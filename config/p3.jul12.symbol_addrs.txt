@@ -2604,3 +2604,4 @@ D_20000140                          = 0x20000140; // ignore:true
 D_30000010                          = 0x30000010; // ignore:true
 D_70000004                          = 0x70000004; // ignore:true
 
+AwfulStatus                                                                         = 0x00399b94; // size:0x4

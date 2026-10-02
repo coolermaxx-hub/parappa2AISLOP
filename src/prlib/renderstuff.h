@@ -54,9 +54,7 @@ public:
     void RenderChunkEECore(PrVuDataChunkPacketHeader *arg0, float arg1);
 
 public:
-    void AppendDmaTag(const sceDmaTag *tag) {
-        m_dma_queue.Append((void*)tag);
-    }
+    void AppendDmaTag(const sceDmaTag *tag);
 
 public:
     PrDmaQueue m_dma_queue;

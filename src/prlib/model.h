@@ -24,7 +24,8 @@ class SpaFileHeader;
 
 struct PrVuNodeHeaderDmaPacket {
     sceDmaTag m_tag;
-    PR_PADDING(unk10, 0x50);
+    NaMATRIX<float, 4, 4> m_matrix;
+    PR_PADDING(unk50, 0x10);
     PrMICRO_PROGRAM_MODULE unk60;
     PR_PADDING(unk64, 0x130);
     int unk194;

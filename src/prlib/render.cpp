@@ -145,7 +145,47 @@ void SpmFileHeader::RenderScreenModelNode() {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderScreenModelNode__7SpmNode);
+void SpmNode::RenderScreenModelNode() {
+    prRenderStuff.m_statistics.node_num++;
+
+    if (!(m_flags & 0x4000)) {
+        return;
+    }
+
+    PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+    if (packet != NULL) {
+        prRenderStuff.m_statistics.opaque_context1_node_num++;
+        PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
+        uc->m_matrix = this->unk40;
+        prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF));
+    }
+
+    PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
+    if (packet2 != NULL) {
+        prRenderStuff.m_statistics.transmit_context1_node_num++;
+        PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
+        uc->m_matrix = this->unk40;
+
+        NaVECTOR<float, 4> pos;
+        NaVECTOR<float, 4> tmp;
+        asm volatile(
+            "lqc2     $vf4,  0x0(%1)        \n\t"
+            "lqc2     $vf5,  0x10(%1)       \n\t"
+            "lqc2     $vf6,  0x20(%1)       \n\t"
+            "lqc2     $vf7,  0x30(%1)       \n\t"
+            "lqc2     $vf8,  0x0(%2)        \n\t"
+            "vmulax   ACC,   $vf4,   $vf8   \n\t"
+            "vmadday  ACC,   $vf5,   $vf8   \n\t"
+            "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+            "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+            "sqc2     $vf9,  0x0(%0)        \n\t"
+        : : "r"(&tmp), "r"(&this->unk40), "r"(&this->unk140) : "memory");
+
+        pos = tmp;
+
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, -pos[2]);
+    }
+}
 
 void PrModelObject::RenderBackgroundScreenModel() {
     m_spm_image->RenderBackgroundScreenModel();
@@ -158,7 +198,26 @@ void SpmFileHeader::RenderBackgroundScreenModel() {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderBackgroundScreenModel__7SpmNode);
+void SpmNode::RenderBackgroundScreenModel() {
+    prRenderStuff.m_statistics.node_num++;
+
+    if ((m_flags & 0x4000) && (!AwfulStatus || (m_flags & 0x400000))) {
+        for (u_int i = 0; i < 2; i++) {
+            PrVuNodeHeaderDmaPacket *packet = this->unk16C[i];
+            if (packet != NULL) {
+                packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
+                packet->m_matrix = this->unk40;
+                prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF));
+
+                if (i == 0) {
+                    prRenderStuff.m_statistics.opaque_context1_node_num++;
+                } else {
+                    prRenderStuff.m_statistics.transmit_context1_node_num++;
+                }
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Model__13PrModelObject);
 
