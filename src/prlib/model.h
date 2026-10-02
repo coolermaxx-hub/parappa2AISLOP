@@ -141,8 +141,17 @@ public:
     float BlendTransactionWeight(PrModelObject *model, float weight, u_int index);
 
 public:
-    PR_PADDING(unk0, 0x1B8);
+    PR_PADDING(unk0, 0x17C);
+    PrVuNodeHeaderDmaPacket *unk17C;
+    PR_PADDING(unk180, 0x14);
+    u_int unk194;
+    u_int *unk198;
+    PR_PADDING(unk19C, 0x14);
+    u_int unk1B0;
+    PR_PADDING(unk1B4, 0x4);
     u_int unk1B8;
+    PR_PADDING(unk1BC, 0x4);
+    u_long128 unk1C0[1];
 };
 
 class SpmComplexNode {
