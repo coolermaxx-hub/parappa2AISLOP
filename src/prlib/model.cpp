@@ -1,7 +1,12 @@
 #include "model.h"
+#include "animation.h"
+#include "spadata.h"
+#include "spram.h"
 
 #include <nalib/navector.h>
 
+/* sdata */
+extern PrSPRAM_DATA *prSpramData_tmp_model;
 extern u_char *workAreaTopAddress;
 extern u_int workAreaSize;
 
@@ -103,7 +108,56 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
     : : "r"(arg1));
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/model", GetPrimitivePosition__13PrModelObjectPt8NaVECTOR2Zfi4);
+#else
+/* Register allocation: this/position swapped (s0/s1) */
+void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
+    position->Set(0.0f, 0.0f, 0.0f, 1.0f);
+
+    if (m_position_animation != NULL) {
+        NaMATRIX<float, 4, 4> *matrix = m_position_animation->unk50[0]->GetMatrix(m_position_animation_time);
+        asm volatile(
+            "lqc2       $vf4,   0x0(%0)        \n\t"
+            "lqc2       $vf5,  0x10(%0)        \n\t"
+            "lqc2       $vf6,  0x20(%0)        \n\t"
+            "lqc2       $vf7,  0x30(%0)        \n\t"
+            "lqc2       $vf8,   0x0(%1)        \n\t"
+            "vmulax     ACC,    $vf4,   $vf8   \n\t"
+            "vmadday    ACC,    $vf5,   $vf8   \n\t"
+            "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
+            "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
+            "sqc2       $vf9,   0x0(%1)        \n\t"
+        : : "r"(matrix), "r"(position));
+    } else {
+        asm volatile(
+            "lqc2       $vf4,   0x0(%0)        \n\t"
+            "lqc2       $vf5,  0x10(%0)        \n\t"
+            "lqc2       $vf6,  0x20(%0)        \n\t"
+            "lqc2       $vf7,  0x30(%0)        \n\t"
+            "lqc2       $vf8,   0x0(%1)        \n\t"
+            "vmulax     ACC,    $vf4,   $vf8   \n\t"
+            "vmadday    ACC,    $vf5,   $vf8   \n\t"
+            "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
+            "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
+            "sqc2       $vf9,   0x0(%1)        \n\t"
+        : : "r"(&unk10), "r"(position));
+    }
+
+    asm volatile(
+        "lqc2       $vf4,   0x0(%0)        \n\t"
+        "lqc2       $vf5,  0x10(%0)        \n\t"
+        "lqc2       $vf6,  0x20(%0)        \n\t"
+        "lqc2       $vf7,  0x30(%0)        \n\t"
+        "lqc2       $vf8,   0x0(%1)        \n\t"
+        "vmulax     ACC,    $vf4,   $vf8   \n\t"
+        "vmadday    ACC,    $vf5,   $vf8   \n\t"
+        "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
+        "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
+        "sqc2       $vf9,   0x0(%1)        \n\t"
+    : : "r"(&prSpramData_tmp_model->m_view_projection_matrix), "r"(position));
+}
+#endif
 
 void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     GetPrimitivePosition(position);
@@ -115,5 +169,7 @@ void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     p[3] = 1.0f;
 }
 
+#ifndef NON_MATCHING
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/model", func_00140E38);
+#endif

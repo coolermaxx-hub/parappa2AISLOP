@@ -31,6 +31,8 @@ public:
         return false;
     }
 
+    NaVECTOR<T, t0>& Set(const T& x, const T& y, const T& z, const T& w);
+
     static NaVECTOR<float, 4>& Copy(NaVECTOR<float, 4>& lhs, NaVECTOR<float, 4>& rhs) {
         asm volatile("
             lq $6, 0(%1)
@@ -47,5 +49,14 @@ public:
 private:
     T v[t0];
 };
+
+template <typename T, int t0>
+NaVECTOR<T, t0>& NaVECTOR<T, t0>::Set(const T& x, const T& y, const T& z, const T& w) {
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+    v[3] = w;
+    return *this;
+}
 
 #endif /* NALIB_NAVECTOR_H */
