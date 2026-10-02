@@ -1544,6 +1544,8 @@ errorNo                             = 0x00399b54;
 waitTime                            = 0x00399b58;
 
 UserName_CharSet                    = 0x0018b800; // size:0x10
+TeachersName_Tbl                    = 0x0018b810; // size:0x20
+UserName_RankingNoSave              = 0x0039975c; // size:0x4
 ULTypeT_CITY_STGCLR                 = 0x0018ca60; // size:0xc
 ULTypeT_CITY_REPLAY                 = 0x0018ca70; // size:0xc
 POPBtn2Sel                          = 0x0018caa0; // size:0x18
@@ -1567,6 +1569,7 @@ MnLPkt                              = 0x01c7f6e0; // size:0xa0
 FPacket                             = 0x01c7f780; // size:0x10
 MCMesWork                           = 0x01c7f790; // size:0x34
 CmpMesWork                          = 0x01c7f7c8; // size:0x18
+RankLst                             = 0x01c7f7e0; // size:0x190
 JukeMenu                            = 0x01c7fb48; // size:0x1414
 UserListMenu                        = 0x01c80fb0; // size:0x118
 ScFade                              = 0x01c810c8; // size:0x14

@@ -44,8 +44,8 @@
 // /* data 18b7a0 */ static u_char UserName_AsciiSetB[41];
 // /* data 18b7d0 */ static u_char UserName_AsciiSetS[41];
 /* data 18b800 */ extern USERNAME_CSET UserName_CharSet[];
-// /* data 18b810 */ static u_char *TeachersName_Tbl[0];
-// /* sdata 39975c */ static u_char *UserName_RankingNoSave;
+/* data 18b810 */ extern u_char *TeachersName_Tbl[]; /* static */
+/* sdata 39975c */ extern u_char *UserName_RankingNoSave; /* static */
 // /* data 18b830 */ static char *_MONTH_STR[0];
 /* data 18b880 */ extern MAPBGM MapBgmTbl[]; /* static */
 /* data 18b908 */ extern TSVOICE_TBL TsVoiceTbl[]; /* static */
@@ -175,7 +175,7 @@
 // /* sbss 399b5c */ static MCRWDATA_HDL *pGameData;
 /* bss 1c7f790 */ extern MCMES_WORK MCMesWork; /* static */
 /* bss 1c7f7c8 */ extern CMPMES_WORK CmpMesWork; /* static */
-// /* bss 1c7f7e0 */ static RANKLIST RankLst[20];
+/* bss 1c7f7e0 */ extern RANKLIST RankLst[]; /* static */
 // /* bss 1c7f970 */ static POPUP_MENU PopupMenu;
 // /* bss 1c7fa88 */ static SAVE_MENU SaveMenu;
 /* bss 1c7fb48 */ extern JUKE_MENU JukeMenu; /* static */
@@ -2086,11 +2086,106 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsMakeUserWork);
-
 typedef struct {
     char name[12];
 } USER_NAME;
+
+/* static */ void TsMakeUserWork(int mode) {
+    int stage = pP3GameState->nStage;
+    int round;
+    int score;
+    int i, no;
+
+    if (stage < 0) {
+        stage = 0;
+    }
+    if (stage > 8) {
+        stage = 8;
+    }
+
+    memset(UserWork, 0, sizeof(USER_DATA));
+
+    *(USER_NAME*)UserWork->name = *(USER_NAME*)pP3GameState->pLog->name;
+    UserWork->name[11] = 0;
+
+    if (mode == 2) {
+        *(USER_NAME*)UserWork->name1 = *(USER_NAME*)pP3GameState->pLog->name1;
+        UserWork->name1[11] = 0;
+
+        if (pP3GameState->nMode == mode) {
+            no = (stage > 8) ? 8 : stage;
+            if (no > 0) {
+                no--;
+            }
+            *(USER_NAME*)UserWork->name2 = *(USER_NAME*)TeachersName_Tbl[no];
+            UserWork->name2[11] = 0;
+        } else {
+            *(USER_NAME*)UserWork->name2 = *(USER_NAME*)pP3GameState->pLog->name2;
+            UserWork->name2[11] = 0;
+        }
+    }
+
+    UserWork->mode = mode;
+    UserWork->flg = 1;
+
+    round = pP3GameState->pLog->nRound;
+    for (i = 0; i < 8; i++) {
+        if (round < pP3GameState->pLog->clrCount[i]) {
+            break;
+        }
+    }
+    if (i >= 8) {
+        round--;
+    }
+
+    UserWork->stageNo = stage;
+    score = pP3GameState->score;
+    if (score < 0) {
+        score = 0;
+    }
+    UserWork->score = score;
+    if (round < 0) {
+        round = 0;
+    }
+    if (round > 98) {
+        round = 98;
+    }
+    UserWork->roundNo = round;
+    UserWork->score2 = pP3GameState->score2P;
+
+    if (pP3GameState->nMode == 1 || pP3GameState->nMode == 2) {
+        UserWork->winner = pP3GameState->winPlayer;
+    } else {
+        UserWork->winner = 0;
+    }
+
+    UserWork->fileNo = 0;
+    if (UserWork->mode == 1) {
+        int mapNo = TsMENU_GetMapNo(NULL) - 1;
+        if (mapNo <= 0) {
+            mapNo = 0;
+        }
+        UserWork->stageNo = mapNo;
+    }
+
+    switch (pP3GameState->nMode) {
+    case 0:
+        UserWork->isVs = 0;
+        UserWork->vsLev = 0;
+        break;
+    case 1:
+        UserWork->isVs = 1;
+        UserWork->vsLev = 0;
+        break;
+    case 2:
+        UserWork->isVs = 2;
+        UserWork->vsLev = pP3GameState->vsLev;
+        if (UserWork->vsLev > 3) {
+            UserWork->vsLev = 3;
+        }
+        break;
+    }
+}
 
 /* static */ void TsSaveSuccessProc(void) {
     TsUserList_SetCurUserData(UserWork);
@@ -3492,7 +3587,79 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsGetRankingList);
+#else
+/* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) {
+    P3MC_RANKSCORE *ptRank[20];
+    P3MC_RANKSCORE *pRank;
+    USER_DATA      *puser;
+    int             i, n, num;
+
+    for (i = 0; i < 20; i++) {
+        ptRank[i] = NULL;
+    }
+
+    if (flag == 0) {
+        num   = pCStageRank[stageNo].nSplay;
+        pRank = pCStageRank[stageNo].splay;
+    } else {
+        num   = pCStageRank[stageNo].nVplay[vsLev];
+        pRank = pCStageRank[stageNo].vplay[vsLev];
+    }
+    _TsSortSetRanking(ptRank, num, pRank, 1);
+
+    n = P3MC_SortUser(UserLst, 1, 0);
+    for (i = 0; i < n; i++) {
+        puser = UserLst->pUserTbl[i];
+        if (puser->flg == 1) {
+            if (flag == 0) {
+                num   = puser->stageRank[stageNo].nSplay;
+                pRank = puser->stageRank[stageNo].splay;
+            } else {
+                num   = puser->stageRank[stageNo].nVplay[vsLev];
+                pRank = puser->stageRank[stageNo].vplay[vsLev];
+            }
+            _TsSortSetRanking(ptRank, num, pRank, 1);
+        }
+    }
+
+    n = P3MC_SortUser(UserLst, 2, 0);
+    for (i = 0; i < n; i++) {
+        puser = UserLst->pUserTbl[i];
+        if (puser->flg == 1) {
+            if (flag == 0) {
+                if (puser->isVs != 0) {
+                    continue;
+                }
+                num   = puser->stageRank[stageNo].nSplay;
+                pRank = puser->stageRank[stageNo].splay;
+            } else {
+                if (puser->isVs != 2) {
+                    continue;
+                }
+                num   = puser->stageRank[stageNo].nVplay[vsLev];
+                pRank = puser->stageRank[stageNo].vplay[vsLev];
+            }
+            _TsSortSetRanking(ptRank, num, pRank, 0);
+        }
+    }
+
+    n = 0;
+    for (i = 0; i < 20 && ptRank[i] != NULL; i++) {
+        RankLst[i].score = ptRank[i]->score;
+        *(RANK_NAME*)RankLst[i].name = *(RANK_NAME*)ptRank[i]->name;
+        RankLst[i].name[8] = '\0';
+        if (RankLst[i].name[0] == '\0') {
+            strcpy(RankLst[i].name, UserName_RankingNoSave);
+        }
+        n++;
+    }
+
+    *nrank = n;
+    return RankLst;
+}
+#endif
 
 void TsPopCusAOff(POPCTIM *pfw) {
     POPCOFF *poff;
