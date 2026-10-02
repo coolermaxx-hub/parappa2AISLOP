@@ -28,11 +28,13 @@ public:
     u_short m_version;
     u_short m_flags;
 
-    PR_PADDING(unk8, 0x10);
+    PR_PADDING(unk8, 0xC);
+    float unk14;
     char m_name[32];
     PR_PADDING(unk38, 0x3c);
     int *unk74;
-    PR_PADDING(unk78, 0x10);
+    PR_PADDING(unk78, 0xC);
+    void *m_user_data;
     SpaTrack<NaVECTOR<float, 4> > *unk88;
     SpaTrack<NaVECTOR<float, 4> > *unk8C;
     SpaTrack<float> *unk90;
