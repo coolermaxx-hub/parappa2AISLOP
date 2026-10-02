@@ -411,7 +411,44 @@ INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_00149168);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_001491C0);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf);
+#else
+static inline NaMATRIX<float, 4, 4> MakeMatrix_tmp_spadata(
+    const float& m00, const float& m01, const float& m02, const float& m03,
+    const float& m10, const float& m11, const float& m12, const float& m13,
+    const float& m20, const float& m21, const float& m22, const float& m23,
+    const float& m30, const float& m31, const float& m32, const float& m33) return ret {
+    SetMatrix_tmp_spadata(&ret, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+}
+
+template <>
+NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle) {
+    float yz = axis[1] * axis[1] + axis[2] * axis[2];
+    float len = sqrtf(axis[0] * axis[0] + yz);
+    float r = sqrtf(yz);
+    float p, q;
+
+    if (r < 1.1920929e-07f) {
+        p = 0.0f;
+        q = 1.0f;
+    } else {
+        p = axis[1] / r;
+        q = axis[2] / r;
+    }
+
+    float a = r / len;
+    float b = -axis[0] / len;
+    float s = sinf(angle);
+    float c = cosf(angle);
+    float k = a * (c - 1.0f);
+
+    return MakeMatrix_tmp_spadata(a * k + 1.0f, p * b * k + q * a * s, q * b * k - p * a * s, 0.0f,
+                                  p * b * k - q * a * s, -p * p * a * k + c, -p * q * a * k - b * s, 0.0f,
+                                  q * b * k + p * a * s, -p * q * a * k + b * s, -q * q * a * k + c, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 1.0f);
+}
+#endif
 
 /* prlib/spadata.cpp */
 template <>
@@ -532,7 +569,32 @@ NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) co
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ABE0);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4iRCf);
+#else
+template <>
+NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle) {
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    if (axis == 0) {
+        return MakeMatrix_tmp_spadata(1.0f, 0.0f, 0.0f, 0.0f,
+                                      0.0f, c, s, 0.0f,
+                                      0.0f, -s, c, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f);
+    } else if (axis == 1) {
+        return MakeMatrix_tmp_spadata(c, 0.0f, -s, 0.0f,
+                                      0.0f, 1.0f, 0.0f, 0.0f,
+                                      s, 0.0f, c, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f);
+    } else {
+        return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
+                                      -s, c, 0.0f, 0.0f,
+                                      0.0f, 0.0f, 1.0f, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f);
+    }
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014AFE0);
 
