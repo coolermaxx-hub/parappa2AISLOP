@@ -110,7 +110,7 @@
 /* data 18c540 */ extern PTPOS POPWZoom_CXY[]; /* static */
 /* data 18c588 */ extern PTPOS JUKEBOX_Pos[]; /* static */
 /* data 18c5b0 */ extern PATPOS JUKEJKT_Pat[]; /* static */
-// /* data 18c628 */ static float JUKEWAV_INITBL[0];
+/* data 18c628 */ extern float JUKEWAV_INITBL[]; /* static */
 /* data 18c650 */ extern PATPOS JUKEJKT_PatS[]; /* static */
 /* data 18c660 */ extern PATPOS JUKEREC_Pat[]; /* static */
 /* data 18c6d8 */ extern PATPOS JUKEREC_PatS[]; /* static */
@@ -6037,7 +6037,390 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     spr->ofsy = boy;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TSJukeCDObj_Draw);
+#else /* Requires .lit4 migration */
+/* static */ void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
+    PATPOS *ppat;
+    float   box, boy;
+    float   jrot, rrot;
+    float   addx, addy;
+    float   rt, zm;
+    float   jzr, rzr;
+    float   jz, rz;
+    float   swing;
+    float   fx, fy;
+    float   rpx, rpy;
+    u_int   abgr, abgrs;
+    u_int   rabgr, rabgrs;
+    int     ton;
+    int     i;
+    int     sx, sy;
+
+    addy = 0.0f;
+    px += pw->patPos->x;
+    py += pw->patPos->y;
+    ppat = &JUKEJKT_Pat[pw->patNo];
+
+    jzr = 1.0f;
+    rzr = 1.0f;
+    zm = 1.0f;
+    swing = 1.0f;
+
+    box = spr->ofsx;
+    boy = spr->ofsy;
+
+    PkALPHA_Add(pk, 0x44);
+
+    jrot = 0.0f;
+    addx = 0.0f;
+    rrot = 0.0f;
+
+    switch (pw->state) {
+    case TSJKCUS_MSK:
+        return;
+    case TSJKCUS_DEF:
+        abgr = 0x80707070;
+        abgrs = 0x30808080;
+        pw->vrate = 0.0f;
+        break;
+    case TSJKCUS_CUR:
+    case TSJKCUS_SELOK:
+        zm = 1.25f;
+        abgr = 0x80c0c0c0;
+        abgrs = 0x30808080;
+        pw->vrate = 0.0f;
+        break;
+    case TSJKCUS_ON:
+        pw->time++;
+        rt = pw->time * (1.0f / 15.0f);
+        if (pw->time >= 15) {
+            pw->time = 0;
+            pw->state = TSJKCUS_CUR;
+        }
+
+        fx = rt * 3.1415927f;
+        abgrs = 0x30808080;
+        zm = (sinf(fx) * 0.2f + 1.0f) * (rt * 0.25f + 1.0f);
+        pw->vrate = sinf(fx) * 0.1f;
+        abgr = GetDToneColor(0x80707070, 0x80c0c0c0, rt * 256.0f);
+        break;
+    case TSJKCUS_OFF:
+        pw->time++;
+        rt = pw->time * (1.0f / 15.0f);
+        if (pw->time >= 15) {
+            pw->time = 0;
+            pw->state = TSJKCUS_DEF;
+        }
+
+        fx = rt * 3.1415927f;
+        abgrs = 0x30808080;
+        zm = (1.0 - sinf(fx) * 0.25) * ((1.0f - rt) * 0.25f + 1.0f);
+        pw->vrate = sinf(fx) * -0.08f;
+        abgr = GetDToneColor(0x80c0c0c0, 0x80707070, rt * 256.0f);
+        break;
+    default:
+        abgr = 0x80c0c0c0;
+        abgrs = 0x30808080;
+        pw->vrate = jrot;
+        break;
+    }
+
+    if (pw->bMsk) {
+        abgr = 0x30808080;
+        abgrs = 0x18808080;
+        pw->vrate = 0.0f;
+    }
+
+    rabgr = abgr;
+    rabgrs = abgrs;
+
+    switch (pw->anime) {
+    case TSJKANM_IN:
+        if (pw->atime) {
+            pw->innm = 0x200;
+            pw->atime--;
+            return;
+        }
+
+        pw->innm = TSNumMov(pw->innm, 0, 5);
+        rt = 1.0f - pw->innm / 512.0f;
+
+        jrot = (1.0f - rt) * 6.2831855f;
+        addx = (1.0f - rt) * (pw->dir ? 200.0f : -200.0f);
+        if (pw->dir2) {
+            addy = (1.0f - rt) * 20.0f;
+        } else {
+            addy = (1.0f - rt) * -20.0f;
+        }
+
+        ton = rt * 256.0f;
+        abgr = GetDToneColor(0xffffff, abgr, ton);
+        abgrs = GetDToneColor(0x808080, abgrs, ton);
+        jzr = (1.0f - rt) * 1.5f + 1.0f;
+
+        if (pw->innm == 0) {
+            pw->anime = TSJKANM_OFF;
+            pw->time = 0;
+            pw->atime = 0;
+        }
+        break;
+    case TSJKANM_OUT:
+        if (pw->atime) {
+            pw->atime--;
+            pw->innm = 0x100;
+            break;
+        }
+
+        pw->innm = TSNumMov(pw->innm, 0, 5);
+        rt = 1.0f - pw->innm / 256.0f;
+
+        jrot = rt * -9.424778f;
+        addx = rt * (pw->dir ? -200.0f : 200.0f);
+        addy = rt * (pw->dir2 ? 20.0f : -20.0f);
+
+        ton = rt * 256.0f;
+        abgr = GetDToneColor(abgr, 0xffffff, ton);
+        abgrs = GetDToneColor(abgr, 0x808080, ton);
+        jzr = rt * 1.2f + 0.5f;
+
+        if (pw->innm == 0) {
+            pw->anime = TSJKANM_OFF;
+            pw->state = TSJKCUS_MSK;
+            pw->time = 0;
+            pw->atime = 0;
+        }
+        break;
+    case TSJKANM_PLAY2:
+    case TSJKANM_RETURN2:
+        if (pw->atime) {
+            pw->atime--;
+            pw->innm = 0x80;
+            pw->oy = pw->rot = pw->ox = 0.0f;
+            if (pw->anime == TSJKANM_RETURN2) {
+                return;
+            }
+            break;
+        }
+
+        pw->innm = TSNumMov(pw->innm, 0, 12);
+        rt = 1.0f - pw->innm / 128.0f;
+        TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
+        fx = sx + px - 318;
+        fy = sy + py - 161;
+
+        if (pw->anime == TSJKANM_RETURN2) {
+            rt = 1.0f - rt;
+        }
+
+        ton = rt * 256.0f;
+        addx = fx * 0.35f * rt;
+        addy = fy * 0.5f * rt;
+        abgr = GetDToneColor(abgr, 0x404040, ton);
+        abgrs = GetDToneColor(abgrs, 0x808080, ton);
+        jzr = 1.0f - rt * 0.3f;
+
+        if (pw->innm == 0) {
+            if (pw->anime == TSJKANM_RETURN2) {
+                pw->state = TSJKCUS_DEF;
+            } else {
+                pw->state = TSJKCUS_MSK;
+            }
+            pw->anime = TSJKANM_OFF;
+            pw->time = 0;
+            pw->atime = 0;
+        }
+        break;
+    case TSJKANM_PLAY1:
+    case TSJKANM_RETURN1:
+        if (pw->atime) {
+            pw->atime--;
+            pw->innm = 0x200;
+            pw->rox = pw->rrot = pw->ox = pw->oy = pw->rot = 0.0f;
+
+            if (pw->anime == TSJKANM_RETURN1) {
+                abgr = 0x80c0c0c0;
+                abgrs = 0x30808080;
+                rabgr = 0x80c0c0c0;
+                rabgrs = 0x30808080;
+                pw->rox = zm * 0.0f;
+                pw->roy = zm * -43.0f;
+                swing = 0.0f;
+            }
+            break;
+        }
+
+        pw->rox = pw->roy = pw->ox = rpx = pw->oy = 0.0f;
+        rpy = -43.0f;
+
+        pw->innm = TSNumMov(pw->innm, 0, 7);
+        rzr = 1.0f;
+        rt = 1.0f - pw->innm / 512.0f;
+
+        if (pw->anime == TSJKANM_RETURN1) {
+            rt = 1.0f - rt;
+        }
+
+        swing = 1.0f - rt;
+        rabgr = abgr;
+        rabgrs = abgrs;
+
+        fx = rt * 0.5f * 3.1415927f;
+        pw->rox = (1.0f - cosf(fx)) * rpx * zm * jzr;
+        pw->roy = sinf(fx) * rpy * zm * jzr;
+
+        if (pw->innm == 0) {
+            pw->time = 0;
+            pw->atime = 0;
+            if (pw->anime == TSJKANM_RETURN1) {
+                pw->state = TSJKCUS_CUR;
+                pw->anime = TSJKANM_OFF;
+            } else {
+                pw->state = TSJKCUS_CUR;
+                pw->anime = TSJKANM_ROTATE;
+            }
+        }
+        break;
+    case TSJKANM_ROTATE:
+        swing = 0.0f;
+
+        if (pw->atime == 0) {
+            pw->innm2 = 0x400;
+            pw->atime = 1;
+            pw->rrot = swing;
+            pw->innm = 0x400;
+        } else {
+            pw->atime++;
+            pw->rrot += ((pw->atime > 110) ? 110 : pw->atime) * 0.0023f;
+            if (pw->rrot > 6.2831855f) {
+                pw->rrot -= 6.2831855f;
+            }
+        }
+
+        fx = zm * 0.0f;
+        fy = zm * -43.0f;
+        rrot = pw->rrot;
+        rzr = 1.0f;
+        pw->rox = fx;
+        pw->roy = fy;
+
+        if (pw->atime > 70) {
+            pw->innm2 = TSNumMov(pw->innm2, 0, 11);
+            rt = 1.0f - pw->innm2 / 1024.0f;
+            ton = rt * 256.0f;
+            abgr = GetDToneColor(abgr, 0xffffff, ton);
+            abgrs = GetDToneColor(abgrs, 0x808080, ton);
+            jzr = 1.0f - rt * 0.5f;
+        }
+
+        if (pw->atime > 100) {
+            pw->innm = TSNumMov(pw->innm, 0, 14);
+            rt = 1.0f - pw->innm / 1024.0f;
+            ton = rt * 256.0f;
+            rabgr = GetDToneColor(rabgr, 0xffffff, ton);
+            rabgrs = GetDToneColor(rabgrs, 0x808080, ton);
+            rzr = rt * 0.8f + rzr;
+
+            TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
+            rpx = sx + px - 318;
+            rpy = sy + py - 181;
+            pw->rox = fx - rpx * rt;
+            pw->roy = fy - rpy * rt;
+        }
+
+        if (pw->innm == 0 && pw->innm2 == 0) {
+            pw->state = TSJKCUS_MSK;
+            pw->anime = TSJKANM_OFF;
+            pw->time = 0;
+            pw->atime = 0;
+        }
+        break;
+    case TSJKANM_ROTSTOP:
+        swing = 0.0f;
+
+        if (pw->atime == 0) {
+            pw->atime = 80;
+            pw->rrot = swing;
+            for (i = 0; i < 60; i++) {
+                pw->rrot -= i;
+            }
+            pw->innm = 0x400;
+
+            TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
+            abgr = 0xffffff;
+            abgrs = 0x808080;
+            rpx = sx + px - 318;
+            rpy = sy + py - 181;
+            pw->roy = zm * -43.0f - rpy;
+            pw->rox = zm * 0.0f - rpx;
+            break;
+        }
+
+        pw->atime--;
+        i = pw->atime - 20;
+        if (i > 0) {
+            pw->rrot += i;
+            rrot = pw->rrot * 0.005f;
+        } else {
+            jrot = swing;
+        }
+
+        pw->innm = TSNumMov(pw->innm, 0, 6);
+        rt = pw->innm / 1024.0f;
+        rzr = rt * 0.8f + 1.0f;
+        jzr = 1.0f - rt * 0.5f;
+
+        ton = rt * 256.0f;
+        abgr = GetDToneColor(abgr, 0xffffff, ton);
+        abgrs = GetDToneColor(abgrs, 0x808080, ton);
+
+        TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
+        rpx = sx + px - 318;
+        rpy = sy + py - 181;
+        fx = zm * 0.0f;
+        fy = zm * -43.0f;
+        pw->roy = fy - rpy * rt;
+        pw->rox = fx - rpx * rt;
+
+        ton = rt * 256.0f * 0.5f;
+        rabgr = GetDToneColor(rabgr, 0xffffff, ton);
+        rabgrs = GetDToneColor(rabgrs, 0x808080, ton);
+
+        if (pw->atime == 0) {
+            pw->state = TSJKCUS_CUR;
+            pw->atime = 1;
+            pw->anime = TSJKANM_RETURN1;
+            pw->rox = fx;
+            pw->roy = fy;
+            pw->time = 0;
+        }
+        break;
+    default:
+        pw->oy = pw->rot = pw->ox = 0.0f;
+        break;
+    }
+
+    jz = jzr * zm;
+    rz = rzr * zm;
+
+    spr->ofsx += addx + pw->ox;
+    spr->ofsy += addy + pw->oy;
+
+    rt = (anmtime % 240) * 2.0f / 240.0f;
+    spr->ofsy += sinf((rt + JUKEWAV_INITBL[pw->patNo]) * 3.1415927f) * 8.0f * swing;
+
+    if (pw->anime == TSJKANM_ROTATE || pw->anime == TSJKANM_ROTSTOP) {
+        _TsJkJacketPut(pk, spr, pw, px, py, jz, jrot, abgr, abgrs);
+        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, rabgr, rabgrs);
+    } else {
+        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, rabgr, rabgrs);
+        _TsJkJacketPut(pk, spr, pw, px, py, jz, jrot, abgr, abgrs);
+    }
+
+    spr->ofsy = boy;
+    spr->ofsx = box;
+}
+#endif
 
 static int TsJukeIsObjAnime(int isComp) {
     int        i;

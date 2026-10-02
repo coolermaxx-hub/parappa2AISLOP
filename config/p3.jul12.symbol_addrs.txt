@@ -1523,6 +1523,7 @@ MNOptLRBtn                          = 0x0018c068; // size:0x60
 Ranking_PatScroll                   = 0x0018c180; // size:0x18
 JUKEBOX_Pos                         = 0x0018c588; // size:0x28 can_reference:false
 JUKEJKT_Pat                         = 0x0018c5b0; // size:0x78
+JUKEWAV_INITBL                      = 0x0018c628; // size:0x28
 JUKEJKT_PatS                        = 0x0018c650; // size:0xc
 JUKEREC_Pat                         = 0x0018c660; // size:0x78
 JUKEREC_PatS                        = 0x0018c6d8; // size:0xc
