@@ -61,11 +61,11 @@
 /* data 18bce0 */ extern PATPOS PAT_ALERT_WIN_FFACE[]; /* static */
 /* data 18bd10 */ extern PATPOS SAVE_MENU_SELPAT[]; /* static */
 /* data 18bd28 */ extern PTPOS SAVEWZoom_CXY[]; /* static */
-// /* data 18bd30 */ static PATPOS LG_SCROLL_MARK[0];
-// /* data 18bd48 */ static PATPOS RP_SCROLL_MARK[0];
-// /* data 18bd60 */ static PATPOS LLG_SCROLL_MARK[0];
-// /* data 18bd78 */ static PATPOS CSSLASH_MARK;
-// /* data 18bd88 */ static STRPOS PAGENO_StrCOD[0];
+/* data 18bd30 */ extern PATPOS LG_SCROLL_MARK[]; /* static */
+/* data 18bd48 */ extern PATPOS RP_SCROLL_MARK[]; /* static */
+/* data 18bd60 */ extern PATPOS LLG_SCROLL_MARK[]; /* static */
+/* data 18bd78 */ extern PATPOS CSSLASH_MARK; /* static */
+/* data 18bd88 */ extern STRPOS PAGENO_StrCOD[]; /* static */
 /* data 18bd98 */ extern PTPOS CellCusPos[]; /* static */
 /* data 18bdb8 */ extern STRPOS LOGS_StrCOD[]; /* static */
 /* data 18bde0 */ extern STRPOS LOGL_StrCOD[]; /* static */
@@ -7561,7 +7561,171 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
+#else /* Needs .sdata match */
+/* static */ void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    USERLIST_MENU *pfw = &UserListMenu;
+    u_char         buf[16];
+    int            isScroll;
+    float          ofsy;
+    PATPOS        *scr;
+    STRPOS        *ps;
+    USER_DATA     *user;
+    int            dispColor;
+    int            i, j, k, n;
+    int            px, py;
+    int            y;
+    int            pflg;
+
+    ofsy = spr->ofsy;
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+    PkALPHA_Add(pk, 0x44);
+    spr->rgba0 = 0x80808080;
+
+    dispColor = pfw->dispColor;
+    switch (dispColor) {
+    case 0:
+        scr = LG_SCROLL_MARK;
+        break;
+    case 1:
+        scr = LLG_SCROLL_MARK;
+        break;
+    case 2:
+    default:
+        scr = RP_SCROLL_MARK;
+        break;
+    }
+
+    if (pfw->curPageTop > 0) {
+        TsPatPut(pk, spr, &scr[0], 0, 0);
+    }
+    if (pfw->curPageTop + 5 < pfw->userMax) {
+        TsPatPut(pk, spr, &scr[1], 0, 0);
+    }
+    TsPatPut(pk, spr, &CSSLASH_MARK, 0, 0);
+
+    isScroll = 1;
+
+    sprintf(buf, "%d", pfw->curuser + pfw->curPageTop + 1);
+    ps = PAGENO_StrCOD;
+    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
+    ps++;
+    sprintf(buf, "%d", pfw->userMax);
+    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
+
+    if (pfw->sline == 0.0f) {
+        isScroll = 0;
+    }
+
+    if (isScroll) {
+        TsMenu_CaptureVram(pk, spr);
+
+        y = 0x29;
+        PkSCISSOR_Add(pk, 0x26, 0x2a, 0x230, 0x80);
+
+        spr->zy = 1.0f;
+        spr->zx = 1.0f;
+        spr->ofsy += pfw->sline;
+        if (1.0f < pfw->sline) {
+            y = 0xf;
+        }
+
+        PkALPHA_Add(pk, 0x8000000064);
+        spr->rgba0 = 0x80808080;
+        spr->ux = 0x26;
+        spr->uy = 0x43;
+        spr->uw = 0x230;
+        spr->uh = 0x1a;
+
+        for (i = 0; i < 6; i++) {
+            spr->px = 0x26;
+            spr->py = y;
+            spr->sw = 0x230;
+            spr->sh = 0x1a;
+            PkNSprite_AddAdj(pk, spr, 1);
+            y += 0x1a;
+        }
+
+        spr->ofsy = ofsy;
+        spr->zx = 1.0f;
+        spr->zy = 0.5f;
+        PkALPHA_Add(pk, 0x44);
+    }
+
+    spr->rgba0 = 0x80808080;
+
+    n = 5;
+    if (isScroll) {
+        n = 6;
+        spr->ofsy += pfw->sline;
+    }
+
+    for (i = 0; i < n; i++) {
+        if (0.0f < pfw->sline) {
+            j = i - 1;
+        } else {
+            j = i;
+        }
+        if (j < 0) {
+            TsCmnCell_CusorDraw(pk, spr, j, NULL, 0, 0, 0x20808080);
+        } else {
+            TsCmnCell_CusorDraw(pk, spr, j, &pfw->cellcs[j], 0, 0, 0x20808080);
+        }
+    }
+
+    spr->ofsy = ofsy;
+
+    n = 5;
+    if (isScroll) {
+        n = 6;
+        spr->ofsy = ofsy + pfw->sline;
+    }
+
+    for (i = 0; i < n; i++) {
+        if (0.0f < pfw->sline) {
+            j = i - 1;
+        } else {
+            j = i;
+        }
+        k  = pfw->curPageTop + j;
+        px = CellCusPos[j + 1].x;
+        py = CellCusPos[j + 1].y;
+
+        if (k >= 0 && k < pfw->userMax) {
+            user = &pfw->pusrdspWk->pUserDisp[k];
+
+            if (pfw->curuser == i) {
+                pflg = (pfw->nameinw[0].nameMsk == 1) ? 2 : 0;
+                if (pfw->nameinw[1].nameMsk == 1) {
+                    pflg |= 4;
+                }
+                if (pfw->nameinw[0].nameMsk || pfw->nameinw[1].nameMsk) {
+                    user = pfw->wuser;
+                }
+            } else {
+                pflg = 0;
+            }
+
+            TsUser_PanelDraw(pk, spr, user, px, py, pflg, dispColor);
+        }
+    }
+
+    spr->ofsy = ofsy;
+    PkDefSCISSOR_Add(pk);
+
+    px = CellCusPos[pfw->curuser + 1].x;
+    py = CellCusPos[pfw->curuser + 1].y;
+
+    if (pfw->nameinw[0].isOn) {
+        TsNAMEINBox_Draw(pk, spr, px, py, dispColor, &pfw->nameinw[0], 0);
+    }
+    if (pfw->nameinw[1].isOn) {
+        TsNAMEINBox_Draw(pk, spr, px, py, dispColor, &pfw->nameinw[1], 1);
+    }
+}
+#endif
 
 static void NameSpaceCut(u_char *dst, u_char *src) {
     int     i, l;
