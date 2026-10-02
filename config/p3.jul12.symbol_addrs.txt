@@ -2143,6 +2143,10 @@ ApplyBillboardMatrix__7SpmNode                                                  
 // prlib/depthfield.cpp
 ApplyDepthOfField__13PrSceneObject                                                  = 0x0014c8e8; // type:func
 
+// nalib/napacket.h (weak copies kept by the linker)
+AddTest1__11NaGifPacketUiiUciUiiUii                                                 = 0x0014cd48; // type:func
+AddGsAD__11NaGifPacketUiUl                                                          = 0x0014cda8; // type:func
+
 // prlib/vram.cpp
 PrAddDrawAreaDefinition__FP11NaGifPacketRC11PrVRAM_RECTbbUl                         = 0x0014cdd0; // type:func
 PrAddTextureAreaDefinition__FP11NaGifPacketRC11PrVRAM_RECTb                         = 0x0014cf78; // type:func

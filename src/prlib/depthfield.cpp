@@ -5,11 +5,11 @@ INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", ApplyDepthOfField__13PrSceneObj
 /* nalib/napacket.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CD38);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CD48);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddTest1__11NaGifPacketUiiUciUiiUii);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDA0);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDA8);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGsAD__11NaGifPacketUiUl);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDB0);
 
