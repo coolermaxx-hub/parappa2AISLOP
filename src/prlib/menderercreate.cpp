@@ -8,6 +8,7 @@
 extern u_int prMendererDrawFbp;
 extern float prMendererSpeed;
 extern float prMendererSyncRatio;
+extern float prMendererRatio;
 extern int prCurrentStage;
 
 extern float mendererSyncPhase;
@@ -18,6 +19,7 @@ extern const float D_00396800[5][3][4];
 void PrUpdateMendererSpeed();
 void PrUpdateAwfulMenderer();
 void CreateMendererTexture(float ratio);
+void PrSynchronizeMendererParameter(float ratio);
 
 /* data */
 extern int mendererTextureRequested;
@@ -64,7 +66,60 @@ void PrSynchronizeMendererParameter(float ratio) {
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", PrInitializeTextureCreation__FUiUiUiUi);
 
+extern u_long128 mendererCreatePacket[];
+
+void PrWaitDmaFinish(u_int channel);
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", CreateMendererTexture__Ff);
+#else /* Requires .lit4 migration */
+void CreateMendererTexture(float ratio) {
+    PrSynchronizeMendererParameter(ratio);
+
+    float scale;
+    float r = prMendererRatio;
+    if (r <= 1.0f) {
+        scale = 1.0f;
+    } else if (r <= 1.4f) {
+        scale = (r - 1.0f) * 5.6666665f / 0.4f + 1.0f;
+    } else if (r <= 1.6f) {
+        scale = 6.6666665f;
+    } else {
+        scale = (2.0f - r) * 5.6666665f / 0.4f + 1.0f;
+    }
+
+    mendererTextureRequested = 1;
+    float step = scale * prMendererSpeed / 60.0f;
+
+    for (u_int i = 0; i < 5; i++) {
+        float *param = noodleParameter[i];
+
+        for (u_int j = 0; j < 3; j++) {
+            float phase = noodlePhase[i][j] + step;
+
+            if (phase < 0.0f) {
+                do {
+                    phase += 1.0f / param[j + 8];
+                } while (phase < 0.0f);
+            } else if (1.0f / param[j + 8] <= phase) {
+                do {
+                    phase -= 1.0f / param[j + 8];
+                } while (1.0f / param[j + 8] <= phase);
+            }
+
+            noodlePhase[i][j] = phase;
+            param[j + 16] = phase;
+        }
+    }
+
+    FlushCache(WRITEBACK_DCACHE);
+    PrWaitDmaFinish(SCE_DMA_VIF1);
+
+    sceDmaChan *chan = sceDmaGetChan(SCE_DMA_VIF1);
+    chan->chcr.TTE = 1;
+    sceDmaSend(chan, mendererCreatePacket);
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", PrCreateMendererTexture);

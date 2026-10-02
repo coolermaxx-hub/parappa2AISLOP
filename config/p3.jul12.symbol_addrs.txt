@@ -2719,3 +2719,4 @@ alphaModulationGsPacket = 0x0038CC30; // size:0x40
 alphaModulationFramePacket = 0x0038CC70; // size:0xD0
 alphaModulationDmaPacket = 0x0038CD40; // size:0x40
 prSpramData_tmp_mendereralpha = 0x003999B0; // size:0x4
+mendererCreatePacket = 0x01C83A60; // size:0x60
