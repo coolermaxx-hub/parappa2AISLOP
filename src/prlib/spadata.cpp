@@ -95,9 +95,8 @@ NaMATRIX<float, 4, 4>& SetMatrix_tmp_spadata(NaMATRIX<float, 4, 4> *m,
     const float& m20, const float& m21, const float& m22, const float& m23,
     const float& m30, const float& m31, const float& m32, const float& m33) asm("Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1");
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetMatrix__C12SpaTransformf);
-#else /* Scheduling: two instructions swapped in case 7 */
+/* Element reference; the original likely used a non-const NaVECTOR::operator[] */
+static inline float& At_tmp(NaVECTOR<float, 4>& v, int i) { return ((float*)&v)[i]; }
 NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
     /* FIXME: static locals; see the note in GetSprineValue */
     extern NaVECTOR<float, 4> vector_tmp_spadata_transform;
@@ -144,8 +143,8 @@ NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
         NaMATRIX<float, 4, 4> *ret = &matrix_tmp_spadata_transform;
         SetMatrix_tmp_spadata(ret,
             1.0f, 0.0f, 0.0f, 0.0f,
-            ((float*)&vector_tmp_spadata_transform)[0], 1.0f, 0.0f, 0.0f,
-            ((float*)&vector_tmp_spadata_transform)[1], ((float*)&vector_tmp_spadata_transform)[2], 1.0f, 0.0f,
+            At_tmp(vector_tmp_spadata_transform, 0), 1.0f, 0.0f, 0.0f,
+            At_tmp(vector_tmp_spadata_transform, 1), At_tmp(vector_tmp_spadata_transform, 2), 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f);
         return ret;
     }
@@ -153,7 +152,6 @@ NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
         return &NaMATRIX<float, 4, 4>::IDENT;
     }
 }
-#endif
 
 NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
     /* FIXME: static local; see the note in GetSprineValue */
