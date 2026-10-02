@@ -54,10 +54,10 @@
 // /* data 18bae8 */ static u_short LoadConfLst[0];
 /* data 18baf8 */ extern TSVSNDSEQ VSNDSEQ_Tbl[]; /* static */
 /* data 18bb10 */ extern TSTEX_TBL TexTable[]; /* static */
-// /* data 18bcb0 */ static PATPOS PAT_ALERT_WIN_ABOVE;
-// /* data 18bcc0 */ static PATPOS PAT_ALERT_WIN_CENTER;
-// /* data 18bcd0 */ static PATPOS PAT_ALERT_WIN_BELOW;
-// /* data 18bce0 */ static PATPOS PAT_ALERT_WIN_FFACE[0];
+/* data 18bcb0 */ extern PATPOS PAT_ALERT_WIN_ABOVE; /* static */
+/* data 18bcc0 */ extern PATPOS PAT_ALERT_WIN_CENTER; /* static */
+/* data 18bcd0 */ extern PATPOS PAT_ALERT_WIN_BELOW; /* static */
+/* data 18bce0 */ extern PATPOS PAT_ALERT_WIN_FFACE[]; /* static */
 // /* data 18bd10 */ static PATPOS SAVE_MENU_SELPAT[0];
 // /* data 18bd28 */ static PTPOS SAVEWZoom_CXY[0];
 // /* data 18bd30 */ static PATPOS LG_SCROLL_MARK[0];
@@ -158,7 +158,7 @@
 /* sbss 399b30 */ extern int CurMapState; /* static */
 /* sbss 399b34 */ extern USER_DATA *UserWork; /* static */
 /* sbss 399b38 */ extern P3MC_STAGERANK *pCStageRank; /* static */
-// /* bss 1c7f610 */ static P3MC_RANKSCORE CurRankScore;
+/* bss 1c7f610 */ extern P3MC_RANKSCORE CurRankScore; /* static */
 /* sbss 399b3c */ extern P3MC_USRLST *UserLst; /* static */
 /* sbss 399b40 */ extern MN_USERLST_WORK *UserDispWork; /* static */
 /* bss 1c7f628 */ extern CURFILEINFO CurFileInfo; /* static */
@@ -1486,7 +1486,71 @@ void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
     dat[1] = ((rand() % 0x10000) << 8) + mptim->date_pad;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
+#else
+/* static */ int TsRanking_Set(void) {
+    P3GAMESTATE    *pstate = pP3GameState;
+    int             stage  = pstate->nStage;
+    P3MC_RANKSCORE *pScore;
+    int            *pNum;
+    u_int           score;
+    int             max;
+    int             n, i, j;
+
+    memset(&CurRankScore, 0, sizeof(CurRankScore));
+
+    if (stage < 1 || stage > 8 || pstate->nMode == 1) {
+        return -1;
+    }
+
+    if (pstate->nMode == 2) {
+        max    = 10;
+        score  = pstate->score;
+        pNum   = &pCStageRank[stage - 1].nVplay[pstate->vsLev];
+        pScore = pCStageRank[stage - 1].vplay[pstate->vsLev];
+        if (pstate->winPlayer > 0) {
+            return -1;
+        }
+    } else {
+        max    = 20;
+        score  = pstate->score + pstate->bonusG;
+        pNum   = &pCStageRank[stage - 1].nSplay;
+        pScore = pCStageRank[stage - 1].splay;
+    }
+
+    GetRankScoreID(&MapTime, CurRankScore.scDate);
+    CurRankScore.name[0] = '\0';
+    CurRankScore.score = score;
+
+    n = *pNum;
+    i = 0;
+    if (n < max) {
+        for (; i < n; i++) {
+            if (pScore[i].score < score) {
+                break;
+            }
+        }
+        *pNum = n + 1;
+    } else {
+        for (; i < max; i++) {
+            if (pScore[i].score < score) {
+                break;
+            }
+        }
+    }
+
+    if (i >= max) {
+        return -1;
+    }
+
+    for (j = max - 1; i < j; j--) {
+        pScore[j] = pScore[j - 1];
+    }
+    pScore[i] = CurRankScore;
+    return i;
+}
+#endif
 
 void TsMENU_SetMapScreen(int mapNo) {
     CurMapNo = mapNo;
@@ -2836,7 +2900,73 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", McErrorMess);
+/* static */ int McErrorMess(int err) {
+    int mes;
+
+    if (!TsMCAMes_IsON()) {
+        switch (err) {
+        case 2:
+            mes = 0x2000008;
+            break;
+        case 3:
+            mes = 0x2000002;
+            break;
+        case 4:
+            mes = 0x2000005;
+            break;
+        case 1:
+        case 5:
+            mes = 0x2000014;
+            break;
+        case 6:
+            mes = 0x2000009;
+            break;
+        case 7:
+            mes = 0x200000d;
+            break;
+        case 15:
+            mes = 0x200000e;
+            break;
+        case 10:
+            mes = 0x2000012;
+            break;
+        case 12:
+            mes = 0x2000004;
+            break;
+        case 40:
+            mes = 0x2000006;
+            break;
+        case 50:
+            mes = 0x200000b;
+            break;
+        case 60:
+            mes = 0x200000c;
+            break;
+        case 70:
+            mes = 0xc000018;
+            break;
+        case 80:
+            mes = 0xc000017;
+            break;
+        case 100:
+            mes = 0xc00000a;
+            break;
+        case 200:
+            mes = 0xc000015;
+            break;
+        default:
+            return 0;
+        }
+
+        TsMCAMes_SetMes(mes);
+    }
+
+    if (TsMCAMes_GetSelect() > 0) {
+        TsMCAMes_SetMes(-1);
+        return 0;
+    }
+    return -1;
+}
 
 static void McInitFlow(void) {
     subStatus = 0;
@@ -3139,7 +3269,71 @@ static void TsMCAMes_Flow(u_int tpad) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsMCAMes_Draw);
+/* static */ void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    MCMES_WORK *pmesw = &MCMesWork;
+    int         px, py, x, y;
+    float       fRate, fLine;
+    float       ofsy;
+    u_int       col;
+
+    if (pmesw->btton) {
+        spr->rgba0 = pmesw->btton << 24;
+        spr->zy = 1.0f;
+        spr->zx = 1.0f;
+        SetSprScreenXYWH(spr);
+        PkCRect_Add(pk, spr, 0);
+    }
+
+    if (pmesw->mesflg < 0) {
+        return;
+    }
+
+    py = pmesw->py;
+    px = pmesw->px;
+    if (pmesw->Dline <= 0x1000) {
+        fLine = 0.0f;
+        fRate = 0.0f;
+    } else {
+        fRate = (pmesw->Dline - 0x1000) / 4096.0f;
+        fLine = fRate * 12.0f - 2.0f;
+    }
+
+    if (pmesw->backSw) {
+        x = px - 0x124;
+        ofsy = spr->ofsy;
+        y = py + 5;
+        spr->zy = 0.5f;
+        spr->zx = 1.0f;
+        spr->rgba0 = 0x80808080;
+        spr->ofsy = ofsy - (fLine * 0.5f + 36.0f);
+        TsPatPut(pk, spr, &PAT_ALERT_WIN_ABOVE, x, y);
+
+        spr->ofsy += 35.5f;
+        if (fLine > 0.0f) {
+            spr->zy = fRate * 0.5f;
+            TsPatPut(pk, spr, &PAT_ALERT_WIN_CENTER, x, y);
+            spr->ofsy += fLine - 1.0f;
+        }
+
+        spr->zy = 0.5f;
+        TsPatPut(pk, spr, &PAT_ALERT_WIN_BELOW, x, py + 1);
+        if (pmesw->faceNo > 0) {
+            TsPatPut(pk, spr, &PAT_ALERT_WIN_FFACE[pmesw->faceNo - 1], px + 0xcc, y);
+        }
+        spr->ofsy = ofsy;
+    }
+
+    if (pmesw->mesflg >= 0) {
+        y = py - ((pmesw->line * 12) >> 1);
+        col = 0x80220061;
+        if (pmesw->color != 0) {
+            if (pmesw->color == 1) {
+                col = 0x807f7f7f;
+            }
+        }
+        _PkMCMsgPut(pk, spr, pmesw->mesflg & 0xffff, px, y, col);
+    }
+}
 
 void TsCMPMes_SetPos(int x, int y) {
     CMPMES_WORK *pmesw = &CmpMesWork;
@@ -3525,7 +3719,71 @@ static int TsJukeObjAnime2(int isOut) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJKMoveCus);
+/* static */ int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
+    int ox = *cx;
+    int oy = *cy;
+    int x, y, pos;
+    int i;
+
+    x   = ox;
+    y   = TSLOOP(oy + my, 2);
+    pos = y * 5 + x;
+
+    if (mx != 0) {
+        pos = TSLOOP(pos + mx, 10);
+        x   = pos % 5;
+        y   = pos / 5;
+    }
+
+    if (!cobj[pos].bMsk) {
+        *cx = x;
+        *cy = y;
+        return 1;
+    }
+
+    if (mx != 0) {
+        if (mx > 0) {
+            mx = 1;
+        } else {
+            mx = -1;
+        }
+        for (i = 0; i < 10; i++) {
+            pos = TSLOOP(pos + mx, 10);
+            if (!cobj[pos].bMsk) {
+                x = pos % 5;
+                y = pos / 5;
+                *cx = x;
+                *cy = y;
+                return (ox != x || oy != y);
+            }
+        }
+        return 0;
+    }
+
+    for (i = x; i < 5; i++) {
+        pos = y * 5 + i;
+        if (!cobj[pos].bMsk) {
+            x = pos % 5;
+            y = pos / 5;
+            *cx = x;
+            *cy = y;
+            return 1;
+        }
+    }
+
+    for (i = x; i >= 0; i--) {
+        pos = y * 5 + i;
+        if (!cobj[pos].bMsk) {
+            x = pos % 5;
+            y = pos / 5;
+            *cx = x;
+            *cy = y;
+            return (ox != x || oy != y);
+        }
+    }
+
+    return 0;
+}
 
 /* static */ void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
     int bx, by;
