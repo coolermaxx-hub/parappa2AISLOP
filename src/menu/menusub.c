@@ -3582,7 +3582,203 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
+#else
+/* static */ int McUserCheckFlow(int type, int mode, int *bError) {
+    /* sdata 3997e0 */ extern int isRun_tmp_267; /* static int isRun; */
+    int flg;
+    #define isRun isRun_tmp_267
+
+    switch (subStatus) {
+    case 0:
+        UCheckSaveError = 0;
+        isRun = -2;
+        UCheckLoadError = 0;
+        if (type == 0) {
+            flg = P3MC_GetUserStart(mode, UserLst, 0);
+        } else {
+            flg = P3MC_GetUserStart(mode, UserLst, 1);
+        }
+        if (flg != 0) {
+            subStatus = 0x100;
+        } else {
+            subStatus = 0xf000;
+        }
+        break;
+    case 0x100:
+        isRun = -2;
+        ret = P3MC_GetUserCheck();
+        errorNo = 0;
+        if (ret < 0) {
+            if (ret == -1) {
+                isRun = -1;
+                subStatus = 0x102;
+            }
+        } else {
+            errorNo = ret;
+            subStatus = 0x150;
+        }
+        break;
+    case 0x102:
+        isRun = -1;
+        waitTime = 90;
+        TsMCAMes_SetMes(3);
+        if (errorNo == 0) {
+            subStatus = 0x103;
+        } else {
+            subStatus = 0x104;
+        }
+        break;
+    case 0x103:
+        isRun = -1;
+        waitTime--;
+        errorNo = P3MC_GetUserCheck();
+        if (errorNo >= 0) {
+            subStatus = 0x104;
+        }
+        break;
+    case 0x104:
+        isRun = -1;
+        if (--waitTime > 0) {
+            break;
+        }
+        if (type == 0 && errorNo == 0) {
+            if (P3MC_CheckBrokenUser(UserLst, mode) != 0) {
+                errorNo = 80;
+            }
+        }
+        subStatus = 0x150;
+        break;
+    case 0x150:
+        UCheckSaveError = 0;
+        UCheckLoadError = 0;
+        if ((type & 2) || type == 0) {
+            if (errorNo == 2) {
+                errorNo = 0;
+                UCheckLoadError = 4;
+            }
+            if (type == 0 && (errorNo == 3 || errorNo == 4 || errorNo == 5)) {
+                memset(UserLst, 0, sizeof(*UserLst));
+                errorNo = 0;
+            }
+        }
+        if ((type & 2) && errorNo == 4) {
+            UCheckLoadError = errorNo;
+            errorNo = 0;
+            if (P3MC_CheckIsNewSave(mode) == 0) {
+                if (mode == 2) {
+                    UCheckSaveError = 15;
+                } else {
+                    UCheckSaveError = 7;
+                }
+            }
+        }
+        if (errorNo == 0) {
+            if (type == 2) {
+                errorNo = UCheckSaveError;
+            }
+            if (type == 1) {
+                errorNo = UCheckLoadError;
+            }
+            if (type == 3) {
+                UCheckSaveError = 0;
+            }
+            if (errorNo == 0) {
+                subStatus = 0xf000;
+                break;
+            }
+        }
+        if (errorNo == 1) {
+            if (type == 0) {
+                errorNo = 70;
+            } else {
+                errorNo = 12;
+            }
+        }
+        if (errorNo == 3) {
+            subStatus = 0xe000;
+        } else {
+            subStatus = 0x160;
+        }
+        if (errorNo == 4 && mode == 2) {
+            errorNo = 40;
+        }
+        break;
+    case 0x160:
+        TsMCAMes_SetMes(-1);
+        if (isRun == -1 && bError != NULL) {
+            *bError = 1;
+        }
+        subStatus = 0x165;
+    case 0x165:
+        ret = P3MC_CheckChange();
+        if (ret == 3 || ret == 5) {
+            subStatus = 0xe000;
+            break;
+        }
+        if (McErrorMess(errorNo) < 0) {
+            break;
+        }
+        subStatus = 0x166;
+    case 0x166:
+        if (P3MC_CheckChange() >= 0) {
+            subStatus = 0xf0f0;
+        }
+        break;
+    case 0xe000:
+        ret = P3MC_CheckChange();
+        if (ret == 0 || ret == 5) {
+            if (isRun == -1 && bError != NULL) {
+                *bError = 2;
+            }
+            subStatus = 0;
+        } else {
+            if (errorNo == 3 && type == 2) {
+                if (mode == 2) {
+                    errorNo = 60;
+                } else {
+                    errorNo = 50;
+                }
+            }
+            if (McErrorMess(errorNo) >= 0) {
+                subStatus = 0xee10;
+            }
+        }
+        break;
+    case 0xee10:
+        subStatus = 0xf0f0;
+        break;
+    case 0xf0f0:
+        flg = 0xf002;
+        if (type == 0) {
+            if (errorNo == 70) {
+                memset(UserLst, 0, sizeof(*UserLst));
+                flg = 0xf000;
+            } else if (errorNo == 80) {
+                flg = 0xf000;
+            }
+        }
+        subStatus = flg;
+        break;
+    case 0xf000:
+        P3MC_GetUserEnd();
+        TsMCAMes_SetMes(-1);
+        return 0;
+    case 0xf001:
+        P3MC_GetUserEnd();
+        TsMCAMes_SetMes(-1);
+        return 1;
+    case 0xf002:
+        P3MC_GetUserEnd();
+        TsMCAMes_SetMes(-1);
+        return 2;
+    }
+
+    return isRun;
+    #undef isRun
+}
+#endif
 
 /* static */ int McUserSaveFlow(USER_DATA *puser) {
     switch (subStatus) {
