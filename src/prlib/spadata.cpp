@@ -327,7 +327,42 @@ INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1Zt8NaM
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4f);
+template <>
+NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) const {
+    if (this->unk2 & 0x1) {
+        float f13 = this->unkC[this->unk4 - 1];
+        if (arg0 < 0.0f || arg0 >= f13) {
+            arg0 = fmodf(arg0, f13);
+        }
+    }
+
+    u_int seg = this->SearchSegment(arg0);
+
+    if (seg == (u_int)-1) {
+        return (NaMATRIX<float, 4, 4>*)&this->unk10;
+    }
+
+    if (seg == this->unk4) {
+        if (this->unk0 == 0) {
+            return (NaMATRIX<float, 4, 4>*)&this->unk10 + ((seg - 1) * 3);
+        } else {
+            return (NaMATRIX<float, 4, 4>*)&this->unk10 + (seg - 1);
+        }
+    }
+
+    switch (this->unk0) {
+    case 0:
+        return this->GetSprineValue(seg, arg0);
+    case 1:
+        return this->GetLinearValue(seg, arg0);
+    case 2:
+        return (NaMATRIX<float, 4, 4>*)&this->unk10 + seg;
+    default:
+        break;
+    }
+
+    return NULL;
+}
 
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ABE0);
