@@ -340,7 +340,7 @@ void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Node__7SpmNodeP13PrModelObject);
-#else /* Need to match .sdata, stack order */
+#else /* Needs .sdata; copy constructor source register (a1 vs a0) and unk188 hoisting differ */
 void SpmNode::RenderContext2Node(PrModelObject *model) {
     if (!(this->m_flags & 0x2000)) {
         return;
@@ -364,63 +364,18 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
-            PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
-            if (packet2 != NULL) {
-                PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
-                uc->m_matrix = this->unk40;
+            PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
+            if (uc != NULL) {
+                uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
+                const NaMATRIX<float, 4, 4>& m = this->unk40;
+                uc->m_matrix = m;
                 uc->unk68 = prSpramData_tmp_render->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {
-                    NaMATRIX<float, 4, 4> tmp;
-                    asm volatile(
-                        "lqc2     $vf4,  0x0(%1)        \n\t"
-                        "lqc2     $vf5,  0x10(%1)       \n\t"
-                        "lqc2     $vf6,  0x20(%1)       \n\t"
-                        "lqc2     $vf7,  0x30(%1)       \n\t"
-                        "lqc2     $vf8,  0x0(%2)        \n\t"
-                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
-                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
-                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
-                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
-                        "sqc2     $vf9,  0x0(%0)        \n\t"
-                        "lqc2     $vf8,  0x10(%2)       \n\t"
-                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
-                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
-                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
-                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
-                        "sqc2     $vf9,  0x10(%0)       \n\t"
-                        "lqc2     $vf8,  0x20(%2)       \n\t"
-                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
-                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
-                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
-                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
-                        "sqc2     $vf9,  0x20(%0)       \n\t"
-                        "lqc2     $vf8,  0x30(%2)       \n\t"
-                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
-                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
-                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
-                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
-                        "sqc2     $vf9,  0x30(%0)       \n\t"
-                    : : "r"(&tmp), "r"(&prSpramData_tmp_render->m_view_projection_matrix), "r"(&this->unk40));
-
-                    NaMATRIX<float, 4, 4> mtx;
-                    mtx = tmp;
-
-                    NaVECTOR<float, 4> *v = (NaVECTOR<float, 4>*)&tmp;
-                    asm volatile(
-                        "lqc2     $vf4,  0x0(%1)        \n\t"
-                        "lqc2     $vf5,  0x10(%1)       \n\t"
-                        "lqc2     $vf6,  0x20(%1)       \n\t"
-                        "lqc2     $vf7,  0x30(%1)       \n\t"
-                        "lqc2     $vf8,  0x0(%2)        \n\t"
-                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
-                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
-                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
-                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
-                        "sqc2     $vf9,  0x0(%0)        \n\t"
-                    : : "r"(v), "r"(&mtx), "r"(&this->unk140));
-                    pos = *v;
+                    NaMATRIX<float, 4, 4> mtx = prSpramData_tmp_render->m_view_projection_matrix * m;
+                    NaVECTOR<float, 4> tmp;
+                    pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->unk140);
                 }
 
                 float z = pos[2] / pos[3];
