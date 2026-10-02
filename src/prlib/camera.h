@@ -36,7 +36,14 @@ public:
     PR_PADDING(unk8, 0xC);
     float unk14;
     char m_name[32];
-    PR_PADDING(unk38, 0x3c);
+    PR_PADDING(unk38, 0x8);
+    NaVECTOR<float, 4> unk40;
+    NaVECTOR<float, 4> unk50;
+    float unk60;
+    float unk64;
+    float unk68;
+    float unk6C;
+    float unk70;
     int *unk74;
     PrLinkedList<SpcFileHeader> m_list;
     PrObjectSet<SpcFileHeader> *m_obj_set;

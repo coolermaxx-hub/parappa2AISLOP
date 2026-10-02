@@ -265,7 +265,7 @@ INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_00149168);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_001491C0);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_00149270);
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf);
 
 /* prlib/spadata.cpp */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1ZfUif);

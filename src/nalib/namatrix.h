@@ -46,6 +46,8 @@ public:
         return lhs;
     }
 
+    static NaMATRIX<float, 4, 4> RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
+
     NaMATRIX<float, 4, 4>& operator=(const NaMATRIX<float, 4, 4>& rhs) {
         return Copy(*this, rhs);
     }

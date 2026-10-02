@@ -2613,3 +2613,4 @@ prSpramData_tmp_render                                                          
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 prSpramData_tmp_transition                                                          = 0x003998f0; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
+RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func
