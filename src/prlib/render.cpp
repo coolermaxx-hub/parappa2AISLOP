@@ -348,7 +348,28 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateClusterMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
+#else
+// NON_MATCHING: same per-node composition as CalculateCurrentMatrixAnimation plus the 0x1000 unkC0 step
+void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    SpmNode *node = m_nodes[0];
+    ComposeAnim_tmp(node, model, arg1);
+    if (node->m_flags & 0x1000) {
+        const NaMATRIX<float, 4, 4>& b = node->unk80;
+        node->unkC0 = node->unk40 * b;
+    }
+
+    for (u_int i = 1; i < m_node_num; i++) {
+        node = m_nodes[i];
+        ComposeAnim_tmp(node, model, node->unk164->unk40);
+        if (node->m_flags & 0x1000) {
+            const NaMATRIX<float, 4, 4>& b = node->unk80;
+            node->unkC0 = node->unk40 * b;
+        }
+    }
+}
+#endif
 
 void PrModelObject::RenderContext1Model() {
     m_spm_image->RenderContext1Model(this);
