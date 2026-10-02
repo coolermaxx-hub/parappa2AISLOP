@@ -6,6 +6,8 @@
 #include "camera.h"
 #include "microprogram.h"
 #include "model.h"
+#include "animation.h"
+#include "spadata.h"
 
 void SpmFileHeader::ChangePointer() {
     if (m_flags & 0x1) {
@@ -69,7 +71,25 @@ void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/setpointer", ChangePointer__13SpaFileHeader);
+void SpaFileHeader::ChangePointer() {
+    if (m_flags & 0x1) {
+        return;
+    }
+
+    unk38 = CalculatePointer<int>(unk38);
+    unk50 = unk54;
+
+    for (u_int i = 0; i < unk4C; i++) {
+        SpaNodeAnimation **p = &unk50[i];
+        if (*p != NULL) {
+            *p = CalculatePointer<SpaNodeAnimation>(*p);
+            (*p)->ChangePointer(this);
+            (*p)->Optimize();
+        }
+    }
+
+    m_flags |= 0x1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/setpointer", ChangePointer__16SpaNodeAnimationP13SpaFileHeader);
 
