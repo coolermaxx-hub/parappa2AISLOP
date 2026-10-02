@@ -8138,9 +8138,50 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
-#else /* Code matches; its short strings are still in asm/data/menu/menusub.sdata.s, so the .sdata has to move to C first */
+/* .sdata, in link order. Strings used only by functions that are still asm are named here. */
+extern MN_MDLTBL Mdl_StageMapH[], Mdl_StageMapA[], Mdl_StageMapY[], Mdl_CityHall[], Mdl_OptCounter[];
+extern MN_MDLTBL Mdl_RepCounter[], Mdl_StgCounterLoad[], Mdl_StgCounterSave[], Mdl_JimakuBak[];
+extern int Cam_StageMap[], Cam_CityHall[], Cam_Notdef[];
+extern u_char D_00395F10[], D_00395F20[];
+
+MN_SCENETBL Scene_StageMap       = { Mdl_StageMapH,      Cam_StageMap };
+MN_SCENETBL Scene_StageMapA      = { Mdl_StageMapA,      Cam_StageMap };
+MN_SCENETBL Scene_StageMapY      = { Mdl_StageMapY,      Cam_StageMap };
+MN_SCENETBL Scene_CityHall       = { Mdl_CityHall,       Cam_CityHall };
+MN_SCENETBL Scene_OptCounter     = { Mdl_OptCounter,     Cam_Notdef };
+MN_SCENETBL Scene_RepCounter     = { Mdl_RepCounter,     Cam_Notdef };
+MN_SCENETBL Scene_StgCounterLoad = { Mdl_StgCounterLoad, Cam_Notdef };
+MN_SCENETBL Scene_StgCounterSave = { Mdl_StgCounterSave, Cam_Notdef };
+MN_SCENETBL Scene_JimakuBak      = { Mdl_JimakuBak,      Cam_Notdef };
+u_char *UserName_InitialStr  = D_00395F10;
+u_char *UserName_InitialStr2 = D_00395F20;
+char D_00399750[] = "TEACHER";
+char D_00399758[] = "";
+u_char *UserName_RankingNoSave = (u_char*)D_00399758;
+char D_00399760[] = "DEC";
+char D_00399768[] = "NOV";
+char D_00399770[] = "OCT";
+char D_00399778[] = "SEP";
+char D_00399780[] = "AUG";
+char D_00399788[] = "JLY";
+char D_00399790[] = "JUN";
+char D_00399798[] = "MAY";
+char D_003997A0[] = "APR";
+char D_003997A8[] = "MAR";
+char D_003997B0[] = "FEB";
+char D_003997B8[] = "JAN";
+TSTEX_INF *tblTex = NULL;
+int UserList_Sw = 0;
+int OptionList_Sw = 0;
+int PopMenu_Sw = 0;
+int SaveMenu_Sw = 0;
+int JukeMenu_Sw = 0;
+int nTim = 0;
+char map0Msk_tmp_250[8] = { 1, 0, 0, 0, 1, 1, 1, 1 };
+int isRun_tmp_267 = -2;
+char D_003997E8[] = "%d";
+char D_003997F0[] = "%s";
+
 /* static */ void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
     u_char  buf[32];
     STRPOS *strpos;
@@ -8251,7 +8292,11 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
         }
     }
 }
-#endif
+
+/* .sdata after TsUser_PanelDraw's string literals */
+int _TexFunc = 0;
+HOSI_OBJ *HOSIObj = NULL;
+MAP_TIME MapTime = { 0 };
 
 /* static */ void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
     u_short       *pcode = pfw->curnchr;
@@ -9276,6 +9321,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
     spr->ofsy = ofy;
 }
 
+__asm__(".section .rodata\n.align 3\n.section .text");
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396168);
 
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396170);
