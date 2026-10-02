@@ -2703,3 +2703,5 @@ tmp_0_transform_vector = 0x00399900; // size:0x4
 tmp_0_transform_matrix = 0x00399904; // size:0x4
 vector_tmp_spadata_transform = 0x01C83270; // size:0x10
 matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
+scene_bbox_max_init = 0x00399918; // size:0x4
+scene_bbox_min_init = 0x0039991C; // size:0x4

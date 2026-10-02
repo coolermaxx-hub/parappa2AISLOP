@@ -72,6 +72,17 @@ public:
         return ret;
     }
 
+    NaVECTOR<float, 4> operator-(const NaVECTOR<float, 4>& rhs) const {
+        NaVECTOR<float, 4> ret;
+        asm volatile("
+            lqc2       $vf4, 0x0(%1)
+            lqc2       $vf5, 0x0(%2)
+            vsub.xyzw  $vf6, $vf4, $vf5
+            sqc2       $vf6, 0x0(%0)
+        " : : "r"(&ret), "r"(this), "r"(&rhs));
+        return ret;
+    }
+
     NaVECTOR<float, 4> operator/(const float& s) const {
         NaVECTOR<float, 4> ret;
         asm volatile("
