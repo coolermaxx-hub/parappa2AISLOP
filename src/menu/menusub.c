@@ -32,10 +32,10 @@
 /* data 18b738 */ extern short AnmCHallPara_Opt[]; /* static */
 /* data 18b740 */ extern short AnmCHallPara_RepRet[]; /* static */
 /* data 18b748 */ extern short AnmCHallPara_Rep[]; /* static */
-// /* data 18b750 */ short AnmCHallFphs_OptRet[0];
-// /* data 18b758 */ short AnmCHallFphs_Opt[0];
-// /* data 18b760 */ short AnmCHallFphs_RepRet[0];
-// /* data 18b768 */ short AnmCHallFphs_Rep[0];
+/* data 18b750 */ extern short AnmCHallFphs_OptRet[]; /* static */
+/* data 18b758 */ extern short AnmCHallFphs_Opt[]; /* static */
+/* data 18b760 */ extern short AnmCHallFphs_RepRet[]; /* static */
+/* data 18b768 */ extern short AnmCHallFphs_Rep[]; /* static */
 /* data 18b770 */ extern short AnmCHallChar_Log[]; /* static */
 /* data 18b780 */ extern short AnmCHallChar_Opt[]; /* static */
 /* data 18b790 */ extern short AnmCHallChar_Rep[]; /* static */
@@ -486,7 +486,70 @@ void TsBGMInit(void) {
     memset(&TsBGMState, 0, sizeof(TsBGMState));
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPlay);
+#else
+static void TsBGMPlay(int no, int time) {
+    BGMSTATE *pbgm = &TsBGMState;
+    int       i;
+    int       isCurPlay = FALSE;
+
+    if (no >= 11) {
+        return;
+    }
+
+    if (MenuVoiceBankSet(-1)) {
+        pbgm->wtNo = no;
+        pbgm->wtLoad = 1;
+        pbgm->wtTim = time;
+        pbgm->ctim = 0;
+        pbgm->state = 1;
+        pbgm->chgReq = 0;
+        pbgm->cstate = 0;
+        return;
+    }
+
+    if ((pbgm->state & 1) && pbgm->wtLoad == 0) {
+        isCurPlay = TRUE;
+        if (pbgm->sndno == no && pbgm->vol == 0x100) {
+            pbgm->sndno = no;
+            pbgm->vol = 0x100;
+            pbgm->state = 1;
+            pbgm->ttim0 = 0;
+            pbgm->ttim = 0;
+            tsBGMONEVol(pbgm->sndno, 0x100);
+            return;
+        }
+    }
+
+    pbgm->chgReq = 0;
+    pbgm->cstate = 0;
+    pbgm->ctim = 0;
+    pbgm->wtLoad = 0;
+
+    if (time > 0) {
+        pbgm->ttim0 = time;
+        pbgm->state = 7;
+        pbgm->sndno = no;
+        pbgm->vol = 0;
+    } else {
+        pbgm->vol = 0x100;
+        pbgm->state = 1;
+        pbgm->sndno = no;
+        pbgm->ttim0 = 0;
+    }
+    pbgm->ttim = 0;
+
+    if (!isCurPlay) {
+        MNSceneMusicFitTimerClear();
+        for (i = 0; i < 11; i++) {
+            tsBGMONEPlay(i);
+        }
+    }
+
+    tsBGMONEVol(pbgm->sndno, pbgm->vol);
+}
+#endif
 
 static void TsBGMStop(int time) {
     BGMSTATE *pbgm = &TsBGMState;
@@ -1961,7 +2024,42 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsMakeUserWork);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveSuccessProc);
+typedef struct {
+    char name[12];
+} USER_NAME;
+
+/* static */ void TsSaveSuccessProc(void) {
+    TsUserList_SetCurUserData(UserWork);
+
+    *(USER_NAME*)pP3GameState->pLog->name = *(USER_NAME*)UserWork->name;
+    pP3GameState->pLog->name[11] = 0;
+
+    if (UserWork->mode == 2) {
+        *(USER_NAME*)pP3GameState->pLog->name1 = *(USER_NAME*)UserWork->name1;
+        pP3GameState->pLog->name1[11] = 0;
+
+        if (UserWork->isVs == 1) {
+            *(USER_NAME*)pP3GameState->pLog->name2 = *(USER_NAME*)UserWork->name2;
+            pP3GameState->pLog->name2[11] = 0;
+        }
+    }
+
+    if (UserWork->mode == 1) {
+        TsSetRankingName(pCStageRank, pP3GameState->pLog->name);
+    } else {
+        TsSetRankingName(pCStageRank, pP3GameState->pLog->name1);
+    }
+
+    TsSetRanking2UData(UserWork, pCStageRank);
+
+    if (UserWork->mode == 1) {
+        CurFileInfo.logFileNo = UserWork->fileNo;
+        *(FILE_DATE*)CurFileInfo.logDate = *(FILE_DATE*)&UserWork->date_day;
+    } else {
+        CurFileInfo.repFileNo = UserWork->fileNo;
+        *(FILE_DATE*)CurFileInfo.repDate = *(FILE_DATE*)&UserWork->date_day;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpSave_Flow);
 
@@ -2533,7 +2631,66 @@ static void MpCityHallFPHSSoundMask(int flg) {
     TSSNDMASK_CHAN(3, flg);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpCityHallFPHSMove);
+/* static */ int MpCityHallFPHSMove(int pos, int fpos) {
+    short *ptr = NULL;
+    int    n;
+
+    if (pos == fpos) {
+        if (!TsAnimeWait_withKeySkip(0, &MNS_CityHall, 0, 6)) {
+            if (TSSND_CHANISSTOP(3)) {
+                TSSNDPLAY(0x8002);
+            }
+        }
+        return fpos;
+    }
+
+    if (TsAnimeWait_withKeySkip(0, &MNS_CityHall, 2, 6)) {
+        return fpos;
+    }
+
+    if (pos > 0 && fpos > 0) {
+        pos = 0;
+    }
+
+    switch (fpos) {
+    case 0:
+        switch (pos) {
+        case 1:
+            ptr = AnmCHallFphs_Opt;
+            break;
+        case 2:
+            ptr = AnmCHallFphs_Rep;
+            break;
+        }
+        break;
+    case 1:
+        if (pos == 0) {
+            ptr = AnmCHallFphs_OptRet;
+        }
+        break;
+    case 2:
+        if (pos == 0) {
+            ptr = AnmCHallFphs_RepRet;
+        }
+        break;
+    }
+
+    if (ptr == NULL) {
+        return fpos;
+    }
+
+    TSSNDPLAY(0x34);
+    while ((n = *ptr) != -1) {
+        if (n & 0x1000) {
+            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+        } else {
+            MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+        }
+        ptr++;
+    }
+
+    return pos;
+}
 
 static void MpCityHallFPHOK(int flg) {
     int n;
@@ -3943,7 +4100,58 @@ static void TsPatTexFnc(int flg) {
     _TexFunc = flg;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsPatSetPrm);
+/* static */ void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
+    TSTEX_INF *ptex = &tblTex[ppos->texNo];
+    int        x, y, w, h;
+    u_int      tw;
+
+    switch (_TexFunc) {
+    case 0:
+        PkTEX0_Add(pk, ptex->tex0);
+        break;
+    case 1:
+        PkTEX0_Add(pk, ptex->tex0 | ((u_long)2 << 35));
+        break;
+    case 2:
+        PkTEX0_Add(pk, ptex->tex0 | ((u_long)3 << 35));
+        break;
+    }
+
+    spr->ux = 0;
+    spr->uy = 0;
+    spr->uw = ptex->w;
+    spr->uh = ptex->h;
+
+    x = ox + ppos->x;
+    y = oy + ppos->y;
+    w = ppos->w;
+    if (w == 0) {
+        w = ptex->w;
+    } else if (w == -1) {
+        w = ptex->w;
+        spr->uy = 0;
+        spr->ux = w - 1;
+        spr->uw = 2 - w;
+        spr->uh = ptex->h;
+    }
+
+    h = ppos->h;
+    if (h == 0) {
+        h = ptex->h;
+    } else if (h == -1) {
+        h = ptex->h;
+        spr->ux = 0;
+        spr->uy = h - 1;
+        tw = ptex->w;
+        spr->uh = 2 - h;
+        spr->uw = tw;
+    }
+
+    spr->px = x;
+    spr->py = y;
+    spr->sw = w;
+    spr->sh = h;
+}
 
 static void TsPatPut(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
     _TsPatSetPrm(pk, spr, ppos, ox, oy);
@@ -3969,7 +4177,25 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPatPutRZoom);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPatPutMZoom);
+/* static */ void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
+    float zx   = spr->zx;
+    float zy   = spr->zy;
+    float ofsx = spr->ofsx;
+    float ofsy = spr->ofsy;
+
+    spr->zx = zx * Zrx;
+    spr->zy = zy * Zry;
+    _TsPatSetPrm(pk, spr, ppos, ox, oy);
+
+    spr->ofsx -= spr->sw * (spr->zx - zx) * 0.5f;
+    spr->ofsy -= spr->sh * (spr->zy - zy) * 0.5f;
+    TsSetCTransSpr(pk, spr, mx, my, Crx, Cry);
+
+    spr->zx = zx;
+    spr->zy = zy;
+    spr->ofsx = ofsx;
+    spr->ofsy = ofsy;
+}
 
 static void TsPatPutSwing(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, int mx, int my, float Crx) {
     _TsPatSetPrm(pk, spr, ppos, ox, oy);
