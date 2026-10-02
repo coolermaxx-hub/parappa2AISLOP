@@ -8,10 +8,6 @@
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/billboard", CreateBillboardMatrix__FRCt8NaMATRIX3Zfi4i4);
-#else
-/* Register allocation: the inverse temporary is copied through a0 instead of s0 */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx) {
@@ -35,7 +31,6 @@ NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx) {
     billboard = NaMATRIX<float, 4, 4>::RotateMatrix(1, angle);
     return billboard;
 }
-#endif
 
 void SpmNode::ApplyBillboardMatrix() {
     NaMATRIX<float, 4, 4>& m = this->unk40;

@@ -380,7 +380,7 @@ segments:
         - [0x299918, sdata, prlib/scene]
         - [0x299920, sdata, prlib/cluster]
         - [0x299928, sdata, prlib/shape]
-        - [0x299930, sdata, prlib/billboard]
+        - [0x299930, .sdata, prlib/billboard]
         - [0x299938, sdata, prlib/depthfield]
         - [0x29993C, .sdata, prlib/vram]
         - [0x299940, .sdata, prlib/random]
@@ -472,7 +472,7 @@ segments:
         - { type: .bss,  vram: 0x01c831c0, name: prlib/microprogram   }
         - { type: bss,   vram: 0x01c831e0, name: prlib/spram          }
         - { type: bss,   vram: 0x01c83260, name: prlib/spadata        }
-        - { type: bss,   vram: 0x01c83390, name: prlib/billboard      }
+        - { type: .bss,  vram: 0x01c83390, name: prlib/billboard      }
         - { type: bss,   vram: 0x01c833d0, name: prlib/depthfield     }
         - { type: .bss,  vram: 0x01c833e0, name: prlib/random         }
         - { type: bss,   vram: 0x01c83570, name: prlib/menderercreate }

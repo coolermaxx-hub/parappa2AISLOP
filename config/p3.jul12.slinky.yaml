@@ -801,7 +801,7 @@ segments:
       - { path: asm/data/prlib/scene.sdata.s.o }
       - { path: asm/data/prlib/cluster.sdata.s.o }
       - { path: asm/data/prlib/shape.sdata.s.o }
-      - { path: asm/data/prlib/billboard.sdata.s.o }
+      - { path: src/prlib/billboard.cpp.o }
       - { path: asm/data/prlib/depthfield.sdata.s.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
@@ -1027,7 +1027,7 @@ segments:
       - { path: src/prlib/scene.cpp.o }
       - { path: src/prlib/cluster.cpp.o }
       - { path: src/prlib/shape.cpp.o }
-      - { path: asm/data/prlib/billboard.bss.s.o }
+      - { path: src/prlib/billboard.cpp.o }
       - { path: asm/data/prlib/depthfield.bss.s.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
