@@ -1464,6 +1464,9 @@ mnmapMap1                           = 0x0018b0e0; // size:0x80
 mnmapMap                            = 0x0018b160; // size:0x240
 mnmapMap2                           = 0x0018b3a0; // size:0x280
 mnmapCityHall                       = 0x0018b670; // size:0xc0
+AnmCHallChar_Log                    = 0x0018b770; // size:0x10
+AnmCHallChar_Opt                    = 0x0018b780; // size:0x10
+AnmCHallChar_Rep                    = 0x0018b790; // size:0x10
 MapBgmTbl                           = 0x0018b880; // size:0x84
 TsVoiceTbl                          = 0x0018b908; // size:0x1c0
 VSNDSEQ_Tbl                         = 0x0018baf8; // size:0x18
@@ -1482,6 +1485,7 @@ MNS_StageMap                        = 0x0018cc38; // size:0x1154
 
 D_00395F20                          = 0x00395f20; // type:asciz
 
+UserName_InitialStr                 = 0x00399748;
 tblTex                              = 0x003997bc;
 UserList_Sw                         = 0x003997c0;
 OptionList_Sw                       = 0x003997c4;

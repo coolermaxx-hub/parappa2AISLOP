@@ -36,10 +36,10 @@
 // /* data 18b758 */ short AnmCHallFphs_Opt[0];
 // /* data 18b760 */ short AnmCHallFphs_RepRet[0];
 // /* data 18b768 */ short AnmCHallFphs_Rep[0];
-// /* data 18b770 */ short AnmCHallChar_Log[0];
-// /* data 18b780 */ short AnmCHallChar_Opt[0];
-// /* data 18b790 */ short AnmCHallChar_Rep[0];
-// /* sdata 399748 */ static u_char *UserName_InitialStr;
+/* data 18b770 */ extern short AnmCHallChar_Log[]; /* static */
+/* data 18b780 */ extern short AnmCHallChar_Opt[]; /* static */
+/* data 18b790 */ extern short AnmCHallChar_Rep[]; /* static */
+/* sdata 399748 */ extern u_char *UserName_InitialStr; /* static */
 // /* sdata 39974c */ static u_char *UserName_InitialStr2;
 // /* data 18b7a0 */ static u_char UserName_AsciiSetB[41];
 // /* data 18b7d0 */ static u_char UserName_AsciiSetS[41];
@@ -287,6 +287,10 @@ static void  TsUserList_SetCurDispUserData(USER_DATA *psrc);
 static void  TsUserList_SetType(USERLISTTYPE_TABLE *ptbl, int mode, int curTag);
 static int   TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno);
 /* static */ int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
+
+typedef struct {
+    u_int date[2];
+} FILE_DATE;
 /* static */ int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
 /* static */ void  TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  NameSpaceCut(u_char *dst, u_char *src);
@@ -2457,7 +2461,32 @@ static void MpCityHallFPHOK(int flg) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpCityHallCharPosSet);
+/* static */ void MpCityHallCharPosSet(int pos) {
+    short *ptr = NULL;
+    u_int  AnmBit;
+    int    n;
+
+    switch (pos) {
+    case 0:
+        ptr = AnmCHallChar_Log;
+        break;
+    case 1:
+        ptr = AnmCHallChar_Opt;
+        break;
+    case 2:
+        ptr = AnmCHallChar_Rep;
+        break;
+    }
+
+    AnmBit = 0x80000000;
+    while ((n = *ptr) != -1) {
+        AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+        ptr++;
+    }
+
+    MNScene_SetAnimeBankEnd(&MNS_CityHall, AnmBit);
+    TSSNDPLAY(0x8002);
+}
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpPopMenu_Flow);
@@ -3109,7 +3138,40 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsJukeObjAnime2);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJKMoveCus);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJKSetPadArrow);
+/* static */ void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
+    int bx, by;
+    int flg;
+    int x = sel % 5;
+    int y = sel / 5;
+
+    flg = 0;
+
+    bx = x;
+    by = y;
+    if (_TsJKMoveCus(&bx, &by, -1, 0, cobj)) {
+        flg |= 1;
+    }
+
+    bx = x;
+    by = y;
+    if (_TsJKMoveCus(&bx, &by, 1, 0, cobj)) {
+        flg |= 2;
+    }
+
+    bx = x;
+    by = y;
+    if (_TsJKMoveCus(&bx, &by, 0, -1, cobj)) {
+        flg |= 4;
+    }
+
+    bx = x;
+    by = y;
+    if (_TsJKMoveCus(&bx, &by, 0, 1, cobj)) {
+        flg |= 8;
+    }
+
+    MENUSubt_PadFontArrowSet(flg);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsJukeMenu_Flow);
 
@@ -3231,7 +3293,37 @@ static void TsUserList_SetCurDispUserData(USER_DATA *psrc) {
     *(pfw->pusrdspWk->pUserDisp + (pfw->curuser + pfw->curPageTop)) = *psrc;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurFileNoCusor);
+/* static */ void TsUserList_SetCurFileNoCusor(int fileNo, u_int *fDate) {
+    USERLIST_MENU *pfw = &UserListMenu;
+    USER_DATA     *puser;
+    int            i;
+
+    if (fileNo < 0 || pfw->pusrlst == NULL) {
+        return;
+    }
+
+    for (i = 0; i < pfw->userMax; i++) {
+        puser = pfw->pusrlst->pUserTbl[i];
+        if (puser->fileNo == fileNo && *(u_int*)&puser->date_day == fDate[0] && *(u_int*)&puser->date_pad == fDate[1]) {
+            break;
+        }
+    }
+
+    if (i >= pfw->userMax) {
+        return;
+    }
+
+    pfw->curuser = 2;
+    pfw->curPageTop = i - 2;
+    if (i + 3 >= pfw->userMax) {
+        pfw->curPageTop = pfw->userMax - 5;
+        pfw->curuser = i - pfw->curPageTop;
+    }
+    if (pfw->curPageTop < 0) {
+        pfw->curuser += pfw->curPageTop;
+        pfw->curPageTop = 0;
+    }
+}
 
 static void TsUserList_SetType(USERLISTTYPE_TABLE *ptbl, int mode, int curTag) {
     USERLIST_MENU *pfw = &UserListMenu;
@@ -3268,7 +3360,40 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return flg;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
+#else
+/* static */ int TsUserList_SetCurTag(USERLIST_MENU *pfw, int no) {
+    USERLIST_TYPE *ptbl;
+    int            fileNo;
+
+    TsUserList_TagChangeAble(pfw, &no);
+    TsUserList_Flow(2, 0, 0);
+
+    fileNo = -1;
+    ptbl = &UserListTbl[pfw->ptypttbl->typeNo[no]];
+
+    pfw->isSave = ptbl->isSave;
+    pfw->scene = ptbl->pScene;
+    pfw->dataMode = ptbl->dataMode;
+    pfw->cmpMesTbl = ptbl->cmpMesTbl;
+    pfw->dispColor = ptbl->dispColor;
+    pfw->nTag = no;
+
+    if (pfw->dataMode == 1) {
+        *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.logDate;
+        fileNo = CurFileInfo.logFileNo;
+    } else {
+        *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.repDate;
+        if (!pfw->isSave) {
+            fileNo = CurFileInfo.repFileNo;
+        }
+    }
+
+    pfw->curFileNo = fileNo;
+    return 0;
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
 
@@ -3307,7 +3432,45 @@ INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396120);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_SetName);
+/* static */ void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
+    u_short       *pcode = pfw->curnchr;
+    int            i, l, j;
+    USERNAME_CSET *cset;
+    u_char        *pchrlst;
+
+    if (name == NULL || *name == '\0') {
+        name = UserName_InitialStr;
+    }
+
+    for (i = 0; i < PR_ARRAYSIZE(pfw->curnchr); i++, pcode++) {
+        if (*name == '\0') {
+            *pcode = 0x27;
+            continue;
+        }
+
+        cset = UserName_CharSet;
+        for (j = 0; j < 2; j++, cset++) {
+            pchrlst = cset->ptbl;
+            for (l = 0; l < cset->len; l++, pchrlst++) {
+                if (*name == *pchrlst) {
+                    break;
+                }
+            }
+
+            if (l < cset->len) {
+                break;
+            }
+        }
+
+        if (j >= 2) {
+            *pcode = 0x27;
+        } else {
+            *pcode = l | (j << 12);
+        }
+
+        name++;
+    }
+}
 
 static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     u_short *pcode = pfw->curnchr;
