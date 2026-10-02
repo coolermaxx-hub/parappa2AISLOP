@@ -85,6 +85,8 @@ int* SpaTrack<int>::GetValue(float arg0) const {
 template <> NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const;
 template <> float* SpaTrack<float>::GetValue(float arg0) const;
 template <> NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) const;
+template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
+template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
 
 /* Template instances emitted later in this TU */
 NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("func_0014AFE0");
