@@ -1740,6 +1740,10 @@ typedef struct {
     u_char name[8];
 } RANK_NAME;
 
+typedef struct {
+    char name[12];
+} USER_NAME;
+
 /* static */ void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
     int             i, k, l;
     P3MC_STAGERANK *pRank = pRankTop;
@@ -1769,9 +1773,101 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetSaveData);
+/* static */ void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
+    P3LOG_VAL      *plog;
+    P3MC_STAGERANK *pRank;
+    int             nStage;
+    P3MC_RANKSCORE *pScore;
+    int             vsLev;
 
+    if (pDataW->pMemTop != NULL) {
+        switch (mode) {
+        case 1:
+            pP3GameState->pLog->game_status = *pP3GameState->pGameStatus;
+            memcpy(pDataW->pData, pP3GameState->pLog, sizeof(P3LOG_VAL));
+
+            plog = (P3LOG_VAL*)pDataW->pData;
+            *(USER_NAME*)plog->name = *(USER_NAME*)puser->name;
+            plog->name[11] = '\0';
+
+            TsSetRanking2UData(&pDataW->pHead->user, pCStageRank);
+            TsSetRankingName(pDataW->pHead->user.stageRank, plog->name);
+            break;
+        case 2:
+            memcpy(pDataW->pData, pP3GameState->pReplayArea, sizeof(MC_REP_STR));
+
+            pRank = pDataW->pHead->user.stageRank;
+            nStage = puser->stageNo - 1;
+            memset(pRank, 0, sizeof(pDataW->pHead->user.stageRank));
+
+            if (nStage >= 0 && nStage < 8) {
+                switch (puser->isVs) {
+                case 2:
+                    vsLev = puser->vsLev;
+                    pRank[nStage].nVplay[vsLev] = 1;
+                    pScore = pRank[nStage].vplay[vsLev];
+                    *pScore = CurRankScore;
+                    break;
+                case 0:
+                    pRank[nStage].nSplay = 1;
+                    pScore = pRank[nStage].splay;
+                    *pScore = CurRankScore;
+                    break;
+                }
+            }
+
+            TsSetRankingName(pRank, puser->name1);
+            break;
+        }
+    }
+}
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRestoreSaveData);
+#else
+/* static */ void TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode) {
+    int i;
+
+    if (pDataW->pMemTop != NULL) {
+        switch (mode) {
+        case 1:
+            memcpy(UserWork, &pDataW->pHead->user, sizeof(USER_DATA));
+            memcpy(pP3GameState->pLog, pDataW->pData, sizeof(P3LOG_VAL));
+            *pP3GameState->pGameStatus = pP3GameState->pLog->game_status;
+            CurFileInfo.logFileNo = pDataW->pHead->user.fileNo;
+
+            for (i = 0; i < 8; i++) {
+                memcpy(&pCStageRank[i], &UserWork->stageRank[i], sizeof(P3MC_STAGERANK));
+            }
+            break;
+        case 2:
+            memcpy(pP3GameState->pReplayArea, pDataW->pData, sizeof(MC_REP_STR));
+
+            switch (pDataW->pHead->user.isVs) {
+            case 0:
+                pP3GameState->nMode = 0;
+                pP3GameState->vsLev = 0;
+                break;
+            case 1:
+                pP3GameState->nMode = 1;
+                pP3GameState->vsLev = 0;
+                break;
+            case 2:
+                pP3GameState->nMode = 2;
+                pP3GameState->vsLev = pDataW->pHead->user.vsLev;
+                if (pP3GameState->vsLev >= 4) {
+                    pP3GameState->vsLev = 3;
+                }
+                break;
+            }
+
+            pP3GameState->nStage = pDataW->pHead->user.stageNo;
+            CurFileInfo.repFileNo = pDataW->pHead->user.fileNo;
+            break;
+        }
+    }
+}
+#endif
 
 int DateChgInt(u_int n) {
     /* Convert BCD to decimal */
@@ -1856,11 +1952,12 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
     }
 
     if (i < RankMAX) {
-        for (l = RankMAX - 1; i < l; l--) {
-            pScore[l] = pScore[l - 1];
+        l = i;
+        for (i = RankMAX - 1; l < i; i--) {
+            pScore[i] = pScore[i - 1];
         }
-        pScore[i] = CurRankScore;
-        return i;
+        pScore[l] = CurRankScore;
+        return l;
     }
 
     return -1;
@@ -2400,10 +2497,6 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
     return 0;
 }
-
-typedef struct {
-    char name[12];
-} USER_NAME;
 
 /* static */ void TsMakeUserWork(int mode) {
     int stage = pP3GameState->nStage;
