@@ -57,7 +57,9 @@ public:
 public:
     PR_PADDING(unk0, 0x40);
     NaMATRIX<float, 4, 4> unk40;
-    PR_PADDING(unk80, 0xc0);
+    PR_PADDING(unk80, 0x40);
+    NaMATRIX<float, 4, 4> unkC0;
+    PR_PADDING(unk100, 0x40);
     NaVECTOR<float, 4> unk140;
     int unk150;
     u_int m_flags;
@@ -72,7 +74,8 @@ public:
     float unk180;
     float unk184;
     u_int unk188;
-    PR_PADDING(unk18C, 0xc);
+    PR_PADDING(unk18C, 0x8);
+    u_int unk194;
     int *unk198;
     PR_PADDING(unk19C, 0x4);
     int *unk1A0;
@@ -129,7 +132,7 @@ public:
     int unk78;
 };
 
-class SpmClusterGeometryNode {
+class SpmClusterGeometryNode : public SpmNode {
 public:
     void RenderClusterNode(PrModelObject *model);
 };
