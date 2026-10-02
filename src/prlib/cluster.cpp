@@ -7,11 +7,12 @@
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/cluster", RenderClusterNode__22SpmClusterGeometryNodeP13PrModelObject);
 #else
-/* Register allocation and loop-invariant hoisting differences. */
+/* Register allocation: the second weight loop swaps a0/a1 and t3/t4 */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
-    u_int vertex = PR_UNCACHEDACCEL(this->unk17C);
+    u_int vertex = (u_int)this->unk17C;
+    vertex |= 0x30000000;
     SpmNode **nodes = this->unk158->m_nodes;
     u_int num = this->unk194;
     int *weight = this->unk1B4;
@@ -48,7 +49,8 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
 
         u_int index_num = *index++;
         for (u_int j = 0; j < index_num; j++) {
-            asm volatile("sqc2 $vf17, 0x0(%0)" : : "r"((*index++ << 4) + vertex));
+            u_int idx = *index++;
+            asm volatile("sqc2 $vf17, 0x0(%0)" : : "r"((idx << 4) + vertex));
         }
     }
 
