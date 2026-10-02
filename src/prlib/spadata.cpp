@@ -286,7 +286,42 @@ float* SpaTrack<float>::GetLinearValue(u_int seg, float arg1) const {
     return &value_tmp_spadata_linear_float;
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zff);
+template <>
+float* SpaTrack<float>::GetValue(float arg0) const {
+    if (this->unk2 & 0x1) {
+        float f13 = this->unkC[this->unk4 - 1];
+        if (arg0 < 0.0f || arg0 >= f13) {
+            arg0 = fmodf(arg0, f13);
+        }
+    }
+
+    u_int seg = this->SearchSegment(arg0);
+
+    if (seg == (u_int)-1) {
+        return (float*)&this->unk10;
+    }
+
+    if (seg == this->unk4) {
+        if (this->unk0 == 0) {
+            return (float*)&this->unk10 + ((seg - 1) * 3);
+        } else {
+            return (float*)&this->unkC + seg;
+        }
+    }
+
+    switch (this->unk0) {
+    case 0:
+        return this->GetSprineValue(seg, arg0);
+    case 1:
+        return this->GetLinearValue(seg, arg0);
+    case 2:
+        return (float*)&this->unk10 + seg;
+    default:
+        break;
+    }
+
+    return NULL;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
 
