@@ -47,7 +47,7 @@
 /* data 18b800 */ extern USERNAME_CSET UserName_CharSet[];
 /* data 18b810 */ extern u_char *TeachersName_Tbl[]; /* static */
 /* sdata 39975c */ extern u_char *UserName_RankingNoSave; /* static */
-// /* data 18b830 */ static char *_MONTH_STR[0];
+/* data 18b830 */ extern char *_MONTH_STR[]; /* static */
 /* data 18b880 */ extern MAPBGM MapBgmTbl[]; /* static */
 /* data 18b908 */ extern TSVOICE_TBL TsVoiceTbl[]; /* static */
 // /* data 18bac8 */ static u_short FussenWAIT0[0];
@@ -67,15 +67,15 @@
 // /* data 18bd78 */ static PATPOS CSSLASH_MARK;
 // /* data 18bd88 */ static STRPOS PAGENO_StrCOD[0];
 /* data 18bd98 */ extern PTPOS CellCusPos[]; /* static */
-// /* data 18bdb8 */ static STRPOS LOGS_StrCOD[0];
-// /* data 18bde0 */ static STRPOS LOGL_StrCOD[0];
-// /* data 18be08 */ static STRPOS REPLAY_StrCOD[0];
-// /* data 18be38 */ static STRPOS VSREPLAY_StrCOD[0];
-// /* data 18be78 */ static PATPOS VS_MARK;
-// /* data 18be88 */ static PATPOS VS_WINMARK1;
-// /* data 18be98 */ static PATPOS VS_WINMARK2;
-// /* data 18bea8 */ static PATPOS LG_NEWDATA_MARK;
-// /* data 18beb8 */ static PATPOS RP_NEWDATA_MARK;
+/* data 18bdb8 */ extern STRPOS LOGS_StrCOD[]; /* static */
+/* data 18bde0 */ extern STRPOS LOGL_StrCOD[]; /* static */
+/* data 18be08 */ extern STRPOS REPLAY_StrCOD[]; /* static */
+/* data 18be38 */ extern STRPOS VSREPLAY_StrCOD[]; /* static */
+/* data 18be78 */ extern PATPOS VS_MARK; /* static */
+/* data 18be88 */ extern PATPOS VS_WINMARK1; /* static */
+/* data 18be98 */ extern PATPOS VS_WINMARK2; /* static */
+/* data 18bea8 */ extern PATPOS LG_NEWDATA_MARK; /* static */
+/* data 18beb8 */ extern PATPOS RP_NEWDATA_MARK; /* static */
 /* data 18bec8 */ extern PATPOS STGCNameBox[]; /* static */
 /* data 18bf08 */ extern PATPOS STGCNameBoxOK; /* static */
 /* data 18bf18 */ extern PATPOS VS1PNameBox[]; /* static */
@@ -7594,7 +7594,119 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396120);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
+#else /* Needs .sdata match; two argument setups are also scheduled differently */
+/* static */ void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
+    u_char  buf[32];
+    STRPOS *strpos;
+    STRPOS *ps;
+    u_int   m;
+
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+    PkALPHA_Add(pk, 0x44);
+
+    if (user == NULL || user->flg == 0) {
+        spr->rgba0 = 0x80808080;
+        TsPatPut(pk, spr, (isLog >= 0) ? ((isLog < 2) ? &LG_NEWDATA_MARK : &RP_NEWDATA_MARK) : &RP_NEWDATA_MARK, px, py);
+        return;
+    }
+
+    if (user->mode == 2) {
+        if (user->isVs) {
+            spr->rgba0 = 0x80808080;
+            TsPatPut(pk, spr, &VS_MARK, px, py);
+
+            switch (user->winner) {
+            case 0:
+                TsPatPut(pk, spr, &VS_WINMARK1, px, py);
+                break;
+            case 1:
+                TsPatPut(pk, spr, &VS_WINMARK2, px, py);
+                break;
+            case 2:
+                break;
+            }
+
+            strpos = VSREPLAY_StrCOD;
+        } else {
+            strpos = REPLAY_StrCOD;
+        }
+
+        sprintf(buf, "STAGE%d", user->stageNo);
+    } else {
+        if (isLog) {
+            strpos = LOGL_StrCOD;
+        } else {
+            strpos = LOGS_StrCOD;
+        }
+
+        if (user->roundNo) {
+            sprintf(buf, "CIRCUIT%d", (user->roundNo + 1 > 99) ? 99 : user->roundNo + 1);
+        } else {
+            sprintf(buf, "STAGE%d", user->stageNo);
+        }
+    }
+
+    ps = strpos;
+    if (user->flg == 2) {
+        strcpy(buf, " STAGE?");
+    }
+    MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+
+    if (user->flg != 2 && user->date_year != 0) {
+        m = user->date_month;
+        if (m >= 19) {
+            m = 18;
+        }
+        sprintf(buf, "%02x.%s.%04x", user->date_day, _MONTH_STR[m], user->date_year);
+        ps = &strpos[1];
+        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+
+        sprintf(buf, "%02x:%02x", user->date_hour, user->date_minute);
+        ps = &strpos[2];
+        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+    } else {
+        ps = &strpos[1];
+        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, "--.---.----");
+        ps = &strpos[2];
+        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, "--:--");
+    }
+
+    sprintf(buf, "%02d", user->fileNo + 1);
+    ps = &strpos[3];
+    MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+
+    ps = &strpos[4];
+    if (!(pflg & 2)) {
+        if (user->mode == 1) {
+            NameSpaceCut(buf, user->name);
+        } else {
+            NameSpaceCut(buf, user->name1);
+        }
+        MENUFontPutL(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+    }
+
+    if (user->mode == 2) {
+        sprintf(buf, "%06d", user->score);
+        ps = &strpos[5];
+        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+
+        if (user->isVs) {
+            ps = &strpos[6];
+            if (!(pflg & 4)) {
+                NameSpaceCut(buf, user->name2);
+                MENUFontPutL(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+            }
+
+            sprintf(buf, "%06d", user->score2);
+            ps = &strpos[7];
+            MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+        }
+    }
+}
+#endif
 
 /* static */ void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
     u_short       *pcode = pfw->curnchr;
