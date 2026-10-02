@@ -1544,6 +1544,7 @@ subStatus                           = 0x00399b4c;
 ret                                 = 0x00399b50;
 errorNo                             = 0x00399b54;
 waitTime                            = 0x00399b58;
+pGameData                           = 0x00399b5c;
 
 UserName_CharSet                    = 0x0018b800; // size:0x10
 TeachersName_Tbl                    = 0x0018b810; // size:0x20

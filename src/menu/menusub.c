@@ -173,7 +173,7 @@
 /* sbss 399b50 */ extern int ret; /* static */
 /* sbss 399b54 */ extern int errorNo; /* static */
 /* sbss 399b58 */ extern int waitTime; /* static */
-// /* sbss 399b5c */ static MCRWDATA_HDL *pGameData;
+/* sbss 399b5c */ extern MCRWDATA_HDL *pGameData; /* static */
 /* bss 1c7f790 */ extern MCMES_WORK MCMesWork; /* static */
 /* bss 1c7f7c8 */ extern CMPMES_WORK CmpMesWork; /* static */
 /* bss 1c7f7e0 */ extern RANKLIST RankLst[]; /* static */
@@ -3586,7 +3586,132 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserSaveFlow);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserLoadFlow);
+/* static */ int McUserLoadFlow(int fileNo, int mode, int bBroken) {
+    switch (subStatus) {
+    case 0:
+        ret = P3MC_CheckChange();
+        if (ret < 0) {
+            break;
+        }
+
+        pGameData = P3MC_MakeDataWork(_P3DATA_SIZE(mode), NULL);
+        if (ret != 0) {
+            subStatus = 0x2010;
+            break;
+        }
+        if (bBroken) {
+            ret = 6;
+            subStatus = 0x2010;
+            break;
+        }
+        subStatus = 0x100;
+    case 0x100:
+        waitTime = 90;
+        TsMCAMes_SetMes(7);
+        P3MC_LoadUser(mode, fileNo, pGameData, 0);
+        subStatus = 0x2000;
+        break;
+    case 0x2000:
+        waitTime--;
+        ret = P3MC_LoadCheck();
+        if (ret >= 0) {
+            subStatus = 0x2002;
+        }
+        break;
+    case 0x2002:
+        if (--waitTime > 0) {
+            break;
+        }
+        subStatus = 0x2010;
+    case 0x2010:
+        if (ret != 0) {
+            errorNo = 0;
+            switch (ret) {
+            case 1:
+            case 2:
+            case 4:
+                errorNo = 2;
+                break;
+            default:
+                errorNo = ret;
+                break;
+            }
+            if (errorNo != 0) {
+                subStatus = 0x2200;
+            }
+            break;
+        }
+        subStatus = 0x2100;
+    case 0x2100:
+        TsRestoreSaveData(pGameData, mode);
+        subStatus = 0x2f00;
+        TsMCAMes_SetMes(-1);
+    case 0x2f00:
+        if (McErrorMess(100) >= 0) {
+            subStatus = 0xf000;
+        }
+        break;
+    case 0x2200:
+        TsMCAMes_SetMes(-1);
+        subStatus = 0x2201;
+    case 0x2201:
+        ret = P3MC_CheckChange();
+        if (ret == 3 || ret == 5) {
+            subStatus = 0xe000;
+            break;
+        }
+        if (McErrorMess(errorNo) < 0) {
+            break;
+        }
+        subStatus = 0x2202;
+    case 0x2202:
+        if (P3MC_CheckChange() < 0) {
+            break;
+        }
+        if (errorNo == 6 && bBroken) {
+            subStatus = 0xf001;
+        } else {
+            subStatus = 0xf002;
+        }
+        break;
+    case 0xe000:
+        ret = P3MC_CheckChange();
+        if (ret == 0 || ret == 5) {
+            subStatus = 0xf004;
+        } else if (McErrorMess(errorNo) >= 0) {
+            subStatus = 0xee10;
+        }
+        break;
+    case 0xee10:
+        if (P3MC_CheckChange() < 0) {
+            break;
+        }
+        TsMCAMes_SetMes(-1);
+        if (errorNo == 6 && bBroken) {
+            subStatus = 0xf001;
+        } else {
+            subStatus = 0xf002;
+        }
+        break;
+    case 0xf000:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 0;
+    case 0xf001:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 1;
+    case 0xf002:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 2;
+    case 0xf004:
+        P3MC_DeleteDataWork(pGameData);
+        return 4;
+    }
+
+    return -1;
+}
 
 static void TsMCAMes_Init(void) {
     memset(&MCMesWork, 0, sizeof(MCMesWork));
