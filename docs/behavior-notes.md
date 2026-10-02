@@ -42,6 +42,20 @@ from the audio stream. Judgement granularity is therefore one frame at best.
 The next step is to trace how a tap gets its timestamp (`onKeyTime` near
 `scrctrl.c:1879`).
 
+**Tap timestamp (checked in source, 2026-10-02).** `ScrCtrlIndvJob()` computes
+`ctime_next` from the line's `lineTime` (the clock value for this frame) and
+`indvTime = ctime_next - current_time`. It calls `tapEventCheck(sindv, ctime_next, indvTime, i)`
+(`src/main/scrctrl.c`, around line 3979). For a human pad, `tapEventCheck` reads
+`pad[].shot` / `pad[].one` (this frame's edge-detected buttons, produced by
+`GPadRead` in `osFunc`) and records the press with `mccReqTapSet(Ttime, ...)`, so
+**a press is stamped with the frame's clock value, not its real press time.**
+Every press within one frame gets the same timestamp. Replays store these
+frame-quantised times (`mccReqTapGet`), and the computer player is driven from
+a precomputed list compared against the same clock. So a faithful port can
+reproduce judgement from `{clock per frame, per-frame pad edges}`.
+Still unread: how `lineTime` is advanced from `GlobalTimeGet` (`ScrTimeRenew`)
+and the judgement window math itself.
+
 **RNG (checked).** `osFunc()` calls `rand()` once every frame and discards the
 result, so the RNG state depends on how many frames have elapsed. Netplay or
 replays must reproduce the frame count, not just the inputs.
