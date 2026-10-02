@@ -82,7 +82,78 @@ int* SpaTrack<int>::GetValue(float arg0) const {
     }
 }
 
+template <> NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const;
+template <> float* SpaTrack<float>::GetValue(float arg0) const;
+template <> NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) const;
+
+/* Template instances emitted later in this TU */
+NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("func_0014AFE0");
+NaMATRIX<float, 4, 4> TransMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("func_0014ABE0");
+NaMATRIX<float, 4, 4>& SetMatrix_tmp_spadata(NaMATRIX<float, 4, 4> *m,
+    const float& m00, const float& m01, const float& m02, const float& m03,
+    const float& m10, const float& m11, const float& m12, const float& m13,
+    const float& m20, const float& m21, const float& m22, const float& m23,
+    const float& m30, const float& m31, const float& m32, const float& m33) asm("func_00147CE0");
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetMatrix__C12SpaTransformf);
+#else /* Scheduling: two instructions swapped in case 7 */
+NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
+    /* FIXME: static locals; see the note in GetSprineValue */
+    extern NaVECTOR<float, 4> vector_tmp_spadata_transform;
+    extern int tmp_0_transform_vector;
+    if (tmp_0_transform_vector == 0) {
+        tmp_0_transform_vector = 1;
+    }
+
+    extern NaMATRIX<float, 4, 4> matrix_tmp_spadata_transform;
+    extern int tmp_0_transform_matrix;
+    if (tmp_0_transform_matrix == 0) {
+        new (&matrix_tmp_spadata_transform) NaMATRIX<float, 4, 4>;
+        tmp_0_transform_matrix = 1;
+    }
+
+    switch (this->unk0) {
+    case 0:
+        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
+        ((float*)&vector_tmp_spadata_transform)[3] = 1.0f;
+        matrix_tmp_spadata_transform = ScaleMatrix_tmp_spadata(vector_tmp_spadata_transform);
+        return &matrix_tmp_spadata_transform;
+    case 1: {
+        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
+        float angle = vector_tmp_spadata_transform[3];
+        ((float*)&vector_tmp_spadata_transform)[3] = 1.0f;
+        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::RotateMatrix(vector_tmp_spadata_transform, angle);
+        return &matrix_tmp_spadata_transform;
+    }
+    case 2:
+    case 3:
+    case 4: {
+        float angle = *((SpaTrack<float>*)&this->unk10)->GetValue(arg0);
+        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::RotateMatrix(this->unk0 - 2, angle);
+        return &matrix_tmp_spadata_transform;
+    }
+    case 5:
+        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
+        matrix_tmp_spadata_transform = TransMatrix_tmp_spadata(vector_tmp_spadata_transform);
+        return &matrix_tmp_spadata_transform;
+    case 6:
+        return ((SpaTrack<NaMATRIX<float, 4, 4> >*)&this->unk10)->GetValue(arg0);
+    case 7: {
+        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
+        NaMATRIX<float, 4, 4> *ret = &matrix_tmp_spadata_transform;
+        SetMatrix_tmp_spadata(ret,
+            1.0f, 0.0f, 0.0f, 0.0f,
+            ((float*)&vector_tmp_spadata_transform)[0], 1.0f, 0.0f, 0.0f,
+            ((float*)&vector_tmp_spadata_transform)[1], ((float*)&vector_tmp_spadata_transform)[2], 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f);
+        return ret;
+    }
+    default:
+        return &NaMATRIX<float, 4, 4>::IDENT;
+    }
+}
+#endif
 
 NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
     /* FIXME: static local; see the note in GetSprineValue */

@@ -2699,3 +2699,7 @@ noodlePhase = 0x01C83570; // size:0x40
 noodleParameter = 0x01C835B0; // size:0x4B0
 tmp_0_node_matrix = 0x00399908; // size:0x4
 matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
+tmp_0_transform_vector = 0x00399900; // size:0x4
+tmp_0_transform_matrix = 0x00399904; // size:0x4
+vector_tmp_spadata_transform = 0x01C83270; // size:0x10
+matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
