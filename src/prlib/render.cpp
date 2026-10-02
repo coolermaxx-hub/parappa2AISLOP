@@ -547,7 +547,7 @@ INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145E50);
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", ComposeGlobalMatrixWithoutVisibility__7SpmNodeP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
 #else
-/* Register allocation: the transition branch copies the product through t3 */
+/* Scheduling: m_flags is loaded before prSpramData is reloaded after BlendTransitionMatrix */
 void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     if (model->unk7C[0] != NULL) {
         PrSPRAM_DATA *spram;
@@ -565,7 +565,8 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
         }
 
         this->unk40 = arg1 * spram->unk0;
-        model->unk7C[model->m_active_transition][this->unk150] = spram->unk0;
+        int idx = this->unk150;
+        model->unk7C[model->m_active_transition][idx] = spram->unk0;
     } else if (m_flags & 0x1) {
         this->unk40 = arg1;
     } else {
