@@ -7454,11 +7454,110 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetCTransSpr);
+#else /* Requires .lit4 migration */
+void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy) {
+    PKMESH *mesh;
+    PKMSPT *pt;
+    int     x, y;
+    int     cx, cy;
+    float   rw, rh;
+    float   rx, ry;
+    float   sx;
 
+    mesh = PkMesh_Create(mx, my);
+    PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * spr->zy);
+    PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
+
+    cx = (mesh->mw + 1) >> 1;
+    cy = (mesh->mh + 1) >> 1;
+    rw = mesh->sw * 0.5f * zx;
+    rh = mesh->sh * 0.5f * zy;
+
+    for (y = 0; y < mesh->mh + 1; y++) {
+        for (x = 0; x < mesh->mw + 1; x++) {
+            pt = &mesh->pmspt[y * (mesh->mw + 1) + x];
+
+            rx = (float)(cx - x) / cx;
+            ry = (float)(cy - y) / cy;
+
+            sx = cosf(rx * 1.5707964f);
+            pt->ofsx += rw * (1.0f - cosf(ry * 1.5707964f)) * rx;
+            pt->ofsy += rh * (1.0f - sx) * ry;
+        }
+    }
+
+    PkFTMesh_Add(pk, spr, mesh);
+    PkMesh_Delete(mesh);
+}
+#endif
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetSLTransSpr);
+#else /* Requires .lit4 migration */
+void TsSetSLTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx) {
+    PKMESH *mesh;
+    int     y;
+    float   rw;
+    float   zy;
+    float   boy;
 
+    boy = spr->ofsy;
+
+    zy = (1.08f - sinf((zx + 1.0f) * 3.1415927f * 0.5f) * 0.08f) * spr->zy;
+    spr->ofsy += spr->sh * spr->zy - spr->sh * zy;
+    rw = spr->sh * spr->zy * cosf(zx * 0.31415927f + 1.5707964f);
+
+    mesh = PkMesh_Create(mx, my);
+    PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * zy);
+    PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
+
+    for (y = 0; y < mesh->mh + 1; y++) {
+        PkMesh_SetHLinOfs(mesh, y, rw * cosf(((float)y / mesh->mh) * 1.5707964f), 0.0f);
+    }
+
+    PkFTMesh_Add(pk, spr, mesh);
+    PkMesh_Delete(mesh);
+
+    spr->ofsy = boy;
+}
+#endif
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetPNTransSpr);
+#else /* Requires .lit4 migration */
+void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float dr) {
+    PKMESH *mesh;
+    int     x, y;
+    float   fdy;
+    float   flx, frx;
+    float   lx, rx;
+    float   uy, dy;
+
+    flx = wr * 6.2831855f;
+    mesh = PkMesh_Create(mx, my);
+    frx = flx - 3.1415927f;
+    fdy = flx + 3.1415927f;
+    PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * spr->zy);
+    PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
+
+    for (y = 0; y < mesh->mh + 1; y++) {
+        lx = sinf(flx + ((float)y / mesh->mh) * 3.1415927f) * 1.5f + 0.75f;
+        rx = -sinf(frx - ((float)y / mesh->mh) * 4.712389f) * 1.5f + 0.75f;
+        PkMesh_SetHLinOfsLRX(mesh, y, lx * dr, rx * dr);
+    }
+
+    for (x = 0; x < mesh->mw + 1; x++) {
+        uy = cosf(flx + ((float)x / mesh->mw) * 3.1415927f) * 0.7f;
+        dy = -cosf(fdy - ((float)x / mesh->mw) * 4.712389f) * 0.7f;
+        PkMesh_SetVLinOfsUDY(mesh, x, uy * dr, dy * dr);
+    }
+
+    PkFTMesh_Add(pk, spr, mesh);
+    PkMesh_Delete(mesh);
+}
+#endif
 
 static void TsPatTexFnc(int flg) {
     _TexFunc = flg;
