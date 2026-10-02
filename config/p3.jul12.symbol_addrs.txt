@@ -2134,6 +2134,27 @@ PrInitializeMenderer                                                            
 PrRenderMenderer                                                                    = 0x0014f388; // type:func
 _GLOBAL_$I$prMendererRatio                                                          = 0x0014f4c0; // type:func
 
+prMendererRatio                                                                     = 0x0039994c; // type:f32
+prMendererSyncRatio                                                                 = 0x00399950; // type:f32
+prMendererGettingWorse                                                              = 0x00399954;
+prMendererColorModulation                                                           = 0x00399958;
+prMendererSpeed                                                                     = 0x0039995c; // type:f32
+prMendererFade                                                                      = 0x00399960; // type:f32
+prMendererDistance                                                                  = 0x00399964; // type:f32
+prMendererWidth                                                                     = 0x00399968; // type:f32
+prMendererLength                                                                    = 0x0039996c; // type:f32
+prSchoolLeaderIndex                                                                 = 0x00399970;
+noodleRotation                                                                      = 0x00399984;
+deceleratingMenderer                                                                = 0x00399988;
+decelerateRatio                                                                     = 0x0039998c; // type:f32
+prMendererTbp                                                                       = 0x00399994;
+prMendererWorkFbp                                                                   = 0x00399998;
+prMendererDrawFbp                                                                   = 0x0039999c;
+
+noodleStatus                                                                        = 0x00399ba8;
+noodleChangeTimer                                                                   = 0x00399bac;
+noodleDeltaRotation                                                                 = 0x00399bb0; // type:f32
+
 // prlib/menderercreate.cpp
 PrSynchronizeMendererParameter__Ff                                                  = 0x0014f9d0; // type:func
 PrInitializeTextureCreation__FUiUiUiUi                                              = 0x0014fbb8; // type:func

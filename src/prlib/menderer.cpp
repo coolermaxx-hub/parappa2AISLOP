@@ -8,11 +8,27 @@
 
 #include <eeregs.h>
 
+/* sdata */
+extern float prMendererRatio;
+extern int prMendererGettingWorse;
+extern int prMendererColorModulation;
+extern float prMendererSpeed;
+extern float prMendererFade;
+extern int deceleratingMenderer;
+extern float decelerateRatio;
+
+extern int prCurrentStage;
+
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", InitializeNoodleStripRendering__FUiUiUiUi);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", GetRandom__Fv);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", StageIndexForColor__Fv);
+static int StageIndexForColor() {
+    if (prCurrentStage == 19) {
+        return 0;
+    }
+    return (u_int)prCurrentStage % 10;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PushNoodleColor__FPUl);
 
@@ -28,26 +44,73 @@ INCLUDE_ASM("asm/nonmatchings/prlib/menderer", StartNoodleRotation__Fv);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", UpdateNoodleRotation__Fv);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrUpdateMendererSpeed__Fv);
+#else
+static void PrUpdateMendererSpeed() {
+    if (deceleratingMenderer == 0) {
+        return;
+    }
+
+    if (prCurrentStage == 6 || prCurrentStage == 16) {
+        float fade = prMendererFade - decelerateRatio;
+        if (fade < 0.0f) {
+            prMendererFade = 0.0f;
+        } else {
+            prMendererFade = fade;
+        }
+    } else {
+        float speed = prMendererSpeed - decelerateRatio;
+        if (speed < 0.0f) {
+            prMendererSpeed = 0.0f;
+        } else {
+            prMendererSpeed = speed;
+        }
+    }
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrDecelerateMenderer);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrRestartMenderer);
+PR_EXTERN
+void PrRestartMenderer() {
+    deceleratingMenderer = 0;
+    prMendererSpeed = 1.0f;
+    prMendererFade = 1.0f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawMenderer__Fv);
 void DrawMenderer();
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrSetMendererRatio);
+PR_EXTERN
+void PrSetMendererRatio(float ratio) {
+    prMendererRatio = ratio;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrGetMendererRatio);
+PR_EXTERN
+float PrGetMendererRatio() {
+    return prMendererRatio;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrSetMendererDirection);
+PR_EXTERN
+void PrSetMendererDirection(int direction) {
+    prMendererGettingWorse = direction;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrGetMendererDirection);
+PR_EXTERN
+int PrGetMendererDirection() {
+    return prMendererGettingWorse;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrSetMendererColorModulation);
+PR_EXTERN
+void PrSetMendererColorModulation(int modulation) {
+    prMendererColorModulation = modulation;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrIsMendererColorModulation);
+PR_EXTERN
+int PrIsMendererColorModulation() {
+    return prMendererColorModulation;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrInitializeMenderer);
 
