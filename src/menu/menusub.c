@@ -3961,9 +3961,6 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     return -1;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
-#else
 /* static */ int McUserCheckFlow(int type, int mode, int *bError) {
     /* sdata 3997e0 */ extern int isRun_tmp_267; /* static int isRun; */
     int flg;
@@ -4128,22 +4125,15 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
     case 0xee10:
         subStatus = 0xf0f0;
         break;
-        do { } while (0);
     case 0xf0f0:
-        if (type == 0) {
-            if (errorNo != 70) {
-                if (errorNo == 80) {
-                    subStatus = 0xf000;
-                    break;
-                }
-            } else {
+        if (type == 0 && (errorNo == 70 || errorNo == 80)) {
+            if (errorNo == 70) {
                 memset(UserLst, 0, sizeof(*UserLst));
-                flg = 0xf000;
-                subStatus = flg;
-                break;
             }
+            subStatus = 0xf000;
+        } else {
+            subStatus = 0xf002;
         }
-        subStatus = 0xf002;
         break;
     case 0xf000:
         P3MC_GetUserEnd();
@@ -4162,7 +4152,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
     return isRun;
     #undef isRun
 }
-#endif
 
 /* static */ int McUserSaveFlow(USER_DATA *puser) {
     switch (subStatus) {
