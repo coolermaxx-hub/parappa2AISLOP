@@ -525,7 +525,37 @@ float* SpaTrack<float>::GetValue(float arg0) const {
     return NULL;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
+#else /* Regalloc: spill slots for the temporaries' addresses differ */
+extern NaMATRIX<float, 4, 4> value_tmp_spadata_sprine_matrix asm("D_01C83310");
+extern int tmp_0_sprine_matrix asm("D_00399910");
+
+template <>
+NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(u_int seg, float arg1) const {
+    /* FIXME: static local; see the note in GetSprineValue */
+    if (tmp_0_sprine_matrix == 0) {
+        new (&value_tmp_spadata_sprine_matrix) NaMATRIX<float, 4, 4>;
+        tmp_0_sprine_matrix = 1;
+    }
+
+    float *keys = this->unkC;
+    float dt = keys[seg + 1] - keys[seg];
+    NaMATRIX<float, 4, 4> *p0 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 4];
+    NaMATRIX<float, 4, 4> *m0 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 36];
+    NaMATRIX<float, 4, 4> *m1 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 68];
+    NaMATRIX<float, 4, 4> *p1 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 52];
+    if (dt == 0.0f) {
+        return p0;
+    }
+
+    float t = (arg1 - keys[seg]) / dt;
+    NaMATRIX<float, 4, 4> d = *p0 - *p1;
+
+    value_tmp_spadata_sprine_matrix = ((((*m0 + *m1) * dt + d * 2.0f) * t - (*m0 * 2.0f + *m1) * dt - d * 3.0f) * t + *m0 * dt) * t + *p0;
+    return &value_tmp_spadata_sprine_matrix;
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
