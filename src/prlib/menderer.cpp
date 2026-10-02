@@ -377,7 +377,7 @@ void StartNoodleRotation() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", UpdateNoodleRotation__Fv);
-#else /* Requires .lit4 migration */
+#else /* Block order: the stage 6 path gets merged into the final add; timer/status stores swapped */
 void UpdateNoodleRotation() {
     if (prCurrentStage == 6) {
         noodleRotation += prMendererSpeed * 0.001f;
@@ -385,27 +385,32 @@ void UpdateNoodleRotation() {
     }
 
     if (noodleStatus == 0 || noodleStatus == 2) {
-        if (--noodleChangeTimer == 0) {
-            noodleChangeTimer = 900;
+        u_int timer = noodleChangeTimer - 1;
+        if (timer == 0) {
+            timer = 900;
             noodleStatus = (noodleStatus + 1) % 4;
         }
+        noodleChangeTimer = timer;
     }
 
+    float delta = noodleDeltaRotation;
     if (noodleStatus == 1) {
-        noodleDeltaRotation -= 1.6666667e-05f;
-        if (noodleDeltaRotation < -0.001f) {
-            noodleDeltaRotation = -0.001f;
+        delta -= 1.6666667e-05f;
+        if (delta < -0.001f) {
+            delta = -0.001f;
             noodleStatus = 2;
         }
+        noodleDeltaRotation = delta;
     } else if (noodleStatus == 3) {
-        noodleDeltaRotation += 1.6666667e-05f;
-        if (noodleDeltaRotation > 0.001f) {
-            noodleDeltaRotation = 0.001f;
+        delta += 1.6666667e-05f;
+        if (delta > 0.001f) {
+            delta = 0.001f;
             noodleStatus = 0;
         }
+        noodleDeltaRotation = delta;
     }
 
-    noodleRotation += prMendererSpeed * noodleDeltaRotation;
+    noodleRotation += prMendererSpeed * delta;
 }
 #endif
 
