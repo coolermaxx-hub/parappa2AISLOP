@@ -4,9 +4,12 @@
 #include "dbug/syori.h"
 #endif
 
+#include "mfifo.h"
 #include "renderstuff.h"
+#include "spram.h"
 
 #include <eeregs.h>
+#include <eestruct.h>
 
 /* sdata */
 extern float prMendererRatio;
@@ -19,9 +22,33 @@ extern float decelerateRatio;
 
 extern int prCurrentStage;
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", InitializeNoodleStripRendering__FUiUiUiUi);
+struct PrNoodleStripPacket {
+    sceDmaTag dmatag;
+    sceGifTag giftag;
+    u_long ad[14][2];
+};
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", GetRandom__Fv);
+/* data */
+extern PrNoodleStripPacket noodleStripDmaPacket;
+
+/* sdata */
+extern PrSPRAM_DATA *prSpramData_tmp_menderer;
+extern u_int noodleRandomSeed;
+
+extern u_int prMendererDrawFbp;
+extern u_int prMendererWorkFbp;
+
+void InitializeNoodleStripRendering(u_int tbp, u_int fbp, u_int tw, u_int th) {
+    noodleStripDmaPacket.ad[4][0] = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
+    noodleStripDmaPacket.ad[8][0] = SCE_GS_SET_TEX0(tbp, 4, 0, tw, th, 1, 0, 0, 0, 0, 0, 0);
+}
+
+static float GetRandom() {
+    u_int seed = noodleRandomSeed * 0x19660D + 0x3C6EF35F;
+    float ret = ((seed >> 8) & 0xFFFF) * (1.0f / 65536.0f);
+    noodleRandomSeed = seed;
+    return ret;
+}
 
 static int StageIndexForColor() {
     if (prCurrentStage == 19) {
@@ -36,7 +63,18 @@ INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStripChunk__FRCt8NaMATR
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", SetNoodleRotationMatrix__FRt8NaMATRIX3Zfi4i4f);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PreDrawNoodleStrip__Fv);
+static void PreDrawNoodleStrip() {
+    u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
+    prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
+    prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
+    prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+
+    PrNoodleStripPacket *packet = (PrNoodleStripPacket*)buf;
+    *packet = noodleStripDmaPacket;
+    packet->ad[0][0] = SCE_GS_SET_BITBLTBUF(prMendererDrawFbp * 32, 10, 0, prMendererWorkFbp * 32, 10, 0);
+
+    PrSendMfifo(&packet->dmatag);
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStrip__Fff);
 
