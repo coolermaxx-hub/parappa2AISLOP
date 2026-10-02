@@ -27,7 +27,9 @@ struct PrVuNodeHeaderDmaPacket {
     NaMATRIX<float, 4, 4> m_matrix;
     PR_PADDING(unk50, 0x10);
     PrMICRO_PROGRAM_MODULE unk60;
-    PR_PADDING(unk64, 0x130);
+    PR_PADDING(unk64, 0x4);
+    float unk68;
+    PR_PADDING(unk6C, 0x128);
     int unk194;
 };
 
@@ -120,6 +122,16 @@ public:
     int unk70;
     SpmNode **m_nodes;
     int unk78;
+};
+
+class SpmClusterGeometryNode {
+public:
+    void RenderClusterNode(PrModelObject *model);
+};
+
+class SpmShapeNode {
+public:
+    void RenderShapeNode(PrModelObject *model);
 };
 
 class SpmComplexNode {

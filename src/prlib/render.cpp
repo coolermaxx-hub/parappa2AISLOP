@@ -8,8 +8,6 @@
 
 #include <nalib/namatrix.h>
 
-/* float D_FLT_003998E4; */
-
 extern PrSPRAM_DATA *prSpramData;
 
 extern bool AwfulStatus;
@@ -72,11 +70,11 @@ INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext1Node__7SpmNodeP13PrMo
 void SpmNode::RenderContext1Node(PrModelObject *model) {
     prRenderStuff.m_statistics.node_num++;
 
-    if (this->unk154 & 0x2000) {
+    if (this->m_flags & 0x2000) {
         return;
     }
 
-    if ((this->unk154 & 0x4000) && (!AwfulStatus || (this->unk154 & 0x400000))) {
+    if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
         PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
         if (packet != NULL) {
             prRenderStuff.m_statistics.opaque_context1_node_num++;
@@ -116,17 +114,17 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmaddaz  ACC,   vf15,    vf17  \n\t"
                 "vmaddw   vf17,  vf16,    vf17  \n\t"
                 "sqc2     vf17,   0x0(%0)       \n\t"
-            : : "r"(sp0), "r"(&prSpramData->unkE0));
+            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix));
 
             float f12 = sp0[2] / sp0[3];
             if (sp0[3] == 0.0f) {
-                f12 = sp0[2] * D_FLT_003998E4;
+                f12 = sp0[2] * 3.40282347e+38f;
             }
 
             prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->unk188, f12);
         }
 
-        if (this->unk154 & 0x40) {
+        if (this->m_flags & 0x40) {
             SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
@@ -231,7 +229,107 @@ void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Node__7SpmNodeP13PrModelObject);
+#else /* Need to match .sdata, stack order */
+void SpmNode::RenderContext2Node(PrModelObject *model) {
+    if (!(this->m_flags & 0x2000)) {
+        return;
+    }
+
+    if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
+        prRenderStuff.m_statistics.opaque_context2_node_num++;
+
+        if (this->m_flags & 0x10) {
+            SpmClusterGeometryNode *cluster = reinterpret_cast<SpmClusterGeometryNode*>(this);
+            cluster->RenderClusterNode(model);
+        } else if (this->m_flags & 0x20) {
+            SpmShapeNode *shape = reinterpret_cast<SpmShapeNode*>(this);
+            shape->RenderShapeNode(model);
+        } else {
+            PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+            if (packet != NULL) {
+                PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
+                uc->m_matrix = this->unk40;
+                uc->unk68 = prSpramData->m_disturbance;
+                prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
+            }
+
+            PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
+            if (packet2 != NULL) {
+                PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
+                uc->m_matrix = this->unk40;
+                uc->unk68 = prSpramData->m_disturbance;
+
+                NaVECTOR<float, 4> pos;
+                {
+                    NaMATRIX<float, 4, 4> tmp;
+                    asm volatile(
+                        "lqc2     $vf4,  0x0(%1)        \n\t"
+                        "lqc2     $vf5,  0x10(%1)       \n\t"
+                        "lqc2     $vf6,  0x20(%1)       \n\t"
+                        "lqc2     $vf7,  0x30(%1)       \n\t"
+                        "lqc2     $vf8,  0x0(%2)        \n\t"
+                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
+                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
+                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+                        "sqc2     $vf9,  0x0(%0)        \n\t"
+                        "lqc2     $vf8,  0x10(%2)       \n\t"
+                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
+                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
+                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+                        "sqc2     $vf9,  0x10(%0)       \n\t"
+                        "lqc2     $vf8,  0x20(%2)       \n\t"
+                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
+                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
+                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+                        "sqc2     $vf9,  0x20(%0)       \n\t"
+                        "lqc2     $vf8,  0x30(%2)       \n\t"
+                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
+                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
+                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+                        "sqc2     $vf9,  0x30(%0)       \n\t"
+                    : : "r"(&tmp), "r"(&prSpramData->m_view_projection_matrix), "r"(&this->unk40));
+
+                    NaMATRIX<float, 4, 4> mtx;
+                    mtx = tmp;
+
+                    NaVECTOR<float, 4> *v = (NaVECTOR<float, 4>*)&tmp;
+                    asm volatile(
+                        "lqc2     $vf4,  0x0(%1)        \n\t"
+                        "lqc2     $vf5,  0x10(%1)       \n\t"
+                        "lqc2     $vf6,  0x20(%1)       \n\t"
+                        "lqc2     $vf7,  0x30(%1)       \n\t"
+                        "lqc2     $vf8,  0x0(%2)        \n\t"
+                        "vmulax   ACC,   $vf4,   $vf8   \n\t"
+                        "vmadday  ACC,   $vf5,   $vf8   \n\t"
+                        "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
+                        "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
+                        "sqc2     $vf9,  0x0(%0)        \n\t"
+                    : : "r"(v), "r"(&mtx), "r"(&this->unk140));
+                    pos = *v;
+                }
+
+                float z = pos[2] / pos[3];
+                if (pos[3] == 0.0f) {
+                    z = pos[2] * 3.40282347e+38f;
+                }
+
+                prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, z);
+            }
+        }
+
+        if (this->m_flags & 0x40) {
+            SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
+            complex->RenderContour(model);
+        }
+    }
+}
+#endif
 
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145DB0);
