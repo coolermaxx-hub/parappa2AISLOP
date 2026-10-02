@@ -8677,9 +8677,6 @@ static void TsSCFADE_Flow(int flg, int prm) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSCFADE_Draw);
-#else
 /* static */ void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
     SCFADE *pfw = &ScFade;
     u_int   abgr;
@@ -8692,17 +8689,17 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSCFADE_Draw);
     case 5:
     case 6:
         spr->rgba0 = 0x80808080;
-        spr->zx = 1.0f;
-        spr->zy = 1.0f;
+        spr->zx = spr->zy = 1.0f;
         PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, (pfw->ton * 128) >> 8));
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
         SetSprScreenXYWH(spr);
         PkNSprite_AddAdj(pk, spr, 1);
         PkALPHA_Add(pk, 0x44);
         break;
+    case 1:
+    case 2:
     default:
-        spr->zx = 1.0f;
-        spr->zy = 1.0f;
+        spr->zx = spr->zy = 1.0f;
         abgr = GetDToneColor(0, 0x80000000, pfw->ton);
         spr->rgba0 = abgr;
         SetSprScreenXYWH(spr);
@@ -8711,7 +8708,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSCFADE_Draw);
         break;
     }
 }
-#endif
 
 void _PkMCMsgPut(SPR_PKT pk, SPR_PRM *spr, int id, int x, int y, u_int abgr) {
     int flg;
