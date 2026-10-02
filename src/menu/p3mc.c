@@ -1515,9 +1515,6 @@ typedef struct {
     char id[16];
 } P3MC_FILEID;
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/p3mc", P3MC_SaveUser);
-#else
 int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     P3MC_WORK  *pw = &P3MC_Work;
     u_char     *pData;
@@ -1565,14 +1562,13 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     pw->data_no = fileNo;
     pw->data_mode = mode;
     pw->data_stage = (mode == 1) ? 0 : stageNo;
-    pw->dhdl = pdhdl;
     pw->prgflag = flg;
+    pw->dhdl = pdhdl;
     pw->dstat = 0;
 
     _P3MC_CheckUserDataHead(pw);
     return 0;
 }
-#endif
 
 int P3MC_SaveCheck(void) {
     int        re;
