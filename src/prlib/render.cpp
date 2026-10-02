@@ -18,12 +18,10 @@ extern PrVu1InitPacket initVu1DmaPacket;
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", Render__13PrSceneObject);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", InitializeVu1__13PrSceneObject);
-#else /* Uses tail call? */
 void PrSceneObject::InitializeVu1() {
     PrVu1InitPacket *packet = (PrVu1InitPacket*)PR_UNCACHED(&initVu1DmaPacket);
-    packet->zbuf     = prRenderStuff.m_zbuf;
+    sceGsZbuf zbuf = prRenderStuff.m_zbuf;
+    packet->zbuf     = zbuf;
     packet->frame    = this->unk50;
     packet->xyoffset = this->unk58;
     packet->scissor  = this->unk70->scissor1;
@@ -35,7 +33,6 @@ void PrSceneObject::InitializeVu1() {
 
     sceDmaSend(chan, &initVu1DmaPacket);
 }
-#endif
 
 void PrSceneObject::PrepareScreenModelRender() {
     prRenderStuff.StartRender(this);

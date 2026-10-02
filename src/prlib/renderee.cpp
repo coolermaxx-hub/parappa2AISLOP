@@ -4,10 +4,10 @@
 #include "scene.h"
 
 /* data */
-extern u_long D_0038C580[];
+extern u_long initEECoreDmaPacket[];
 
 void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
-    u_long *packet = (u_long*)PR_UNCACHED(D_0038C580);
+    u_long *packet = (u_long*)PR_UNCACHED(initEECoreDmaPacket);
 
     sceGsZbuf zbuf = m_zbuf;
     packet[6] = *(u_long*)&zbuf;
@@ -19,7 +19,7 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);
     chan->chcr.TTE = 0;
-    sceDmaSend(chan, D_0038C580);
+    sceDmaSend(chan, initEECoreDmaPacket);
 }
 
 INCLUDE_ASM("asm/nonmatchings/prlib/renderee", RenderVertexEECoreBothface__13PrRenderStuff);
