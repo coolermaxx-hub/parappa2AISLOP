@@ -20,43 +20,30 @@ extern u_int noodlePolygonIndex[116];
 void SetNextTarget(PrNoodlePositionData *data);
 void InitializeNoodlePositionData();
 
+static inline float ABS_tmp(float x) {
+    return (x >= 0.0f) ? x : -x;
+}
+
+static inline float MAX_tmp(float a, float b) {
+    return (a <= b) ? b : a;
+}
+
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", SetNextTarget__FP20PrNoodlePositionData);
-#else /* Requires .lit4 migration */
+#else /* Regalloc: the first abs copies dx before comparing */
 void SetNextTarget(PrNoodlePositionData *data) {
     float x = (PrFloatRandom() - 0.5f) * 2.0f * 0.1f;
     float y = (PrFloatRandom() - 0.5f) * 2.0f * 0.04f;
     float z = (PrFloatRandom() - 0.5f) * 2.0f * 0.1f;
 
     float dx = x - data->position[0];
-    float d;
 
-    d = dx;
-    if (d < 0.0f) {
-        d = -d;
-    }
-    float tx = d / 0.2f * 180.0f;
+    float tx = ABS_tmp(dx) / 0.2f * 180.0f;
+    float ty = ABS_tmp(y - data->position[1]) / 0.08f * 180.0f;
+    float tz = ABS_tmp(z - data->position[2]) / 0.2f * 180.0f;
 
-    d = y - data->position[1];
-    if (d < 0.0f) {
-        d = -d;
-    }
-    float ty = d / 0.08f * 180.0f;
-
-    d = z - data->position[2];
-    if (d < 0.0f) {
-        d = -d;
-    }
-    float tz = d / 0.2f * 180.0f;
-
-    float txy = (ty <= tx) ? tx : ty;
-    float t = 1.0f;
-    if (t <= tz) {
-        t = tz;
-    }
-    if (t <= txy) {
-        t = txy;
-    }
+    float txy = MAX_tmp(ty, tx);
+    float t = MAX_tmp(MAX_tmp(1.0f, tz), txy);
 
     data->timer = t;
     data->velocity[0] = dx / data->timer;
@@ -89,17 +76,14 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", GetSynchronizeRatio__FPC20PrNoodlePositionData);
-#else /* Requires .lit4 migration */
-float GetSynchronizeRatio(const PrNoodlePositionData *data) {
-    float diff = data->index - prSchoolLeaderIndex;
-    if (diff < 0.0f) {
-        diff = -diff;
-    }
+#else /* Regalloc: diff is copied to another register before the min */
+static inline float MIN_tmp(float a, float b) {
+    return (a <= b) ? a : b;
+}
 
-    float dist = 1.0f - diff;
-    if (diff <= dist) {
-        dist = diff;
-    }
+float GetSynchronizeRatio(const PrNoodlePositionData *data) {
+    float diff = ABS_tmp(data->index - prSchoolLeaderIndex);
+    float dist = MIN_tmp(diff, 1.0f - diff);
 
     float ratio = ((1.0f - dist) * 3.0f - 1.8f) * prMendererSyncRatio;
     if (ratio > 1.0f) {
@@ -109,11 +93,7 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data) {
     }
 
     if (prMendererRatio >= 1.2f && prMendererRatio <= 1.8f) {
-        float blend = 1.5f - prMendererRatio;
-        if (blend < 0.0f) {
-            blend = -blend;
-        }
-        blend /= 0.3f;
+        float blend = ABS_tmp(1.5f - prMendererRatio) / 0.3f;
         ratio = ratio * blend + (1.0f - blend);
     }
 
