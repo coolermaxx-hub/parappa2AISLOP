@@ -28,10 +28,10 @@
 // /* data 18b638 */ static short RShopRute2[0];
 // /* data 18b648 */ static short *RecordShopRute[10];
 /* data 18b670 */ extern MNMAPPOS mnmapCityHall[]; /* static */
-// /* data 18b730 */ short AnmCHallPara_OptRet[0];
-// /* data 18b738 */ short AnmCHallPara_Opt[0];
-// /* data 18b740 */ short AnmCHallPara_RepRet[0];
-// /* data 18b748 */ short AnmCHallPara_Rep[0];
+/* data 18b730 */ extern short AnmCHallPara_OptRet[]; /* static */
+/* data 18b738 */ extern short AnmCHallPara_Opt[]; /* static */
+/* data 18b740 */ extern short AnmCHallPara_RepRet[]; /* static */
+/* data 18b748 */ extern short AnmCHallPara_Rep[]; /* static */
 // /* data 18b750 */ short AnmCHallFphs_OptRet[0];
 // /* data 18b758 */ short AnmCHallFphs_Opt[0];
 // /* data 18b760 */ short AnmCHallFphs_RepRet[0];
@@ -2427,7 +2427,38 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpCityHallParaStart);
+/* static */ void MpCityHallParaStart(int pos) {
+    short *ptr = NULL;
+    int    n;
+
+    switch (pos) {
+    case 1:
+        ptr = AnmCHallPara_Opt;
+        break;
+    case 2:
+        ptr = AnmCHallPara_Rep;
+        break;
+    case 3:
+        ptr = AnmCHallPara_OptRet;
+        break;
+    case 4:
+        ptr = AnmCHallPara_RepRet;
+        break;
+    }
+
+    if (ptr == NULL) {
+        return;
+    }
+
+    while ((n = *ptr) != -1) {
+        if (n & 0x1000) {
+            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+        } else {
+            MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+        }
+        ptr++;
+    }
+}
 
 static void MpCityHallFPHSSoundMask(int flg) {
     TSSNDMASK_CHAN(3, flg);
@@ -3487,7 +3518,53 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Flow);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Draw);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSCFADE_Set);
+int TsSCFADE_Set(int flg, int num, int prio) {
+    SCFADE *pfw = &ScFade;
+    int     state = 0;
+    int     t;
+
+    switch (flg) {
+    case 1:
+    case 5:
+        if (pfw->state != flg) {
+            TsSCFADE_Flow(1, 0);
+            pfw->ton = 256;
+        } else {
+            state = 1;
+        }
+        break;
+    case 2:
+    case 6:
+        if (pfw->state != flg) {
+            TsSCFADE_Flow(1, 0);
+            pfw->ton = 0;
+        } else {
+            state = 1;
+        }
+        break;
+    default:
+        state = 1;
+        break;
+    }
+
+    if (state) {
+        t = pfw->ttim0 - 1;
+        t -= pfw->ttim;
+        if (t < 1) {
+            return 0;
+        }
+        return t;
+    }
+
+    if (num != 0) {
+        pfw->prio = prio;
+        pfw->state = flg;
+        pfw->ttim0 = num;
+        pfw->ttim = 0;
+    }
+
+    return num;
+}
 
 static void TsSCFADE_Flow(int flg, int prm) {
     SCFADE *pfw = &ScFade;
@@ -3522,7 +3599,41 @@ static void TsSCFADE_Flow(int flg, int prm) {
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSCFADE_Draw);
+#else
+/* static */ void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
+    SCFADE *pfw = &ScFade;
+    u_int   abgr;
+
+    if (pfw->ton == 0 || prio != pfw->prio) {
+        return;
+    }
+
+    switch (pfw->state) {
+    case 5:
+    case 6:
+        spr->rgba0 = 0x80808080;
+        spr->zx = 1.0f;
+        spr->zy = 1.0f;
+        PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, (pfw->ton * 128) >> 8));
+        PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
+        SetSprScreenXYWH(spr);
+        PkNSprite_AddAdj(pk, spr, 1);
+        PkALPHA_Add(pk, 0x44);
+        break;
+    default:
+        spr->zx = 1.0f;
+        spr->zy = 1.0f;
+        abgr = GetDToneColor(0, 0x80000000, pfw->ton);
+        spr->rgba0 = abgr;
+        SetSprScreenXYWH(spr);
+        PkALPHA_Add(pk, 0x44);
+        PkCRect_Add(pk, spr, 0);
+        break;
+    }
+}
+#endif
 
 void _PkMCMsgPut(SPR_PKT pk, SPR_PRM *spr, int id, int x, int y, u_int abgr) {
     int flg;
