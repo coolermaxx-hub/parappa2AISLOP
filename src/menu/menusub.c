@@ -59,8 +59,8 @@
 /* data 18bcc0 */ extern PATPOS PAT_ALERT_WIN_CENTER; /* static */
 /* data 18bcd0 */ extern PATPOS PAT_ALERT_WIN_BELOW; /* static */
 /* data 18bce0 */ extern PATPOS PAT_ALERT_WIN_FFACE[]; /* static */
-// /* data 18bd10 */ static PATPOS SAVE_MENU_SELPAT[0];
-// /* data 18bd28 */ static PTPOS SAVEWZoom_CXY[0];
+/* data 18bd10 */ extern PATPOS SAVE_MENU_SELPAT[]; /* static */
+/* data 18bd28 */ extern PTPOS SAVEWZoom_CXY[]; /* static */
 // /* data 18bd30 */ static PATPOS LG_SCROLL_MARK[0];
 // /* data 18bd48 */ static PATPOS RP_SCROLL_MARK[0];
 // /* data 18bd60 */ static PATPOS LLG_SCROLL_MARK[0];
@@ -5559,7 +5559,74 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
     return 0;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveMenu_Draw);
+#else /* Requires .lit4 migration; register allocation also differs (ppat/spr/pfw/i/arate) */
+static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    SAVE_MENU *pfw = &SaveMenu;
+    PATPOS    *ppat;
+    int        i;
+    float      fswing;
+    int        arate;
+    float      rt0, rt1, rt2;
+    int        bHiLgt;
+    int        bPut;
+
+    fswing = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
+    fswing = -cosf(fswing * 6.2831855f);
+    arate = MNSceneGetMusicFitTimer() % 180;
+    pfw->cani.fswing = fswing;
+
+    if (TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
+        spr->zoom.centerX = SAVEWZoom_CXY[0].x;
+        spr->zoom.centerY = SAVEWZoom_CXY[0].y;
+        spr->zoom.zoomX = rt1;
+        spr->zoom.zoomY = rt0;
+        spr->zoom.isOn = 1;
+        arate = rt0 * 256.0f;
+    } else {
+        spr->zoom.isOn = 0;
+        arate = 256;
+    }
+
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+    PkALPHA_Add(pk, 0x44);
+
+    spr->rgba0 = GetDToneColor(0x404040, 0x80808080, arate);
+    ppat = SAVE_MENU_SELPAT;
+    pfw->cani.habgr = GetDToneColor(0x404040, 0x80ffffff, arate);
+    pfw->cani.nabgr = GetDToneColor(0x404040, 0x80808080, arate);
+
+    for (i = 0; i < 2; i++, ppat++) {
+        bHiLgt = 0;
+        bPut = 0;
+
+        if (i == pfw->selno) {
+            bHiLgt = 1;
+            if (pfw->cani.okTim) {
+                bPut = 2;
+                bHiLgt = 2;
+            } else {
+                bPut = (pfw->cani.onTim) ? 3 : 1;
+            }
+        }
+
+        switch (bHiLgt) {
+        case 0:
+            spr->rgba0 = pfw->cani.nabgr;
+            break;
+        case 1:
+            spr->rgba0 = pfw->cani.habgr;
+            break;
+        }
+
+        TsPopCusPut(pk, spr, 3, &pfw->cani, bPut, i, ppat, 0, 0);
+    }
+
+    spr->zoom.isOn = 0;
+}
+#endif
 
 static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     memset(pw, 0, sizeof(*pw));
