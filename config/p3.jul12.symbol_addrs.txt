@@ -2676,7 +2676,7 @@ RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270;
 initVu1DmaPacket                                                                    = 0x0038c500;
 initEECoreDmaPacket                                                                 = 0x0038c580;
 value_tmp_spadata_linear_float                                                      = 0x00399ba4; // size:0x4
-Set__t8NaVECTOR2Zfi4RCfT1T1T1                                                       = 0x00145db0; // type:func
+__t8NaVECTOR2Zfi4RCfT1T1T1                                                          = 0x00145db0; // type:func
 sceVu0InversMatrix                                                                  = 0x001617c0; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4iRCf                                                 = 0x0014ace8; // type:func
 prSpramData_tmp_contour = 0x003999c4; // size:0x4
@@ -2736,3 +2736,4 @@ _t8NaMATRIX3Zfi3i3$ZERO                                                         
 _t8NaMATRIX3Zfi2i2$IDENT                                                            = 0x0038ceb8; // size:0x10
 _t8NaMATRIX3Zfi3i3$IDENT                                                            = 0x0038cec8; // size:0x24
 _t8NaVECTOR2Zfi2$ZERO                                                               = 0x003999d0; // size:0x8
+Set__t8NaVECTOR2Zfi4RCfT1T1T1                                                       = 0x00140e38; // type:func

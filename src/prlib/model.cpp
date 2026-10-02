@@ -6,12 +6,6 @@
 
 #include <nalib/navector.h>
 
-/*
- * This file carries its own copy of NaVECTOR<float, 4>::Set
- * (func_00140E38); call it directly so the jal stays local.
- */
-NaVECTOR<float, 4>& SetVector_tmp_model(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("func_00140E38");
-
 /* sdata */
 extern PrSPRAM_DATA *prSpramData_tmp_model;
 extern u_char *workAreaTopAddress;
@@ -201,7 +195,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
 }
 
 void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
-    SetVector_tmp_model(position, 0.0f, 0.0f, 0.0f, 1.0f);
+    position->Set(0.0f, 0.0f, 0.0f, 1.0f);
 
     if (m_position_animation != NULL) {
         NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->unk50[0]->GetMatrix(m_position_animation_time), *position);
@@ -221,6 +215,3 @@ void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     p[1] = p[1] / w - 1936.0f;
     p[3] = 1.0f;
 }
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/model", func_00140E38);

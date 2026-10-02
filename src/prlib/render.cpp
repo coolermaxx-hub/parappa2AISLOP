@@ -13,8 +13,8 @@
 #include <nalib/namatrix.h>
 #include <math.h>
 
-template <>
-NaVECTOR<float, 4>& NaVECTOR<float, 4>::Set(const float& x, const float& y, const float& z, const float& w);
+/* render.cpp's own out-of-line copy of the NaVECTOR<float, 4> constructor */
+NaVECTOR<float, 4>* CtorVector_tmp_render(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("__t8NaVECTOR2Zfi4RCfT1T1T1");
 
 /* sdata */
 extern PrSPRAM_DATA *prSpramData_tmp_render;
@@ -88,7 +88,7 @@ void PrModelObject::CalculateCurrentMatrix() {
             NaVECTOR<float, 4> v;
             NaVECTOR<float, 4> scale;
             NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->unk40;
-            scale.Set(1.0f, 1.0f, 1.0f, 0.0f);
+            CtorVector_tmp_render(&scale, 1.0f, 1.0f, 1.0f, 0.0f);
 
             NaVECTOR<float, 4> tmp;
             v = NaMATRIX<float, 4, 4>::Apply(tmp, root, scale);
@@ -416,7 +416,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
 #endif
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/render", Set__t8NaVECTOR2Zfi4RCfT1T1T1);
+INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
 
 /* prlib/render.cpp */
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {

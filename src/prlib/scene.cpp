@@ -8,7 +8,7 @@
 /* data */
 extern char D_0038C720[]; /* "(noname)" */
 
-NaVECTOR<float, 4>& SetVector_tmp_scene(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("func_00140E38");
+NaVECTOR<float, 4>& SetVector_tmp_scene(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("Set__t8NaVECTOR2Zfi4RCfT1T1T1");
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", __13PrSceneObjectP13sceGsDrawEnv1PCcUi);
