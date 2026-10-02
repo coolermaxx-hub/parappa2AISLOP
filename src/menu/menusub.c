@@ -66,7 +66,7 @@
 // /* data 18bd60 */ static PATPOS LLG_SCROLL_MARK[0];
 // /* data 18bd78 */ static PATPOS CSSLASH_MARK;
 // /* data 18bd88 */ static STRPOS PAGENO_StrCOD[0];
-// /* data 18bd98 */ static PTPOS CellCusPos[0];
+/* data 18bd98 */ extern PTPOS CellCusPos[]; /* static */
 // /* data 18bdb8 */ static STRPOS LOGS_StrCOD[0];
 // /* data 18bde0 */ static STRPOS LOGL_StrCOD[0];
 // /* data 18be08 */ static STRPOS REPLAY_StrCOD[0];
@@ -6361,7 +6361,98 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     obj->flg = 0xffff;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
+#else /* Requires .lit4 migration; stack frame is 16 bytes short and the flg branch layout differs */
+/* static */ void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor) {
+    TSTEX_INF *ptex;
+    int flg;
+    int ton;
+    int t;
+    float ft;
+
+    if ((u_int)(n + 1) >= 9) {
+        return;
+    }
+
+    if ((u_int)n < 7 && obj != NULL) {
+        switch (obj->state) {
+        case 1:
+            if (--obj->tim == 0) {
+                obj->flg = 1;
+                obj->state = 0;
+            } else {
+                obj->ton = obj->tim * 8 + 0x100;
+            }
+            obj->flg = 1;
+            break;
+        case 2:
+            if (--obj->tim == 0) {
+                obj->state = 0;
+                obj->flg = 0;
+            } else {
+                t = obj->tim * 16;
+                if (t > 90) {
+                    obj->flg = 1;
+                    obj->ton = ((t - 90) << 8) / 166;
+                } else {
+                    obj->flg = 0;
+                    obj->ton = ((90 - t) << 8) / 90;
+                }
+            }
+            break;
+        case 3:
+            if (--obj->tim == 0) {
+                obj->state = 0;
+                obj->flg = 1;
+            } else {
+                ft = sinf((obj->tim % 8) * 0.125f * 3.1415927f);
+                obj->flg = 1;
+                obj->ton = (int)(ft * 256.0f) + 0x100;
+            }
+            break;
+        }
+
+        if (obj->state == 0) {
+            obj->ton = 0x100;
+        }
+    }
+
+    if ((u_int)n < 7) {
+        ton = obj->ton;
+        flg = obj->flg;
+    } else {
+        ton = 0x100;
+        flg = 0;
+    }
+
+    if (flg == 1) {
+        PkALPHA_Add(pk, 0x48);
+        spr->rgba0 = GetDToneColor(0, CurColor, ton);
+    } else if (flg == -1) {
+        return;
+    } else {
+        PkALPHA_Add(pk, 0x42);
+        spr->rgba0 = GetDToneColor(0x808080, 0x10808080, ton);
+    }
+
+    ptex = &tblTex[1];
+    spr->zx = 1.0f;
+    spr->zy = 0.47f;
+    PkTEX0_Add(pk, ptex->tex0);
+
+    spr->ux = 0;
+    spr->uy = 0;
+    spr->uw = ptex->w;
+    spr->uh = ptex->h;
+    spr->px = CellCusPos[n + 1].x + ox;
+    spr->py = CellCusPos[n + 1].y + oy;
+    spr->sw = 0x234;
+    spr->sh = ptex->h * 2;
+    PkNSprite_Add(pk, spr, 1);
+    PkALPHA_Add(pk, 0x44);
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
@@ -7991,7 +8082,104 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     return 1;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
+#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396168/D_00396170); regalloc also differs */
+/* static */ void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl) {
+    HOSI_OBJ  *obj;
+    HOSI_TYPE *type;
+    TSTEX_INF *ptex;
+    u_int      col;
+    int        l, i;
+    int        x, y, w, h;
+    int        ton, t, q;
+    float      zrate, rot;
+
+    obj  = HOSIObj;
+    type = hTypeTable;
+
+    for (l = 0; l < PR_ARRAYSIZEU(hTypeTable); l++, type++) {
+        ptex = &tblTex[type->patNo + 76];
+        PkTEX0_Add(pk, ptex->tex0);
+
+        col = colTbl[type->colIdx];
+        spr->zy = type->rate * 0.01f;
+        spr->zx = spr->zy * 2.0f;
+
+        for (i = 0; i < type->num; i++, obj++) {
+            if (obj->wtim > 0) {
+                if (--obj->wtim == 0) {
+                    obj->tim = type->dispTime;
+                    obj->dir = rand() & 1;
+
+                    switch (rand() % 4) {
+                    case 0:
+                        x = 0;
+                        y = 0;
+                        w = sw;
+                        h = sh >> 2;
+                        break;
+                    case 1:
+                        x = 0;
+                        y = 0;
+                        w = sw >> 3;
+                        h = sh;
+                        break;
+                    case 2:
+                        y = 0;
+                        w = sw >> 3;
+                        h = sh;
+                        x = sw - w;
+                        break;
+                    default:
+                        h = sh >> 2;
+                        x = 0;
+                        w = sw;
+                        y = sh - h;
+                        break;
+                    }
+
+                    x = x - 20 + (rand() % (w / (type->patW >> 1))) * (type->patW >> 1);
+                    y = y - 10 + (rand() % (h / (type->patW >> 2))) * (type->patW >> 2);
+
+                    obj->px = x;
+                    obj->vx = ((sw >> 1) - x) * 0.001f;
+                    obj->py = y;
+                    obj->vy = ((sh >> 1) - y) * 0.001f;
+                }
+            } else {
+                if (--obj->tim <= 0) {
+                    obj->wtim = (rand() % (type->dispTime >> 3)) * 3;
+                } else {
+                    t   = (type->dispTime * 3) >> 2;
+                    q   = type->dispTime >> 2;
+                    ton = 0x100;
+
+                    if (t < obj->tim) {
+                        ton = 0x100 - (((obj->tim - t) << 8) / q);
+                    } else if (obj->tim < q) {
+                        ton = (obj->tim << 8) / q;
+                    }
+
+                    spr->rgba0 = GetDToneColor(col, col | 0x80000000, ton);
+
+                    zrate = cosf(((float)(obj->tim % t) / t) * 6.2831855f) * 0.1 + 0.9;
+
+                    t   = type->dispTime >> 1;
+                    rot = (float)(obj->tim % t) / t;
+                    if (obj->dir) {
+                        rot = -rot;
+                    }
+
+                    obj->px -= obj->vx;
+                    obj->py -= obj->vy;
+                    TsHosiPut(pk, spr, ptex, obj->px, obj->py, zrate, rot * 6.2831855f);
+                }
+            }
+        }
+    }
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsHosiPut);
