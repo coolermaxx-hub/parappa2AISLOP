@@ -440,24 +440,21 @@ static void PrUpdateMendererSpeed() {
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrDecelerateMenderer);
-#else /* Scheduling: li v0,1 should come before the swc1 */
 PR_EXTERN
 void PrDecelerateMenderer(u_int frames) {
     if (prCurrentStage == 6 || prCurrentStage == 16) {
         frames = 120;
     }
 
+    float r;
     if (prCurrentStage == 6 || prCurrentStage == 16) {
-        decelerateRatio = prMendererFade / frames;
+        r = prMendererFade / frames;
     } else {
-        decelerateRatio = prMendererSpeed / frames;
+        r = prMendererSpeed / frames;
     }
-
+    decelerateRatio = r;
     deceleratingMenderer = 1;
 }
-#endif
 
 PR_EXTERN
 void PrRestartMenderer() {
