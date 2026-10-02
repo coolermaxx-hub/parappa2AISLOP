@@ -2,8 +2,12 @@
 
 #include "dma.h"
 #include "random.h"
+#include "renderstuff.h"
 #include "tim2.h"
+#include "utility.h"
 #include "wave.h"
+
+#include "nalib/namatrix.h"
 
 #include <eekernel.h>
 #include <eetypes.h>
@@ -12,12 +16,14 @@
 
 /* data */
 extern u_long mendererFadeData[7][2];
+extern u_long awfulBackgroundPacket[24][2] asm("D_0038C9B0");
 
 extern float prMendererNoodleColor[];
 
 /* sdata */
 extern float awfulAngle;
 extern float prMendererSpeed;
+extern float prMendererFade;
 
 /* sbss */
 extern TIM2_PICTUREHEADER *awfulPicture;
@@ -114,7 +120,67 @@ void PrInitializeAwfulBackground(void *tim2) {
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrDrawAwfulBackground__FG10sceGsFrame);
+#else /* First draft: TEX0 build order, stack layout and the 2x2 rotate loops still differ */
+static inline NaVECTOR<float, 2> RotateVector_tmp(const NaMATRIX<float, 2, 2>& m, const NaVECTOR<float, 2>& v) {
+    float r[2];
+    for (int i = 0; i < 2; i++) {
+        float sum = 0.0f;
+        for (int j = 0; j < 2; j++) {
+            sum += m[i][j] * v[j];
+        }
+        r[i] = sum;
+    }
+    return NaVECTOR<float, 2>(r[0], r[1]);
+}
+
+void PrDrawAwfulBackground(sceGsFrame frame) {
+    TIM2_PICTUREHEADER *pic = awfulPicture;
+    if (pic == NULL) {
+        return;
+    }
+
+    sceGsZbuf zbuf = prRenderStuff.m_zbuf;
+    u_int zbp = zbuf.ZBP;
+    u_int tbp = (zbp + 4) * 32;
+    u_int cbp = tbp + 0x80;
+
+    awfulBackgroundPacket[3][0] = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 1);
+    awfulBackgroundPacket[19][0] = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 0);
+
+    pic->GsTex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMT4, (u_int)PrGetBitSize(256), (u_int)PrGetBitSize(256),
+                                  1, 1, cbp, SCE_GS_PSMCT16, 0, 0, 1);
+    pic->GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0);
+    pic->GsRegs = 0x800000;
+    pic->GsTexClut = 0;
+    Tim2LoadPicture(pic);
+
+    awfulBackgroundPacket[5][0] = pic->GsTex0;
+    awfulBackgroundPacket[4][0] = SCE_GS_SET_ALPHA(0, 1, 2, 1, (u_int)(prMendererFade * 128.0f));
+
+    float angle = -awfulAngle;
+    float c = cosf(angle);
+    float s = sinf(angle);
+    NaMATRIX<float, 2, 2> rot(c, s, -s, c);
+
+    NaVECTOR<float, 2> p0 = RotateVector_tmp(rot, NaVECTOR<float, 2>(2730.0f, 2048.0f));
+    NaVECTOR<float, 2> p1 = RotateVector_tmp(rot, NaVECTOR<float, 2>(-2730.0f, 2048.0f));
+
+    awfulBackgroundPacket[10][0] = SCE_GS_SET_UV((u_int)(p0[0] + 8192.0f), (u_int)(p0[1] + 8192.0f));
+    awfulBackgroundPacket[12][0] = SCE_GS_SET_UV((u_int)(p1[0] + 8192.0f), (u_int)(p1[1] + 8192.0f));
+    awfulBackgroundPacket[14][0] = SCE_GS_SET_UV((u_int)(8192.0f - p1[0]), (u_int)(8192.0f - p1[1]));
+    awfulBackgroundPacket[16][0] = SCE_GS_SET_UV((u_int)(8192.0f - p0[0]), (u_int)(8192.0f - p0[1]));
+
+    PrWaitDmaFinish(SCE_DMA_GIF);
+    sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);
+    chan->chcr.TTE = 0;
+    FlushCache(WRITEBACK_DCACHE);
+    sceDmaSendN(chan, awfulBackgroundPacket, 24);
+
+    WaveCtrlDisp(&awfulWave, &frame);
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrUpdateAwfulMenderer__Fv);
@@ -134,6 +200,8 @@ void PrUpdateAwfulMenderer() {
 #endif
 
 /* nalib/navector.h */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", func_00150D10);
+#endif
