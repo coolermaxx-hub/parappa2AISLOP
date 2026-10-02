@@ -49,9 +49,20 @@ INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateClusterMatrix__13SpmFileHe
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateClusterMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext1Model__13PrModelObject);
+void PrModelObject::RenderContext1Model() {
+    m_spm_image->RenderContext1Model(this);
+    m_rendered_once = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext1Model__13SpmFileHeaderP13PrModelObject);
+void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
+    if (m_flags & 0x10) {
+        return;
+    }
+
+    for (u_int i = 0; i < m_node_num; i++) {
+        m_nodes[i]->RenderContext1Node(model);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", ModifySimpleDmaPacket__7SpmNodeP23PrVuNodeHeaderDmaPacket);
 
@@ -123,21 +134,43 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderScreenModelNode__13PrModelObject);
+void PrModelObject::RenderScreenModelNode() {
+    m_spm_image->RenderScreenModelNode();
+    m_rendered_once = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderScreenModelNode__13SpmFileHeader);
+void SpmFileHeader::RenderScreenModelNode() {
+    for (u_int i = 0; i < m_node_num; i++) {
+        m_nodes[i]->RenderScreenModelNode();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderScreenModelNode__7SpmNode);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderBackgroundScreenModel__13PrModelObject);
+void PrModelObject::RenderBackgroundScreenModel() {
+    m_spm_image->RenderBackgroundScreenModel();
+    m_rendered_once = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderBackgroundScreenModel__13SpmFileHeader);
+void SpmFileHeader::RenderBackgroundScreenModel() {
+    for (u_int i = 0; i < m_node_num; i++) {
+        m_nodes[i]->RenderBackgroundScreenModel();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderBackgroundScreenModel__7SpmNode);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Model__13PrModelObject);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Model__13SpmFileHeaderP13PrModelObject);
+void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
+    if (m_flags & 0x8) {
+        return;
+    }
+
+    for (u_int i = 0; i < m_node_num; i++) {
+        m_nodes[i]->RenderContext2Node(model);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Node__7SpmNodeP13PrModelObject);
 
