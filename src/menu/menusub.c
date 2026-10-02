@@ -1273,20 +1273,23 @@ static void TsSet_ParappaCapColor(void) {
     MenuRoundTim2Trans(n);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsClearSet);
-#else
 /* static */ void TsClearSet(P3GAMESTATE *pstate) {
-    P3LOG_VAL *plog   = pstate->pLog;
-    int        nstage = pstate->nStage;
-    int        stage  = nstage - 1;
-    int        round  = plog->nRound;
-    int        bAuto  = FALSE;
-    int        jacket = 0;
-    int        i, cnt, lv;
+    int        nRound;
+    int        nStage;
+    int        i;
+    int        flg;
+    int        bGoRecShop = FALSE;
+    int        bRecJacket = 0;
+    int        vslev;
+    int        nextPos;
+    u_int      clog;
     short     *pRute;
+    P3LOG_VAL *pLog = pstate->pLog;
 
-    if (stage < 0 || stage >= 8) {
+    nStage = pstate->nStage - 1;
+    nRound = pLog->nRound;
+
+    if (nStage < 0 || nStage >= 8) {
         return;
     }
     if (pstate->nMode == 1) {
@@ -1294,75 +1297,76 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsClearSet);
     }
 
     if (pstate->nMode == 2) {
-        lv = pstate->vsLev + 1;
-        if (round >= 4 && plog->clrVSCOM1[stage] < 4 && lv >= 4) {
-            cnt = 0;
+        vslev = pstate->vsLev;
+        if (nRound >= 4 && pLog->clrVSCOM1[nStage] < 4 && vslev + 1 >= 4) {
+            flg = 0;
             for (i = 0; i < 8; i++) {
-                if (plog->clrVSCOM1[i] >= 4) {
-                    cnt++;
+                if (pLog->clrVSCOM1[i] >= 4) {
+                    flg++;
                 }
             }
-            if (cnt == 7) {
-                bAuto  = TRUE;
-                jacket = 9;
+            if (flg == 7) {
+                bGoRecShop = TRUE;
+                bRecJacket = 9;
             }
         }
-        if (plog->clrVSCOM1[stage] < lv) {
-            plog->clrVSCOM1[stage] = lv;
+        if (pLog->clrVSCOM1[nStage] < vslev + 1) {
+            pLog->clrVSCOM1[nStage] = vslev + 1;
         }
     } else if (pstate->nMode == 0) {
         pstate->pAutoMove = NULL;
-        if (round == 0 && plog->clrCount[stage] <= 0) {
-            lv = nstage + 1;
-            if (lv >= 9) {
-                lv = 1;
+        if (nRound == 0 && pLog->clrCount[nStage] <= 0) {
+            nextPos = pstate->nStage + 1;
+            if (nextPos >= 9) {
+                nextPos = 1;
             }
             pstate->autoMovePos[1] = -1;
-            pstate->autoMovePos[0] = lv;
+            pstate->autoMovePos[0] = nextPos;
             pstate->pAutoMove = pstate->autoMovePos;
         }
 
-        if (round < 4) {
-            plog->clrFlg[round] |= 1 << stage;
+        flg = (nRound < 4);
+        if (flg) {
+            pLog->clrFlg[nRound] |= 1 << nStage;
         }
 
-        round++;
-        plog->clrCount[stage]++;
-        if (plog->clrCount[stage] > round) {
-            plog->clrCount[stage] = round;
+        pLog->clrCount[nStage]++;
+        if (pLog->clrCount[nStage] > nRound + 1) {
+            pLog->clrCount[nStage] = nRound + 1;
         }
 
         if (pP3GameState->bCoolClr) {
-            if (round > 4 && plog->clrCOOL[stage] < 4) {
-                bAuto  = TRUE;
-                jacket = stage;
+            if (!flg && pLog->clrCOOL[nStage] < 4) {
+                bGoRecShop = TRUE;
+                bRecJacket = nStage;
             }
-            plog->clrCOOL[stage] = round;
-            plog->logCOOL[stage] = ((plog->logCOOL[stage] << 4) & 0xfff0) | ((round < 5) ? round : 4);
+            pLog->clrCOOL[nStage] = nRound + 1;
+            clog = pLog->logCOOL[nStage];
+            pLog->logCOOL[nStage] = ((clog << 4) & 0xfff0) | ((nRound + 1 < 5) ? nRound + 1 : 4);
         }
 
-        cnt = TRUE;
+        flg = TRUE;
         for (i = 0; i < 8; i++) {
-            if (plog->clrCount[i] < round) {
-                cnt = FALSE;
+            if (pLog->clrCount[i] < nRound + 1) {
+                flg = FALSE;
             }
         }
 
-        if (cnt) {
-            plog->nRound++;
-            if (plog->nRound > 1000000) {
-                plog->nRound = 1000000;
+        if (flg) {
+            pLog->nRound++;
+            if (pLog->nRound > 1000000) {
+                pLog->nRound = 1000000;
             }
-            printf("*** Round Up = (%d)\n", plog->nRound);
-            if (plog->nRound == 4) {
-                bAuto  = TRUE;
-                jacket = 0;
+            printf("*** Round Up = (%d)\n", pLog->nRound);
+            if (pLog->nRound == 4) {
+                bGoRecShop = TRUE;
+                bRecJacket = 0;
             }
         }
     }
 
-    if (bAuto) {
-        pRute = RecordShopRute[stage + 1];
+    if (bGoRecShop) {
+        pRute = RecordShopRute[nStage + 1];
         for (i = 0; i < 9; i++) {
             pstate->autoMovePos[i] = pRute[i];
             if (pRute[i] < 0) {
@@ -1370,11 +1374,10 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsClearSet);
             }
         }
         pstate->autoMovePos[i] = -2;
-        pstate->curRecJacket = jacket;
         pstate->pAutoMove = pstate->autoMovePos;
+        pstate->curRecJacket = bRecJacket;
     }
 }
-#endif
 
 static void TsCheckEnding(P3GAMESTATE *pstate) {
     int        nRound;
@@ -1796,65 +1799,71 @@ void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
 #else
 /* static */ int TsRanking_Set(void) {
-    P3GAMESTATE    *pstate = pP3GameState;
-    int             stage  = pstate->nStage;
+    P3GAMESTATE    *pstate;
     P3MC_RANKSCORE *pScore;
-    int            *pNum;
     u_int           score;
-    int             max;
-    int             n, i, j;
+    int             i;
+    int             l;
+    int             nStage;
+    int            *pNRank;
+    int             nRank;
+    int             RankMAX;
+    int             vsLev;
 
+    pstate = pP3GameState;
+    nStage = pstate->nStage;
     memset(&CurRankScore, 0, sizeof(CurRankScore));
 
-    if (stage < 1 || stage > 8 || pstate->nMode == 1) {
+    if (nStage < 1 || nStage > 8 || pstate->nMode == 1) {
         return -1;
     }
 
     if (pstate->nMode == 2) {
-        max    = 10;
-        score  = pstate->score;
-        pNum   = &pCStageRank[stage - 1].nVplay[pstate->vsLev];
-        pScore = pCStageRank[stage - 1].vplay[pstate->vsLev];
+        vsLev   = pstate->vsLev;
+        RankMAX = 10;
+        score   = pstate->score;
+        pNRank  = &pCStageRank[nStage - 1].nVplay[vsLev];
+        pScore  = pCStageRank[nStage - 1].vplay[vsLev];
         if (pstate->winPlayer > 0) {
             return -1;
         }
     } else {
-        max    = 20;
-        score  = pstate->score + pstate->bonusG;
-        pNum   = &pCStageRank[stage - 1].nSplay;
-        pScore = pCStageRank[stage - 1].splay;
+        RankMAX = 20;
+        score   = pstate->score + pstate->bonusG;
+        pNRank  = &pCStageRank[nStage - 1].nSplay;
+        pScore  = pCStageRank[nStage - 1].splay;
     }
 
     GetRankScoreID(&MapTime, CurRankScore.scDate);
     CurRankScore.name[0] = '\0';
     CurRankScore.score = score;
 
-    n = *pNum;
+    nRank = *pNRank;
     i = 0;
-    if (n < max) {
-        for (; i < n; i++) {
+    if (nRank < RankMAX) {
+        for (i = 0; i < nRank; i++) {
             if (pScore[i].score < score) {
                 break;
             }
         }
-        *pNum = n + 1;
+        *pNRank = nRank + 1;
     } else {
-        for (; i < max; i++) {
+        for (i = 0; i < RankMAX; i++) {
             if (pScore[i].score < score) {
                 break;
             }
         }
     }
 
-    if (i >= max) {
-        return -1;
+    if (i < RankMAX) {
+        for (l = RankMAX - 1; i < l; l--) {
+            pScore[l] = pScore[l - 1];
+        }
+        pScore[i] = CurRankScore;
+        return i;
     }
 
-    for (j = max - 1; i < j; j--) {
-        pScore[j] = pScore[j - 1];
-    }
-    pScore[i] = CurRankScore;
-    return i;
+    return -1;
 }
 #endif
 
@@ -3893,65 +3902,73 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsGetRankingList);
-#else
 /* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) {
+    int             i;
+    int             maxn;
+    int             rnkMax;
     P3MC_RANKSCORE *ptRank[20];
-    P3MC_RANKSCORE *pRank;
-    USER_DATA      *puser;
-    int             i, n, num;
 
     for (i = 0; i < 20; i++) {
         ptRank[i] = NULL;
     }
 
-    if (flag == 0) {
-        num   = pCStageRank[stageNo].nSplay;
-        pRank = pCStageRank[stageNo].splay;
-    } else {
-        num   = pCStageRank[stageNo].nVplay[vsLev];
-        pRank = pCStageRank[stageNo].vplay[vsLev];
-    }
-    _TsSortSetRanking(ptRank, num, pRank, 1);
+    {
+        int             n;
+        P3MC_RANKSCORE *pRank;
 
-    n = P3MC_SortUser(UserLst, 1, 0);
-    for (i = 0; i < n; i++) {
-        puser = UserLst->pUserTbl[i];
-        if (puser->flg == 1) {
+        if (flag == 0) {
+            n     = pCStageRank[stageNo].nSplay;
+            pRank = pCStageRank[stageNo].splay;
+        } else {
+            n     = pCStageRank[stageNo].nVplay[vsLev];
+            pRank = pCStageRank[stageNo].vplay[vsLev];
+        }
+        _TsSortSetRanking(ptRank, n, pRank, 1);
+    }
+
+    maxn = P3MC_SortUser(UserLst, 1, 0);
+    for (i = 0; i < maxn; i++) {
+        int             n;
+        P3MC_RANKSCORE *pRank;
+        USER_DATA      *pUser = UserLst->pUserTbl[i];
+
+        if (pUser->flg == 1) {
             if (flag == 0) {
-                num   = puser->stageRank[stageNo].nSplay;
-                pRank = puser->stageRank[stageNo].splay;
+                n     = pUser->stageRank[stageNo].nSplay;
+                pRank = pUser->stageRank[stageNo].splay;
             } else {
-                num   = puser->stageRank[stageNo].nVplay[vsLev];
-                pRank = puser->stageRank[stageNo].vplay[vsLev];
+                n     = pUser->stageRank[stageNo].nVplay[vsLev];
+                pRank = pUser->stageRank[stageNo].vplay[vsLev];
             }
-            _TsSortSetRanking(ptRank, num, pRank, 1);
+            _TsSortSetRanking(ptRank, n, pRank, 1);
         }
     }
 
-    n = P3MC_SortUser(UserLst, 2, 0);
-    for (i = 0; i < n; i++) {
-        puser = UserLst->pUserTbl[i];
-        if (puser->flg == 1) {
+    maxn = P3MC_SortUser(UserLst, 2, 0);
+    for (i = 0; i < maxn; i++) {
+        int             n;
+        P3MC_RANKSCORE *pRank;
+        USER_DATA      *pUser = UserLst->pUserTbl[i];
+
+        if (pUser->flg == 1) {
             if (flag == 0) {
-                if (puser->isVs != 0) {
+                if (pUser->isVs != 0) {
                     continue;
                 }
-                num   = puser->stageRank[stageNo].nSplay;
-                pRank = puser->stageRank[stageNo].splay;
+                n     = pUser->stageRank[stageNo].nSplay;
+                pRank = pUser->stageRank[stageNo].splay;
             } else {
-                if (puser->isVs != 2) {
+                if (pUser->isVs != 2) {
                     continue;
                 }
-                num   = puser->stageRank[stageNo].nVplay[vsLev];
-                pRank = puser->stageRank[stageNo].vplay[vsLev];
+                n     = pUser->stageRank[stageNo].nVplay[vsLev];
+                pRank = pUser->stageRank[stageNo].vplay[vsLev];
             }
-            _TsSortSetRanking(ptRank, num, pRank, 0);
+            _TsSortSetRanking(ptRank, n, pRank, 0);
         }
     }
 
-    n = 0;
+    rnkMax = 0;
     for (i = 0; i < 20 && ptRank[i] != NULL; i++) {
         RankLst[i].score = ptRank[i]->score;
         *(RANK_NAME*)RankLst[i].name = *(RANK_NAME*)ptRank[i]->name;
@@ -3959,13 +3976,12 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsGetRankingList);
         if (RankLst[i].name[0] == '\0') {
             strcpy(RankLst[i].name, UserName_RankingNoSave);
         }
-        n++;
+        rnkMax++;
     }
 
-    *nrank = n;
+    *nrank = rnkMax;
     return RankLst;
 }
-#endif
 
 void TsPopCusAOff(POPCTIM *pfw) {
     POPCOFF *poff;
