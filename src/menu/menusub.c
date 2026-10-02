@@ -108,11 +108,11 @@
 // /* data 18c4b0 */ static int PopBubblePat_No[0][9];
 // /* data 18c540 */ static PTPOS POPWZoom_CXY[0];
 /* data 18c588 */ extern PTPOS JUKEBOX_Pos[]; /* static */
-// /* data 18c5b0 */ static PATPOS JUKEJKT_Pat[0];
+/* data 18c5b0 */ extern PATPOS JUKEJKT_Pat[]; /* static */
 // /* data 18c628 */ static float JUKEWAV_INITBL[0];
-// /* data 18c650 */ static PATPOS JUKEJKT_PatS[0];
-// /* data 18c660 */ static PATPOS JUKEREC_Pat[0];
-// /* data 18c6d8 */ static PATPOS JUKEREC_PatS[0];
+/* data 18c650 */ extern PATPOS JUKEJKT_PatS[]; /* static */
+/* data 18c660 */ extern PATPOS JUKEREC_Pat[]; /* static */
+/* data 18c6d8 */ extern PATPOS JUKEREC_PatS[]; /* static */
 /* data 18c6e8 */ extern u_int HosiColor[][8]; /* static */
 /* data 18c748 */ extern HOSI_TYPE hTypeTable[17];
 /* sdata 3997bc */ extern TSTEX_INF *tblTex; /* static */
@@ -1410,7 +1410,18 @@ int DateChgInt(u_int n) {
     );
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", GetRankScoreID);
+void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
+    int year   = DateChgInt(mptim->date_year);
+    int second = DateChgInt(mptim->date_second);
+    int hour   = DateChgInt(mptim->date_hour);
+    int day    = DateChgInt(mptim->date_day);
+    int month  = DateChgInt(mptim->date_month);
+    int minute = DateChgInt(mptim->date_minute);
+
+    dat[0] = (year % 50) * (12 * 31 * 24 * 60 * 60) + (month % 12) * (31 * 24 * 60 * 60) +
+             (day % 31) * (24 * 60 * 60) + (hour % 24) * (60 * 60) + (minute % 60) * 60 + (second % 60);
+    dat[1] = ((rand() % 0x10000) << 8) + mptim->date_pad;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
 
@@ -1423,7 +1434,42 @@ void TsMENU_SetMapScreen(int mapNo) {
     CurMapState = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCheckTimeMapChange);
+static int TsCheckTimeMapChange() {
+    if (CurMapState == 0 && CurMapBakFlg != CurMapOldFlg) {
+        if (MNScene_isSeniAnime(&MNS_StageMap)) {
+            return 0;
+        }
+
+        _bMapCaptureReq = TRUE;
+        CurMapState = 1;
+        return 1;
+    }
+
+    switch (CurMapState) {
+    case 0:
+        TsMENU_GetMapTimeState(0);
+        break;
+    case 1:
+        TsSetScene_Map(&MNS_StageMap2, CurMapNo, CurMapBakFlg, 0);
+        MNScene_CopyState(&MNS_StageMap2, &MNS_StageMap);
+        TsMENU_SetMapScreen(CurMapNo);
+        MNScene_CopyState(&MNS_StageMap, &MNS_StageMap2);
+        MNScene_DispSw(&MNS_StageMap, 0);
+        MNScene_DispSw(&MNS_StageMap2, 1);
+        CurMapState = 2;
+        /* fallthrough */
+    case 2:
+        if (TsSCFADE_Set(5, 30, 2) == 0) {
+            MNScene_DispSw(&MNS_StageMap2, 0);
+            MNScene_End(&MNS_StageMap2);
+            MNScene_DispSw(&MNS_StageMap, 1);
+            CurMapState = 0;
+        }
+        break;
+    }
+
+    return CurMapState;
+}
 
 int TsAnimeWait_withKeySkip(u_int tpad, MN_SCENE *scene, int ltim, u_int bnk) {
     if (bnk == -1) {
@@ -3183,9 +3229,41 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     pw->patNo = pno;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJkJacketPut);
+/* static */ void _TsJkJacketPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zx, float rot, u_int abgr, u_int abgrs) {
+    if (pw->vrate == 0.0f) {
+        spr->rgba0 = abgrs;
+        TsPatPutRZoom(pk, spr, JUKEJKT_PatS, px + 10, py + 5, zx, rot);
+        spr->rgba0 = abgr;
+        TsPatPutRZoom(pk, spr, &JUKEJKT_Pat[pw->patNo], px, py, zx, rot);
+    } else {
+        spr->rgba0 = abgrs;
+        TsPatPutMZoom(pk, spr, JUKEJKT_PatS, px + 10, py + 5, zx + pw->vrate, zx + pw->vrate, 8, 8, pw->vrate, pw->vrate);
+        spr->rgba0 = abgr;
+        TsPatPutMZoom(pk, spr, &JUKEJKT_Pat[pw->patNo], px, py, zx + pw->vrate, zx + pw->vrate, 8, 8, pw->vrate, pw->vrate);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJkRecordPut);
+/* static */ void _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zr, float rrot, u_int abgr, u_int abgrs) {
+    float box, boy;
+
+    if (pw->rox == 0.0f && pw->roy == 0.0f) {
+        return;
+    }
+
+    box = spr->ofsx;
+    boy = spr->ofsy;
+
+    spr->rgba0 = abgrs;
+    spr->ofsx = box + pw->rox;
+    spr->ofsy = boy + pw->roy;
+    TsPatPutRZoom(pk, spr, JUKEREC_PatS, px + 10, py + 5, zr, rrot);
+
+    spr->rgba0 = abgr;
+    TsPatPutRZoom(pk, spr, &JUKEREC_Pat[pw->patNo], px, py, zr, rrot);
+
+    spr->ofsx = box;
+    spr->ofsy = boy;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TSJukeCDObj_Draw);
 
