@@ -16,7 +16,7 @@ static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx) {
     NaVECTOR<float, 4> eye;
-    eye = prSpramData->unk50;
+    eye = prSpramData->m_camera.position;
     ((float*)&eye)[3] = 1.0f;
 
     NaVECTOR<float, 4> v;

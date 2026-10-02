@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include "prpriv.h"
+
 #include "vu1/vumem.h"
 
 #include <nalib/navector.h>
@@ -24,21 +26,26 @@ public:
     NaMATRIX<float, 4, 4> unk0;
     u_long128 *m_noodle_buffer[3];
     char unk4C[0x4];
-    NaVECTOR<float, 4> unk50;
-    char unk60[0x40];
+    PrPERSPECTIVE_CAMERA m_camera;
+    NaVECTOR<float, 4> m_camera_direction;
     NaMATRIX<float, 4, 4> m_camera_matrix;
     NaMATRIX<float, 4, 4> m_view_projection_matrix;
     NaMATRIX<float, 4, 4> unk120;
     NaMATRIX<float, 4, 4> unk160;
     NaMATRIX<float, 4, 4> unk1A0;
-    char unk1E0[0xC0];
+    NaMATRIX<float, 4, 4> unk1E0;
+    NaMATRIX<float, 4, 4> unk220;
+    char unk260[0x40];
     sceDmaTag m_end_dmatag;
     char unk2B0[0x100];
     PrDisplayHeader m_display_header;
     float m_animation_time;
     PrModelObject *m_current_model;
     SpaFileHeader *m_animation;
-    char unk66C[0x10];
+    u_int m_unk66C;
+    u_int m_unk670;
+    u_int m_unk674;
+    u_int m_unk678;
     float m_model_contour_blur_alpha[2];
     float m_model_transaction_blend_ratio;
     u_int m_disturbance_param;
