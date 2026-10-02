@@ -65,9 +65,6 @@ void SetNextTarget(PrNoodlePositionData *data) {
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", InitializeNoodlePositionData__Fv);
-#else /* Requires .lit4 migration */
 void InitializeNoodlePositionData() {
     PrNoodlePositionData *data = noodlePositionData;
 
@@ -79,7 +76,6 @@ void InitializeNoodlePositionData() {
         SetNextTarget(data);
     }
 }
-#endif
 
 void UpdateNoodlePositionData(PrNoodlePositionData *data) {
     if (--data->timer == (u_int)-1) {

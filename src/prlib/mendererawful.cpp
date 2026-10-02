@@ -62,10 +62,9 @@ float GetAwfulRotation() {
 }
 #endif
 
-extern const float D_00399250;
 void PrStartAwfulRotation() {
     awfulStatus = 0;
-    awfulRotation = D_00399250; /* 0.016f */
+    awfulRotation = 0.016f;
     SetNextSwitchRotationTimer();
 }
 

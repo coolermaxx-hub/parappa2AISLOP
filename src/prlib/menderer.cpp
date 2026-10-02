@@ -372,10 +372,9 @@ void DrawNoodleStrip(float ratio, float rot) {
 }
 #endif
 
-extern const float D_003991AC;
 void StartNoodleRotation() {
     noodleChangeTimer = 900;
-    noodleDeltaRotation = D_003991AC; /* 0.001f */
+    noodleDeltaRotation = 0.001f;
     noodleStatus = 0;
     noodleRotation = 0.0f;
 }

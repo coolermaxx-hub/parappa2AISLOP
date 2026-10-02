@@ -53,6 +53,11 @@ DVP_COMPILER_FLAGS = "" # None (at the moment)
 
 EE_COMPILE_CMD = f"{EE_COMPILER_DIR}/ee-gcc -c {EE_COMMON_INCLUDES} {EE_COMPILER_FLAGS}"
 EE_COMPILE_CMD_CXX = f"{EE_COMPILER_DIR}/ee-gcc -c {EE_COMMON_INCLUDES} {EE_COMPILER_FLAGS_CXX}"
+# Compile to asm first so lit4fix can point float literals at the .lit4 data
+# that is still in asm (see tools/buildtools/lit4fix.py), then assemble.
+EE_LIT4FIX = "python3 tools/buildtools/lit4fix.py $in $out.s"
+EE_ASSEMBLE_CMD = f"{EE_COMPILER_DIR}/ee-gcc -c {EE_COMPILER_FLAGS} -x assembler $out.s -o $out"
+EE_ASSEMBLE_CMD_CXX = f"{EE_COMPILER_DIR}/ee-gcc -c {EE_COMPILER_FLAGS_CXX.replace('-x c++', '-x assembler')} $out.s -o $out"
 IOP_COMPILE_CMD = f"{IOP_COMPILER_DIR}/iop-gcc -c {IOP_COMMON_INCLUDES} {IOP_COMPILER_FLAGS}"
 DVP_COMPILE_CMD = f"{EE_COMPILER_DIR}/ee-dvp-as {DVP_COMMON_INCLUDES} {DVP_COMPILER_FLAGS}"
 
@@ -187,7 +192,7 @@ def build_stuff(linker_entries: List[LinkerEntry], is_irx: bool = False, append:
         ninja.rule(
             "ee_cpp",
             description="ee_cpp $in",
-            command=f"{EE_COMPILE_CMD_CXX} $in -o $out && {CROSS}strip $out -N dummy-symbol-name",
+            command=f"{EE_COMPILE_CMD_CXX.replace(' -c ', ' -S ')} $in -o $out.s && {EE_LIT4FIX} && {EE_ASSEMBLE_CMD_CXX} && {CROSS}strip $out -N dummy-symbol-name",
         )
 
         ninja.rule(
@@ -199,7 +204,7 @@ def build_stuff(linker_entries: List[LinkerEntry], is_irx: bool = False, append:
         ninja.rule(
             "ee_cc",
             description="ee_cc $in",
-            command=f"{EE_COMPILE_CMD} $in -o $out && {CROSS}strip $out -N dummy-symbol-name",
+            command=f"{EE_COMPILE_CMD.replace(' -c ', ' -S ')} $in -o $out.s && {EE_LIT4FIX} && {EE_ASSEMBLE_CMD} && {CROSS}strip $out -N dummy-symbol-name",
         )
 
         ninja.rule(

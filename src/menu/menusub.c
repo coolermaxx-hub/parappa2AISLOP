@@ -4548,9 +4548,6 @@ void TsMCAMes_SetMes(int no) {
     pmesw->line = _PkMCMsgGetLine(pmesw->mesflg & 0xffff);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsMCAMes_Flow);
-#else /* Needs .sdata match */
 static void TsMCAMes_Flow(u_int tpad) {
     MCMES_WORK *pmesw;
     int         cLine;
@@ -4644,7 +4641,6 @@ static void TsMCAMes_Flow(u_int tpad) {
         }
     }
 }
-#endif
 
 /* static */ void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
     MCMES_WORK *pmesw = &MCMesWork;
@@ -7288,9 +7284,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Draw);
-#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396120) */
 static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
     int           i;
     OPTION_MENU  *pfw = &OptionMenu;
@@ -7333,7 +7326,6 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
         TsPatPut(pk, spr, &pselw->pObjTbl[pfw->sw[i]].ppat, 0, 0);
     }
 }
-#endif
 
 static int TsUserList_GetCurFileNo(int *isBroken) {
     USERLIST_MENU *pfw   = &UserListMenu;
@@ -8141,8 +8133,6 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396120);
-
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
 #else /* Needs .sdata match; two argument setups are also scheduled differently */
@@ -8815,9 +8805,6 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetCTransSpr);
-#else /* Requires .lit4 migration */
 void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy) {
     PKMESH *mesh;
     PKMSPT *pt;
@@ -8852,11 +8839,7 @@ void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy
     PkFTMesh_Add(pk, spr, mesh);
     PkMesh_Delete(mesh);
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetSLTransSpr);
-#else /* Requires .lit4 migration */
 void TsSetSLTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx) {
     PKMESH *mesh;
     int     y;
@@ -8883,11 +8866,7 @@ void TsSetSLTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx) {
 
     spr->ofsy = boy;
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetPNTransSpr);
-#else /* Requires .lit4 migration */
 void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float dr) {
     PKMESH *mesh;
     int     x, y;
@@ -8918,7 +8897,6 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
     PkFTMesh_Add(pk, spr, mesh);
     PkMesh_Delete(mesh);
 }
-#endif
 
 static void TsPatTexFnc(int flg) {
     _TexFunc = flg;
@@ -8999,9 +8977,6 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPatPutRZoom);
-#else /* Requires .lit4 migration */
 /* static */ void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot) {
     float zx  = spr->zx;
     float zy  = spr->zy;
@@ -9032,7 +9007,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPatPutRZoom);
     spr->ofsx = ofx;
     spr->ofsy = ofy;
 }
-#endif
 
 /* static */ void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
     float zx   = spr->zx;
