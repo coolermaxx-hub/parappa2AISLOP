@@ -2146,8 +2146,14 @@ ApplyDepthOfField__13PrSceneObject                                              
 gifTag_tmp_depthfield                                                               = 0x01c833d0; // size:0x10
 
 // nalib/napacket.h (weak copies kept by the linker)
-AddTest1__11NaGifPacketUiiUciUiiUii                                                 = 0x0014cd48; // type:func
-AddGsAD__11NaGifPacketUiUl                                                          = 0x0014cda8; // type:func
+AddGifPackedAD_TEXFLUSH__11NaGifPacket                                              = 0x0014cd38; // type:func
+AddGifPackedAD_TEST_1__11NaGifPacketbiUcibibi                                       = 0x0014cd48; // type:func
+OpenGifTag__11NaGifPacketUI80                                                       = 0x0014cda0; // type:func
+AddGsAD__18NaGifPacketWrapperUiUl                                                   = 0x0014cda8; // type:func
+CloseGifTag__18NaGifPacketWrapper                                                   = 0x0014cdb0; // type:func
+OpenGifTag__18NaGifPacketWrapperUI80                                                = 0x0014cdb8; // type:func
+End__18NaGifPacketWrapperUiUiUi                                                     = 0x0014cdc0; // type:func
+Init__18NaGifPacketWrapperPUI80                                                     = 0x0014cdc8; // type:func
 
 // prlib/vram.cpp
 PrAddDrawAreaDefinition__FP11NaGifPacketRC11PrVRAM_RECTbbUl                         = 0x0014cdd0; // type:func

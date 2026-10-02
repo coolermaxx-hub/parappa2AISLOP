@@ -68,14 +68,14 @@ void PrSceneObject::ApplyDepthOfField() {
     tag.FLG = 0;
     tag.NREG = 1;
     tag.REGS0 = 0xe;
-    packet.BeginGifTag(*(u_long128*)&tag);
+    packet.OpenGifTag(*(u_long128*)&tag);
 
     zbuf.ZMSK = 1;
     packet.AddGsAD(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
 
     bool first = true;
     for (u_int i = 1; i <= level; i++) {
-        packet.AddTexflush();
+        packet.AddGifPackedAD_TEXFLUSH();
         PrAddDrawAreaDefinition(&packet, work, first, true, 0);
         PrAddTextureAreaDefinition(&packet, src, first);
         PrAddSpriteDefinitionSuperSampled(&packet, work, src);
@@ -84,8 +84,8 @@ void PrSceneObject::ApplyDepthOfField() {
         const NaMATRIX<float, 4, 4>& m = prSpramData_tmp_depthfield->unk1A0;
         PrSetSpriteDefinitionZ((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3]));
 
-        packet.AddTexflush();
-        packet.AddTest1(0, 0, 0, 0, 0, 0, 1, 2);
+        packet.AddGifPackedAD_TEXFLUSH();
+        packet.AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 1, 2);
         PrAddDrawAreaDefinition(&packet, src, false, false, 0);
         PrAddTextureAreaDefinition(&packet, work, false);
         packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x60));
@@ -107,29 +107,31 @@ void PrSceneObject::ApplyDepthOfField() {
     packet.AddGsAD(SCE_GS_TEST_1, *(u_long*)&env->test1);
     packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80));
     packet.CloseGifTag();
-    sceGifPkTerminate(&packet.m_packet);
+    sceGifPkTerminate(&packet);
 
     sceDmaChan *dma = sceDmaGetChan(SCE_DMA_GIF);
     dma->chcr.TTE = 0;
     FlushCache(0);
-    sceDmaSend(dma, (u_long128*)(((u_int)packet.m_packet.pBase & 0x3fff) | 0x80000000));
+    sceDmaSend(dma, (u_long128*)(((u_int)packet.pBase & 0x3fff) | 0x80000000));
 }
 #endif
 
 
-/* nalib/napacket.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CD38);
+/* nalib/napacket.h (emitted by the C version above) */
+#ifndef NON_MATCHING
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEXFLUSH__11NaGifPacket);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddTest1__11NaGifPacketUiiUciUiiUii);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEST_1__11NaGifPacketbiUcibibi);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDA0);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__11NaGifPacketUI80);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGsAD__11NaGifPacketUiUl);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGsAD__18NaGifPacketWrapperUiUl);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDB0);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", CloseGifTag__18NaGifPacketWrapper);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDB8);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__18NaGifPacketWrapperUI80);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDC0);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", End__18NaGifPacketWrapperUiUiUi);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", func_0014CDC8);
+INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", Init__18NaGifPacketWrapperPUI80);
+#endif

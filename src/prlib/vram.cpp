@@ -9,21 +9,21 @@ int PrAddDrawAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, bool o
     u_int x1 = x0 + rect.w;
     u_int y1 = y0 + rect.h;
 
-    packet->AddFrame1((y >> 5) * fbw, fbw, 0, 0);
-    packet->AddScissor1(x0, x1, y0, y1);
+    packet->AddGifPackedAD_FRAME_1((y >> 5) * fbw, fbw, 0, 0);
+    packet->AddGifPackedAD_SCISSOR_1(x0, x1, y0, y1);
 
     if (offset) {
-        packet->AddXyoffset1(0, 0);
+        packet->AddGifPackedAD_XYOFFSET_1(0, 0);
         num = 3;
     }
 
     if (test) {
-        packet->AddTest1(0, 0, 0, 0, 0, 0, 0, 0);
+        packet->AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 0, 0);
         num++;
     }
 
     if (color) {
-        packet->AddPrim(6 /* SPRITE */, 0, 0, 0, 0, 0, 0, 0, 0);
+        packet->AddGifPackedAD_PRIM(6 /* SPRITE */, 0, 0, 0, 0, 0, 0, 0, 0);
         num += 4;
         packet->AddGsAD(SCE_GS_RGBAQ, color);
         packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(x0 << 4, y0 << 4, 0));
@@ -41,14 +41,14 @@ int PrAddTextureAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, boo
     u_int h = rect.h;
     u_int v = y & 0x1f;
 
-    packet->AddTex0_1(((y >> 5) * tbw) << 5, tbw, 0, 10, 10, 1, 1, 0, 0, 0, 0, 0);
-    packet->AddClamp1(2, 2, x, x + w - 1, v, v + h - 1);
+    packet->AddGifPackedAD_TEX0_1(((y >> 5) * tbw) << 5, tbw, 0, 10, 10, 1, 1, 0, 0, 0, 0, 0);
+    packet->AddGifPackedAD_CLAMP_1(2, 2, x, x + w - 1, v, v + h - 1);
 
     if (!bilinear) {
         return 2;
     }
 
-    packet->AddTex1_1(0, 0, 1, 1, 0, 0, 0);
+    packet->AddGifPackedAD_TEX1_1(0, 0, 1, 1, 0, 0, 0);
     return 3;
 }
 
@@ -70,7 +70,7 @@ int PrAddSpriteDefinition(NaGifPacket *packet, const PrVRAM_RECT& dst, const PrV
     u_int sw = src.w;
     u_int sh = src.h;
 
-    packet->AddPrim(6, 0, 1, 0, blend, 0, 1, 0, 0);
+    packet->AddGifPackedAD_PRIM(6, 0, 1, 0, blend, 0, 1, 0, 0);
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max(sx * 16 + 8, 0), Max(sy * 16 + 8, 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx + sw) * 16 + 8, 0), Max((sy + sh) * 16 + 8, 0)));
@@ -94,15 +94,15 @@ int PrAddSpriteDefinitionSuperSampled(NaGifPacket *packet, const PrVRAM_RECT& ds
     int u0 = (du >> 2) + 8;
     int v0 = dv + 8;
 
-    packet->AddPrim(6, 0, 1, 0, 1, 0, 1, 0, 0);
-    packet->AddAlpha1(0, 2, 2, 2, 0x21);
+    packet->AddGifPackedAD_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
+    packet->AddGifPackedAD_ALPHA_1(0, 2, 2, 2, 0x21);
 
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx << 4) + (u0 - du), 0), Max((sy << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max(((sx + sw) << 4) + (u0 - du), 0), Max(((sy + sh) << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ((dx + dw) << 4, (dy + dh) << 4, prSpriteDefinitionZ << 4));
 
-    packet->AddAlpha1(0, 2, 2, 1, 0x21);
+    packet->AddGifPackedAD_ALPHA_1(0, 2, 2, 1, 0x21);
 
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx << 4) + (u0 + du), 0), Max((sy << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
