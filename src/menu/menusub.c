@@ -134,8 +134,13 @@
 // /* data 18cad0 */ static int Pop_CmpMesNo[0];
 // /* data 18cae8 */ static int POPSel2BtnDir[0];
 /* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
-// /* data 18cb08 */ static BGM_TABLE JukeBgmTbl[0];
-// /* data 18cb58 */ static int JukeMenu_CmpMesNo[0];
+typedef struct { // 0x8
+    /* 0x0 */ MENU_DISKSND_ENUM bgmNo;
+    /* 0x4 */ int endV;
+} BGM_TABLE;
+
+/* data 18cb08 */ extern BGM_TABLE JukeBgmTbl[]; /* static */
+/* data 18cb58 */ extern int JukeMenu_CmpMesNo[]; /* static */
 /* data 18cb80 */ extern MNOPT_SELINF OptionSelTbl[]; /* static */
 /* data 18cbc0 */ extern USERLIST_TYPE UserListTbl[]; /* static */
 /* sdata 399820 */ extern int _TexFunc; /* static */
@@ -5391,7 +5396,359 @@ static int TsJukeObjAnime2(int isOut) {
     MENUSubt_PadFontArrowSet(flg);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsJukeMenu_Flow);
+/* static */ int TsJukeMenu_Flow(int flg, u_int tpad) {
+    JUKE_MENU *pfw = &JukeMenu;
+    int i;
+    int state;
+    int sel;
+    int osel;
+    int selx, sely;
+    extern int scstate_tmp_268; /* static */
+    extern int scstPos_tmp_269; /* static */
+#define scstate scstate_tmp_268
+#define scstPos scstPos_tmp_269
+
+    if (flg == 1) {
+        memset(pfw, 0, sizeof(*pfw));
+
+        pfw->selno = tpad;
+        if (tpad >= 10) {
+            pfw->selno = 0;
+        }
+
+        pfw->state = 0;
+        JukeMenu_Sw = flg;
+        pfw->anmTime = 0;
+        scstate = 0;
+        scstPos = 0;
+
+        for (i = 0; i < 10; i++) {
+            TSJukeCDObj_Init(&pfw->cusObj[i], i);
+        }
+
+        pfw->cusObj[8].bMsk = 0;
+
+        for (i = 0; i < 8; i++) {
+            int no;
+
+            switch (i) {
+            case 0:
+                no = 0;
+                break;
+            case 1:
+                no = 1;
+                break;
+            case 2:
+                no = 2;
+                break;
+            case 3:
+                no = 3;
+                break;
+            case 4:
+                no = 4;
+                break;
+            case 5:
+                no = 5;
+                break;
+            case 6:
+                no = 6;
+                break;
+            case 7:
+            default:
+                no = 7;
+                break;
+            }
+
+            if (pP3GameState->pLog->clrCOOL[i] < 4) {
+                pfw->cusObj[no].bMsk = 1;
+            }
+        }
+
+        for (i = 0; i < 8; i++) {
+            if (pP3GameState->pLog->clrVSCOM1[i] < 4) {
+                break;
+            }
+        }
+        if (i < 8) {
+            pfw->cusObj[9].bMsk = 1;
+        }
+
+        if (pfw->cusObj[pfw->selno].bMsk) {
+            for (i = 0; i < 10; i++) {
+                if (!pfw->cusObj[i].bMsk) {
+                    pfw->selno = i;
+                    break;
+                }
+            }
+        }
+        return 0;
+    }
+
+    if (flg == 2) {
+        JukeMenu_Sw = 0;
+        scstate = 0;
+        scstPos = 0;
+        return 0;
+    }
+
+    switch (scstate) {
+    case 0:
+        if (scstPos) {
+            scstate = 0x2100;
+        }
+        break;
+    case 0x100:
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[1]);
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[34]);
+        scstate = 0x110;
+        /* fallthrough */
+    case 0x110:
+        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
+            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+            scstate = 0;
+        }
+        break;
+    case 0x2000:
+        if (!scstPos) {
+            scstate = 0x100;
+        }
+        break;
+    case 0x2100:
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[4]);
+        scstate = 0x2180;
+        break;
+    case 0x2180:
+        if (TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
+            break;
+        }
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[1]);
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[33]);
+        scstate = 0x2200;
+        /* fallthrough */
+    case 0x2200:
+        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
+            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[5]);
+            scstate = 0x2000;
+        }
+        break;
+    }
+
+    state = pfw->state;
+    pfw->anmTime++;
+
+    switch (state) {
+    case 0:
+        TsJukeObjAnime(0);
+        state = 0x100;
+        pfw->cusObj[pfw->selno].time = 0;
+        pfw->cusObj[pfw->selno].state = TSJKCUS_CUR;
+        /* fallthrough */
+    case 0x100:
+        if (TsJukeIsObjAnime(1)) {
+            break;
+        }
+        /* fallthrough */
+    case 0x1000:
+        pfw->exitflg = 0;
+        state = 0x1100;
+        break;
+    case 0x1100:
+        _TsJKSetPadArrow(pfw->selno, pfw->cusObj);
+        TsCMPMes_SetMes(JukeMenu_CmpMesNo[pfw->selno]);
+
+        if (TsCheckTimeMapChange()) {
+            break;
+        }
+
+        osel = sel = pfw->selno;
+        selx = osel % 5;
+        sely = osel / 5;
+
+        if (tpad & 0x1000) {
+            _TsJKMoveCus(&selx, &sely, 0, -1, pfw->cusObj);
+        } else if (tpad & 0x4000) {
+            _TsJKMoveCus(&selx, &sely, 0, 1, pfw->cusObj);
+        } else if (tpad & 0x8000) {
+            _TsJKMoveCus(&selx, &sely, -1, 0, pfw->cusObj);
+        } else if (tpad & 0x2000) {
+            _TsJKMoveCus(&selx, &sely, 1, 0, pfw->cusObj);
+        }
+
+        sel = sely * 5 + selx;
+        if (osel != sel) {
+            sel = TSLIMIT(sel, 0, 10);
+            pfw->selno = sel;
+            (pfw->cusObj + osel)->state = TSJKCUS_OFF;
+            (pfw->cusObj + osel)->time = 0;
+            (pfw->cusObj + sel)->state = TSJKCUS_ON;
+            (pfw->cusObj + sel)->time = 0;
+            TSSNDPLAY(VSND_MVCUS_LR);
+        }
+
+        if (tpad & 0x40) {
+            pfw->exitflg = 1;
+            TSSNDPLAY(VSND_CANCEL);
+            state = 0xf020;
+        } else if (tpad & 0x20) {
+            pfw->exitflg = 0;
+            (pfw->cusObj + sel)->state = TSJKCUS_SELOK;
+            (pfw->cusObj + sel)->time = 0;
+            TSSNDPLAY(VSND_SELMODE);
+            state = 0x3000;
+        }
+        break;
+    case 0x3000:
+        scstPos = 1;
+        state = 0x3010;
+        TsCMPMes_SetMes(-1);
+        TsJukeObjAnime2(0);
+        MenuDataDiskSndReq(JukeBgmTbl[pfw->selno].bgmNo);
+        /* fallthrough */
+    case 0x3010:
+        if (TsJukeIsObjAnime(0)) {
+            break;
+        }
+        TsBGMMute(40);
+        state = 0x3020;
+        /* fallthrough */
+    case 0x3020:
+        if (!TsJukeIsObjAnime(1) && (tpad & 0x840)) {
+            pfw->exitflg = 1;
+            TSSNDPLAY(VSND_CANCEL);
+            state = 0x6000;
+        }
+        if (MenuDataDiskSndReady()) {
+            break;
+        }
+        /* fallthrough */
+    case 0x3f00:
+        TsBGMPause(1);
+        state = 0x4000;
+        MenuDataDiskSndPlay();
+        MenuDataDiskVolume(128);
+        memset(&pfw->MNS_StageMapW, 0, sizeof(pfw->MNS_StageMapW));
+        MNScene_CopyState(&pfw->MNS_StageMapW, &MNS_StageMap);
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimeSEA[1]);
+        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapBGMCamera[pfw->selno]);
+        pfw->timeV = 0;
+        break;
+    case 0x4000:
+        if (!TsJukeIsObjAnime(1)) {
+            pfw->timeV++;
+            if (pfw->timeV >= JukeBgmTbl[pfw->selno].endV) {
+                state = 0x6000;
+            } else if (pfw->timeV + 60 < JukeBgmTbl[pfw->selno].endV && (tpad & 0x840)) {
+                pfw->exitflg = 1;
+                TSSNDPLAY(VSND_CANCEL);
+                state = 0x5000;
+            }
+        }
+        break;
+    case 0x5000:
+        state = 0x5008;
+        _bMapCaptureReq = 1;
+        break;
+    case 0x5008:
+    {
+        int mn;
+        u_int AnmBit = 0x80000000;
+
+        mn = TsMENU_GetMapNo(NULL);
+        state = 0x5010;
+        TsSetScene_Map(&MNS_StageMap2, CurMapNo, CurMapOldFlg, 0);
+        MNScene_CopyState(&MNS_StageMap, &pfw->MNS_StageMapW);
+        TsMENU_SetMapScreen(mn);
+        MNScene_CopyState(&MNS_StageMap, &pfw->MNS_StageMapW);
+        MNScene_DispSw(&MNS_StageMap2, 1);
+        MNScene_SetAnimeBankEnd(&MNS_StageMap2, MNScene_StartAnime(&MNS_StageMap2, -1, &StageMapAnimePA[33]) | AnmBit);
+        MNScene_DispSw(&MNS_StageMap, 0);
+        pfw->bgmFadeVol = 128;
+        TsJukeObjAnime2(2);
+    }
+        /* fallthrough */
+    case 0x5010:
+        if (pfw->bgmFadeVol > 0) {
+            pfw->bgmFadeVol -= 3;
+            if (pfw->bgmFadeVol < 0) {
+                pfw->bgmFadeVol = 0;
+            }
+            MenuDataDiskVolume(pfw->bgmFadeVol);
+        }
+        if (TsSCFADE_Set(5, 60, 2)) {
+            break;
+        }
+        state = 0x5020;
+        MNScene_DispSw(&MNS_StageMap2, 0);
+        MNScene_End(&MNS_StageMap2);
+        MNScene_StartAnime(&MNS_StageMap, -1, StageMapAnimeSEA);
+        MNScene_DispSw(&MNS_StageMap, 1);
+        MenuDataDiskSndEnd();
+        TsJukeObjAnime2(1);
+        scstPos = 0;
+        TsBGMPause(0);
+        TsBGMPlay(pP3GameState->nStage + 1, 20);
+        /* fallthrough */
+    case 0x5020:
+        if (!TsJukeIsObjAnime(1)) {
+            state = 0x1000;
+        }
+        break;
+    case 0x6000:
+    {
+        int mn;
+
+        TsJukeObjAnime2(2);
+        state = 0x6010;
+        MenuDataDiskSndEnd();
+        mn = TsMENU_GetMapNo(NULL);
+        MNScene_CopyStateMdl(&pfw->MNS_StageMapW, &MNS_StageMap);
+        TsMENU_SetMapScreen(mn);
+        MNScene_CopyState(&MNS_StageMap, &pfw->MNS_StageMapW);
+        MNScene_StartAnime(&MNS_StageMap, -1, StageMapAnimeSEA);
+        scstPos = 0;
+        TsBGMPause(0);
+        TsBGMPlay(pP3GameState->nStage + 1, 60);
+        break;
+    }
+    case 0x6010:
+        if (TsJukeIsObjAnime(1) && !TsJukeIsObjAnime(0)) {
+            break;
+        }
+        TsJukeObjAnime2(1);
+        state = 0x6020;
+        /* fallthrough */
+    case 0x6020:
+        if (!TsJukeIsObjAnime(1)) {
+            state = 0x1000;
+        }
+        break;
+    case 0xf000:
+    case 0xf010:
+    case 0xf020:
+        TsJukeObjAnime(1);
+        state = 0xf080;
+        /* fallthrough */
+    case 0xf080:
+        if (TsJukeIsObjAnime(1)) {
+            break;
+        }
+        /* fallthrough */
+    case 0xf100:
+        JukeMenu_Sw = 0;
+        if (pfw->exitflg) {
+            state = 0xff20;
+            break;
+        }
+        return -1;
+    case 0xff20:
+        return -1;
+    }
+
+    pfw->state = state;
+    return 0;
+#undef scstate
+#undef scstPos
+}
 
 static void TsJukeMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     JUKE_MENU *pfw;

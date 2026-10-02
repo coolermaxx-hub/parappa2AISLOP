@@ -1536,6 +1536,8 @@ state_tmp_270                       = 0x00399ae0;
 waitTime_tmp_271                    = 0x00399ae4;
 scstate_tmp_273                     = 0x00399ae8;
 scstPos_tmp_274                     = 0x00399aec;
+scstate_tmp_268                     = 0x00399b00;
+scstPos_tmp_269                     = 0x00399b04;
 curTag_tmp_275                      = 0x00399af0;
 fphs_pos_tmp_276                    = 0x00399af4;
 AnmBit_tmp_277                      = 0x00399af8;
@@ -1566,6 +1568,8 @@ ULTypeT_CITY_STGCLR                 = 0x0018ca60; // size:0xc
 ULTypeT_CITY_REPLAY                 = 0x0018ca70; // size:0xc
 POPBtn2Sel                          = 0x0018caa0; // size:0x18
 SaveMenu_CmpMesNo                   = 0x0018cb00; // size:0x8
+JukeBgmTbl                          = 0x0018cb08; // size:0x50
+JukeMenu_CmpMesNo                   = 0x0018cb58; // size:0x28
 UserListTbl                         = 0x0018cbc0; // size:0x78
 
 MapCity_tmp_254                     = 0x01c77a50; // size:0x34
