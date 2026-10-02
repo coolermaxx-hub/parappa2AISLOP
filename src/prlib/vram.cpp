@@ -1,10 +1,17 @@
 #include "common.h"
 
+#include <eetypes.h>
+
 INCLUDE_ASM("asm/nonmatchings/prlib/vram", PrAddDrawAreaDefinition__FP11NaGifPacketRC11PrVRAM_RECTbbUl);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/vram", PrAddTextureAreaDefinition__FP11NaGifPacketRC11PrVRAM_RECTb);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/vram", PrSetSpriteDefinitionZ__FUi);
+/* sdata */
+extern u_int prSpriteDefinitionZ;
+
+void PrSetSpriteDefinitionZ(u_int z) {
+    prSpriteDefinitionZ = z;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/vram", PrAddSpriteDefinition__FP11NaGifPacketRC11PrVRAM_RECTT1b);
 

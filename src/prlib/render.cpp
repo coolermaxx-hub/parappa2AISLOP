@@ -8,7 +8,8 @@
 
 #include <nalib/namatrix.h>
 
-extern PrSPRAM_DATA *prSpramData;
+/* sdata */
+extern PrSPRAM_DATA *prSpramData_tmp_render;
 
 extern bool AwfulStatus;
 
@@ -121,7 +122,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmaddaz  ACC,   vf15,    vf17  \n\t"
                 "vmaddw   vf17,  vf16,    vf17  \n\t"
                 "sqc2     vf17,   0x0(%0)       \n\t"
-            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix));
+            : : "r"(sp0), "r"(&prSpramData_tmp_render->m_view_projection_matrix));
 
             float f12 = sp0[2] / sp0[3];
             if (sp0[3] == 0.0f) {
@@ -224,7 +225,13 @@ void SpmNode::RenderBackgroundScreenModel() {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Model__13PrModelObject);
+void PrModelObject::RenderContext2Model() {
+    SpmFileHeader *spm = m_spm_image;
+    prSpramData_tmp_render->m_animation = m_animation;
+    prSpramData_tmp_render->m_animation_time = m_animation_time;
+    spm->RenderContext2Model(this);
+    m_rendered_once = 1;
+}
 
 void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
     if (m_flags & 0x8) {
@@ -258,7 +265,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 uc->m_matrix = this->unk40;
-                uc->unk68 = prSpramData->m_disturbance;
+                uc->unk68 = prSpramData_tmp_render->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
@@ -266,7 +273,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             if (packet2 != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
                 uc->m_matrix = this->unk40;
-                uc->unk68 = prSpramData->m_disturbance;
+                uc->unk68 = prSpramData_tmp_render->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {
@@ -300,7 +307,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                         "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
                         "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
                         "sqc2     $vf9,  0x30(%0)       \n\t"
-                    : : "r"(&tmp), "r"(&prSpramData->m_view_projection_matrix), "r"(&this->unk40));
+                    : : "r"(&tmp), "r"(&prSpramData_tmp_render->m_view_projection_matrix), "r"(&this->unk40));
 
                     NaMATRIX<float, 4, 4> mtx;
                     mtx = tmp;

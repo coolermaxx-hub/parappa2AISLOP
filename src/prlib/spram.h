@@ -11,6 +11,7 @@
 #include <libdma.h>
 
 class PrModelObject;
+class SpaFileHeader;
 class PrSceneObject;
 
 class PrSPRAM_DATA {
@@ -33,7 +34,10 @@ public:
     sceDmaTag m_end_dmatag;
     char unk2B0[0x100];
     PrDisplayHeader m_display_header;
-    char unk660[0x1c];
+    float m_animation_time;
+    PrModelObject *m_current_model;
+    SpaFileHeader *m_animation;
+    char unk66C[0x10];
     float m_model_contour_blur_alpha[2];
     float m_model_transaction_blend_ratio;
     u_int m_disturbance_param;

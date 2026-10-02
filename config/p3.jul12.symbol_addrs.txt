@@ -2609,3 +2609,5 @@ AwfulStatus                                                                     
 noodleStripDmaPacket                                                                = 0x0038c740; // size:0x100
 prSpramData_tmp_menderer                                                            = 0x00399948; // size:0x4
 noodleRandomSeed                                                                    = 0x00399978; // size:0x4
+prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
+prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
