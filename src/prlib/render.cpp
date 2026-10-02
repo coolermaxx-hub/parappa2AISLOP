@@ -360,9 +360,6 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
     }
 }
 
-/* FLT_MAX literal of RenderContext2Node, which is still asm */
-float D_003998E8 = 3.40282347e+38f;
-
 void PrModelObject::RenderScreenModelNode() {
     m_spm_image->RenderScreenModelNode();
     m_rendered_once = 1;
@@ -466,9 +463,6 @@ void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext2Node__7SpmNodeP13PrModelObject);
-#else /* Needs .sdata; copy constructor source register (a1 vs a0) and unk188 hoisting differ */
 void SpmNode::RenderContext2Node(PrModelObject *model) {
     if (!(this->m_flags & 0x2000)) {
         return;
@@ -507,11 +501,12 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 }
 
                 float z = pos[2] / pos[3];
+                u_int key = this->unk188;
                 if (pos[3] == 0.0f) {
                     z = pos[2] * 3.40282347e+38f;
                 }
 
-                prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, z);
+                prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), key, z);
             }
         }
 
@@ -521,7 +516,6 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
         }
     }
 }
-#endif
 
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
