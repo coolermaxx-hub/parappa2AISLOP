@@ -18,8 +18,8 @@ Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against ups
 | `iop_mdl` | 4 / 4 (100%) | 4 / 4 (100.0%) | 100% | 100.0%
 | `main` | 564 / 570 (98.9%) | 567 / 570 (99.5%) | 95.0% | 96.4%
 | `menu` | 308 / 374 (82.4%) | 359 / 374 (96.0%) | 52.0% | 80.9%
-| `prlib` | 143 / 360 (39.7%) | 276 / 360 (76.7%) | 21.8% | 42.1%
-| **Total** | **1140 / 1429 (79.8%)** | **1327 / 1429 (92.9%)** | **63.3%** | **78.4%**
+| `prlib` | 143 / 360 (39.7%) | 278 / 360 (77.2%) | 21.8% | 43.0%
+| **Total** | **1140 / 1429 (79.8%)** | **1329 / 1429 (93.0%)** | **63.3%** | **78.6%**
 
 ### Progress
 *Badges below show this fork's matched-function percentage. The upstream project's own numbers are on its [decomp(dot)dev page](https://decomp.dev/parappadev/parappa2).*
@@ -44,4 +44,6 @@ Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against ups
 ### Contributing
 
 Please see our [build](docs/build.md) and [decompilation](docs/decompilation.md) guides.
+
+Fork rules and what "100%" means here: [porting-rules](docs/porting-rules.md). Notes on timing, input, audio and RNG for a future port: [behavior-notes](docs/behavior-notes.md).
 
