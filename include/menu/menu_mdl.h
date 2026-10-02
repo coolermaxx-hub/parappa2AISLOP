@@ -127,7 +127,7 @@ int MNScene_ModelDispSw(MN_SCENE *pshdl, int nmdl, int bsw);
 /* sdata 399730 */ extern MN_SCENETBL Scene_StgCounterLoad;
 // /* data 18ae00 */ MN_MDLTBL Mdl_StgCounterSave[0];
 /* sdata 399738 */ extern MN_SCENETBL Scene_StgCounterSave;
-// /* data 18afa8 */ MNANM_TBL CounterAnime[0];
+/* data 18afa8 */ extern MNANM_TBL CounterAnime[];
 // /* data 18b068 */ MN_MDLTBL Mdl_JimakuBak[0];
 /* sdata 399740 */ extern MN_SCENETBL Scene_JimakuBak;
 

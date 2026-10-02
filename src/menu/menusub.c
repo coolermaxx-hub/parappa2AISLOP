@@ -5229,8 +5229,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
             break;
         }
 
-        osel = pfw->selLev;
-        sel = pfw->selLev;
+        osel = sel = pfw->selLev;
         if (tpad & 0x8000) {
             sel--;
         }
@@ -6543,7 +6542,454 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
+#else
+/* static */ int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
+    USERLIST_MENU *pfw = &UserListMenu;
+    USER_DATA     *puser;
+    int            state;
+    int            sely;
+    int            osely;
+    int            optop;
+    int            ret;
+    int            ret2;
+    int            i;
+    int            bScrollEnd;
+    int            nCell;
+    int            err;
+    int            dumy;
+    int            sflg;
+    int            errNo;
+
+    if (flg == 1) {
+        pfw->curFileNo = -1;
+        pfw->state = 0;
+        pfw->wuser = UserWork;
+        pfw->ptypttbl = NULL;
+        pfw->scene = NULL;
+        pfw->nTag = 0;
+        pfw->dataMode = 0;
+        pfw->dispColor = 0;
+        pfw->isSave = 0;
+        pfw->cmpMesTbl = NULL;
+        pfw->gameMode = 0;
+        pfw->curuser = 0;
+        pfw->curPageTop = 0;
+        pfw->isNameIn = 0;
+        pfw->sline = 0.0f;
+        pfw->pusrlst = NULL;
+        pfw->exitflg = 0;
+        pfw->userMax = TsUserList_SortUser();
+        pfw->mcerrNo = 0;
+        pfw->mcRetTag = 0;
+
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+
+        memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
+        for (i = 0; i < 5; i++) {
+            TsCmnCell_CusorMASK(&pfw->cellcs[i]);
+        }
+        return 0;
+    }
+
+    if (flg == 3) {
+        if (pfw->ptypttbl != NULL && TsUserList_SetCurTag(pfw, tpad)) {
+            return 0;
+        }
+
+        pfw->isNameIn = 0;
+        pfw->pusrlst = UserLst;
+        pfw->sline = 0.0f;
+        pfw->exitflg = 0;
+        pfw->userMax = TsUserList_SortUser();
+
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+
+        pfw->curuser = 0;
+        pfw->curPageTop = 0;
+
+        nCell = pfw->userMax;
+        if (nCell > 5) {
+            nCell = 5;
+        }
+
+        if (pfw->curFileNo >= 0) {
+            TsUserList_SetCurFileNoCusor(pfw->curFileNo, pfw->curFileDate);
+        }
+        if (pfw->scene != NULL) {
+            MNScene_StartAnime(pfw->scene, -1, &CounterAnime[nCell]);
+            MNScene_DispSw(pfw->scene, 1);
+        }
+
+        memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
+        for (i = nCell; i < 5; i++) {
+            TsCmnCell_CusorMASK(&pfw->cellcs[i]);
+        }
+
+        if (pfw->userMax > 0) {
+            TsCmnCell_CusorSET(&pfw->cellcs[pfw->curuser]);
+        }
+        if (pfw->cmpMesTbl != NULL) {
+            TsCMPMes_SetMes(pfw->cmpMesTbl[0]);
+        }
+        return 0;
+    }
+
+    state = pfw->state;
+
+    if (flg == 2) {
+        pfw->isNameIn = 0;
+        pfw->pusrlst = NULL;
+        pfw->exitflg = 0;
+        if (pfw->ptypttbl != NULL) {
+            for (i = 0; i < pfw->ptypttbl->nType; i++) {
+                MNScene_DispSw(UserListTbl[pfw->ptypttbl->typeNo[i]].pScene, 0);
+            }
+        }
+        pfw->scene = NULL;
+        return 0;
+    }
+
+    if (state < 0xe000) {
+        ret = P3MC_CheckChange();
+        if (ret == 3 || ret == 5) {
+            state = 0xe000;
+            TsCMPMes_SetMes(-1);
+            TsMCAMes_SetMes(-1);
+            pfw->isNameIn = 0;
+            TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+            TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        }
+    }
+
+    switch (state) {
+    case 0x1000:
+        if (pfw->mcerrNo != 0 && McErrorMess(pfw->mcerrNo) < 0) {
+            break;
+        }
+        pfw->nTag = pfw->mcRetTag;
+        TsUserList_Flow(3, pfw->nTag, 0);
+        state = 0x3000;
+        break;
+    case 0:
+    case 0x3000:
+        pfw->isNameIn = 0;
+        state = 0x3100;
+        pfw->exitflg = 0;
+        /* fallthrough */
+    case 0x3100:
+        if (pfw->cmpMesTbl != NULL) {
+            TsCMPMes_SetMes(pfw->cmpMesTbl[0]);
+        }
+
+        bScrollEnd = 0;
+        if (pfw->sline != 0.0f) {
+            if (pfw->sline > 0.0f) {
+                pfw->sline -= 3.25f;
+                if (pfw->sline < 0.0f) {
+                    pfw->sline = 0.0f;
+                }
+            } else {
+                pfw->sline += 3.25f;
+                if (pfw->sline > 0.0f) {
+                    pfw->sline = 0.0f;
+                }
+            }
+            bScrollEnd = 1;
+            if (pfw->sline != 0.0f) {
+                break;
+            }
+        }
+
+        sely = pfw->nTag;
+        ret = sely;
+        if (tpad & 0x8000) {
+            sely--;
+        }
+        if (tpad & 0x2000) {
+            sely++;
+        }
+        sely = TSLIMIT(sely, 0, pfw->ptypttbl->nType);
+
+        if (ret != sely) {
+            if (tpad & 0x8000) {
+                TSSNDPLAY(VSND_MVCUS_L);
+            } else {
+                TSSNDPLAY(VSND_MVCUS_R);
+            }
+
+            dumy = sely;
+            err = TsUserList_TagChangeAble(pfw, &dumy);
+            if (err) {
+                state = 0x1000;
+                pfw->mcerrNo = err;
+                pfw->mcRetTag = pfw->nTag;
+            }
+            pfw->nTag = sely;
+            TsUserList_Flow(3, sely, 0);
+            break;
+        }
+
+        osely = sely = pfw->curuser;
+        optop = pfw->curPageTop;
+        if (pfw->userMax > 0) {
+            if (tpad & 0x1000) {
+                sely--;
+            }
+            if (tpad & 0x4000) {
+                sely++;
+            }
+            if (bScrollEnd && sely == osely) {
+                if (TsGetMenuPadIsRepeat(0, 0)) {
+                    sely--;
+                }
+                if (TsGetMenuPadIsRepeat(0, 1)) {
+                    sely++;
+                }
+            }
+        }
+
+        if (osely != sely) {
+            sflg = 1;
+            if (sely < 0) {
+                sflg = 2;
+                pfw->curPageTop += sely;
+                sely = 0;
+            }
+            if (sely >= 5) {
+                sflg = 3;
+                pfw->curPageTop += sely - 4;
+                sely = 4;
+            }
+            if (pfw->curPageTop < 0) {
+                pfw->curPageTop = 0;
+                sflg = 0;
+            }
+            if (pfw->curPageTop + sely >= pfw->userMax) {
+                sflg = 0;
+                if (pfw->curPageTop == 0) {
+                    sely = pfw->userMax - 1;
+                } else {
+                    pfw->curPageTop = (pfw->userMax - 1) - sely;
+                }
+            }
+            pfw->curuser = sely;
+
+            if (sflg) {
+                if (sely < osely) {
+                    TSSNDPLAY(VSND_MVCUS_U);
+                } else {
+                    TSSNDPLAY(VSND_MVCUS_D);
+                }
+            }
+
+            if (optop != pfw->curPageTop) {
+                if (pfw->curPageTop < optop) {
+                    pfw->sline = -26.0f;
+                } else {
+                    pfw->sline = 26.0f;
+                }
+            }
+
+            if (osely != sely) {
+                TsCmnCell_CusorOFF(&pfw->cellcs[osely]);
+                TsCmnCell_CusorON(&pfw->cellcs[sely]);
+            }
+
+            if (sflg == 2) {
+                TsCmnCell_CusorOFF(&pfw->cellcs[sely + 1]);
+                TsCmnCell_CusorON(&pfw->cellcs[sely]);
+            } else if (sflg == 3) {
+                TsCmnCell_CusorOFF(&pfw->cellcs[sely - 1]);
+                TsCmnCell_CusorON(&pfw->cellcs[sely]);
+            }
+        }
+
+        if (tpad & 0x20) {
+            state = 0x3f00;
+            TsCmnCell_CusorSEL(&pfw->cellcs[pfw->curuser]);
+            pfw->wtim = 28;
+            TSSNDPLAY(VSND_SELPOPUP);
+        }
+        if (tpad & 0x40) {
+            state = 0x3f10;
+            TSSNDPLAY(VSND_CANCEL);
+        }
+        break;
+    case 0x3f00:
+        if (--pfw->wtim <= 0) {
+            state = 0x3f08;
+        }
+        break;
+    case 0x3f08:
+        state = pfw->isSave ? 0x4000 : 0x5000;
+        break;
+    case 0x3f10:
+        pfw->exitflg = 1;
+        state = 0xff20;
+        break;
+    case 0x5000:
+        state = 0x5010;
+        TsMCAMes_SetMes(0x10000016);
+        /* fallthrough */
+    case 0x5010:
+        ret = TsMCAMes_GetSelect();
+        if (ret == 0) {
+            break;
+        }
+        if (ret == 1) {
+            state = 0xff10;
+            break;
+        }
+        state = 0x3000;
+        TsMCAMes_SetMes(-1);
+        break;
+    case 0x4000:
+        puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
+        state = 0x4010;
+        if (puser->fileNo != 0xffff) {
+            break;
+        }
+        state = 0x4005;
+        /* fallthrough */
+    case 0x4005:
+        errNo = (pfw->dataMode == 2) ? 15 : 7;
+        if (McErrorMess(errNo) >= 0) {
+            state = 0x3000;
+        }
+        break;
+    case 0x4010:
+        puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
+        if (!puser->flg) {
+            state = 0x4020;
+            break;
+        }
+        state = 0x4015;
+        TsMCAMes_SetMes(0x1000000f);
+        /* fallthrough */
+    case 0x4015:
+        ret = TsMCAMes_GetSelect();
+        if (ret == 0) {
+            break;
+        }
+        state = (ret == 1) ? 0x4020 : 0x3000;
+        TsMCAMes_SetMes(-1);
+        break;
+    case 0x4020:
+        pfw->isNameIn = 1;
+        pfw->wuser->fileNo = TsUserList_GetCurFileNo(NULL);
+
+        if (pfw->dataMode == 1) {
+            TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name);
+        } else {
+            TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name1);
+        }
+
+        if (pfw->dataMode == 1) {
+            pfw->nameinw[0].dispType = 0;
+        } else if (pfw->gameMode == 0) {
+            pfw->nameinw[0].dispType = 0;
+        } else {
+            pfw->nameinw[0].dispType = 1;
+            if (pfw->gameMode == 1) {
+                TsNAMEINBox_Flow(1, &pfw->nameinw[1], (u_int)pfw->wuser->name2);
+                pfw->nameinw[1].dispType = 2;
+            }
+        }
+
+        state = 0x4030;
+        if (pfw->cmpMesTbl != NULL) {
+            TsCMPMes_SetMes(pfw->cmpMesTbl[1]);
+        }
+        /* fallthrough */
+    case 0x4030:
+        pfw->nameinw[0].isCan = 1;
+        ret2 = 1;
+        ret = TsNAMEINBox_Flow(0, &pfw->nameinw[0], tpad);
+        if (pfw->gameMode == 1 && pfw->dataMode != 1) {
+            pfw->nameinw[1].isCan = 1;
+            ret2 = TsNAMEINBox_Flow(0, &pfw->nameinw[1], tpad2);
+        }
+
+        if (ret == -2 || ret2 == -2) {
+            TsNAMEINBox_Flow(3, &pfw->nameinw[0], 0);
+            TsNAMEINBox_Flow(3, &pfw->nameinw[1], 0);
+        }
+        if (ret == -1 || ret2 == -1) {
+            state = 0x4f10;
+        }
+        if (ret == 1 && ret2 == 1) {
+            state = 0x4f00;
+        }
+        break;
+    case 0x4f00:
+        state = 0xf000;
+        break;
+    case 0x4f10:
+        state = 0x3000;
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        pfw->exitflg = 1;
+        break;
+    case 0xe000:
+        ret = P3MC_CheckChange();
+        if (ret == 0 || ret == 5) {
+            state = 0xff40;
+            break;
+        }
+        err = 3;
+        if (pfw->isSave) {
+            err = (pfw->dataMode == 2) ? 60 : 50;
+        }
+        if (McErrorMess(err) >= 0) {
+            state = 0xee10;
+        }
+        break;
+    case 0xee10:
+        state = 0xff20;
+        break;
+    case 0xf000:
+        TsUserList_SetCurDispUserData(pfw->wuser);
+        pfw->state = 0xf100;
+        /* fallthrough */
+    case 0xf100:
+        TsMCAMes_SetMes(-1);
+        /* fallthrough */
+    case 0xff10:
+        if (P3MC_CheckChange() < 0) {
+            break;
+        }
+        pfw->exitflg = 0;
+        pfw->state = 0x3000;
+        pfw->isNameIn = 0;
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        return 1;
+    case 0xff20:
+        if (P3MC_CheckChange() < 0) {
+            break;
+        }
+        pfw->isNameIn = 0;
+        pfw->exitflg = 1;
+        TsMCAMes_SetMes(-1);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        return -1;
+    case 0xff40:
+        pfw->isNameIn = 0;
+        pfw->exitflg = 1;
+        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        return -3;
+    }
+
+    pfw->state = state;
+    return 0;
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
 
