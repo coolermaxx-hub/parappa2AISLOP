@@ -232,7 +232,103 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
+#else
+// NON_MATCHING: 11 opcode hunks left (gcc hoists the 1.0f blend constant in the loop copy)
+static inline void ComposeNoVis_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    if (model->unk7C[0] != NULL) {
+        PrSPRAM_DATA *spram;
+        if (node->m_flags & 0x1) {
+            spram = prSpramData_tmp_render;
+            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+        } else {
+            spram = prSpramData_tmp_render;
+            spram->unk0 = node->unk0;
+        }
+
+        if (spram->m_model_transaction_blend_ratio != 1.0f) {
+            node->BlendTransitionMatrix(model, spram->unk0);
+            spram = prSpramData_tmp_render;
+        }
+
+        node->unk40 = arg1 * spram->unk0;
+        int idx = node->unk150;
+        model->unk7C[model->m_active_transition][idx] = spram->unk0;
+    } else if (node->m_flags & 0x1) {
+        node->unk40 = arg1;
+    } else {
+        node->unk40 = arg1 * node->unk0;
+    }
+
+    if (node->m_flags & 0x8000) {
+        node->ApplyBillboardMatrix();
+    }
+}
+
+static inline void ComposeAnim_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    float time = prSpramData_tmp_render->m_animation_time;
+    SpaFileHeader *animation = prSpramData_tmp_render->m_animation;
+    SpmNode *parent = node->unk164;
+
+    if (parent == NULL || (parent->m_flags & 0x4000)) {
+        if (animation->IsNodeVisible(node, time)) {
+            node->m_flags |= 0x4000;
+            goto done;
+        }
+    }
+    node->m_flags &= ~0x4000;
+    done:
+
+    if (node->m_flags & 0x4000) {
+        SpaNodeAnimation *na = animation->unk50[node->unk150];
+        if (na == NULL) {
+            ComposeNoVis_tmp(node, model, arg1);
+        } else {
+            int e = 0;
+            if (model->unk7C[0] != NULL) {
+                PrSPRAM_DATA *spram;
+                e = 0; if (na->unk8 == 0) e = 1;
+                if (e & 1) {
+                    spram = prSpramData_tmp_render;
+                    spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+                } else {
+                    const NaMATRIX<float, 4, 4> *m = na->GetMatrix(time);
+                    spram = prSpramData_tmp_render;
+                    spram->unk0 = *m;
+                }
+
+                if (spram->m_model_transaction_blend_ratio != 1.0f) {
+                    node->BlendTransitionMatrix(model, spram->unk0);
+                    spram = prSpramData_tmp_render;
+                }
+
+                node->unk40 = arg1 * spram->unk0;
+                int idx = node->unk150;
+                model->unk7C[model->m_active_transition][idx] = spram->unk0;
+            } else if ((e = 0, (na->unk8 == 0 ? (e = 1) : 0), e & 1)) {
+                node->unk40 = arg1;
+            } else {
+                NaMATRIX<float, 4, 4> tmp = *na->GetMatrix(time);
+                node->unk40 = arg1 * tmp;
+            }
+
+            if (node->m_flags & 0x8000) {
+                node->ApplyBillboardMatrix();
+            }
+        }
+    }
+}
+
+void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    ComposeAnim_tmp(m_nodes[0], model, arg1);
+
+    for (u_int i = 1; i < m_node_num; i++) {
+        SpmNode *node = m_nodes[i];
+        ComposeAnim_tmp(node, model, node->unk164->unk40);
+    }
+}
+#endif
 
 void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
