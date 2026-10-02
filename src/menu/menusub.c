@@ -7440,9 +7440,6 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return flg;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
-#else
 /* static */ int TsUserList_SetCurTag(USERLIST_MENU *pfw, int no) {
     USERLIST_TYPE *ptbl;
     int            fileNo;
@@ -7464,6 +7461,8 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
         *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.logDate;
         if (!pfw->isSave) {
             fileNo = CurFileInfo.logFileNo;
+        } else {
+            fileNo = CurFileInfo.logFileNo;
         }
     } else {
         *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.repDate;
@@ -7475,7 +7474,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
     pfw->curFileNo = fileNo;
     return 0;
 }
-#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
