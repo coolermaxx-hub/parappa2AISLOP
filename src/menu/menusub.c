@@ -3312,10 +3312,6 @@ static void MpCityHallFPHOK(int flg) {
     TSSNDPLAY(0x8002);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpPopMenu_Flow);
-#else
-/* short loop */
 static int MpPopMenu_Flow(int flg, u_int tpad) {
     /* sbss 399afc */ extern int state_tmp_296;
     int ret;
@@ -3360,7 +3356,6 @@ static int MpPopMenu_Flow(int flg, u_int tpad) {
 
     return 0;
 }
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpMapMenu_Flow);
 
