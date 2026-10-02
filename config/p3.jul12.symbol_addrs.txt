@@ -2616,3 +2616,4 @@ __builtin_vec_delete                = 0x0016df88; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func
 initVu1DmaPacket                                                                    = 0x0038c500;
 initEECoreDmaPacket                                                                 = 0x0038c580;
+value_tmp_spadata_linear_float                                                      = 0x00399ba4; // size:0x4

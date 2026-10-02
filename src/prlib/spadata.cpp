@@ -270,7 +270,21 @@ INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4RCt
 /* prlib/spadata.cpp */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1ZfUif);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1ZfUif);
+template <>
+float* SpaTrack<float>::GetLinearValue(u_int seg, float arg1) const {
+    extern float value_tmp_spadata_linear_float;
+
+    float *keys = this->unkC;
+    u_int next = seg + 1;
+    float *values = (float*)&this->unk10;
+    float *v0 = &values[seg];
+    float *v1 = &values[next];
+    float d0 = arg1 - keys[seg];
+    float d1 = keys[seg + 1] - arg1;
+
+    value_tmp_spadata_linear_float = (d1 * *v0 + d0 * *v1) / (d1 + d0);
+    return &value_tmp_spadata_linear_float;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zff);
 
