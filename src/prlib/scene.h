@@ -43,14 +43,15 @@ public:
     PrObjectSet<PrModelObject> m_model_set;
     SpcFileHeader *m_camera;
     sceGsDrawEnv1 *unk70;
-    PR_PADDING(unk74, 0x8);
+    u_int unk74;
+    u_int unk78;
     float m_camera_time;
     char *m_name;
     float m_default_focal_len;
     float m_default_defocus_len;
     u_int m_default_depth_level;
     sceGsDBuffDc *unk90;
-    PR_PADDING(unk94, 0x4);
+    u_int unk94;
     PrModelObject *unk98;
     PrModelObject *unk9C;
     PrModelObject *m_screen_model_list;

@@ -2143,6 +2143,8 @@ ApplyBillboardMatrix__7SpmNode                                                  
 // prlib/depthfield.cpp
 ApplyDepthOfField__13PrSceneObject                                                  = 0x0014c8e8; // type:func
 
+gifTag_tmp_depthfield                                                               = 0x01c833d0; // size:0x10
+
 // nalib/napacket.h (weak copies kept by the linker)
 AddTest1__11NaGifPacketUiiUciUiiUii                                                 = 0x0014cd48; // type:func
 AddGsAD__11NaGifPacketUiUl                                                          = 0x0014cda8; // type:func
@@ -2617,6 +2619,7 @@ noodleStripDmaPacket                                                            
 prSpramData_tmp_menderer                                                            = 0x00399948; // size:0x4
 noodleRandomSeed                                                                    = 0x00399978; // size:0x4
 prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
+prSpramData_tmp_depthfield                                                          = 0x00399938; // size:0x4
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 prSpramData_tmp_transition                                                          = 0x003998f0; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func

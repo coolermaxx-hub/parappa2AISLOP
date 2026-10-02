@@ -30,7 +30,8 @@ public:
     NaMATRIX<float, 4, 4> m_view_projection_matrix;
     NaMATRIX<float, 4, 4> unk120;
     NaMATRIX<float, 4, 4> unk160;
-    char unk1A0[0x100];
+    NaMATRIX<float, 4, 4> unk1A0;
+    char unk1E0[0xC0];
     sceDmaTag m_end_dmatag;
     char unk2B0[0x100];
     PrDisplayHeader m_display_header;

@@ -32,8 +32,8 @@ public:
         sceGifPkAddGsAD(&m_packet, addr, data);
     }
 
-    void OpenGifTag(const sceGifTag& tag) {
-        OpenGifTag(*(u_long128*)&tag);
+    void BeginGifTag(u_long128 tag) {
+        OpenGifTag(tag);
     }
 
     void AddAlpha1(int a, int b, int c, int d, u_char fix) {
@@ -77,7 +77,7 @@ public:
         AddGsAD(SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(ofx, ofy));
     }
 
-private:
+public:
     sceGifPacket m_packet;
 };
 
