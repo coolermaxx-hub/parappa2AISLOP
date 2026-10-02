@@ -1364,7 +1364,30 @@ void TsMenu_Draw(void) {
     TsCmnPkClose(&FPacket, pkt, 0xf);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetRankingName);
+typedef struct {
+    u_char name[8];
+} RANK_NAME;
+
+/* static */ void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
+    int             i, k, l;
+    P3MC_STAGERANK *pRank = pRankTop;
+
+    for (l = 0; l < 8; l++, pRank++) {
+        for (i = 0; i < pRank->nSplay; i++) {
+            if (pRank->splay[i].name[0] == '\0') {
+                *(RANK_NAME*)pRank->splay[i].name = *(RANK_NAME*)name;
+            }
+        }
+
+        for (k = 0; k < 4; k++) {
+            for (i = 0; i < pRank->nVplay[k]; i++) {
+                if (pRank->vplay[k][i].name[0] == '\0') {
+                    *(RANK_NAME*)pRank->vplay[k][i].name = *(RANK_NAME*)name;
+                }
+            }
+        }
+    }
+}
 
 static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
     int i;
@@ -3034,7 +3057,43 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsSortSetRanking);
+/* static */ void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp) {
+    int l, k, m;
+    int isSame;
+
+    for (l = 0; l < n; l++, pRank++) {
+        for (k = 0; k < 20; k++) {
+            if (ptRank[k] == NULL || ptRank[k]->score < pRank->score) {
+                for (m = 19; k < m; m--) {
+                    ptRank[m] = ptRank[m - 1];
+                }
+                ptRank[k] = pRank;
+                break;
+            }
+
+            if (ptRank[k]->score == pRank->score && ptRank[k]->scDate[0] == pRank->scDate[0] && ptRank[k]->scDate[1] == pRank->scDate[1]) {
+                isSame = TRUE;
+                if (bNameCmp) {
+                    int n;
+
+                    for (n = 0; n < 8; n++) {
+                        if (ptRank[k]->name[n] != pRank->name[n]) {
+                            isSame = FALSE;
+                            break;
+                        }
+                        if (ptRank[k]->name[n] == '\0') {
+                            break;
+                        }
+                    }
+                }
+
+                if (isSame) {
+                    break;
+                }
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsGetRankingList);
 
@@ -3163,9 +3222,73 @@ static int TsJukeIsObjAnime(int isComp) {
     return FALSE;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsJukeObjAnime);
+static int TsJukeObjAnime(int isOut) {
+    int        i;
+    JUKE_MENU *pfw = &JukeMenu;
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsJukeObjAnime2);
+    for (i = 0; i < 10; i++) {
+        if (i < 5) {
+            pfw->cusObj[i].dir2 = i & 1;
+            pfw->cusObj[i].dir = 1;
+            if (!isOut) {
+                pfw->cusObj[i].state = 1;
+                pfw->cusObj[i].anime = TSJKANM_IN;
+                pfw->cusObj[i].atime = (5 - i) * 6 + 1;
+            } else {
+                pfw->cusObj[i].anime = TSJKANM_OUT;
+                pfw->cusObj[i].atime = (5 - i) * 6 + 1;
+            }
+        } else {
+            pfw->cusObj[i].dir2 = (i + 1) & 1;
+            pfw->cusObj[i].dir = 0;
+            if (!isOut) {
+                pfw->cusObj[i].state = 1;
+                pfw->cusObj[i].anime = TSJKANM_IN;
+                pfw->cusObj[i].atime = (i - 5) * 6 + 19;
+            } else {
+                pfw->cusObj[i].anime = TSJKANM_OUT;
+                pfw->cusObj[i].atime = (i - 5) * 6 + 19;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int TsJukeObjAnime2(int isOut) {
+    int        i;
+    JUKE_MENU *pfw = &JukeMenu;
+
+    for (i = 0; i < 10; i++) {
+        if (i == pfw->selno) {
+            switch (isOut) {
+            case 0:
+                pfw->cusObj[i].atime = 1;
+                pfw->cusObj[i].state = 2;
+                pfw->cusObj[i].anime = TSJKANM_PLAY1;
+                break;
+            case 2:
+                pfw->cusObj[i].atime = 0;
+                pfw->cusObj[i].state = isOut;
+                pfw->cusObj[i].anime = TSJKANM_ROTSTOP;
+                break;
+            }
+        } else {
+            pfw->cusObj[i].atime = (rand() % 3) * 3 + 1;
+            switch (isOut) {
+            case 0:
+                pfw->cusObj[i].anime = TSJKANM_PLAY2;
+                break;
+            case 1:
+                pfw->cusObj[i].state = isOut;
+                pfw->cusObj[i].anime = TSJKANM_RETURN2;
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsJKMoveCus);
 
