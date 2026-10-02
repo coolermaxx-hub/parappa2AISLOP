@@ -12,13 +12,31 @@ INCLUDE_ASM("asm/nonmatchings/prlib/model", _$_13PrModelObject);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/model", Initialize__13PrModelObject);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", LinkAnimation__13PrModelObjectP13SpaFileHeader);
+void PrModelObject::LinkAnimation(SpaFileHeader *animation) {
+    if (animation != NULL) {
+        m_animation = animation;
+        m_animation_time = 0.0f;
+    } else {
+        CleanupAnimation();
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", CleanupAnimation__13PrModelObject);
+void PrModelObject::CleanupAnimation() {
+    m_animation = NULL;
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", LinkPositionAnimation__13PrModelObjectP13SpaFileHeader);
+void PrModelObject::LinkPositionAnimation(SpaFileHeader *animation) {
+    if (animation != NULL) {
+        m_position_animation = animation;
+        m_position_animation_time = 0.0f;
+    } else {
+        CleanupPositionAnimation();
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", CleanupPositionAnimation__13PrModelObject);
+void PrModelObject::CleanupPositionAnimation() {
+    m_position_animation = NULL;
+}
 
 void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4> *arg1) {
     asm volatile(

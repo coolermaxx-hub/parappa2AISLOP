@@ -1,6 +1,8 @@
-#include "common.h"
+#include "camera.h"
 
-INCLUDE_ASM("asm/nonmatchings/prlib/camera", Initialize__13SpcFileHeader);
+void SpcFileHeader::Initialize() {
+    ChangePointer();
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/camera", GetCamera__C13SpcFileHeaderf);
 

@@ -11,7 +11,10 @@ public:
     PR_PADDING(unk0, 0x14);
     float unk14;
     char m_name[32];
-    PR_PADDING(unk38, 0x10);
+    PR_PADDING(unk38, 0x4);
+    int unk3C;
+    int unk40;
+    int unk44;
     void *m_user_data;
     PR_PADDING(unk4C, 0x4);
     SpaNodeAnimation **unk50;
