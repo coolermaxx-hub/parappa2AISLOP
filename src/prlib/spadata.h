@@ -60,6 +60,7 @@ private:
 
 class SpaTransform {
 public:
+    NaMATRIX<float, 4, 4>* GetMatrix(float arg0) const;
     bool IsEverIdentical();
 
     template <typename T>

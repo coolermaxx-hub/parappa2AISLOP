@@ -5,6 +5,11 @@
 
 #include <math.h>
 
+/* placement new, used to emulate static local construction */
+inline void* operator new(size_t, void *p) {
+    return p;
+}
+
 template <>
 NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float arg1) const;
 
@@ -79,7 +84,57 @@ int* SpaTrack<int>::GetValue(float arg0) const {
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetMatrix__C12SpaTransformf);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetMatrix__C16SpaNodeAnimationf);
+NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
+    /* FIXME: static local; see the note in GetSprineValue */
+    extern NaMATRIX<float, 4, 4> matrix_tmp_spadata_node;
+    extern int tmp_0_node_matrix;
+    if (tmp_0_node_matrix == 0) {
+        new (&matrix_tmp_spadata_node) NaMATRIX<float, 4, 4>;
+        tmp_0_node_matrix = 1;
+    }
+
+    asm volatile("
+        vmove.xyzw $vf16, $vf0
+        vmr32.xyzw $vf15, $vf0
+        vmr32.xyzw $vf14, $vf15
+        vmr32.xyzw $vf13, $vf14
+    ");
+
+    for (u_int i = 0; i < this->unk8; i++) {
+        NaMATRIX<float, 4, 4> *m = this->unkC[i]->GetMatrix(arg0);
+        asm volatile("
+            lqc2         $vf4, 0x0(%0)
+            lqc2         $vf5, 0x10(%0)
+            lqc2         $vf6, 0x20(%0)
+            lqc2         $vf7, 0x30(%0)
+            vmulax.xyzw  ACC, $vf4, $vf13x
+            vmadday.xyzw ACC, $vf5, $vf13y
+            vmaddaz.xyzw ACC, $vf6, $vf13z
+            vmaddw.xyzw  $vf13, $vf7, $vf13w
+            vmulax.xyzw  ACC, $vf4, $vf14x
+            vmadday.xyzw ACC, $vf5, $vf14y
+            vmaddaz.xyzw ACC, $vf6, $vf14z
+            vmaddw.xyzw  $vf14, $vf7, $vf14w
+            vmulax.xyzw  ACC, $vf4, $vf15x
+            vmadday.xyzw ACC, $vf5, $vf15y
+            vmaddaz.xyzw ACC, $vf6, $vf15z
+            vmaddw.xyzw  $vf15, $vf7, $vf15w
+            vmulax.xyzw  ACC, $vf4, $vf16x
+            vmadday.xyzw ACC, $vf5, $vf16y
+            vmaddaz.xyzw ACC, $vf6, $vf16z
+            vmaddw.xyzw  $vf16, $vf7, $vf16w
+        " : : "r"(m));
+    }
+
+    asm volatile("
+        sqc2 $vf13, 0x0(%0)
+        sqc2 $vf14, 0x10(%0)
+        sqc2 $vf15, 0x20(%0)
+        sqc2 $vf16, 0x30(%0)
+    " : : "r"(&matrix_tmp_spadata_node));
+
+    return &matrix_tmp_spadata_node;
+}
 
 bool SpaNodeAnimation::IsVisible(float arg0) const {
     if (this->unk4 == NULL) {

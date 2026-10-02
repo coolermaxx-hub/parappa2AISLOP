@@ -2697,3 +2697,5 @@ mendererTexturePacket = 0x01C83AC0; // size:0xE0
 mendererSyncPhase = 0x003999A8; // size:0x4
 noodlePhase = 0x01C83570; // size:0x40
 noodleParameter = 0x01C835B0; // size:0x4B0
+tmp_0_node_matrix = 0x00399908; // size:0x4
+matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
