@@ -9,7 +9,7 @@ We are currently targeting the July 12th NTSC-J prototype, but we aim to target 
 > **Unofficial AI-assisted fork.** This is not the official project and is not affiliated with parappadev. The official decompilation lives at [parappadev/parappa2](https://github.com/parappadev/parappa2). Please don't take questions about this fork to the upstream maintainers or their Discord servers.
 
 ### Fork progress compared to upstream
-Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against upstream `main` (45694de). Every number counts only code that builds byte-for-byte identical to the original; functions that still compile from asm, or only have a `NON_MATCHING` C version, do not count.
+Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against upstream `main` (45694de). Every number counts only code that builds byte-for-byte identical to the original; functions that still compile from asm, or only have a `NON_MATCHING` C version, do not count. Compiler-emitted helper copies that splat names `func_XXXXXXXX` are paired with their C++ names by `tools/objdiff_symbol_mappings.py` (objdiff still diffs each pair).
 
 | Folder | Upstream functions | Fork functions | Upstream code bytes | Fork code bytes
 |--------|-------------------:|---------------:|--------------------:|----------------:
@@ -18,8 +18,8 @@ Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against ups
 | `iop_mdl` | 4 / 4 (100%) | 4 / 4 (100.0%) | 100% | 100.0%
 | `main` | 564 / 570 (98.9%) | 567 / 570 (99.5%) | 95.0% | 96.4%
 | `menu` | 308 / 374 (82.4%) | 359 / 374 (96.0%) | 52.0% | 80.9%
-| `prlib` | 143 / 360 (39.7%) | 265 / 360 (73.6%) | 21.8% | 41.3%
-| **Total** | **1140 / 1429 (79.8%)** | **1316 / 1429 (92.1%)** | **63.3%** | **78.2%**
+| `prlib` | 143 / 360 (39.7%) | 276 / 360 (76.7%) | 21.8% | 42.1%
+| **Total** | **1140 / 1429 (79.8%)** | **1327 / 1429 (92.9%)** | **63.3%** | **78.4%**
 
 ### Progress
 *Badges below show this fork's matched-function percentage. The upstream project's own numbers are on its [decomp(dot)dev page](https://decomp.dev/parappadev/parappa2).*

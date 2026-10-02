@@ -130,7 +130,7 @@ char* PrGetSceneName(PR_SCENEHANDLE scene);
 
 void* PrGetRenderingStatistics(void);
 
-void PrSetModelVisibillity(PR_MODELHANDLE model, u_int node_idx, u_int visible);
+void PrSetModelVisibility(PR_MODELHANDLE model, u_int node_idx, u_int visible);
 
 PR_MODELHANDLE     PrGetModelImage(PR_MODELHANDLE model);
 PR_ANIMATIONHANDLE PrGetAnimationImage(PR_ANIMATIONHANDLE animation);

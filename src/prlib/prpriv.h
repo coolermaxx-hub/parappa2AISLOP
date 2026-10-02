@@ -130,7 +130,7 @@ char* PrGetAnimationName(SpaFileHeader *animation);
 char* PrGetCameraName(SpcFileHeader *camera);
 char* PrGetSceneName(PrSceneObject *scene);
 PrRENDERING_STATISTICS* PrGetRenderingStatistics();
-void PrSetModelVisibillity(PrModelObject *model, u_int node_idx, bool visible);
+void PrSetModelVisibility(PrModelObject *model, u_int node_idx, bool visible);
 SpmFileHeader* PrGetModelImage(PrModelObject *model);
 SpaFileHeader* PrGetAnimationImage(SpaFileHeader *animation);
 SpcFileHeader* PrGetCameraImage(SpcFileHeader *camera);

@@ -503,7 +503,7 @@ PrRENDERING_STATISTICS* PrGetRenderingStatistics() {
 }
 
 PR_EXTERN
-void PrSetModelVisibillity(PrModelObject *model, u_int node_idx, bool visible) {
+void PrSetModelVisibility(PrModelObject *model, u_int node_idx, bool visible) {
     if (node_idx >= model->m_spm_image->m_node_num) {
         return;
     }
