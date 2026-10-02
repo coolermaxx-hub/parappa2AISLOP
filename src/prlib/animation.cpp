@@ -3,12 +3,12 @@
 void SpaFileHeader::Initialize() {
     ChangePointer();
 
-    if (unk44 == 0) {
-        if (unk3C != 0) {
-            unk3C = 0;
+    if (m_obj_set == NULL) {
+        if (m_list.next != NULL) {
+            m_list.next = NULL;
         }
-        if (unk40 != 0) {
-            unk40 = 0;
+        if (m_list.prev != NULL) {
+            m_list.prev = NULL;
         }
     }
 }

@@ -95,7 +95,7 @@ SpaFileHeader* PrGetLinkedPositionAnimation(PrModelObject *model);
 void PrSelectCamera(SpcFileHeader *camera, PrSceneObject *scene);
 SpcFileHeader* PrGetSelectedCamera(PrSceneObject *scene);
 PrPERSPECTIVE_CAMERA* PrGetCurrentCamera(PrSceneObject *scene);
-void PrSetDefaultCamera(NaMATRIX<float, 4, 4> *arg0, NaMATRIX<float, 4, 4> *arg1);
+void PrSetDefaultCamera(PrPERSPECTIVE_CAMERA *camera, PrSceneObject *scene);
 void PrSetAppropriateDefaultCamera(PrSceneObject *scene);
 void PrShowModel(PrModelObject *model, NaMATRIX<float, 4, 4> *position);
 NaMATRIX<float, 4, 4>* PrGetModelMatrix(PrModelObject *model);

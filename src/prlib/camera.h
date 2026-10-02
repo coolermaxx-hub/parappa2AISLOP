@@ -3,10 +3,15 @@
 
 #include "prpriv.h"
 #include "spadata.h"
+#include "linkedlist.h"
+#include "objectset.h"
 
 #include <eetypes.h>
 
 #include <nalib/navector.h>
+
+#define SPC_MAGIC   (0x09463AD8)
+#define SPC_VERSION (1)
 
 class SpcFileHeader {
 public:
@@ -33,7 +38,8 @@ public:
     char m_name[32];
     PR_PADDING(unk38, 0x3c);
     int *unk74;
-    PR_PADDING(unk78, 0xC);
+    PrLinkedList<SpcFileHeader> m_list;
+    PrObjectSet<SpcFileHeader> *m_obj_set;
     void *m_user_data;
     SpaTrack<NaVECTOR<float, 4> > *unk88;
     SpaTrack<NaVECTOR<float, 4> > *unk8C;

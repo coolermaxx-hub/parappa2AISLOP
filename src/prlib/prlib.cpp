@@ -118,9 +118,41 @@ PrModelObject* PrInitializeModel(SpmFileHeader *spm, PrSceneObject *scene) {
     return model;
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrInitializeAnimation);
+PR_EXTERN
+SpaFileHeader* PrInitializeAnimation(SpaFileHeader *animation) {
+    if (animation->m_magic != SPA_MAGIC) {
+        exit(0);
+    }
+    if (animation->m_version != SPA_VERSION) {
+        exit(0);
+    }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrInitializeCamera);
+    animation->Initialize();
+
+    if (animation->m_obj_set == NULL) {
+        animation->m_user_data = NULL;
+        prObjectDatabase.AppendAnimation(animation);
+    }
+    return animation;
+}
+
+PR_EXTERN
+SpcFileHeader* PrInitializeCamera(SpcFileHeader *camera) {
+    if (camera->m_magic != SPC_MAGIC) {
+        exit(0);
+    }
+    if (camera->m_version != SPC_VERSION) {
+        exit(0);
+    }
+
+    camera->Initialize();
+
+    if (camera->m_obj_set == NULL) {
+        camera->m_user_data = NULL;
+        prObjectDatabase.AppendCamera(camera);
+    }
+    return camera;
+}
 
 PR_EXTERN
 void PrCleanupModel(PrModelObject *model) {
@@ -131,11 +163,46 @@ void PrCleanupModel(PrModelObject *model) {
     delete model;
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrCleanupAnimation);
+PR_EXTERN
+void PrCleanupAnimation(SpaFileHeader *animation) {
+    if (animation == NULL) {
+        animation = prObjectDatabase.m_animation_set.m_head;
+        while (animation != NULL) {
+            PrCleanupAnimation(animation);
+            animation = prObjectDatabase.m_animation_set.m_head;
+        }
+    } else if (animation->m_obj_set != NULL) {
+        prObjectDatabase.DeleteAnimation(animation);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrCleanupCamera);
+PR_EXTERN
+void PrCleanupCamera(SpcFileHeader *camera) {
+    if (camera == NULL) {
+        camera = prObjectDatabase.m_camera_set.m_head;
+        while (camera != NULL) {
+            PrCleanupCamera(camera);
+            camera = prObjectDatabase.m_camera_set.m_head;
+        }
+    } else if (camera->m_obj_set != NULL) {
+        prObjectDatabase.DeleteCamera(camera);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrCleanupAllSceneModel);
+PR_EXTERN
+void PrCleanupAllSceneModel(PrSceneObject *scene) {
+    if (scene == NULL) {
+        for (scene = prObjectDatabase.m_scene_set.m_head; scene != NULL; scene = scene->m_list.next) {
+            PrCleanupAllSceneModel(scene);
+        }
+    } else {
+        PrModelObject *model = scene->m_model_set.m_head;
+        while (model != NULL) {
+            PrCleanupModel(model);
+            model = scene->m_model_set.m_head;
+        }
+    }
+}
 
 PR_EXTERN
 float PrGetAnimationStartFrame(SpaFileHeader *animation) {
@@ -232,7 +299,10 @@ PrPERSPECTIVE_CAMERA* PrGetCurrentCamera(PrSceneObject *scene) {
     return scene->GetCurrentCamera();
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrSetDefaultCamera);
+PR_EXTERN
+void PrSetDefaultCamera(PrPERSPECTIVE_CAMERA *camera, PrSceneObject *scene) {
+    scene->m_default_camera = *camera;
+}
 
 PR_EXTERN
 void PrSetAppropriateDefaultCamera(PrSceneObject *scene) {
