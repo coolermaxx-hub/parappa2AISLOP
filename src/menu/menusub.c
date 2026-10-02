@@ -5009,9 +5009,8 @@ asm(".section .rodata\n.align 4\n.text");
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
-#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396068/D_00396070/D_00396078); f20/f21 also swapped */
+#else /* Scheduling: one constant load in case 3 comes after the first mul (also drop INCLUDE_RODATA D_00396068/D_00396070/D_00396078 when matched) */
 /* static */ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
-    float rt2;
     float rt3;
     float rt = 0.0f;
     u_int mode;
@@ -5082,19 +5081,21 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
 
     switch (mode) {
     case 2:
-        rt  = pfw->okTim / 25.0f;
-        rt2 = sinf(rt * 9.424778f);
-        rt3 = sinf(rt * 6.2831855f);
-        rt2 *= rt * 0.9f * rt + 0.1f;
+    {
+        float drt = pfw->okTim / 25.0f;
+        float zrt = sinf(drt * 9.424778f);
+        rt3 = sinf(drt * 6.2831855f);
+        zrt *= drt * 0.9f * drt + 0.1f;
         spr->rgba0 = GetDToneColor(0xffffff, 0x80ffffff, rt3 * 256.0f * rt3);
 
         TsPatTexFnc(2);
-        TsPatPutMZoom(pk, spr, ppos, px, py, 1.0 - rt2 * 0.2, rt2 * 0.6 + 1.0, 8, 4, rt2 * -0.2, rt2 * 0.6);
+        TsPatPutMZoom(pk, spr, ppos, px, py, 1.0 - zrt * 0.2, zrt * 0.6 + 1.0, 8, 4, zrt * -0.2, zrt * 0.6);
         TsPatTexFnc(0);
 
         pfw->srTim = 8;
         pfw->srTNo = i;
         pfw->offinf[i].bCur = 1;
+    }
         break;
     case 1:
         TsPatPutSwing(pk, spr, ppos, px, py, 2, 8, pfw->fswing * rt);
@@ -5103,19 +5104,23 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
         }
         break;
     case 3:
-        rt3 = sinf(pfw->onTim * 0.1f * 2.1991148f);
+    {
+        float zrt = sinf(pfw->onTim * 0.1f * 2.1991148f);
         pfw->srTNo = i;
         pfw->srTim = 8;
-        TsPatPutMZoom(pk, spr, ppos, px, py, rt3 * 0.05f + 1.0f, rt3 * 0.14f + 1.0f, 8, 4, rt3 * -0.05f, rt3 * -0.3f);
+        TsPatPutMZoom(pk, spr, ppos, px, py, zrt * 0.05f + 1.0f, zrt * 0.14f + 1.0f, 8, 4, zrt * -0.05f, zrt * -0.3f);
         pfw->offinf[i].bCur = 1;
+    }
         break;
     case 5:
     case 6:
-        rt = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
+    {
+        float zrat = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
         pfw->srTNo = i;
         pfw->srTim = 8;
-        TsPatPutMZoom(pk, spr, ppos, px, py, rt * 0.1f + 0.95f, rt * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
+        TsPatPutMZoom(pk, spr, ppos, px, py, zrat * 0.1f + 0.95f, zrat * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
         pfw->offinf[i].bCur = 1;
+    }
         break;
     default:
         TsPatPut(pk, spr, ppos, px, py);
