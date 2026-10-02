@@ -492,9 +492,6 @@ void TsBGMInit(void) {
     memset(&TsBGMState, 0, sizeof(TsBGMState));
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPlay);
-#else
 static void TsBGMPlay(int no, int time) {
     BGMSTATE *pbgm = &TsBGMState;
     int       i;
@@ -506,17 +503,16 @@ static void TsBGMPlay(int no, int time) {
 
     if (MenuVoiceBankSet(-1)) {
         pbgm->wtNo = no;
-        pbgm->wtLoad = 1;
-        pbgm->wtTim = time;
         pbgm->ctim = 0;
+        pbgm->wtTim = time;
         pbgm->state = 1;
         pbgm->chgReq = 0;
         pbgm->cstate = 0;
+        pbgm->wtLoad = 1;
         return;
     }
 
     if ((pbgm->state & 1) && pbgm->wtLoad == 0) {
-        isCurPlay = TRUE;
         if (pbgm->sndno == no && pbgm->vol == 0x100) {
             pbgm->sndno = no;
             pbgm->vol = 0x100;
@@ -526,6 +522,7 @@ static void TsBGMPlay(int no, int time) {
             tsBGMONEVol(pbgm->sndno, 0x100);
             return;
         }
+        isCurPlay = TRUE;
     }
 
     pbgm->chgReq = 0;
@@ -555,7 +552,6 @@ static void TsBGMPlay(int no, int time) {
 
     tsBGMONEVol(pbgm->sndno, pbgm->vol);
 }
-#endif
 
 static void TsBGMStop(int time) {
     BGMSTATE *pbgm = &TsBGMState;
