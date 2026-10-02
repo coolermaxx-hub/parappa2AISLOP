@@ -12,7 +12,7 @@ NaVECTOR<float, 4>& SetVector_tmp_scene(NaVECTOR<float, 4> *v, const float& x, c
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", __13PrSceneObjectP13sceGsDrawEnv1PCcUi);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (102 vs 106 instructions) */
 PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int arg2) {
     m_list.next = NULL;
     m_list.prev = NULL;
@@ -67,7 +67,7 @@ PrPERSPECTIVE_CAMERA* PrSceneObject::GetCurrentCamera() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", SetAppropriateDefaultCamera__13PrSceneObject);
-#else /* Requires .lit4 migration */
+#else /* Regalloc and scheduling */
 void PrSceneObject::SetAppropriateDefaultCamera() {
     /* static const float in .sdata */
     extern float scene_bbox_max_init[];

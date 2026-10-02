@@ -27,7 +27,7 @@ extern u_long mendererTexturePacket[];
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", PrSynchronizeMendererParameter__Ff);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (112 vs 128 instructions) */
 void PrSynchronizeMendererParameter(float ratio) {
     float inv = 1.0f - ratio;
 
@@ -72,7 +72,7 @@ void PrWaitDmaFinish(u_int channel);
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", CreateMendererTexture__Ff);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (153 vs 161 instructions) */
 void CreateMendererTexture(float ratio) {
     PrSynchronizeMendererParameter(ratio);
 
@@ -123,7 +123,19 @@ void CreateMendererTexture(float ratio) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", PrCreateMendererTexture);
-#else /* Requires .lit4 migration */
+#else /* Float register allocation */
+static inline float ratio_tmp(float phase) {
+    if (phase < 1.0f) {
+        return 0.0f;
+    } else if (phase < 2.0f) {
+        return phase - 1.0f;
+    } else if (phase < 4.0f) {
+        return 1.0f;
+    } else {
+        return 5.0f - phase;
+    }
+}
+
 PR_EXTERN
 void PrCreateMendererTexture() {
     PrUpdateMendererSpeed();
@@ -139,18 +151,9 @@ void PrCreateMendererTexture() {
         phase -= 5.0f;
     }
 
-    float ratio;
-    if (phase < 1.0f) {
-        ratio = 0.0f;
-    } else if (phase < 2.0f) {
-        ratio = phase - 1.0f;
-    } else if (phase < 4.0f) {
-        ratio = 1.0f;
-    } else {
-        ratio = 5.0f - phase;
-    }
-
     mendererSyncPhase = phase;
+    float ratio = ratio_tmp(phase);
+
     prMendererSyncRatio = ratio;
     CreateMendererTexture(ratio);
 }

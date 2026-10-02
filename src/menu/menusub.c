@@ -5555,7 +5555,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
-#else /* Requires .lit4 migration; the loops also get strength-reduced/hoisted here but not in the original */
+#else /* The loops also get strength-reduced/hoisted here but not in the original */
 /* static */ void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     POPUP_MENU *pfw = &PopupMenu;
     char        buf[32];
@@ -5729,7 +5729,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
-#else /* Requires .lit4 migration; PopMenuSel_Pat[i] should use madd */
+#else /* PopMenuSel_Pat[i] should use madd */
 void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py, u_int hicol, u_int nmcol, int dflg) {
     int   i;
     float bofsy;
@@ -5929,7 +5929,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveMenu_Draw);
-#else /* Requires .lit4 migration; register allocation also differs (ppat/spr/pfw/i/arate) */
+#else /* Register allocation also differs (ppat/spr/pfw/i/arate) */
 static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     SAVE_MENU *pfw = &SaveMenu;
     PATPOS    *ppat;
@@ -6040,7 +6040,7 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TSJukeCDObj_Draw);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (1052 vs 1057 instructions) */
 /* static */ void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
     PATPOS *ppat;
     float   box, boy;
@@ -7035,7 +7035,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
-#else /* Requires .lit4 migration; stack frame is 16 bytes short and the flg branch layout differs */
+#else /* Stack frame is 16 bytes short and the flg branch layout differs */
 /* static */ void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor) {
     TSTEX_INF *ptex;
     int flg;
@@ -8466,7 +8466,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Draw);
-#else /* Requires .lit4 migration; the first TsPatPut loop also gets strength-reduced here but not in the original */
+#else /* The first TsPatPut loop also gets strength-reduced here but not in the original */
 /* static */ void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
     float   ofsx = spr->ofsx;
     float   ofsy = spr->ofsy;
@@ -9142,7 +9142,7 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
-#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396168/D_00396170); regalloc also differs */
+#else /* Regalloc; drop INCLUDE_RODATA D_00396168/D_00396170 once it matches */
 /* static */ void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl) {
     HOSI_OBJ  *obj;
     HOSI_TYPE *type;

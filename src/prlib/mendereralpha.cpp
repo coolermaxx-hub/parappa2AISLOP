@@ -33,7 +33,7 @@ extern float alphaWeight[8];
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendereralpha", PrInitializeAlphaModulation__Fv);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (162 vs 164 instructions) */
 void PrInitializeAlphaModulation() {
     float *param = &alphaModulationPacket[4];
 
@@ -67,7 +67,7 @@ void PrInitializeAlphaModulation() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendereralpha", PrCreateAlphaModulation__Ff);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (110 vs 108 instructions) */
 void PrCreateAlphaModulation(float alpha) {
     if (prCurrentStage == 6 || prCurrentStage == 16) {
         alpha = 0.0f;

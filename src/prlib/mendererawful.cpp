@@ -43,7 +43,7 @@ void SetNextSwitchRotationTimer() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", GetAwfulRotation__Fv);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (73 vs 72 instructions) */
 float GetAwfulRotation() {
     if (awfulStatus == 0 || awfulStatus == 2) {
         if (--awfulChangeTimer == 0) {
@@ -184,7 +184,7 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrUpdateAwfulMenderer__Fv);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (32 vs 35 instructions) */
 void PrUpdateAwfulMenderer() {
     float angle = awfulAngle + prMendererSpeed * GetAwfulRotation();
     if (angle >= 6.2831855f) {

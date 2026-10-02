@@ -92,7 +92,7 @@ extern float prMendererNoodleColor[4];
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PushNoodleColor__FPUl);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (262 vs 266 instructions) */
 void PushNoodleColor(u_long *rgbaq) {
     if (!prMendererColorModulation || prCurrentStage == 6) {
         *rgbaq = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
@@ -198,7 +198,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStripChunk__FRCt8NaMATRIX3Zfi4i4);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (347 vs 405 instructions) */
 void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     u_int count = 115;
 
@@ -336,7 +336,7 @@ static void PreDrawNoodleStrip() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStrip__Fff);
-#else /* Requires .lit4 migration */
+#else /* Regalloc and scheduling */
 void DrawNoodleStrip(float ratio, float rot) {
     PreDrawNoodleStrip();
 
@@ -482,7 +482,7 @@ void DrawMenderer();
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawMenderer__Fv);
-#else /* Requires .lit4 migration */
+#else /* Codegen differs (359 vs 418 instructions) */
 void DrawMenderer() {
     float ratio = prMendererRatio;
 
