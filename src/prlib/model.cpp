@@ -6,6 +6,12 @@
 
 #include <nalib/navector.h>
 
+/*
+ * This file carries its own copy of NaVECTOR<float, 4>::Set
+ * (func_00140E38); call it directly so the jal stays local.
+ */
+NaVECTOR<float, 4>& SetVector_tmp_model(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("func_00140E38");
+
 /* sdata */
 extern PrSPRAM_DATA *prSpramData_tmp_model;
 extern u_char *workAreaTopAddress;
@@ -194,56 +200,17 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
     : : "r"(arg1));
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/model", GetPrimitivePosition__13PrModelObjectPt8NaVECTOR2Zfi4);
-#else
-/* Register allocation: this/position swapped (s0/s1) */
 void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
-    position->Set(0.0f, 0.0f, 0.0f, 1.0f);
+    SetVector_tmp_model(position, 0.0f, 0.0f, 0.0f, 1.0f);
 
     if (m_position_animation != NULL) {
-        NaMATRIX<float, 4, 4> *matrix = m_position_animation->unk50[0]->GetMatrix(m_position_animation_time);
-        asm volatile(
-            "lqc2       $vf4,   0x0(%0)        \n\t"
-            "lqc2       $vf5,  0x10(%0)        \n\t"
-            "lqc2       $vf6,  0x20(%0)        \n\t"
-            "lqc2       $vf7,  0x30(%0)        \n\t"
-            "lqc2       $vf8,   0x0(%1)        \n\t"
-            "vmulax     ACC,    $vf4,   $vf8   \n\t"
-            "vmadday    ACC,    $vf5,   $vf8   \n\t"
-            "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
-            "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
-            "sqc2       $vf9,   0x0(%1)        \n\t"
-        : : "r"(matrix), "r"(position));
+        NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->unk50[0]->GetMatrix(m_position_animation_time), *position);
     } else {
-        asm volatile(
-            "lqc2       $vf4,   0x0(%0)        \n\t"
-            "lqc2       $vf5,  0x10(%0)        \n\t"
-            "lqc2       $vf6,  0x20(%0)        \n\t"
-            "lqc2       $vf7,  0x30(%0)        \n\t"
-            "lqc2       $vf8,   0x0(%1)        \n\t"
-            "vmulax     ACC,    $vf4,   $vf8   \n\t"
-            "vmadday    ACC,    $vf5,   $vf8   \n\t"
-            "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
-            "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
-            "sqc2       $vf9,   0x0(%1)        \n\t"
-        : : "r"(&unk10), "r"(position));
+        NaMATRIX<float, 4, 4>::Apply(*position, unk10, *position);
     }
 
-    asm volatile(
-        "lqc2       $vf4,   0x0(%0)        \n\t"
-        "lqc2       $vf5,  0x10(%0)        \n\t"
-        "lqc2       $vf6,  0x20(%0)        \n\t"
-        "lqc2       $vf7,  0x30(%0)        \n\t"
-        "lqc2       $vf8,   0x0(%1)        \n\t"
-        "vmulax     ACC,    $vf4,   $vf8   \n\t"
-        "vmadday    ACC,    $vf5,   $vf8   \n\t"
-        "vmaddaz    ACC,    $vf6,   $vf8   \n\t"
-        "vmaddw     $vf9,   $vf7,   $vf8   \n\t"
-        "sqc2       $vf9,   0x0(%1)        \n\t"
-    : : "r"(&prSpramData_tmp_model->m_view_projection_matrix), "r"(position));
+    NaMATRIX<float, 4, 4>::Apply(*position, prSpramData_tmp_model->m_view_projection_matrix, *position);
 }
-#endif
 
 void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     GetPrimitivePosition(position);
@@ -255,7 +222,5 @@ void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     p[3] = 1.0f;
 }
 
-#ifndef NON_MATCHING
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/model", func_00140E38);
-#endif
