@@ -3478,9 +3478,6 @@ static void McInitFlow(void) {
     waitTime  = 0;
 }
 
-#ifndef NON_MATCHING /* .rodata JPT */
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", McStartCheckFlow);
-#else
 static int McStartCheckFlow(/* a0 4 */ int flg) {
     /* v1 3 */ int ret;
 
@@ -3580,7 +3577,6 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 
     return -1;
 }
-#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
