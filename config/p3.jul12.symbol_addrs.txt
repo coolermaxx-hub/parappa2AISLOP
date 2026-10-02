@@ -2694,3 +2694,6 @@ tmp_0_linear_vector = 0x0039990C; // size:0x4
 value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
 mendererTextureRequested = 0x003999A4; // size:0x4
 mendererTexturePacket = 0x01C83AC0; // size:0xE0
+mendererSyncPhase = 0x003999A8; // size:0x4
+noodlePhase = 0x01C83570; // size:0x40
+noodleParameter = 0x01C835B0; // size:0x4B0
