@@ -17,6 +17,7 @@
 #include <prlib/prlib.h>
 
 #include <malloc.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -26,7 +27,7 @@
 // /* data 18b620 */ static short RShopRute0[0];
 // /* data 18b630 */ static short RShopRute1[0];
 // /* data 18b638 */ static short RShopRute2[0];
-// /* data 18b648 */ static short *RecordShopRute[10];
+/* data 18b648 */ extern short *RecordShopRute[]; /* static */
 /* data 18b670 */ extern MNMAPPOS mnmapCityHall[]; /* static */
 /* data 18b730 */ extern short AnmCHallPara_OptRet[]; /* static */
 /* data 18b738 */ extern short AnmCHallPara_Opt[]; /* static */
@@ -132,7 +133,7 @@
 // /* data 18cab8 */ static int POPSel2Btn[0];
 // /* data 18cad0 */ static int Pop_CmpMesNo[0];
 // /* data 18cae8 */ static int POPSel2BtnDir[0];
-// /* data 18cb00 */ static int SaveMenu_CmpMesNo[0];
+/* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
 // /* data 18cb08 */ static BGM_TABLE JukeBgmTbl[0];
 // /* data 18cb58 */ static int JukeMenu_CmpMesNo[0];
 // /* data 18cb80 */ static MNOPT_SELINF OptionSelTbl[0];
@@ -177,7 +178,7 @@
 /* bss 1c7f7c8 */ extern CMPMES_WORK CmpMesWork; /* static */
 /* bss 1c7f7e0 */ extern RANKLIST RankLst[]; /* static */
 // /* bss 1c7f970 */ static POPUP_MENU PopupMenu;
-// /* bss 1c7fa88 */ static SAVE_MENU SaveMenu;
+/* bss 1c7fa88 */ extern SAVE_MENU SaveMenu; /* static */
 /* bss 1c7fb48 */ extern JUKE_MENU JukeMenu; /* static */
 // /* bss 1c80f60 */ static OPTION_MENU OptionMenu;
 /* bss 1c80fb0 */ extern USERLIST_MENU UserListMenu; /* static */
@@ -636,7 +637,106 @@ void TsBGMChangePos(int no) {
     pbgm->chgReq = no + 1;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPoll);
+#else
+/* static */ void TsBGMPoll(void) {
+    BGMSTATE *pbgm = &TsBGMState;
+
+    MNSceneMusicFitTimerFrame();
+    if (pbgm->state == 0) {
+        return;
+    }
+
+    if (pbgm->wtLoad) {
+        MNSceneMusicFitTimerClear();
+        if (MenuVoiceBankSet(-1)) {
+            return;
+        }
+        pbgm->wtLoad = 0;
+        TsBGMPlay(pbgm->wtNo, pbgm->wtTim);
+    }
+
+    tsBGMONEflow();
+
+    if (pbgm->chgReq && (pbgm->wbgm[0].tim % 36) == 0) {
+        pbgm->oldno = pbgm->sndno;
+        pbgm->sndno = pbgm->chgReq - 1;
+        pbgm->ctim = 1;
+        pbgm->cstate = 0;
+        pbgm->chgReq = 0;
+    } else if (pbgm->ctim) {
+        if (pbgm->ctim == 75) {
+            tsBGMONEVol(0, 0);
+            MenuVoiceSetVol(3, 23, 0);
+            tsBGMONEVol(pbgm->oldno, 0);
+            tsBGMONEVol(pbgm->sndno, pbgm->vol);
+            pbgm->ctim = 0;
+        } else {
+            if (pbgm->ctim < 2) {
+                tsBGMONEVol(0, pbgm->ctim * pbgm->vol);
+            } else if (pbgm->ctim == 72) {
+                tsBGMONEVol(0, 0);
+                MenuVoicePlay(3, 23);
+            } else if (pbgm->ctim > 72) {
+                MenuVoiceSetVol(3, 23, ((75 - pbgm->ctim) * pbgm->vol) / 3);
+            }
+
+            if (pbgm->ctim < 2) {
+                tsBGMONEVol(pbgm->oldno, (1 - pbgm->ctim) * pbgm->vol);
+            } else if (pbgm->ctim == 72) {
+                if (pbgm->sndno == 10) {
+                    tsBGMONETop(pbgm->sndno, pbgm->vol);
+                } else {
+                    tsBGMONETop(pbgm->sndno, 0);
+                }
+            } else if (pbgm->ctim > 72) {
+                if (pbgm->sndno != 10) {
+                    tsBGMONEVol(pbgm->sndno, ((pbgm->ctim - 72) * pbgm->vol) / 72);
+                }
+            }
+
+            pbgm->ctim++;
+        }
+    }
+
+    if (pbgm->ttim0) {
+        pbgm->ttim++;
+        if (pbgm->ttim > pbgm->ttim0) {
+            pbgm->ttim0 = 0;
+            pbgm->ttim = 0;
+            if (pbgm->state & 4) {
+                pbgm->vol = 0x100;
+                pbgm->state = 1;
+                pbgm->cstate = 0;
+                pbgm->ctim = 0;
+                tsBGMONEVol(pbgm->sndno, 0x100);
+            } else {
+                pbgm->vol = 0;
+                pbgm->ttim0 = 0;
+                pbgm->ttim = 0;
+                pbgm->cstate = 0;
+                pbgm->ctim = 0;
+                if (!(pbgm->state & 9)) {
+                    pbgm->state = 0;
+                    TsBGMStop(0);
+                } else {
+                    pbgm->state = 9;
+                    tsBGMONEVol(pbgm->sndno, 0);
+                }
+            }
+        } else {
+            pbgm->vol = (pbgm->ttim << 8) / pbgm->ttim0;
+            if (!(pbgm->state & 4)) {
+                pbgm->vol = 0x100 - pbgm->vol;
+            }
+            if (pbgm->ctim == 0) {
+                tsBGMONEVol(pbgm->sndno, pbgm->vol);
+            }
+        }
+    }
+}
+#endif
 
 static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
     CmnGifOpenCmnPk(pgifpk);
@@ -1068,7 +1168,108 @@ static void TsSet_ParappaCapColor(void) {
     MenuRoundTim2Trans(n);
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsClearSet);
+#else
+/* static */ void TsClearSet(P3GAMESTATE *pstate) {
+    P3LOG_VAL *plog   = pstate->pLog;
+    int        nstage = pstate->nStage;
+    int        stage  = nstage - 1;
+    int        round  = plog->nRound;
+    int        bAuto  = FALSE;
+    int        jacket = 0;
+    int        i, cnt, lv;
+    short     *pRute;
+
+    if (stage < 0 || stage >= 8) {
+        return;
+    }
+    if (pstate->nMode == 1) {
+        return;
+    }
+
+    if (pstate->nMode == 2) {
+        lv = pstate->vsLev + 1;
+        if (round >= 4 && plog->clrVSCOM1[stage] < 4 && lv >= 4) {
+            cnt = 0;
+            for (i = 0; i < 8; i++) {
+                if (plog->clrVSCOM1[i] >= 4) {
+                    cnt++;
+                }
+            }
+            if (cnt == 7) {
+                bAuto  = TRUE;
+                jacket = 9;
+            }
+        }
+        if (plog->clrVSCOM1[stage] < lv) {
+            plog->clrVSCOM1[stage] = lv;
+        }
+    } else if (pstate->nMode == 0) {
+        pstate->pAutoMove = NULL;
+        if (round == 0 && plog->clrCount[stage] <= 0) {
+            lv = nstage + 1;
+            if (lv >= 9) {
+                lv = 1;
+            }
+            pstate->autoMovePos[1] = -1;
+            pstate->autoMovePos[0] = lv;
+            pstate->pAutoMove = pstate->autoMovePos;
+        }
+
+        if (round < 4) {
+            plog->clrFlg[round] |= 1 << stage;
+        }
+
+        round++;
+        plog->clrCount[stage]++;
+        if (plog->clrCount[stage] > round) {
+            plog->clrCount[stage] = round;
+        }
+
+        if (pP3GameState->bCoolClr) {
+            if (round > 4 && plog->clrCOOL[stage] < 4) {
+                bAuto  = TRUE;
+                jacket = stage;
+            }
+            plog->clrCOOL[stage] = round;
+            plog->logCOOL[stage] = ((plog->logCOOL[stage] << 4) & 0xfff0) | ((round < 5) ? round : 4);
+        }
+
+        cnt = TRUE;
+        for (i = 0; i < 8; i++) {
+            if (plog->clrCount[i] < round) {
+                cnt = FALSE;
+            }
+        }
+
+        if (cnt) {
+            plog->nRound++;
+            if (plog->nRound > 1000000) {
+                plog->nRound = 1000000;
+            }
+            printf("*** Round Up = (%d)\n", plog->nRound);
+            if (plog->nRound == 4) {
+                bAuto  = TRUE;
+                jacket = 0;
+            }
+        }
+    }
+
+    if (bAuto) {
+        pRute = RecordShopRute[stage + 1];
+        for (i = 0; i < 9; i++) {
+            pstate->autoMovePos[i] = pRute[i];
+            if (pRute[i] < 0) {
+                break;
+            }
+        }
+        pstate->autoMovePos[i] = -2;
+        pstate->curRecJacket = jacket;
+        pstate->pAutoMove = pstate->autoMovePos;
+    }
+}
+#endif
 
 static void TsCheckEnding(P3GAMESTATE *pstate) {
     int        nRound;
@@ -3737,7 +3938,124 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveMenu_Flow);
+/* static */ int TsSaveMenu_Flow(int flg, u_int tpad) {
+    SAVE_MENU *pfw = &SaveMenu;
+    int        state;
+    int        aret;
+    int        sel;
+
+    if (flg == 1) {
+        if (tpad < 2) {
+            pfw->selno = tpad;
+        } else {
+            pfw->selno = 0;
+        }
+        pfw->state = 0;
+        TsANIME_Init(&pfw->awork);
+        TsPopCusInit(&pfw->cani, 0);
+        SaveMenu_Sw = TRUE;
+        return 0;
+    }
+
+    if (flg == 2) {
+        SaveMenu_Sw = FALSE;
+        return 0;
+    }
+
+    state = pfw->state;
+    aret = TsANIME_Poll(&pfw->awork);
+    TsPopCusFlow(&pfw->cani);
+
+    switch (state) {
+    case 0:
+        state = 0x100;
+        TsANIME_Start(&pfw->awork, 2, 15);
+        aret = TsANIME_Poll(&pfw->awork);
+    case 0x100:
+        if (aret) {
+            break;
+        }
+    case 0x1000:
+        pfw->exitflg = 0;
+        state = 0x1010;
+        break;
+    case 0x1010:
+        TsCMPMes_SetMes(SaveMenu_CmpMesNo[pfw->selno]);
+        if (TsCheckTimeMapChange()) {
+            break;
+        }
+
+        sel = pfw->selno;
+        if (tpad & 0x8000) {
+            sel--;
+        }
+        if (tpad & 0x2000) {
+            sel++;
+        }
+
+        if (pfw->selno != sel) {
+            sel = TSLOOP(sel, 2);
+            pfw->selno = sel;
+            TsPopCusAOff(&pfw->cani);
+            pfw->cani.onTNo = sel;
+            pfw->cani.onTim = 10;
+            TSSNDPLAY(2);
+            TsCMPMes_SetMes(SaveMenu_CmpMesNo[pfw->selno]);
+        }
+
+        if (tpad & 0x40) {
+            pfw->exitflg = 1;
+            TSSNDPLAY(9);
+            state = 0xf020;
+        } else if (tpad & 0x20) {
+            pfw->exitflg = 0;
+            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+            state = 0xf000;
+            TSSNDPLAY(6);
+        }
+        break;
+    case 0xf000:
+        pfw->cani.okTim = 25;
+        state = 0xf010;
+        pfw->cani.onTNo = pfw->selno;
+    case 0xf010:
+        if (pfw->cani.okTim) {
+            break;
+        }
+    case 0xf020:
+        state = 0xf080;
+        TsANIME_Start(&pfw->awork, 3, 20);
+        aret = TsANIME_Poll(&pfw->awork);
+    case 0xf080:
+        if (aret) {
+            break;
+        }
+    case 0xf100:
+        SaveMenu_Sw = FALSE;
+        if (pfw->exitflg) {
+            state = 0xff20;
+            break;
+        }
+
+        switch (pfw->selno) {
+        case 0:
+            ret = 1;
+            break;
+        case 1:
+            ret = 2;
+            break;
+        default:
+            ret = 3;
+            break;
+        }
+        return ret;
+    case 0xff20:
+        return -1;
+    }
+
+    pfw->state = state;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveMenu_Draw);
 

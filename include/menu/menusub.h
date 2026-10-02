@@ -232,6 +232,14 @@ typedef struct { // 0x14
     /* 0x10 */ int atrn3;
 } ANIME_WK;
 
+typedef struct { // 0xc0
+    /* 0x00 */ int state;
+    /* 0x04 */ int exitflg;
+    /* 0x08 */ int selno;
+    /* 0x0c */ ANIME_WK awork;
+    /* 0x20 */ POPCTIM cani;
+} SAVE_MENU;
+
 typedef struct { // 0x118
     /* 0x000 */ int state;
     /* 0x004 */ int exitflg;
