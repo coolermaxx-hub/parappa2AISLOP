@@ -57,6 +57,22 @@ public:
         return Copy(*this, rhs);
     }
 
+    static NaVECTOR<float, 4>& Apply(NaVECTOR<float, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
+        asm volatile("
+            lqc2         $vf4, 0x0(%1)
+            lqc2         $vf5, 0x10(%1)
+            lqc2         $vf6, 0x20(%1)
+            lqc2         $vf7, 0x30(%1)
+            lqc2         $vf8, 0x0(%2)
+            vmulax.xyzw  ACC, $vf4, $vf8x
+            vmadday.xyzw ACC, $vf5, $vf8y
+            vmaddaz.xyzw ACC, $vf6, $vf8z
+            vmaddw.xyzw  $vf9, $vf7, $vf8w
+            sqc2         $vf9, 0x0(%0)
+        " : : "r"(&out), "r"(&lhs), "r"(&rhs));
+        return out;
+    }
+
     NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
         NaMATRIX<float, 4, 4> ret;
         asm volatile("

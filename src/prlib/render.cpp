@@ -7,7 +7,14 @@
 #include "scene.h"
 #include "spram.h"
 
+#include "animation.h"
+#include "spadata.h"
+
 #include <nalib/namatrix.h>
+#include <math.h>
+
+template <>
+NaVECTOR<float, 4>& NaVECTOR<float, 4>::Set(const float& x, const float& y, const float& z, const float& w);
 
 /* sdata */
 extern PrSPRAM_DATA *prSpramData_tmp_render;
@@ -55,7 +62,53 @@ void PrSceneObject::PrepareScreenModelRender() {
     prRenderStuff.MergeRender();
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrix__13PrModelObject);
+void PrModelObject::CalculateCurrentMatrix() {
+    PrSPRAM_DATA *spram = prSpramData_tmp_render;
+    const NaMATRIX<float, 4, 4> *mtx = &this->unk10;
+
+    spram->m_animation_time = m_animation_time;
+    spram->m_current_model = this;
+    SpaFileHeader *animation = m_animation;
+    spram->m_animation = animation;
+    this->unkA4 = 1.0f;
+
+    SpmFileHeader *spm = m_spm_image;
+
+    if (m_position_animation != NULL) {
+        float time = m_position_animation_time;
+        NaMATRIX<float, 4, 4> pos;
+        pos = *m_position_animation->unk50[0]->GetMatrix(time);
+        mtx = &pos;
+    }
+
+    if (animation != NULL) {
+        if (spm->m_flags & 0x20) {
+            spm->CalculateClusterMatrixAnimation(this, *mtx);
+
+            NaVECTOR<float, 4> v;
+            NaVECTOR<float, 4> scale;
+            NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->unk40;
+            scale.Set(1.0f, 1.0f, 1.0f, 0.0f);
+
+            NaVECTOR<float, 4> tmp;
+            v = NaMATRIX<float, 4, 4>::Apply(tmp, root, scale);
+
+            float disturbance = m_disturbance;
+            float len = 0.0f;
+            for (int i = 0; i < 4; i++) {
+                len += v[i] * v[i];
+            }
+
+            this->unkA4 = disturbance * sqrtf(len);
+        } else {
+            spm->CalculateCurrentMatrixAnimation(this, *mtx);
+        }
+    } else if (spm->m_flags & 0x20) {
+        spm->CalculateClusterMatrix(this, *mtx);
+    } else {
+        spm->CalculateCurrentMatrix(this, *mtx);
+    }
+}
 
 void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     m_nodes[0]->ComposeGlobalMatrix(model, arg1);
@@ -388,7 +441,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
 #endif
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145DB0);
+INCLUDE_ASM("asm/nonmatchings/prlib/render", Set__t8NaVECTOR2Zfi4RCfT1T1T1);
 
 /* prlib/render.cpp */
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
