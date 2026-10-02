@@ -361,6 +361,31 @@ typedef struct { // 0x8
     /* 0x6 */ u_short ton;
 } CELLOBJ;
 
+typedef struct { // 0x10
+    /* 0x0 */ int workVol;
+    /* 0x4 */ PATPOS ppat;
+} MNOPT_OBJ;
+
+typedef struct { // 0x10
+    /* 0x0 */ int nObj;
+    /* 0x4 */ MNOPT_OBJ *pObjTbl;
+    /* 0x8 */ int cmpMesNo;
+    /* 0xc */ int voiceNo;
+} MNOPT_SELINF;
+
+typedef struct { // 0x4
+    /* 0x0 */ short tim[2];
+} OPTION_LRBTN;
+
+typedef struct { // 0x4c
+    /* 0x00 */ int state;
+    /* 0x04 */ int exitflg;
+    /* 0x08 */ int selno;
+    /* 0x0c */ int sw[4];
+    /* 0x1c */ CELLOBJ cellcs[4];
+    /* 0x3c */ OPTION_LRBTN btnlr[4];
+} OPTION_MENU;
+
 typedef struct { // 0xc
     /* 0x0 */ int nType;
     /* 0x4 */ int typeNo[2];

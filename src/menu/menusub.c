@@ -136,7 +136,7 @@
 /* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
 // /* data 18cb08 */ static BGM_TABLE JukeBgmTbl[0];
 // /* data 18cb58 */ static int JukeMenu_CmpMesNo[0];
-// /* data 18cb80 */ static MNOPT_SELINF OptionSelTbl[0];
+/* data 18cb80 */ extern MNOPT_SELINF OptionSelTbl[]; /* static */
 /* data 18cbc0 */ extern USERLIST_TYPE UserListTbl[]; /* static */
 /* sdata 399820 */ extern int _TexFunc; /* static */
 /* sdata 399824 */ extern HOSI_OBJ *HOSIObj; /* static */
@@ -180,7 +180,7 @@
 // /* bss 1c7f970 */ static POPUP_MENU PopupMenu;
 /* bss 1c7fa88 */ extern SAVE_MENU SaveMenu; /* static */
 /* bss 1c7fb48 */ extern JUKE_MENU JukeMenu; /* static */
-// /* bss 1c80f60 */ static OPTION_MENU OptionMenu;
+/* bss 1c80f60 */ extern OPTION_MENU OptionMenu; /* static */
 /* bss 1c80fb0 */ extern USERLIST_MENU UserListMenu; /* static */
 /* bss 1c810c8 */ extern SCFADE ScFade; /* static */
 
@@ -3750,16 +3750,19 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
         subStatus = 0xf0f0;
         break;
     case 0xf0f0:
-        flg = 0xf002;
         if (type == 0) {
-            if (errorNo == 70) {
+            if (errorNo != 70) {
+                if (errorNo == 80) {
+                    subStatus = 0xf000;
+                    break;
+                }
+            } else {
                 memset(UserLst, 0, sizeof(*UserLst));
-                flg = 0xf000;
-            } else if (errorNo == 80) {
-                flg = 0xf000;
+                subStatus = 0xf000;
+                break;
             }
         }
-        subStatus = flg;
+        subStatus = 0xf002;
         break;
     case 0xf000:
         P3MC_GetUserEnd();
@@ -5066,7 +5069,168 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
+#else
+/* static */ int TsOption_Flow(int flg, u_int tpad) {
+    OPTION_MENU  *pfw = &OptionMenu;
+    int           state;
+    int           sel;
+    int           i;
+    int           l;
+    int          *psw;
+    MNOPT_SELINF *pselw;
+    /* sbss 399b08 */ extern int opt_lang_tmp_270; /* static int opt_lang; */
+    /* sbss 399b0c */ extern int opt_subt_tmp_271; /* static int opt_subt; */
+    /* sbss 399b10 */ extern int opt_vibr_tmp_272; /* static int opt_vibr; */
+    /* sbss 399b14 */ extern int opt_oneb_tmp_273; /* static int opt_oneb; */
+
+    if (flg == 1) {
+        pfw->state = 0;
+        pfw->selno = 0;
+        opt_lang_tmp_270 = pP3GameState->pGameStatus->language_type;
+        opt_subt_tmp_271 = pP3GameState->pGameStatus->subtitle;
+        opt_vibr_tmp_272 = pP3GameState->pGameStatus->vibration;
+        opt_oneb_tmp_273 = pP3GameState->pGameStatus->play_table_modeG;
+        memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
+        memset(pfw->btnlr, 0, sizeof(pfw->btnlr));
+        TsCmnCell_CusorSET(&pfw->cellcs[pfw->selno]);
+
+        pselw = OptionSelTbl;
+        for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
+            switch (i) {
+            case 0:
+                psw = &opt_lang_tmp_270;
+                break;
+            case 1:
+                psw = &opt_subt_tmp_271;
+                break;
+            case 2:
+                psw = &opt_vibr_tmp_272;
+                break;
+            default:
+                psw = &opt_oneb_tmp_273;
+                break;
+            }
+
+            for (l = 0; l < pselw->nObj; l++) {
+                if (pselw->pObjTbl[l].workVol == *psw) {
+                    break;
+                }
+            }
+
+            if (l < pselw->nObj) {
+                pfw->sw[i] = l;
+            } else {
+                pfw->sw[i] = 0;
+            }
+        }
+        return 0;
+    }
+
+    state = pfw->state;
+    if (flg == 2) {
+        return 0;
+    }
+
+    switch (state) {
+    case 0:
+        state = 0x1000;
+    case 0x1000:
+    {
+        int osel;
+        int old;
+
+        osel = sel = pfw->selno;
+        if (tpad & 0x1000) {
+            sel--;
+        }
+        if (tpad & 0x4000) {
+            sel++;
+        }
+        if (osel != sel) {
+            sel = TSLOOP(sel, 4);
+            TsCmnCell_CusorOFF(&pfw->cellcs[osel]);
+            TsCmnCell_CusorON(&pfw->cellcs[sel]);
+            pfw->selno = sel;
+            TSSNDPLAY(OptionSelTbl[sel].voiceNo);
+            TSSNDPLAY(5);
+        }
+
+        osel = pfw->selno;
+        old = sel = pfw->sw[osel];
+        if (tpad & 0x8000) {
+            sel--;
+        }
+        if (tpad & 0x2000) {
+            sel++;
+        }
+        if (old != sel) {
+            int max;
+
+            *(short *)((char *)pfw->btnlr[osel].tim + ((sel < old) ? 0 : 2)) = 6;
+            max = OptionSelTbl[osel].nObj;
+            pfw->sw[pfw->selno] = TSLOOP(sel, max);
+            TSSNDPLAY(2);
+        }
+
+        if (tpad & 0x20) {
+            pfw->exitflg = 0;
+            state = 0xf000;
+            TSSNDPLAY(6);
+        }
+        if (tpad & 0x40) {
+            state = 0xf000;
+            pfw->exitflg = 1;
+            TSSNDPLAY(9);
+        }
+        TsCMPMes_SetMes(OptionSelTbl[pfw->selno].cmpMesNo);
+    }
+        break;
+    case 0xf000:
+        if (pfw->exitflg == 0) {
+            pselw = OptionSelTbl;
+            for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
+                switch (i) {
+                case 0:
+                    psw = &opt_lang_tmp_270;
+                    break;
+                case 1:
+                    psw = &opt_subt_tmp_271;
+                    break;
+                case 2:
+                    psw = &opt_vibr_tmp_272;
+                    break;
+                default:
+                    psw = &opt_oneb_tmp_273;
+                    break;
+                }
+                *psw = pselw->pObjTbl[pfw->sw[i]].workVol;
+            }
+
+            pP3GameState->pGameStatus->language_type = opt_lang_tmp_270;
+            pP3GameState->pGameStatus->subtitle = opt_subt_tmp_271;
+            pP3GameState->pGameStatus->vibration = opt_vibr_tmp_272;
+            pP3GameState->pGameStatus->play_table_modeG = opt_oneb_tmp_273;
+            TsCMPMes_SetMes(-1);
+        }
+    case 0xf100:
+        if (pfw->exitflg == 0) {
+            state = 0xff10;
+        } else {
+            state = 0xff20;
+        }
+        break;
+    case 0xff10:
+        return 1;
+    case 0xff20:
+        return -1;
+    }
+
+    pfw->state = state;
+    return 0;
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Draw);
 
