@@ -25,7 +25,8 @@ class SpaFileHeader;
 struct PrVuNodeHeaderDmaPacket {
     sceDmaTag m_tag;
     NaMATRIX<float, 4, 4> m_matrix;
-    PR_PADDING(unk50, 0x10);
+    PR_PADDING(unk50, 0x8);
+    float m_contour_blur_alpha[2];
     PrMICRO_PROGRAM_MODULE unk60;
     PR_PADDING(unk64, 0x4);
     float unk68;
@@ -169,7 +170,9 @@ public:
     void RenderContour(PrModelObject *model);
 
 public:
-    PR_PADDING(unk0, 0x17C);
+    PR_PADDING(unk0, 0x140);
+    NaVECTOR<float, 4> unk140;
+    PR_PADDING(unk150, 0x2C);
     PrVuNodeHeaderDmaPacket *unk17C;
     PR_PADDING(unk180, 0x1C);
     u_int unk19C;
