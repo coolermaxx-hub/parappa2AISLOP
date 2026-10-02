@@ -46,9 +46,13 @@ INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", GetAwfulRotation__Fv);
 #else /* Codegen differs (73 vs 72 instructions) */
 float GetAwfulRotation() {
     if (awfulStatus == 0 || awfulStatus == 2) {
-        if (--awfulChangeTimer == 0) {
+        u_int timer = awfulChangeTimer - 1;
+        if (timer == 0) {
+            awfulChangeTimer = 0;
             awfulStatus = (awfulStatus + 1) % 4;
             SetNextSwitchRotationTimer();
+        } else {
+            awfulChangeTimer = timer;
         }
     }
 
