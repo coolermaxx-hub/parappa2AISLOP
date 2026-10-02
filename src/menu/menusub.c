@@ -5004,12 +5004,6 @@ void TsPopCusFlow(POPCTIM *pfw) {
     }
 }
 
-/* TODO: remove once TsPopCusPut is decompiled; its rodata starts 16-byte aligned */
-asm(".section .rodata\n.align 4\n.text");
-
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
-#else /* Scheduling: one constant load in case 3 comes after the first mul (also drop INCLUDE_RODATA D_00396068/D_00396070/D_00396078 when matched) */
 /* static */ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
     float rt3;
     float rt = 0.0f;
@@ -5105,7 +5099,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
         break;
     case 3:
     {
-        float zrt = sinf(pfw->onTim * 0.1f * 2.1991148f);
+        float zrt = sinf(pfw->onTim * 2.1991148f * 0.1f);
         pfw->srTNo = i;
         pfw->srTim = 8;
         TsPatPutMZoom(pk, spr, ppos, px, py, zrt * 0.05f + 1.0f, zrt * 0.14f + 1.0f, 8, 4, zrt * -0.05f, zrt * -0.3f);
@@ -5128,17 +5122,10 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
         break;
     }
 }
-#endif
 
 int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     return (pfw->bDim[POPBtn2Sel[(bank != 0) ? (nbtn + 3) : (nbtn + 0)]] == FALSE);
 }
-
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396068);
-
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396070);
-
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396078);
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
