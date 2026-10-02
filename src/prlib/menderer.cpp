@@ -77,7 +77,113 @@ static int StageIndexForColor() {
     return (u_int)prCurrentStage % 10;
 }
 
+/* data */
+extern float noodleSaturationRange[][2];
+extern float noodleBaseColor[][3];
+
+/* sdata */
+extern float noodleHueOffset;
+extern float noodleBrightnessPhase;
+
+/* data */
+extern float prMendererNoodleColor[4];
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PushNoodleColor__FPUl);
+#else /* Requires .lit4 migration */
+static void PushNoodleColor(u_long *rgbaq) {
+    if (!prMendererColorModulation || prCurrentStage == 6) {
+        *rgbaq = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
+        return;
+    }
+
+    int stage = StageIndexForColor();
+    float *range = noodleSaturationRange[stage];
+    float saturation = range[0] + (range[1] - range[0]) * GetRandom();
+
+    float hue = GetRandom() * 3.0f + noodleHueOffset;
+    if (hue > 3.0f) {
+        hue -= 3.0f;
+    }
+
+    float r, g, b;
+
+    if (hue < 1.0f) {
+        r = hue;
+    } else {
+        r = 0.0f;
+        if (hue < 2.0f) {
+            r = 2.0f - hue;
+        }
+    }
+
+    if (hue < 1.0f) {
+        g = 0.0f;
+    } else if (hue < 2.0f) {
+        g = hue - 1.0f;
+    } else {
+        g = 3.0f - hue;
+    }
+
+    if (hue < 1.0f) {
+        b = 1.0f - hue;
+    } else {
+        b = 0.0f;
+        if (!(hue < 2.0f)) {
+            b = hue - 2.0f;
+        }
+    }
+
+    float *base = noodleBaseColor[stage];
+    r = base[0] + r * saturation;
+    g = base[1] + g * saturation;
+    b = base[2] + b * saturation;
+
+    float blend;
+    if (prCurrentStage == 19 || prMendererRatio <= 1.0f) {
+        blend = 0.0f;
+    } else if (prMendererRatio <= 1.4f) {
+        blend = (prMendererRatio - 1.0f) * 0.3f / 0.4f;
+    } else if (prMendererRatio <= 1.6f) {
+        blend = 0.3f;
+    } else {
+        blend = 1.0f;
+        if (prMendererRatio <= 2.0f) {
+            blend = (prMendererRatio - 1.6f) * 0.7f / 0.4f + 0.3f;
+        }
+    }
+
+    float phase = noodleBrightnessPhase + GetRandom() * 2.0f;
+    if (phase >= 2.0f) {
+        phase -= 2.0f;
+    }
+
+    float d = 1.0f - phase;
+    if (d < 0.0f) {
+        d = -d;
+    }
+
+    float brightness = d * 0.29999995f + 0.6f;
+    r += (brightness * prMendererNoodleColor[0] - r) * blend;
+    b += (brightness * prMendererNoodleColor[2] - b) * blend;
+    g += (brightness * prMendererNoodleColor[1] - g) * blend;
+
+    if (r > 1.0f) {
+        r = 1.0f;
+    }
+    if (g > 1.0f) {
+        g = 1.0f;
+    }
+    if (b > 1.0f) {
+        b = 1.0f;
+    }
+
+    u_int r8 = r * 255.99f;
+    u_int g8 = g * 255.99f;
+    u_int b8 = b * 255.99f;
+    *rgbaq = r8 | ((u_long)g8 << 8) | ((u_long)b8 << 16) | (0x80UL << 24);
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStripChunk__FRCt8NaMATRIX3Zfi4i4);
 

@@ -2705,3 +2705,7 @@ vector_tmp_spadata_transform = 0x01C83270; // size:0x10
 matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
 scene_bbox_max_init = 0x00399918; // size:0x4
 scene_bbox_min_init = 0x0039991C; // size:0x4
+noodleSaturationRange = 0x0038C870; // size:0x50
+noodleBaseColor = 0x0038C8C0; // size:0x78
+noodleHueOffset = 0x0039997C; // size:0x4
+noodleBrightnessPhase = 0x00399980; // size:0x4
