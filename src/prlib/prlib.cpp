@@ -380,20 +380,20 @@ void PrSetStage(int stage) {
     prCurrentStage = stage;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/prlib", PrSetDepthOfField);
-#else
 PR_EXTERN
 void PrSetDepthOfField(PrSceneObject *scene, float focal_lng, float defocus_lng) {
-    if (focal_lng == 0.0f) {
+    if (focal_lng != 0.0f) {
+        if (focal_lng < 0.0f || defocus_lng <= focal_lng) {
+            defocus_lng = 0.0f;
+            return;
+        }
+    } else {
         defocus_lng = 0.0f;
-    } else if (focal_lng < 0.0f || defocus_lng <= focal_lng) {
-        return;
     }
-    scene->m_default_defocus_len = defocus_lng;
+
     scene->m_default_focal_len = focal_lng;
+    scene->m_default_defocus_len = defocus_lng;
 }
-#endif
 
 PR_EXTERN
 void PrSetDepthOfFieldLevel(PrSceneObject *scene, u_int level) {
