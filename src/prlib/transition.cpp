@@ -1,4 +1,8 @@
 #include "model.h"
+#include "spram.h"
+
+/* sdata */
+extern PrSPRAM_DATA *prSpramData_tmp_transition;
 
 void PrModelObject::SavePosture() {
     if (!(m_spm_image->m_flags & 0x40)) {
@@ -17,4 +21,13 @@ void PrModelObject::ResetPosture() {
 
 INCLUDE_ASM("asm/nonmatchings/prlib/transition", BlendTransitionMatrix__7SpmNodeP13PrModelObjectRt8NaMATRIX3Zfi4i4);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/transition", BlendTransactionWeight__12SpmShapeNodeP13PrModelObjectfUi);
+float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u_int index) {
+    float ratio = prSpramData_tmp_transition->m_model_transaction_blend_ratio;
+
+    if (!(model->m_flags & 0x4)) {
+        return weight;
+    }
+
+    float *posture = model->unk74[1 - model->m_active_transition];
+    return (1.0f - ratio) * posture[this->unk1B8 + index] + ratio * weight;
+}

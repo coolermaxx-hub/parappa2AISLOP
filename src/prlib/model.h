@@ -135,7 +135,14 @@ public:
 
 class SpmShapeNode {
 public:
+    void AddShapePosition(u_int arg0, float arg1);
     void RenderShapeNode(PrModelObject *model);
+
+    float BlendTransactionWeight(PrModelObject *model, float weight, u_int index);
+
+public:
+    PR_PADDING(unk0, 0x1B8);
+    u_int unk1B8;
 };
 
 class SpmComplexNode {
@@ -189,7 +196,8 @@ public:
     SpaFileHeader *m_animation;
     SpaFileHeader *m_position_animation;
     int m_active_transition;
-    PR_PADDING(unk74, 0x10);
+    float *unk74[2];
+    PR_PADDING(unk7C, 0x8);
     int m_rendered_once;
     PR_PADDING(unk88, 0xC);
     float m_contour_blur_alpha[2];
