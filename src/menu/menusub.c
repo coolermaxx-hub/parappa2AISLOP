@@ -7539,7 +7539,40 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPatPutRZoom);
+#else /* Requires .lit4 migration */
+/* static */ void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot) {
+    float zx  = spr->zx;
+    float zy  = spr->zy;
+    float ofx = spr->ofsx;
+    float ofy = spr->ofsy;
+
+    spr->zx = zx * zrate;
+    spr->zy = zy * zrate;
+    _TsPatSetPrm(pk, spr, ppos, ox, oy);
+
+    spr->ofsx -= spr->sw * (spr->zx - zx) * 0.5f;
+    spr->ofsy -= spr->sh * (spr->zy - zy) * 0.5f;
+
+    while (rot > 3.1415927f) {
+        rot -= 6.2831855f;
+    }
+    while (rot < -3.1415927f) {
+        rot += 6.2831855f;
+    }
+
+    spr->rot = rot;
+    spr->cx = spr->sw * 0.5f;
+    spr->cy = spr->sh * 0.5f;
+    PkRSprite_Add(pk, spr, 3);
+
+    spr->zx = zx;
+    spr->zy = zy;
+    spr->ofsx = ofx;
+    spr->ofsy = ofy;
+}
+#endif
 
 /* static */ void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
     float zx   = spr->zx;
@@ -7670,7 +7703,49 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsHosiPut);
+#else /* Requires .lit4 migration */
+/* static */ void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot) {
+    float zx  = spr->zx;
+    float zy  = spr->zy;
+    float ofx = spr->ofsx;
+    float ofy = spr->ofsy;
+
+    spr->ux = 0;
+    spr->uy = 0;
+    spr->uw = ptex->w;
+    spr->uh = ptex->h;
+
+    spr->zx = zx * zrate;
+    spr->zy = zy * zrate;
+
+    spr->px = 0;
+    spr->py = 0;
+    spr->sw = ptex->w;
+    spr->sh = ptex->h;
+
+    spr->ofsx = ofx - spr->sw * (spr->zx - zx) * 0.5f + px;
+    spr->ofsy = ofy - spr->sh * (spr->zy - zy) * 0.5f + py;
+
+    while (rot > 3.1415927f) {
+        rot -= 6.2831855f;
+    }
+    while (rot < -3.1415927f) {
+        rot += 6.2831855f;
+    }
+
+    spr->rot = rot;
+    spr->cx = spr->sw * 0.5f;
+    spr->cy = spr->sh * 0.5f;
+    PkRSprite_Add(pk, spr, 3);
+
+    spr->zx = zx;
+    spr->zy = zy;
+    spr->ofsx = ofx;
+    spr->ofsy = ofy;
+}
+#endif
 
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396168);
 
