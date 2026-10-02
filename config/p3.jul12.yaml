@@ -321,7 +321,7 @@ segments:
         # .lit4
         - [0x298F00, .lit4, main/cdctrl]
         - [0x298F10, .lit4, main/scrctrl]
-        - [0x298F14, lit4, main/drawctrl]
+        - [0x298F14, .lit4, main/drawctrl]
         - [0x298F38, .lit4, main/effect]
         - [0x298F40, .lit4, main/mbar]
         - [0x298F44, .lit4, main/main]

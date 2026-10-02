@@ -328,6 +328,22 @@ typedef struct { // 0x10
     /* 0xc */ MOVEIN_DATA *movein_data_pp;
 } MOVEIN_PARA;
 
+typedef enum {
+    DDSP_HMOVE_L = 0,
+    DDSP_HMOVE_R = 1,
+    DDSP_VMOVE_U = 2,
+    DDSP_VMOVE_D = 3
+} DDSP_ENUM;
+
+typedef struct { // 0x18
+    /* 0x00 */ DDSP_ENUM type;
+    /* 0x04 */ float pos_start;
+    /* 0x08 */ float pos_add;
+    /* 0x0c */ int move_size;
+    /* 0x10 */ float next_line_ang;
+    /* 0x14 */ float next_time_ang;
+} DOUBLE_PARA;
+
 void outsideDrawSceneClear(void);
 int outsideDrawSceneReq(int (*prg_pp)(void *para_pp, int frame, int first_f, int useDisp, int drDisp), u_char pri, u_int useF, u_int drawF, void *param);
 

@@ -21,6 +21,7 @@
 #include <libpad.h>
 
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1551,7 +1552,128 @@ int DrawSceneObjData(void *para_pp, int frame, int first_f, int useDisp, int drD
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/drawctrl", DrawDoubleDispIn);
+int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
+    sceGifPacket gifpk;
+    int          i;
+    sceGsFrame  *use_pp;
+    int          req_req;
+    int          ng_f;
+    float        current_ang;
+    float        ck_pos;
+    int          cnt_size;
+    float        adj_pos;
+    float        treat_pos;
+    int          tmp_x, tmp_y, tmp_w, tmp_h;
+    DOUBLE_PARA *dpara_pp = (DOUBLE_PARA*)para_pp; /* note: not in STABS. */
+
+    if (first_f == DRPRGF_INIT) {
+        return 0;
+    }
+    if (first_f == DRPRGF_RESET) {
+        return 0;
+    }
+
+    use_pp = DrawGetFrameP(useDisp);
+
+    CmnGifADPacketMake(&gifpk, DrawGetFrameP(drDisp));
+    req_req = 0;
+
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, 0, 10, 8, 0, SCE_GS_MODULATE, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, 0, 0, 0, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
+
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
+
+    current_ang = dpara_pp->next_time_ang * frame;
+    ck_pos = dpara_pp->pos_start + dpara_pp->pos_add * frame;
+
+    if (dpara_pp->type == DDSP_VMOVE_U || dpara_pp->type == DDSP_VMOVE_D) {
+        cnt_size = 640;
+    } else {
+        cnt_size = 224;
+    }
+
+    for (i = 0; i < cnt_size; i++) {
+        tmp_x = 0;
+        treat_pos = ck_pos + sinf(current_ang) * dpara_pp->move_size;
+        tmp_y = 0;
+        tmp_w = 0;
+        tmp_h = 0;
+        ng_f = 0;
+
+        switch (dpara_pp->type) {
+        case DDSP_HMOVE_L:
+            if (treat_pos < 1.0f) {
+                ng_f = 1;
+            } else {
+                if (treat_pos > 640.0f) {
+                    treat_pos = 640.0f;
+                }
+                tmp_x = 0;
+                tmp_y = i;
+                tmp_w = treat_pos;
+                tmp_h = 1;
+            }
+            break;
+        case DDSP_HMOVE_R:
+            if (treat_pos >= 639.0f) {
+                ng_f = 1;
+            } else {
+                if (treat_pos < 0.0f) {
+                    treat_pos = 0.0f;
+                }
+                adj_pos = 640.0f - treat_pos;
+                tmp_y = i;
+                tmp_x = treat_pos;
+                tmp_w = adj_pos;
+                tmp_h = 1;
+            }
+            break;
+        case DDSP_VMOVE_U:
+            if (treat_pos < 1.0f) {
+                ng_f = 1;
+            } else {
+                if (treat_pos > 224.0f) {
+                    treat_pos = 224.0f;
+                }
+                tmp_x = i;
+                tmp_h = treat_pos;
+                tmp_w = 1;
+            }
+            break;
+        case DDSP_VMOVE_D:
+            if (treat_pos > 223.0f) {
+                ng_f = 1;
+            } else {
+                if (treat_pos < 0.0f) {
+                    treat_pos = 0.0f;
+                }
+                adj_pos = 224.0f - treat_pos;
+                tmp_x = i;
+                tmp_y = treat_pos;
+                tmp_w = 1;
+                tmp_h = adj_pos;
+            }
+            break;
+        }
+
+        if (!ng_f) {
+            sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(tmp_x << 4, tmp_y << 4));
+            sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(tmp_x), GS_Y_COORD(tmp_y), 1));
+            sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV((tmp_x + tmp_w) << 4, (tmp_y + tmp_h) << 4));
+            sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD((tmp_x + tmp_w)), GS_Y_COORD((tmp_y + tmp_h)), 1));
+            req_req = 1;
+        }
+
+        current_ang += dpara_pp->next_line_ang;
+    }
+
+    if (req_req) {
+        CmnGifADPacketMakeTrans(&gifpk);
+    }
+
+    return 0;
+}
 
 int DrawVramClear(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     VCLR_PARA    *vclr_para_pp = (VCLR_PARA*)para_pp; /* note: not in STABS. */
@@ -2099,9 +2221,6 @@ void MendererCtrlTitleDera(void) {
 
 INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_00393300);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/main/drawctrl", MendererCtrl);
-#else /* Requires .lit4 migration */
 static void MendererCtrl(void) {
     float Mmax = 0.0f;
     float Mmin = 0.0f;
@@ -2161,7 +2280,6 @@ static void MendererCtrl(void) {
         PrRenderMenderer();
     }
 }
-#endif
 
 static float mendRatioTitleGet(int frame, int dera_f) {
     int           i;
