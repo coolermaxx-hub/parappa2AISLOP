@@ -23,7 +23,6 @@ PrPERSPECTIVE_CAMERA* SpcFileHeader::GetCamera(float time) const {
         camera.interest = unk50;
     }
 
-    PrPERSPECTIVE_CAMERA *cam = &camera;
     float roll;
     if (unk90 != NULL) {
         roll = *unk90->GetValue(time);
@@ -37,6 +36,7 @@ PrPERSPECTIVE_CAMERA* SpcFileHeader::GetCamera(float time) const {
         camera.field_of_view = unk64;
     }
 
+    PrPERSPECTIVE_CAMERA *cam = &camera;
     cam->near_clip = unk6C;
     cam->far_clip = unk70;
     cam->aspect = unk68;

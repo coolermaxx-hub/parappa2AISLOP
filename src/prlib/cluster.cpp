@@ -7,7 +7,7 @@
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/cluster", RenderClusterNode__22SpmClusterGeometryNodeP13PrModelObject);
 #else
-/* Register allocation: the second weight loop swaps a0/a1 and t3/t4 */
+/* Register allocation: t2/t3 swapped for the second packet and its matrix */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
@@ -62,10 +62,10 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
     }
 
-    PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
-    if (packet2 != NULL) {
-        PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
-        int *weight = this->unk1B4;
+    PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
+    if (uc != NULL) {
+        uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
+        weight = this->unk1B4;
         u_int weight_num = *weight++;
 
         asm volatile("vsub.xyzw $vf17, $vf0, $vf0");
