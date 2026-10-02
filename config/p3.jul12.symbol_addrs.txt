@@ -2689,3 +2689,4 @@ awfulWave = 0x01c83ba0; // size:0x30
 mendererInitialized = 0x00399974; // size:0x4
 noodlePositionData = 0x01C83C10; // size:0xE60
 noodlePolygonIndex = 0x01C84A70; // size:0x1D0
+value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
