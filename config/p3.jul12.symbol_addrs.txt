@@ -2537,6 +2537,9 @@ sinf                                = 0x001654a0; // type:func
 // sce/ee/gcc/src/newlib/libm/math/w_atan2.c
 atan2                               = 0x00165618; // type:func
 
+// sce/ee/gcc/src/newlib/libm/common/sf_floor.c
+floorf                              = 0x001653B8; // type:func
+
 // sce/ee/gcc/src/newlib/libm/math/wf_atan2.c
 atan2f                              = 0x00165730; // type:func
 
