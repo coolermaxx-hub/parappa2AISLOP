@@ -88,9 +88,9 @@
 // /* data 18c018 */ static MNOPT_OBJ MNOptObj_Oneb[0];
 /* data 18c038 */ extern PATPOS MNOptMiniFrm[]; /* static */
 /* data 18c068 */ extern PATPOS MNOptLRBtn[]; /* static */
-// /* data 18c0c8 */ static PATPOS PopMenuSel_Pat[0];
-// /* data 18c108 */ static PATPOS VSComMenuSel_Pat[0];
-// /* data 18c138 */ static PATPOS VSComMenuSelH_Pat[0];
+/* data 18c0c8 */ extern PATPOS PopMenuSel_Pat[]; /* static */
+/* data 18c108 */ extern PATPOS VSComMenuSel_Pat[]; /* static */
+/* data 18c138 */ extern PATPOS VSComMenuSelH_Pat[]; /* static */
 // /* data 18c168 */ static PATPOS SIRanking_Pat[0];
 // /* data 18c180 */ static PATPOS Ranking_PatScroll[0];
 // /* data 18c198 */ static PATPOS RankSISTNo_PAT[0];
@@ -130,7 +130,7 @@
 /* data 18ca80 */ extern USERLISTTYPE_TABLE ULTypeT_SAVE_LOG; /* static */
 /* data 18ca90 */ extern USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY; /* static */
 /* data 18caa0 */ extern int POPBtn2Sel[]; /* static */
-// /* data 18cab8 */ static int POPSel2Btn[0];
+/* data 18cab8 */ extern int POPSel2Btn[]; /* static */
 /* data 18cad0 */ extern int Pop_CmpMesNo[]; /* static */
 /* data 18cae8 */ extern int POPSel2BtnDir[]; /* static */
 /* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
@@ -5438,7 +5438,86 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
+#else /* Requires .lit4 migration; PopMenuSel_Pat[i] should use madd */
+void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py, u_int hicol, u_int nmcol, int dflg) {
+    int   i;
+    float bofsy;
+    int   bPut;
+    int   bHiLgt;
+
+    bofsy = spr->ofsy;
+
+    for (i = 0; i < 5; i++) {
+        bHiLgt = 0;
+        pfw->cani.habgr = hicol;
+        pfw->cani.nabgr = nmcol;
+
+        spr->ofsy = bofsy + sinf((MNSceneGetMusicFitTimer() % 480) * 6.2831855f * 0.0020833334f + POPSel2Btn[i] * 2.5132742f) * 3.3f;
+
+        if (i == pfw->selno && pfw->cani.okTim) {
+            bPut = 2;
+            bHiLgt = 2;
+        } else {
+            bPut = 0;
+            if (POPSel2Btn[i] == pfw->btnNo) {
+                bPut = 1;
+            }
+            if (i == pfw->selno) {
+                bHiLgt = 1;
+                if (pfw->cani.onTim) {
+                    bPut = 3;
+                }
+            }
+        }
+
+        if (pfw->isSelLev) {
+            bPut = (i == 2) ? 5 : 0;
+        }
+
+        switch (bHiLgt) {
+        case 0:
+            spr->rgba0 = pfw->cani.nabgr;
+            break;
+        case 1:
+            spr->rgba0 = pfw->cani.habgr;
+            break;
+        }
+
+        TsPopCusPut(pk, spr, dflg, &pfw->cani, bPut, i, &PopMenuSel_Pat[i], px, py);
+
+        if (i == 2) {
+            int     i;
+            int     bPut0;
+            PATPOS *pt;
+
+            pfw->cani.habgr = nmcol;
+            pfw->cani.nabgr = nmcol;
+
+            for (i = 0; i < pfw->levMax; i++) {
+                spr->rgba0 = nmcol;
+                bPut0 = bPut;
+                pt = &VSComMenuSel_Pat[i];
+
+                if (pfw->isSelLev) {
+                    bPut0 = 6;
+                    if (i == pfw->selLev) {
+                        spr->rgba0 = GetDToneColor(0x80ffffff, 0x80606060, sinf((MNSceneGetMusicFitTimer() % 30) * 3.1415927f / 30.0f) * 256.0f);
+                        pt = &VSComMenuSelH_Pat[i];
+                    } else {
+                        spr->rgba0 = 0x80707070;
+                    }
+                }
+
+                TsPopCusPut(pk, spr, dflg, &pfw->cani, bPut0, 2, pt, px, py);
+            }
+        }
+    }
+
+    spr->ofsy = bofsy;
+}
+#endif
 
 /* static */ int TsSaveMenu_Flow(int flg, u_int tpad) {
     SAVE_MENU *pfw = &SaveMenu;
