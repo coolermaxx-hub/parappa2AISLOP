@@ -4137,7 +4137,8 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
                 }
             } else {
                 memset(UserLst, 0, sizeof(*UserLst));
-                subStatus = 0xf000;
+                flg = 0xf000;
+                subStatus = flg;
                 break;
             }
         }
