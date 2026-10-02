@@ -86,8 +86,8 @@
 // /* data 18bfd8 */ static MNOPT_OBJ MNOptObj_Subt[0];
 // /* data 18bff8 */ static MNOPT_OBJ MNOptObj_Vibr[0];
 // /* data 18c018 */ static MNOPT_OBJ MNOptObj_Oneb[0];
-// /* data 18c038 */ static PATPOS MNOptMiniFrm[0];
-// /* data 18c068 */ static PATPOS MNOptLRBtn[0];
+/* data 18c038 */ extern PATPOS MNOptMiniFrm[]; /* static */
+/* data 18c068 */ extern PATPOS MNOptLRBtn[]; /* static */
 // /* data 18c0c8 */ static PATPOS PopMenuSel_Pat[0];
 // /* data 18c108 */ static PATPOS VSComMenuSel_Pat[0];
 // /* data 18c138 */ static PATPOS VSComMenuSelH_Pat[0];
@@ -6447,7 +6447,52 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Draw);
+#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396120) */
+static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    int           i;
+    OPTION_MENU  *pfw = &OptionMenu;
+    MNOPT_SELINF *pselw;
+    int           l;
+    PATPOS       *ppat;
+    float         zr;
+
+    for (i = 0; i < PR_ARRAYSIZEU(pfw->cellcs); i++) {
+        TsCmnCell_CusorDraw(pk, spr, i, &pfw->cellcs[i], 0, 0, 0x1a808080);
+    }
+
+    for (i = 0; i < PR_ARRAYSIZEU(pfw->btnlr); i++) {
+        spr->rgba0 = 0x800062ff;
+        TsPatPut(pk, spr, &MNOptMiniFrm[i], 0, 0);
+
+        for (l = 0; l < 2; l++) {
+            ppat = &MNOptLRBtn[i * 2 + l];
+
+            if (pfw->btnlr[i].tim[l] > 0) {
+                pfw->btnlr[i].tim[l]--;
+                spr->rgba0 = 0x80ffffff;
+                zr = (float)pfw->btnlr[i].tim[l] * 0.5 * (1.0f / 6.0f) + 1.0;
+            } else {
+                spr->rgba0 = 0x80808080;
+                zr = 1.0f;
+            }
+
+            TsPatPutRZoom(pk, spr, ppat, 0, 0, zr, (l == 0) ? -1.5707964f : 1.5707964f);
+        }
+    }
+
+    PkALPHA_Add(pk, 0x44);
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+    spr->rgba0 = 0x80808080;
+
+    pselw = OptionSelTbl;
+    for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
+        TsPatPut(pk, spr, &pselw->pObjTbl[pfw->sw[i]].ppat, 0, 0);
+    }
+}
+#endif
 
 static int TsUserList_GetCurFileNo(int *isBroken) {
     USERLIST_MENU *pfw   = &UserListMenu;

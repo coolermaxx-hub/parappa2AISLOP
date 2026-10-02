@@ -1487,8 +1487,8 @@ PAT_ALERT_WIN_FFACE                 = 0x0018bce0; // size:0x30
 SAVE_MENU_SELPAT                    = 0x0018bd10; // size:0x18
 SAVEWZoom_CXY                       = 0x0018bd28; // size:0x4
 CellCusPos                          = 0x0018bd98; // size:0x1c
-MNOptMiniFrm                        = 0x0018c038; // size:0x30 can_reference:false
-MNOptLRBtn                          = 0x0018c068; // size:0x60 can_reference:false
+MNOptMiniFrm                        = 0x0018c038; // size:0x30
+MNOptLRBtn                          = 0x0018c068; // size:0x60
 Ranking_PatScroll                   = 0x0018c180; // type:s32 size:0x18 can_reference:false
 JUKEBOX_Pos                         = 0x0018c588; // size:0x28 can_reference:false
 JUKEJKT_Pat                         = 0x0018c5b0; // size:0x78
@@ -2529,8 +2529,12 @@ __umoddi3                           = 0x0016a798; // type:func
 // sce/ee/gcc/src/gcc/build/gcc/dp-bit.c
 dpadd                               = 0x0016b0e8; // type:func
 dpsub                               = 0x0016b140; // type:func
+dpmul                               = 0x0016b1a8; // type:func
+dpdiv                               = 0x0016b450; // type:func
 dpcmp                               = 0x0016b6d0; // type:func
 litodp                              = 0x0016b720; // type:func
+dptoli                              = 0x0016b7d8; // type:func
+dptoul                              = 0x0016b870; // type:func
 dptofp                              = 0x0016b978; // type:func
 
 // sce/ee/gcc/src/gcc/build/gcc/fp-bit.c
