@@ -117,6 +117,22 @@ public:
         return ret;
     }
 
+    NaMATRIX<float, 4, 4> operator*(const float& s) const {
+        NaMATRIX<float, 4, 4> ret;
+        for (int i = 0; i < 4; i++) {
+            ret.m[i] = m[i] * s;
+        }
+        return ret;
+    }
+
+    NaMATRIX<float, 4, 4> operator+(const NaMATRIX<float, 4, 4>& rhs) const {
+        NaMATRIX<float, 4, 4> ret;
+        for (int i = 0; i < 4; i++) {
+            ret.m[i] = m[i] + rhs.m[i];
+        }
+        return ret;
+    }
+
 private:
     NaVECTOR<T, t0> m[t1];
 
