@@ -57,6 +57,7 @@ void PrInitializeNoodlePolygonPosition();
 void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix);
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot);
 void StartNoodleRotation();
+void PushNoodleColor(u_long *rgbaq);
 
 void InitializeNoodleStripRendering(u_int tbp, u_int fbp, u_int tw, u_int th) {
     noodleStripDmaPacket.ad[4][0] = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
@@ -91,7 +92,7 @@ extern float prMendererNoodleColor[4];
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PushNoodleColor__FPUl);
 #else /* Requires .lit4 migration */
-static void PushNoodleColor(u_long *rgbaq) {
+void PushNoodleColor(u_long *rgbaq) {
     if (!prMendererColorModulation || prCurrentStage == 6) {
         *rgbaq = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
         return;
@@ -185,7 +186,127 @@ static void PushNoodleColor(u_long *rgbaq) {
 }
 #endif
 
+/* data */
+extern u_long noodleStripHeaderPacket[6];
+
+/* rodata */
+extern const u_long D_003967E0[2]; /* DMAcnt, qwc 6 */
+extern const u_long D_003967F0[2]; /* GIFtag, REGLIST PRIM RGBAQ (UV XYZ2) x4 */
+
+void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStripChunk__FRCt8NaMATRIX3Zfi4i4);
+#else /* Requires .lit4 migration */
+void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
+    u_int count = 115;
+
+    if (prCurrentStage == 6 || prCurrentStage == 16) {
+        float ratio = prMendererRatio;
+        float t;
+
+        if (ratio <= 1.05f) {
+            t = 0.0f;
+        } else if (ratio <= 1.4f) {
+            t = (ratio - 1.0f) / 0.4f;
+        } else if (ratio <= 1.6f) {
+            t = 1.0f;
+        } else if (ratio < 1.95f) {
+            t = (2.0f - ratio) / 0.4f;
+        } else {
+            t = 0.0f;
+        }
+
+        count = (u_int)(t * (t * t) * 114.0f + 0.5f) + 1;
+        if (count > 115) {
+            count = 115;
+        } else if (count == 0) {
+            count = 1;
+        }
+    }
+
+    u_int per_block = (115 + 4) / 5;
+    u_int index = 0;
+    noodleRandomSeed = 0;
+
+    for (u_int block = 0; block < 5; ) {
+        u_int next = block + 1;
+
+        u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
+        prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
+        prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
+        prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+
+        u_long *header = (u_long*)buf;
+        for (int i = 0; i < 6; i++) {
+            header[i] = noodleStripHeaderPacket[i];
+        }
+        header[4] = ((u_long)(((block + 2) * 16) - 1) << 34) | 0x3FC00A | ((u_long)(next * 16) << 24);
+        PrSendMfifo((sceDmaTag*)header);
+
+        u_long v0 = (u_long)(next * 256) << 16;
+        u_long v1 = (u_long)((block + 2) * 256) << 16;
+
+        for (u_int j = 0; j < per_block; j++) {
+            buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
+            prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
+            prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
+            prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+
+            u_long *packet = (u_long*)buf;
+            packet[0] = D_003967E0[0];
+            packet[1] = D_003967E0[1];
+            packet[2] = D_003967F0[0];
+            packet[3] = D_003967F0[1];
+
+            NaVECTOR<float, 4> position[4];
+            PrGetNoodlePolygonPosition(position, index);
+            index++;
+
+            NaVECTOR<float, 4> screen[4];
+            for (int k = 0; k < 4; k++) {
+                screen[k] = matrix * position[k];
+            }
+
+            u_long *ad = &packet[4];
+            *ad++ = 0x35C;
+            PushNoodleColor(ad++);
+            *ad++ = v0;
+            *ad++ = (u_int)screen[0][0] | ((u_long)(u_int)screen[0][1] << 16);
+            *ad++ = v0 | 0x1000;
+            *ad++ = (u_int)screen[1][0] | ((u_long)(u_int)screen[1][1] << 16);
+            *ad++ = v1;
+            *ad++ = (u_int)screen[2][0] | ((u_long)(u_int)screen[2][1] << 16);
+            *ad++ = v1 | 0x1000;
+            *ad = (u_int)screen[3][0] | ((u_long)(u_int)screen[3][1] << 16);
+            PrSendMfifo((sceDmaTag*)packet);
+
+            if (index == count) {
+                goto done;
+            }
+        }
+
+        if (index == count) {
+            break;
+        }
+        block = next;
+    }
+
+done:
+    float hue = noodleHueOffset + prMendererSpeed * 0.07f;
+    if (hue >= 3.0f) {
+        hue -= 3.0f;
+    }
+
+    float brightness = noodleBrightnessPhase + prMendererSpeed * 0.0528f;
+    if (brightness >= 2.0f) {
+        brightness -= 2.0f;
+    }
+
+    noodleBrightnessPhase = brightness;
+    noodleHueOffset = hue;
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", SetNoodleRotationMatrix__FRt8NaMATRIX3Zfi4i4f);
 

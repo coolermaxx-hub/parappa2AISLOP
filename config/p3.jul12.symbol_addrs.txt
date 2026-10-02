@@ -2709,3 +2709,4 @@ noodleSaturationRange = 0x0038C870; // size:0x50
 noodleBaseColor = 0x0038C8C0; // size:0x78
 noodleHueOffset = 0x0039997C; // size:0x4
 noodleBrightnessPhase = 0x00399980; // size:0x4
+noodleStripHeaderPacket = 0x0038C840; // size:0x30
