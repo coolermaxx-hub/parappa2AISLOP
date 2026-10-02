@@ -39,6 +39,17 @@ typedef struct { // 0x4
     /* 0x2 */ short y;
 } PTPOS;
 
+typedef struct { // 0x8
+    /* 0x0 */ short x;
+    /* 0x2 */ short y;
+    /* 0x4 */ u_int abgr;
+} STRPOS;
+
+typedef struct { // 0x8
+    /* 0x0 */ PTPOS *menu;
+    /* 0x4 */ PTPOS *rank;
+} POPRNK_PPOS;
+
 typedef struct { // 0xc
     /* 0x0 */ int texNo;
     /* 0x4 */ short x;

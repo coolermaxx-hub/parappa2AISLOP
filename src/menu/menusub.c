@@ -91,23 +91,23 @@
 /* data 18c0c8 */ extern PATPOS PopMenuSel_Pat[]; /* static */
 /* data 18c108 */ extern PATPOS VSComMenuSel_Pat[]; /* static */
 /* data 18c138 */ extern PATPOS VSComMenuSelH_Pat[]; /* static */
-// /* data 18c168 */ static PATPOS SIRanking_Pat[0];
-// /* data 18c180 */ static PATPOS Ranking_PatScroll[0];
-// /* data 18c198 */ static PATPOS RankSISTNo_PAT[0];
+/* data 18c168 */ extern PATPOS SIRanking_Pat[]; /* static */
+/* data 18c180 */ extern PATPOS Ranking_PatScroll[]; /* static */
+/* data 18c198 */ extern PATPOS RankSISTNo_PAT[]; /* static */
 // /* data 18c208 */ static PATPOS VSL1Ranking_Pat[0];
 // /* data 18c248 */ static PATPOS VSL2Ranking_Pat[0];
 // /* data 18c288 */ static PATPOS VSL3Ranking_Pat[0];
 // /* data 18c2c8 */ static PATPOS VSL4Ranking_Pat[0];
-// /* data 18c308 */ static PATPOS *VSRanking_PatTbl[0];
-// /* data 18c318 */ static PATPOS RankVSSTNo_PAT[0];
-// /* data 18c388 */ static STRPOS SRanking_Str[0];
-// /* data 18c3a0 */ static STRPOS VRanking_Str[0];
+/* data 18c308 */ extern PATPOS *VSRanking_PatTbl[]; /* static */
+/* data 18c318 */ extern PATPOS RankVSSTNo_PAT[]; /* static */
+/* data 18c388 */ extern STRPOS SRanking_Str[]; /* static */
+/* data 18c3a0 */ extern STRPOS VRanking_Str[]; /* static */
 // /* data 18c3b8 */ static PTPOS PopMenu_Pos[0];
 // /* data 18c3c0 */ static PTPOS Ranking_Pos[0];
-// /* data 18c3c8 */ static POPRNK_PPOS PopRnk_pPos[0];
+/* data 18c3c8 */ extern POPRNK_PPOS PopRnk_pPos[]; /* static */
 /* data 18c420 */ extern int PopRnkPos_No[][9]; /* static */
 /* data 18c4b0 */ extern int PopBubblePat_No[][9]; /* static */
-// /* data 18c540 */ static PTPOS POPWZoom_CXY[0];
+/* data 18c540 */ extern PTPOS POPWZoom_CXY[]; /* static */
 /* data 18c588 */ extern PTPOS JUKEBOX_Pos[]; /* static */
 /* data 18c5b0 */ extern PATPOS JUKEJKT_Pat[]; /* static */
 // /* data 18c628 */ static float JUKEWAV_INITBL[0];
@@ -5552,7 +5552,179 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
 }
 #endif
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
+#else /* Requires .lit4 migration; the loops also get strength-reduced/hoisted here but not in the original */
+/* static */ void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    POPUP_MENU *pfw = &PopupMenu;
+    char        buf[32];
+    float       rt0, rt1, rt2;
+    int         ton;
+    float       uneri;
+    float       rt;
+    PTPOS      *pos;
+    PATPOS     *pat;
+    PATPOS     *stno;
+    STRPOS     *str;
+    RANKLIST   *pRanking;
+    int         nRanking;
+    u_int       hicol, nmcol, col;
+    int         px, py;
+    int         ox, oy;
+    int         x, y, sy;
+    int         i, n;
+
+    pfw->cani.fswing = -cosf((MNSceneGetMusicFitTimer() % 72) / 72.0f * 6.2831855f);
+    uneri = (MNSceneGetMusicFitTimer() % 180) / 180.0f;
+
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+    PkALPHA_Add(pk, 0x44);
+
+    if (pfw->isRnkWAnime == 0 && TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
+        pos = &POPWZoom_CXY[pfw->nPBubPat];
+        ton = rt0 * 256.0f;
+
+        spr->zoom.centerX = pos->x;
+        spr->zoom.centerY = pos->y;
+        spr->zoom.zoomX   = rt0;
+        spr->zoom.zoomY   = rt1;
+        spr->zoom.isOn    = 1;
+    } else {
+        spr->zoom.isOn = 0;
+        ton = 0x100;
+    }
+
+    pos = PopRnk_pPos[pfw->nPPosSet].menu;
+    py  = pos->y;
+    px  = pos->x;
+    spr->rgba0 = GetDToneColor(0x404040, 0x80808080, ton);
+
+    if (pfw->urTim) {
+        pfw->urTim--;
+    }
+
+    hicol = GetDToneColor(0x404040, 0x80ffffff, ton);
+    nmcol = GetDToneColor(0x404040, 0x80808080, ton);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 0);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 1);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 6);
+    spr->zoom.isOn = 0;
+
+    if (pfw->isRankOn == 0) {
+        return;
+    }
+
+    ox  = px;
+    oy  = py;
+    pos = PopRnk_pPos[pfw->nPPosSet].rank;
+    py  = pos->y;
+    px  = pos->x;
+
+    if (pfw->isRnkWAnime) {
+        if (TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
+        if (pfw->rankFlg == 0) {
+            pat = &PopMenuSel_Pat[3];
+        } else {
+            pat = &PopMenuSel_Pat[4];
+        }
+
+        x = pat->x + ox;
+        spr->zoom.zoomY   = rt1 * 0.9f + 0.1f;
+        spr->zoom.isOn    = 1;
+        spr->zoom.centerX = (x + 32) + (x - px) / 1.8f;
+        spr->zoom.zoomX   = rt0 * 0.65f + 0.35f;
+        spr->zoom.centerY = pat->y + oy + 6;
+        ton = (int)(rt0 * 156.0f) + 100;
+        rt  = rt2 * 0.6f;
+        } else {
+            spr->zoom.isOn = 0;
+            ton = 0x100;
+            rt  = 0.0f;
+        }
+    } else {
+        ton = 0x100;
+        rt  = 0.0f;
+    }
+
+    spr->rgba0 = GetDToneColor(0x20ffffff, 0x80808080, ton);
+
+    if (pfw->rankFlg == 0) {
+        pat  = SIRanking_Pat;
+        stno = RankSISTNo_PAT;
+        n    = 2;
+    } else {
+        pat  = VSRanking_PatTbl[pfw->rVsLev];
+        stno = RankVSSTNo_PAT;
+        n    = 5;
+    }
+
+    for (i = 0; i < n; i++) {
+        if (rt != 0.0f) {
+            float f = sinf(rt * 6.2831855f);
+
+            TsPatPutMZoom(pk, spr, &pat[i], px, py, f * 0.2f + 1.0f, f * 0.2f + 1.0f, 8, 8, f * 0.3f, f * 0.3f);
+            pfw->urTim = 20;
+        } else if (i == 0) {
+            TsPatPutUneri(pk, spr, &pat[i], px, py, 8, 10, uneri, (pfw->urTim != 0) ? 1.0f - pfw->urTim * 0.05f : 1.0f);
+        } else {
+            TsPatPut(pk, spr, &pat[i], px, py);
+        }
+    }
+
+    if (rt < 0.15f) {
+        ton = (0.15f - rt) * 256.0f * 6.6666665f;
+    } else {
+        ton = 0;
+    }
+
+    spr->rgba0 = GetDToneColor(0x808080, 0x80808080, ton);
+    TsPatPut(pk, spr, &stno[0], px, py);
+    TsPatPut(pk, spr, &stno[pfw->rStageNo + 1], px, py);
+
+    if (pfw->selrnkpg > 0) {
+        TsPatPut(pk, spr, &Ranking_PatScroll[0], px, py);
+    }
+    if (pfw->selrnkpg < pfw->nPageMax - 1) {
+        TsPatPut(pk, spr, &Ranking_PatScroll[1], px, py);
+    }
+
+    pRanking = pfw->pRanking;
+    nRanking = pfw->nRanking;
+
+    if (pfw->rankFlg == 0) {
+        str = SRanking_Str;
+    } else {
+        str = VRanking_Str;
+    }
+
+    y  = py + str->y;
+    sy = y - 5;
+    SetSprScreenXYWH(spr);
+    PkSCISSOR_Add(pk, spr->px, sy, spr->sw, 80);
+
+    py -= pfw->selrnkpg * 80 + (pfw->rsline >> 1);
+
+    for (i = 0; i < nRanking; i++, py += 8) {
+        x = py + str->y;
+        if (y - 13 < x && x < sy + 88) {
+            col = GetDToneColor(str->abgr & 0xffffff, str->abgr, ton);
+
+            sprintf(buf, "%d", i + 1);
+            MENUFontPutR(pk, spr, px + str[0].x, x, col, 0x100, buf, 1.0f);
+
+            sprintf(buf, "%d", pRanking[i].score);
+            MENUFontPutR(pk, spr, px + str[1].x, py + str[1].y, col, 0x102, buf, 1.0f);
+
+            sprintf(buf, "%s", pRanking[i].name);
+            MENUFontPutR(pk, spr, px + str[2].x, py + str[2].y, col, 0x100, buf, 1.1f);
+        }
+    }
+
+    PkDefSCISSOR_Add(pk);
+    spr->zoom.isOn = 0;
+}
+#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
