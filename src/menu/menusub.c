@@ -105,8 +105,8 @@
 // /* data 18c3b8 */ static PTPOS PopMenu_Pos[0];
 // /* data 18c3c0 */ static PTPOS Ranking_Pos[0];
 // /* data 18c3c8 */ static POPRNK_PPOS PopRnk_pPos[0];
-// /* data 18c420 */ static int PopRnkPos_No[0][9];
-// /* data 18c4b0 */ static int PopBubblePat_No[0][9];
+/* data 18c420 */ extern int PopRnkPos_No[][9]; /* static */
+/* data 18c4b0 */ extern int PopBubblePat_No[][9]; /* static */
 // /* data 18c540 */ static PTPOS POPWZoom_CXY[0];
 /* data 18c588 */ extern PTPOS JUKEBOX_Pos[]; /* static */
 /* data 18c5b0 */ extern PATPOS JUKEJKT_Pat[]; /* static */
@@ -131,8 +131,8 @@
 /* data 18ca90 */ extern USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY; /* static */
 /* data 18caa0 */ extern int POPBtn2Sel[]; /* static */
 // /* data 18cab8 */ static int POPSel2Btn[0];
-// /* data 18cad0 */ static int Pop_CmpMesNo[0];
-// /* data 18cae8 */ static int POPSel2BtnDir[0];
+/* data 18cad0 */ extern int Pop_CmpMesNo[]; /* static */
+/* data 18cae8 */ extern int POPSel2BtnDir[]; /* static */
 /* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
 typedef struct { // 0x8
     /* 0x0 */ MENU_DISKSND_ENUM bgmNo;
@@ -182,7 +182,7 @@ typedef struct { // 0x8
 /* bss 1c7f790 */ extern MCMES_WORK MCMesWork; /* static */
 /* bss 1c7f7c8 */ extern CMPMES_WORK CmpMesWork; /* static */
 /* bss 1c7f7e0 */ extern RANKLIST RankLst[]; /* static */
-// /* bss 1c7f970 */ static POPUP_MENU PopupMenu;
+/* bss 1c7f970 */ extern POPUP_MENU PopupMenu; /* static */
 /* bss 1c7fa88 */ extern SAVE_MENU SaveMenu; /* static */
 /* bss 1c7fb48 */ extern JUKE_MENU JukeMenu; /* static */
 /* bss 1c80f60 */ extern OPTION_MENU OptionMenu; /* static */
@@ -5023,7 +5023,419 @@ INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396070);
 
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396078);
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
+#else
+/* static */ int TsPopMenu_Flow(int flg, u_int tpad) {
+    POPUP_MENU *pfw = &PopupMenu;
+    int state;
+    int aflg;
+    int sel;
+    int osel;
+    int bkSel;
+    int i;
+
+    if (flg == 1) {
+        TsANIME_Init(&pfw->awork);
+        pfw->isRnkWAnime = 0;
+        TsPopCusInit(&pfw->cani, 0);
+
+        pfw->state = 0;
+        pfw->selno = 0;
+        pfw->btnNo = 0;
+        pfw->bSelRank = 0;
+        pfw->selLev = 0;
+        pfw->rVsLev = 0;
+        pfw->urTim = 0;
+
+        if (pP3GameState->pLog->nRound == 0 && !(((int)pP3GameState->pLog->clrFlg[0] >> (pP3GameState->nStage - 1)) & 1)) {
+            for (i = 0; i < 5; i++) {
+                if (i != 0) {
+                    pfw->cani.bDim[i] = 1;
+                }
+            }
+        }
+
+        if (pP3GameState->pLog->clrVSCOM1[pP3GameState->nStage - 1] == 0) {
+            pfw->levMax = 1;
+        } else {
+            pfw->levMax = 4;
+        }
+
+        if (tpad != 0) {
+            tpad--;
+        }
+
+        pfw->nPPosSet = PopRnkPos_No[tpad][pP3GameState->nStage];
+        pfw->nPBubPat = PopBubblePat_No[tpad][pP3GameState->nStage];
+        PopMenu_Sw = 1;
+        pfw->isRankOn = 0;
+        pfw->isSelLev = 0;
+        return 0;
+    }
+
+    if (flg == 2) {
+        PopMenu_Sw = 0;
+        pfw->isRankOn = 0;
+        pfw->isSelLev = 0;
+        return 0;
+    }
+
+    aflg = TsANIME_Poll(&pfw->awork);
+    TsPopCusFlow(&pfw->cani);
+
+    state = pfw->state;
+    switch (state) {
+    case 0:
+        state = 0x800;
+        TsANIME_Start(&pfw->awork, 2, 15);
+        aflg = TsANIME_Poll(&pfw->awork);
+        pfw->isRnkWAnime = 0;
+        /* fallthrough */
+    case 0x800:
+        if (aflg) {
+            break;
+        }
+        /* fallthrough */
+    case 0x1000:
+        pfw->isSelLev = 0;
+        state = 0x1010;
+        pfw->selLev = 0;
+        pfw->exitflg = 0;
+        break;
+    case 0x1010:
+        if (pP3GameState->pLog->nRound == 0 && !(((int)pP3GameState->pLog->clrFlg[0] >> (pP3GameState->nStage - 1)) & 1)) {
+            MENUSubt_PadFontArrowSet(0);
+        } else {
+            MENUSubt_PadFontArrowSet(POPSel2BtnDir[pfw->selno]);
+        }
+        TsCMPMes_SetMes(Pop_CmpMesNo[pfw->selno]);
+
+        if (TsCheckTimeMapChange()) {
+            break;
+        }
+
+        i = pfw->btnNo;
+        bkSel = POPBtn2Sel[pfw->bSelRank ? i + 3 : i];
+        sel = i;
+
+        if (tpad & 0x8000) {
+            sel--;
+        }
+        if (tpad & 0x2000) {
+            sel++;
+        }
+        if (i != sel) {
+            sel = TSLOOP(sel, 3);
+            if (TsPUPCheckMove(sel, pfw->bSelRank, &pfw->cani)) {
+                pfw->btnNo = sel;
+                pfw->bSelRank = 0;
+                TSSNDPLAY(VSND_MVCUS_LR);
+            }
+        }
+
+        if (pfw->btnNo == 1) {
+            pfw->bSelRank = 0;
+        } else {
+            sel = pfw->bSelRank;
+            if (tpad & 0x1000) {
+                sel--;
+            }
+            if (tpad & 0x4000) {
+                sel++;
+            }
+            if (pfw->bSelRank != sel) {
+                sel = TSLOOP(sel, 2);
+                if (TsPUPCheckMove(pfw->btnNo, sel, &pfw->cani)) {
+                    pfw->bSelRank = sel;
+                    TSSNDPLAY(VSND_MVCUS_UD);
+                }
+            }
+        }
+
+        pfw->selno = POPBtn2Sel[pfw->bSelRank ? pfw->btnNo + 3 : pfw->btnNo];
+        if (bkSel != pfw->selno) {
+            TsPopCusAOff(&pfw->cani);
+            pfw->cani.onTim = 10;
+            pfw->cani.onTNo = pfw->selno;
+        }
+        TsCMPMes_SetMes(Pop_CmpMesNo[pfw->selno]);
+
+        if (tpad & 0x40) {
+            state = 0xf020;
+            pfw->exitflg = 1;
+            TSSNDPLAY(VSND_CANCEL);
+        }
+        if (tpad & 0x20) {
+            pfw->exitflg = 0;
+            switch (pfw->selno) {
+            case 0:
+            case 1:
+                TSSNDPLAY(VSND_GO_GAME);
+                break;
+            case 2:
+                if (pfw->levMax < 2) {
+                    TSSNDPLAY(VSND_GO_GAME);
+                } else {
+                    TSSNDPLAY(VSND_SELPOPUP);
+                }
+                break;
+            case 3:
+            case 4:
+                TSSNDPLAY(VSND_SELPOPUP);
+                break;
+            }
+            state = 0x2000;
+        }
+        break;
+    case 0x2000:
+        switch (pfw->selno) {
+        case 0:
+        case 1:
+            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+            state = 0xf000;
+            break;
+        case 2:
+            if (pfw->levMax < 2) {
+                state = 0xf000;
+                MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+                pfw->selLev = 0;
+            } else {
+                state = 0x3000;
+            }
+            break;
+        case 3:
+        case 4:
+            state = 0x5000;
+            break;
+        }
+        break;
+    case 0x3000:
+        pfw->cani.okTim = 25;
+        state = 0x3005;
+        pfw->cani.onTNo = pfw->selno;
+        /* fallthrough */
+    case 0x3005:
+        if (pfw->cani.okTim) {
+            break;
+        }
+        pfw->selLev = 0;
+        pfw->isSelLev = 1;
+        TsCMPMes_SetMes(24);
+        state = 0x3010;
+        /* fallthrough */
+    case 0x3010:
+        if (TsCheckTimeMapChange()) {
+            break;
+        }
+
+        osel = pfw->selLev;
+        sel = pfw->selLev;
+        if (tpad & 0x8000) {
+            sel--;
+        }
+        if (tpad & 0x2000) {
+            sel++;
+        }
+        sel = TSLOOP(sel, pfw->levMax);
+        if (osel != sel) {
+            pfw->selLev = sel;
+            TSSNDPLAY(VSND_MVCUS_LR);
+        }
+
+        if (tpad & 0x40) {
+            state = 0x1000;
+            TSSNDPLAY(VSND_CANCEL);
+        }
+        if (tpad & 0x20) {
+            state = 0xf000;
+            TSSNDPLAY(VSND_GO_GAME);
+            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+            pfw->isSelLev = 0;
+        }
+        break;
+    case 0x5000:
+        pfw->cani.okTim = 25;
+        pfw->cani.onTNo = pfw->selno;
+        if (pfw->selno == 3) {
+            pfw->nTagMax = 1;
+            pfw->nRankMax = 20;
+        } else {
+            pfw->nRankMax = 10;
+            pfw->nTagMax = pfw->levMax;
+        }
+        pfw->rVsLev = 0;
+        state = 0x5010;
+        McInitFlow();
+        break;
+    case 0x5010:
+        ret = McUserCheckFlow(0, 3, NULL);
+        if (ret < 0) {
+            break;
+        }
+        if (ret == 1 || ret == 2) {
+            pfw->isRankOn = 0;
+            state = 0x1010;
+        } else {
+            state = 0x6000;
+        }
+        break;
+    case 0x6000:
+        TsANIME_Start(&pfw->awork, 4, 15);
+        pfw->isRnkWAnime = 1;
+        aflg = TsANIME_Poll(&pfw->awork);
+        /* fallthrough */
+    case 0x6002:
+        pfw->selrnkpg = 0;
+        pfw->isRankOn = 1;
+        pfw->rsline = 0;
+        pfw->rStageNo = pP3GameState->nStage - 1;
+        if (pfw->selno == 3) {
+            pfw->rankFlg = 0;
+        } else {
+            pfw->rankFlg = 1;
+        }
+        pfw->pRanking = TsGetRankingList(pfw->rankFlg, pfw->rVsLev, pfw->rStageNo, &pfw->nRanking);
+        if (pfw->nRanking > pfw->nRankMax) {
+            pfw->nRanking = pfw->nRankMax;
+        }
+        pfw->nPageMax = (pfw->nRanking + 9) / 10;
+        if (pfw->nPageMax == 0) {
+            pfw->nPageMax = 1;
+        }
+        state = 0x6005;
+        /* fallthrough */
+    case 0x6005:
+        if (aflg) {
+            break;
+        }
+        if (pfw->nPageMax < 2) {
+            if (pfw->rankFlg) {
+                TsCMPMes_SetMes(30);
+            } else {
+                TsCMPMes_SetMes(29);
+            }
+        } else {
+            TsCMPMes_SetMes(28);
+        }
+        state = 0x6010;
+        break;
+    case 0x6010:
+        if (pfw->rsline) {
+            pfw->rsline = TSNumMov(pfw->rsline, 0, 5);
+        } else {
+            if (TsCheckTimeMapChange()) {
+                break;
+            }
+
+            sel = pfw->selrnkpg;
+            bkSel = sel;
+            osel = sel;
+            if (tpad & 0x1000) {
+                sel--;
+            }
+            if (tpad & 0x4000) {
+                sel++;
+            }
+            sel = TSLIMIT(sel, 0, pfw->nPageMax);
+            if (bkSel != sel) {
+                if (sel < bkSel) {
+                    pfw->rsline = 160;
+                } else {
+                    pfw->rsline = -160;
+                }
+                pfw->selrnkpg = sel;
+                if (sel < osel) {
+                    TSSNDPLAY(VSND_MVCUS_U);
+                } else {
+                    TSSNDPLAY(VSND_MVCUS_D);
+                }
+            }
+
+            sel = pfw->rVsLev;
+            bkSel = sel;
+            if (tpad & 0x8000) {
+                sel--;
+            }
+            if (tpad & 0x2000) {
+                sel++;
+            }
+            sel = TSLOOP(sel, pfw->nTagMax);
+            if (bkSel != sel) {
+                pfw->rVsLev = sel;
+                TSSNDPLAY(VSND_MVCUS_LR);
+                state = 0x6002;
+                break;
+            }
+        }
+
+        if (tpad & 0x40) {
+            pfw->exitflg = 0;
+            state = 0x6020;
+            TSSNDPLAY(VSND_CANCEL);
+        }
+        break;
+    case 0x6020:
+        state = 0x6030;
+        TsANIME_Start(&pfw->awork, 5, 15);
+        aflg = TsANIME_Poll(&pfw->awork);
+        pfw->isRnkWAnime = 1;
+        /* fallthrough */
+    case 0x6030:
+        if (aflg) {
+            break;
+        }
+        pfw->isRankOn = 0;
+        state = 0x1010;
+        break;
+    case 0xf000:
+        pfw->cani.okTim = 25;
+        state = 0xf010;
+        pfw->cani.onTNo = pfw->selno;
+        /* fallthrough */
+    case 0xf010:
+        if (pfw->cani.okTim) {
+            break;
+        }
+        /* fallthrough */
+    case 0xf020:
+        state = 0xf080;
+        TsANIME_Start(&pfw->awork, 3, 15);
+        aflg = TsANIME_Poll(&pfw->awork);
+        pfw->isRnkWAnime = 0;
+        /* fallthrough */
+    case 0xf080:
+        if (aflg) {
+            break;
+        }
+        /* fallthrough */
+    case 0xf100:
+        PopMenu_Sw = 0;
+        pfw->isRankOn = 0;
+        if (pfw->exitflg) {
+            state = 0xff20;
+            break;
+        }
+        switch (pfw->selno) {
+        case 0:
+            ret = 1;
+            break;
+        case 1:
+            ret = 2;
+            break;
+        case 2:
+            ret = (pfw->selLev << 8) | 3;
+            break;
+        }
+        return ret;
+    case 0xff20:
+        return -1;
+    }
+
+    pfw->state = state;
+    return 0;
+}
+#endif
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
 
