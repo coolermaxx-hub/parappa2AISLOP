@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include "dma.h"
+#include "gifreg.h"
 #include "model.h"
 #include "renderstuff.h"
 #include "scene.h"
@@ -36,7 +37,26 @@ void PrSceneObject::InitializeVu1() {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", PrepareScreenModelRender__13PrSceneObject);
+void PrSceneObject::PrepareScreenModelRender() {
+    prRenderStuff.StartRender(this);
+    prRenderStuff.m_transmit_array_size = 0;
+
+    PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk3);
+    prRenderStuff.AppendDmaTag(&strip->m_tag);
+
+    for (PrModelObject *model = m_screen_model_list; model != NULL; model = model->m_list.next) {
+        if (model->m_flags & 1) {
+            prSpramData_tmp_render->InitializeModel(model);
+            model->RenderScreenModelNode();
+        }
+    }
+
+    strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk1);
+    prRenderStuff.AppendDmaTag(&strip->m_tag);
+
+    prRenderStuff.SortTransmitDmaArray();
+    prRenderStuff.MergeRender();
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrix__13PrModelObject);
 
@@ -70,7 +90,32 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/render", ModifySimpleDmaPacket__7SpmNodeP23PrVuNodeHeaderDmaPacket);
+void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
+    PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
+    uc->m_matrix = this->unk40;
+    uc->unk68 = prSpramData_tmp_render->m_disturbance;
+
+    float du = this->unk180;
+    float dv = this->unk184;
+
+    if (du != 0.0f) {
+        uc->unk70 += du;
+        if (uc->unk70 > 1.0f) {
+            uc->unk70 -= 1.0f;
+        } else if (uc->unk70 < 0.0f) {
+            uc->unk70 += 1.0f;
+        }
+    }
+
+    if (dv != 0.0f) {
+        uc->unk74 += dv;
+        if (uc->unk74 > 1.0f) {
+            uc->unk74 -= 1.0f;
+        } else if (uc->unk74 < 0.0f) {
+            uc->unk74 += 1.0f;
+        }
+    }
+}
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext1Node__7SpmNodeP13PrModelObject);

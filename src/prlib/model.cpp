@@ -105,7 +105,15 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
 
 INCLUDE_ASM("asm/nonmatchings/prlib/model", GetPrimitivePosition__13PrModelObjectPt8NaVECTOR2Zfi4);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", GetScreenPosition__13PrModelObjectPt8NaVECTOR2Zfi4);
+void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
+    GetPrimitivePosition(position);
+
+    float *p = reinterpret_cast<float*>(position);
+    float w = p[3];
+    p[0] = p[0] / w - 1728.0f;
+    p[1] = p[1] / w - 1936.0f;
+    p[3] = 1.0f;
+}
 
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/model", func_00140E38);

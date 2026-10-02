@@ -29,7 +29,10 @@ struct PrVuNodeHeaderDmaPacket {
     PrMICRO_PROGRAM_MODULE unk60;
     PR_PADDING(unk64, 0x4);
     float unk68;
-    PR_PADDING(unk6C, 0x128);
+    PR_PADDING(unk6C, 0x4);
+    float unk70;
+    float unk74;
+    PR_PADDING(unk78, 0x11C);
     int unk194;
 };
 
@@ -66,7 +69,8 @@ public:
     PrVuNodeHeaderDmaPacket *unk16C[2];
     PR_PADDING(unk174, 0x8);
     PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x8);
+    float unk180;
+    float unk184;
     u_int unk188;
     PR_PADDING(unk18C, 0xc);
     int *unk198;
