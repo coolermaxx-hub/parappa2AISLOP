@@ -9234,9 +9234,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsHosiPut);
-#else /* Requires .lit4 migration */
 /* static */ void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot) {
     float zx  = spr->zx;
     float zy  = spr->zy;
@@ -9276,7 +9273,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsHosiPut);
     spr->ofsx = ofx;
     spr->ofsy = ofy;
 }
-#endif
 
 INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396168);
 

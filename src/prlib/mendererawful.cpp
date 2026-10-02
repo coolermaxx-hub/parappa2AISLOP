@@ -29,6 +29,8 @@ extern float awfulRotation;
 /* bss */
 extern WAVE_STR awfulWave;
 
+float GetAwfulRotation();
+
 void SetNextSwitchRotationTimer() {
     awfulChangeTimer = (u_int)((PrFloatRandom() * 4.0f + 3.0f) * 60.0f);
 }
