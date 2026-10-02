@@ -383,7 +383,7 @@ segments:
         - [0x299928, sdata, prlib/shape]
         - [0x299930, sdata, prlib/billboard]
         - [0x299938, sdata, prlib/depthfield]
-        - [0x29993C, sdata, prlib/vram]
+        - [0x29993C, .sdata, prlib/vram]
         - [0x299940, .sdata, prlib/random]
         - [0x299948, sdata, prlib/menderer]
         - [0x2999A0, sdata, prlib/menderercreate]

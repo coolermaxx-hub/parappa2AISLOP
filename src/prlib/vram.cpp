@@ -52,8 +52,7 @@ int PrAddTextureAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, boo
     return 3;
 }
 
-/* sdata */
-extern u_int prSpriteDefinitionZ;
+static u_int prSpriteDefinitionZ = 0;
 
 void PrSetSpriteDefinitionZ(u_int z) {
     prSpriteDefinitionZ = z;

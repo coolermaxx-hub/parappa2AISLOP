@@ -804,7 +804,7 @@ segments:
       - { path: asm/data/prlib/shape.sdata.s.o }
       - { path: asm/data/prlib/billboard.sdata.s.o }
       - { path: asm/data/prlib/depthfield.sdata.s.o }
-      - { path: asm/data/prlib/vram.sdata.s.o }
+      - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
       - { path: asm/data/prlib/menderer.sdata.s.o }
       - { path: asm/data/prlib/menderercreate.sdata.s.o }
