@@ -1510,6 +1510,7 @@ PopMenu_Sw                          = 0x003997c8;
 SaveMenu_Sw                         = 0x003997cc;
 JukeMenu_Sw                         = 0x003997d0;
 nTim                                = 0x003997d4;
+map0Msk_tmp_250                     = 0x003997d8; // size:0x8
 D_00399800                          = 0x00399800; // type:asciz size:0x8
 _TexFunc                            = 0x00399820;
 HOSIObj                             = 0x00399824;

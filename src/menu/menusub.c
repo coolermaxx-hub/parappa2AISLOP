@@ -1144,7 +1144,112 @@ static void TsMENU_GetMapTimeState(int flg) {
     CurMapBakFlg = state;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSetScene_Map);
+/* static */ void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
+    int        gmn;
+    P3LOG_VAL *pLog;
+    int        i;
+    int        nRound;
+    /* sdata 3997d8 */ extern char map0Msk_tmp_250[8];
+    int        clrno;
+    int        nCrown;
+    int        cwCol[4];
+    int        l;
+    u_int      Cflg;
+    int        cn;
+
+    gmn = mapNo;
+    pLog = pP3GameState->pLog;
+    nRound = pLog->nRound;
+    if (mapNo == 0) {
+        gmn = TsMENU_GetMapNo(NULL);
+        if (gmn == 9 && nRound >= 4) {
+            gmn = 10;
+        }
+    }
+    if (mapNo == 9 && nRound >= 4) {
+        mapNo = 10;
+        gmn = 10;
+    }
+
+    MNScene_End(pScene);
+    switch (tflg) {
+    case 1:
+        MNScene_Init(pScene, &Scene_StageMap, bFocus);
+        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[0]);
+        break;
+    case 2:
+        MNScene_Init(pScene, &Scene_StageMapY, bFocus);
+        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[1]);
+        break;
+    case 0:
+    default:
+        MNScene_Init(pScene, &Scene_StageMapA, bFocus);
+        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[2]);
+        break;
+    }
+
+    MNScene_DispSw(pScene, 1);
+    MNScene_StartAnime(pScene, -1, &StageMapAnime[mapNo]);
+    MNScene_StartAnime(pScene, -1, &StageMapAnime[gmn + 11]);
+    MNScene_StartAnime(pScene, -1, StageMapAnimeSEA);
+
+    for (i = 0; i < 8; i++) {
+        clrno = pLog->clrCount[i];
+        if (mapNo == 0 && map0Msk_tmp_250[i]) {
+            clrno = 0;
+        }
+
+        if (clrno > 0) {
+            MNScene_StartAnime(pScene, -1, &StageMapAnimeBB[i * 2]);
+
+            if (clrno > nRound + 1) {
+                clrno = nRound + 1;
+            }
+            if (clrno > 4) {
+                clrno = 4;
+            }
+            if (clrno > 0) {
+                clrno--;
+            }
+            MenuStageCl1Trans(i, clrno);
+
+            for (l = 0; l < 4; l++) {
+                cwCol[l] = 0;
+            }
+
+            nCrown = 0;
+            Cflg = pLog->logCOOL[i];
+            for (l = 0; l < 4 && Cflg != 0; l++, nCrown++) {
+                cwCol[l] = Cflg & 0xf;
+                Cflg >>= 4;
+            }
+
+            if (nCrown > 4) {
+                nCrown = 4;
+            }
+
+            if (nCrown <= 0) {
+                MNScene_ModelDispSw(pScene, i + 12, 0);
+            } else {
+                MNScene_StartAnime(pScene, -1, &StageMapCWptr[i][nCrown - 1]);
+                for (l = 0; l < nCrown; l++) {
+                    cn = cwCol[nCrown - 1 - l];
+                    if (cn > 0) {
+                        MenuCoolCl1Trans(i, l, cn - 1);
+                    }
+                }
+            }
+        } else {
+            MNScene_StartAnime(pScene, -1, &StageMapAnimeBB[i * 2 + 1]);
+            MNScene_ModelDispSw(pScene, i + 12, 0);
+        }
+    }
+
+    if (mapNo == 0) {
+        MNScene_StartAnime(pScene, -1, &StageMapAnimePA[0]);
+        MNScene_StartAnime(pScene, -1, &StageMapAnimePA[6]);
+    }
+}
 
 static void TsSet_ParappaCapColor(void) {
     P3LOG_VAL      *pLog = pP3GameState->pLog;
