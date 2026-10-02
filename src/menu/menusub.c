@@ -76,12 +76,12 @@
 // /* data 18be98 */ static PATPOS VS_WINMARK2;
 // /* data 18bea8 */ static PATPOS LG_NEWDATA_MARK;
 // /* data 18beb8 */ static PATPOS RP_NEWDATA_MARK;
-// /* data 18bec8 */ static PATPOS STGCNameBox[0];
-// /* data 18bf08 */ static PATPOS STGCNameBoxOK;
-// /* data 18bf18 */ static PATPOS VS1PNameBox[0];
-// /* data 18bf58 */ static PATPOS VS1PNameBoxOK;
-// /* data 18bf68 */ static PATPOS VS2PNameBox[0];
-// /* data 18bfa8 */ static PATPOS VS2PNameBoxOK;
+/* data 18bec8 */ extern PATPOS STGCNameBox[]; /* static */
+/* data 18bf08 */ extern PATPOS STGCNameBoxOK; /* static */
+/* data 18bf18 */ extern PATPOS VS1PNameBox[]; /* static */
+/* data 18bf58 */ extern PATPOS VS1PNameBoxOK; /* static */
+/* data 18bf68 */ extern PATPOS VS2PNameBox[]; /* static */
+/* data 18bfa8 */ extern PATPOS VS2PNameBoxOK; /* static */
 // /* data 18bfb8 */ static MNOPT_OBJ MNOptObj_Lang[0];
 // /* data 18bfd8 */ static MNOPT_OBJ MNOptObj_Subt[0];
 // /* data 18bff8 */ static MNOPT_OBJ MNOptObj_Vibr[0];
@@ -5011,7 +5011,123 @@ void TsPopCusFlow(POPCTIM *pfw) {
 /* TODO: remove once TsPopCusPut is decompiled; its rodata starts 16-byte aligned */
 asm(".section .rodata\n.align 4\n.text");
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
+#else /* Requires .lit4 migration (and dropping INCLUDE_RODATA D_00396068/D_00396070/D_00396078); f20/f21 also swapped */
+/* static */ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
+    float rt2;
+    float rt3;
+    float rt = 0.0f;
+    u_int mode;
+
+    mode = bPut;
+    if (pfw->bDim[i]) {
+        mode = 4;
+    }
+
+    switch (mode) {
+    case 0:
+        if (!(flg & 1)) {
+            return;
+        }
+        if (pfw->offinf[i].time) {
+            rt   = pfw->offinf[i].time * 0.06666667f;
+            mode = 1;
+        }
+        break;
+    case 1:
+        if (!(flg & 1)) {
+            return;
+        }
+        rt = 1.0f;
+        if (pfw->srTNo == i && pfw->srTim) {
+            rt = 1.0f - pfw->srTim * 0.125f;
+        }
+        break;
+    case 2:
+        if (!(flg & 2)) {
+            return;
+        }
+        pfw->srTNo = i;
+        pfw->srTim = 8;
+        break;
+    case 3:
+        if (!(flg & 1)) {
+            return;
+        }
+        pfw->srTNo = i;
+        pfw->srTim = 8;
+        break;
+    case 4:
+        if (flg) {
+            return;
+        }
+        spr->rgba0 = 0x40808080;
+        break;
+    case 5:
+        if (!(flg & 4)) {
+            return;
+        }
+        spr->rgba0 = 0x80707070;
+        break;
+    case 6:
+        if (!(flg & 4)) {
+            return;
+        }
+        break;
+    }
+
+    if (mode < 2 || mode == 5) {
+        if (pfw->offinf[i].cltm) {
+            float ct = pfw->offinf[i].cltm * 0.06666667f;
+            spr->rgba0 = GetDToneColor(pfw->nabgr, pfw->habgr, ct * 240.0f * ct);
+        }
+    }
+
+    switch (mode) {
+    case 2:
+        rt  = pfw->okTim / 25.0f;
+        rt2 = sinf(rt * 9.424778f);
+        rt3 = sinf(rt * 6.2831855f);
+        rt2 *= rt * 0.9f * rt + 0.1f;
+        spr->rgba0 = GetDToneColor(0xffffff, 0x80ffffff, rt3 * 256.0f * rt3);
+
+        TsPatTexFnc(2);
+        TsPatPutMZoom(pk, spr, ppos, px, py, 1.0 - rt2 * 0.2, rt2 * 0.6 + 1.0, 8, 4, rt2 * -0.2, rt2 * 0.6);
+        TsPatTexFnc(0);
+
+        pfw->srTim = 8;
+        pfw->srTNo = i;
+        pfw->offinf[i].bCur = 1;
+        break;
+    case 1:
+        TsPatPutSwing(pk, spr, ppos, px, py, 2, 8, pfw->fswing * rt);
+        if (pfw->offinf[i].time == 0) {
+            pfw->offinf[i].bCur = 1;
+        }
+        break;
+    case 3:
+        rt3 = sinf(pfw->onTim * 0.1f * 2.1991148f);
+        pfw->srTNo = i;
+        pfw->srTim = 8;
+        TsPatPutMZoom(pk, spr, ppos, px, py, rt3 * 0.05f + 1.0f, rt3 * 0.14f + 1.0f, 8, 4, rt3 * -0.05f, rt3 * -0.3f);
+        pfw->offinf[i].bCur = 1;
+        break;
+    case 5:
+    case 6:
+        rt = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
+        pfw->srTNo = i;
+        pfw->srTim = 8;
+        TsPatPutMZoom(pk, spr, ppos, px, py, rt * 0.1f + 0.95f, rt * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
+        pfw->offinf[i].bCur = 1;
+        break;
+    default:
+        TsPatPut(pk, spr, ppos, px, py);
+        pfw->offinf[i].bCur = 0;
+        break;
+    }
+}
+#endif
 
 int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     return (pfw->bDim[POPBtn2Sel[(bank != 0) ? (nbtn + 3) : (nbtn + 0)]] == FALSE);
@@ -7520,7 +7636,137 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     return 0;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Draw);
+#else /* Requires .lit4 migration; the first TsPatPut loop also gets strength-reduced here but not in the original */
+/* static */ void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
+    float   ofsx = spr->ofsx;
+    float   ofsy = spr->ofsy;
+    u_char  str[2];
+    float   rt0, rt1;
+    float   rt;
+    PATPOS *pbox;
+    PATPOS *pok;
+    int     ton;
+    u_int   col, curcol;
+    int     x, y;
+    int     i;
+    u_short code;
+
+    rt0 = (MNSceneGetMusicFitTimer() % 360) / 360.0f;
+    if (side) {
+        rt0 = sinf((rt0 + rt0) * 3.1415927f - 1.5707964f) * 4.0f;
+    } else {
+        rt0 = sinf((rt0 + rt0) * 3.1415927f) * 4.0f;
+    }
+
+    spr->ofsy += rt0;
+    spr->zx = 1.0f;
+    spr->zy = 0.5f;
+
+    switch (pfw->dispType) {
+    case 1:
+        pbox = VS1PNameBox;
+        pok  = &VS1PNameBoxOK;
+        break;
+    case 2:
+        pbox = VS2PNameBox;
+        pok  = &VS2PNameBoxOK;
+        break;
+    case 0:
+    default:
+        pbox = STGCNameBox;
+        pok  = &STGCNameBoxOK;
+        break;
+    }
+
+    if (TsANIME_GetRate(&pfw->awork, &rt0, &rt1, NULL)) {
+        x = px + pbox->x + 0x72;
+        y = py + pbox->y + 10;
+        spr->zoom.centerX = x;
+        spr->zoom.centerY = y;
+
+        rt = TSNumRBack(rt1, 0.3f);
+        if (pfw->awork.aflg & 1) {
+            spr->zoom.zoomX = rt;
+        } else {
+            spr->zoom.zoomX = (1.0f - rt) * 1.2f + 1.0f;
+        }
+
+        rt = TSNumRBack(rt0, 0.15f);
+        spr->zoom.zoomY = rt * rt;
+        spr->zoom.isOn  = 1;
+        ton = rt0 * rt0 * 256.0f;
+    } else {
+        spr->zoom.isOn = 0;
+        ton = 0x100;
+    }
+
+    col = GetDToneColor(0x808080, 0x80808080, ton);
+    spr->rgba0 = col;
+    PkALPHA_Add(pk, 0x44);
+
+    for (i = 0; i < 5; i++) {
+        TsPatPut(pk, spr, &pbox[i], px, py);
+    }
+
+    rt = sinf((MNSceneGetMusicFitTimer() % 12) / 12.0f * 3.1415927f) * 256.0f;
+    if (pfw->onTime) {
+        curcol = GetDToneColor(0x800a6ec8, 0x80ffffff, rt);
+    } else {
+        curcol = GetDToneColor(0x803ca0ff, 0x80b4ffff, rt);
+    }
+
+    x = px + pbox->x + 0x25;
+    y = py + pbox->y + 9;
+    if (pfw->onTime) {
+        spr->px = x;
+        spr->py = y;
+        spr->sw = 0xb8;
+        spr->sh = 0x19;
+    } else {
+        x += pfw->curnpos * 20;
+        spr->px = x;
+        spr->py = y;
+        spr->sh = 0x19;
+        spr->sw = (pfw->curnpos == 8) ? 0x18 : 0x15;
+    }
+
+    spr->rgba0 = GetDToneColor(curcol & 0xffffff, curcol, ton);
+    PkCRect_Add(pk, spr, 2);
+
+    spr->rgba0 = col;
+    TsPatPut(pk, spr, pok, px, py);
+
+    x = px + pbox->x + 0x30;
+    y = py + pbox->y + 9;
+
+    switch (isLog) {
+    case 0:
+        col = 0x80660000;
+        break;
+    case 1:
+        col = 0x801e4000;
+        break;
+    case 2:
+    default:
+        col = 0x80000061;
+        break;
+    }
+    col = GetDToneColor(0x808080, col, ton);
+
+    for (i = 0; i < 8; i++) {
+        code   = pfw->curnchr[i];
+        str[0] = UserName_CharSet[code >> 12].ptbl[code & 0xfff];
+        str[1] = 0;
+        MENUFontPutL(pk, spr, x, y, col, 1, str);
+        x += 20;
+    }
+
+    spr->ofsx = ofsx;
+    spr->ofsy = ofsy;
+}
+#endif
 
 int TsSCFADE_Set(int flg, int num, int prio) {
     SCFADE *pfw = &ScFade;
