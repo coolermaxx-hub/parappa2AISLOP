@@ -8140,7 +8140,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
-#else /* Needs .sdata match; two argument setups are also scheduled differently */
+#else /* Code matches; its short strings are still in asm/data/menu/menusub.sdata.s, so the .sdata has to move to C first */
 /* static */ void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
     u_char  buf[32];
     STRPOS *strpos;
@@ -8187,16 +8187,17 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUser_PanelDraw);
         }
 
         if (user->roundNo) {
-            sprintf(buf, "CIRCUIT%d", (user->roundNo + 1 > 99) ? 99 : user->roundNo + 1);
+            int round = (user->roundNo + 1 > 99) ? 99 : user->roundNo + 1;
+            sprintf(buf, "CIRCUIT%d", round);
         } else {
             sprintf(buf, "STAGE%d", user->stageNo);
         }
     }
 
-    ps = strpos;
     if (user->flg == 2) {
         strcpy(buf, " STAGE?");
     }
+    ps = strpos;
     MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
 
     if (user->flg != 2 && user->date_year != 0) {
