@@ -3,6 +3,8 @@
 
 #include "navector.h"
 
+#include <libvu0.h>
+
 template <typename T, int t0, int t1>
 class NaMATRIX {
 public:
@@ -47,11 +49,18 @@ public:
             sq $8, 0x20(%0)
             sq $9, 0x30(%0)
         " : : "r"(&lhs), "r"(&rhs)
-        : "$6", "$7", "$8", "$9", "memory");
+        : "$6", "$7", "$8", "$9");
         return lhs;
     }
 
     static NaMATRIX<float, 4, 4> RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
+    static NaMATRIX<float, 4, 4> RotateMatrix(int axis, const float& angle);
+
+    NaMATRIX<float, 4, 4> Inverse() const {
+        NaMATRIX<float, 4, 4> ret;
+        sceVu0InversMatrix((sceVu0FVECTOR*)&ret, (sceVu0FVECTOR*)this);
+        return ret;
+    }
 
     NaMATRIX<float, 4, 4>& operator=(const NaMATRIX<float, 4, 4>& rhs) {
         return Copy(*this, rhs);

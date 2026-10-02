@@ -367,7 +367,7 @@ NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) co
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ABE0);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ACE8);
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4iRCf);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014AFE0);
 
