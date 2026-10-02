@@ -2612,3 +2612,4 @@ noodleRandomSeed                                                                
 prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 prSpramData_tmp_transition                                                          = 0x003998f0; // size:0x4
+__builtin_vec_delete                = 0x0016df88; // type:func

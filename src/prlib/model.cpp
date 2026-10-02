@@ -2,6 +2,7 @@
 #include "animation.h"
 #include "spadata.h"
 #include "spram.h"
+#include "scene.h"
 
 #include <nalib/navector.h>
 
@@ -39,11 +40,96 @@ void PrSetPostureWorkArea(void *addr, u_int size) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", __13PrModelObjectP13SpmFileHeader);
+PrModelObject::PrModelObject(SpmFileHeader *spm) {
+    m_list.next = NULL;
+    m_list.prev = NULL;
+    m_obj_set = NULL;
+    m_linked_scene = NULL;
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", _$_13PrModelObject);
+    unk10 = NaMATRIX<float, 4, 4>::IDENT;
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", Initialize__13PrModelObject);
+    unk50 = 0x55668899;
+    m_user_data = NULL;
+    m_spm_image = spm;
+    m_flags = 0;
+
+    m_animation_time = 0.0f;
+    m_position_animation_time = 0.0f;
+    m_animation = NULL;
+    m_position_animation = NULL;
+
+    unk7C[0] = NULL;
+    unk7C[1] = NULL;
+    unk74[0] = NULL;
+    unk74[1] = NULL;
+    m_rendered_once = 0;
+    m_active_transition = 0;
+
+    unk88 = NULL;
+    unk8C = NULL;
+    unk90 = 0;
+    m_contour_blur_alpha[0] = 0.0f;
+    m_contour_blur_alpha[1] = 0.0f;
+    m_transaction_blend_ratio = 1.0f;
+    m_disturbance = 0.0f;
+    unkA4 = 1.0f;
+
+    spm->unk50 = this;
+}
+
+PrModelObject::~PrModelObject() {
+    m_linked_scene->m_model_set.Remove(this);
+    m_linked_scene = NULL;
+
+    CleanupAnimation();
+    CleanupPositionAnimation();
+
+    m_spm_image->unk50 = NULL;
+
+    delete unk88;
+    delete unk8C;
+
+    if ((m_flags & 0x8) && unk74[0] != NULL) {
+        delete[] unk74[0];
+    }
+
+    if ((m_flags & 0x10) && unk7C[0] != NULL) {
+        delete[] unk7C[0];
+    }
+}
+
+void PrModelObject::Initialize() {
+    SpmFileHeader *spm = m_spm_image;
+    spm->ChangePointer();
+
+    if (spm->m_flags & 0x40) {
+        u_int node_num = spm->m_node_num;
+        if (node_num != 0) {
+            NaMATRIX<float, 4, 4> *matrix = (NaMATRIX<float, 4, 4>*)AllocateFromWorkArea(node_num * sizeof(NaMATRIX<float, 4, 4>) * 2);
+            if (matrix == NULL) {
+                unk7C[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
+                m_flags |= 0x10;
+            } else {
+                unk7C[0] = matrix;
+            }
+            unk7C[1] = unk7C[0] + node_num;
+
+            u_int weight_num = spm->unk6C;
+            if (weight_num != 0) {
+                float *weight = (float*)AllocateFromWorkArea(weight_num * sizeof(float) * 2);
+                if (weight == NULL) {
+                    unk74[0] = new float[weight_num * 2];
+                    m_flags |= 0x8;
+                } else {
+                    unk74[0] = weight;
+                }
+                unk74[1] = unk74[0] + weight_num;
+            }
+        }
+    }
+
+    m_flags &= ~0x4;
+}
 
 void PrModelObject::LinkAnimation(SpaFileHeader *animation) {
     if (animation != NULL) {
