@@ -154,10 +154,23 @@ public:
     u_long128 unk1C0[1];
 };
 
+struct SpmContourIndex {
+    u_int m_src;
+    u_int m_dst;
+};
+
 class SpmComplexNode {
 public:
     void SaveContour(PrModelObject *model);
     void RenderContour(PrModelObject *model);
+
+public:
+    PR_PADDING(unk0, 0x17C);
+    PrVuNodeHeaderDmaPacket *unk17C;
+    PR_PADDING(unk180, 0x1C);
+    u_int unk19C;
+    SpmContourIndex *unk1A0;
+    PrVuNodeHeaderDmaPacket *unk1A4;
 };
 
 class PrModelObject {

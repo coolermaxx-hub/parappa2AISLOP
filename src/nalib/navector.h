@@ -38,7 +38,7 @@ public:
             lq $6, 0(%1)
             sq $6, 0(%0)
         " : : "r"(&lhs), "r"(&rhs)
-        : "$6", "memory");
+        : "$6");
         return lhs;
     }
 
