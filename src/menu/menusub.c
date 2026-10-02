@@ -3584,7 +3584,172 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserCheckFlow);
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", McUserSaveFlow);
+/* static */ int McUserSaveFlow(USER_DATA *puser) {
+    switch (subStatus) {
+    case 0:
+        ret = P3MC_CheckChange();
+        if (ret < 0) {
+            break;
+        }
+
+        pGameData = P3MC_MakeDataWork(_P3DATA_SIZE(puser->mode), puser);
+        TsSetSaveData(pGameData, puser->mode, puser);
+        if (ret != 0) {
+            subStatus = 0x2010;
+            break;
+        }
+        subStatus = 0x100;
+    case 0x100:
+        P3MC_SaveUser(pGameData, 5);
+        subStatus = 0x2000;
+        break;
+    case 0x1000:
+        TsMCAMes_SetMes(0x10000010);
+        subStatus = 0x1010;
+    case 0x1010:
+        ret = P3MC_CheckChange();
+        if (ret == 3 || ret == 5) {
+            TsMCAMes_SetMes(-1);
+            subStatus = 0xe000;
+            break;
+        }
+        ret = TsMCAMes_GetSelect();
+        if (ret != 0) {
+            if (ret == 1) {
+                subStatus = 0x1020;
+            } else {
+                subStatus = 0xf002;
+            }
+        }
+        break;
+    case 0x1020:
+        if (P3MC_CheckChange() < 0) {
+            break;
+        }
+        TsMCAMes_SetMes(-1);
+        subStatus = 0x1030;
+    case 0x1030:
+        P3MC_SaveUser(pGameData, 3);
+        subStatus = 0x2000;
+        break;
+    case 0x2000:
+        ret = P3MC_SaveCheck();
+        if (ret == -2) {
+            TsMCAMes_SetMes(0x13);
+        }
+        if (ret == -3) {
+            TsMCAMes_SetMes(0x11);
+        }
+        if (ret < 0) {
+            break;
+        }
+        subStatus = 0x2010;
+    case 0x2010:
+        if (ret != 0) {
+            errorNo = 0;
+            switch (ret) {
+            case 9:
+                subStatus = 0x1000;
+                break;
+            case 3:
+                if (puser->mode == 2) {
+                    errorNo = 60;
+                } else {
+                    errorNo = 50;
+                }
+                break;
+            case 1:
+            case 8:
+                errorNo = 1;
+                break;
+            case 7:
+                if (puser->mode == 2) {
+                    errorNo = 15;
+                } else {
+                    errorNo = 7;
+                }
+                break;
+            default:
+                errorNo = ret;
+                break;
+            }
+            if (errorNo != 0) {
+                subStatus = 0x2200;
+            }
+            break;
+        }
+        subStatus = 0x2100;
+    case 0x2100:
+        *puser = pGameData->pHead->user;
+        subStatus = 0x21f0;
+        TsMCAMes_SetMes(-1);
+    case 0x21f0:
+        if (McErrorMess(200) >= 0) {
+            subStatus = 0xf000;
+        }
+        break;
+    case 0x2200:
+        TsMCAMes_SetMes(-1);
+        subStatus = 0x2201;
+    case 0x2201:
+        ret = P3MC_CheckChange();
+        if (ret == 3 || ret == 5) {
+            subStatus = 0xe000;
+            break;
+        }
+        if (McErrorMess(errorNo) < 0) {
+            break;
+        }
+        subStatus = 0x2202;
+    case 0x2202:
+        if (P3MC_CheckChange() >= 0) {
+            subStatus = 0xf002;
+        }
+        break;
+    case 0xe000:
+        ret = P3MC_CheckChange();
+        switch (ret) {
+        case 0:
+        case 5:
+            subStatus = 0xf004;
+            break;
+        default:
+            if (puser->mode == 2) {
+                errorNo = 60;
+            } else {
+                errorNo = 50;
+            }
+            if (McErrorMess(errorNo) < 0) {
+                break;
+            }
+            subStatus = 0xee10;
+            break;
+        }
+        break;
+    case 0xee10:
+        if (P3MC_CheckChange() >= 0) {
+            subStatus = 0xf002;
+        }
+        break;
+    case 0xf000:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 0;
+    case 0xf001:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 1;
+    case 0xf002:
+        P3MC_DeleteDataWork(pGameData);
+        TsMCAMes_SetMes(-1);
+        return 2;
+    case 0xf004:
+        P3MC_DeleteDataWork(pGameData);
+        return 4;
+    }
+
+    return -1;
+}
 
 /* static */ int McUserLoadFlow(int fileNo, int mode, int bBroken) {
     switch (subStatus) {
@@ -4258,6 +4423,9 @@ void TsPopCusFlow(POPCTIM *pfw) {
         }
     }
 }
+
+/* TODO: remove once TsPopCusPut is decompiled; its rodata starts 16-byte aligned */
+asm(".section .rodata\n.align 4\n.text");
 
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopCusPut);
 
