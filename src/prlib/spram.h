@@ -21,7 +21,7 @@ public:
     void SendDisplayHeader();
 
 public:
-    char unk0[0x40];
+    NaMATRIX<float, 4, 4> unk0;
     u_long128 *m_noodle_buffer[3];
     char unk4C[0x4];
     NaVECTOR<float, 4> unk50;

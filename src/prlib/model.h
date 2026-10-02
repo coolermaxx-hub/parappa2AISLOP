@@ -55,7 +55,7 @@ public:
     void ApplyBillboardMatrix();
 
 public:
-    PR_PADDING(unk0, 0x40);
+    NaMATRIX<float, 4, 4> unk0;
     NaMATRIX<float, 4, 4> unk40;
     PR_PADDING(unk80, 0x40);
     NaMATRIX<float, 4, 4> unkC0;

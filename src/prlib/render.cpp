@@ -422,4 +422,36 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
 INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145E50);
 
 /* prlib/render.cpp */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", ComposeGlobalMatrixWithoutVisibility__7SpmNodeP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
+#else
+/* Register allocation: the transition branch copies the product through t3 */
+void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    if (model->unk7C[0] != NULL) {
+        PrSPRAM_DATA *spram;
+        if (m_flags & 0x1) {
+            spram = prSpramData_tmp_render;
+            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+        } else {
+            spram = prSpramData_tmp_render;
+            spram->unk0 = this->unk0;
+        }
+
+        if (spram->m_model_transaction_blend_ratio != 1.0f) {
+            BlendTransitionMatrix(model, spram->unk0);
+            spram = prSpramData_tmp_render;
+        }
+
+        this->unk40 = arg1 * spram->unk0;
+        model->unk7C[model->m_active_transition][this->unk150] = spram->unk0;
+    } else if (m_flags & 0x1) {
+        this->unk40 = arg1;
+    } else {
+        this->unk40 = arg1 * this->unk0;
+    }
+
+    if (m_flags & 0x8000) {
+        ApplyBillboardMatrix();
+    }
+}
+#endif
