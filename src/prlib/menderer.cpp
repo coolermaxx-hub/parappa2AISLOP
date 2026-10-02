@@ -313,9 +313,6 @@ done:
 NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148248");
 NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148140");
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", SetNoodleRotationMatrix__FRt8NaMATRIX3Zfi4i4f);
-#else /* Requires .lit4 migration */
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;
     matrix = NaMATRIX<float, 4, 4>::RotateMatrix(2, rot);
@@ -323,7 +320,6 @@ void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     matrix = ScaleMatrix_tmp_menderer(10240.0f, 3584.0f, 0.0f) * matrix;
     matrix = TransMatrix_tmp_menderer(32768.0f, 32768.0f, 0.0f) * matrix;
 }
-#endif
 
 static void PreDrawNoodleStrip() {
     u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
