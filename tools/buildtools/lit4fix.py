@@ -12,7 +12,8 @@ load of the matching symbol in the asm .lit4 file. The assembler emits
 literal entries in source order without merging duplicates, so the asm file
 is walked in order: functions pulled in with INCLUDE_ASM advance the cursor
 past the symbols they reference, and decompiled functions take the next
-entries. The value is checked before a symbol is used.
+unused entry with the same value (a matching function always takes them
+strictly in order).
 
 usage: lit4fix.py <source file> <compiler asm output, rewritten in place>
 """
@@ -26,6 +27,7 @@ LIT4_RE = re.compile(r"dlabel (D_\w+)\n\s*/\* \w+ \w+ ([0-9A-Fa-f]{8}) \*/\s*\.f
 LI_S_RE = re.compile(r"^(\s*)li\.s\s+(\$f\d+),\s*(\S+)\s*$")
 INCLUDE_RE = re.compile(r'\.include\s+\\?"(asm/nonmatchings/[^"\\]+)\\?"')
 SYM_RE = re.compile(r"\((D_[0-9A-Fa-f]{8})\)")
+LOOKAHEAD = 32
 
 
 def float_bits(text: str) -> int:
@@ -47,6 +49,7 @@ def main() -> int:
     index = {sym: i for i, (sym, _) in enumerate(entries)}
 
     lines = Path(asm_path).read_text().split("\n")
+    used = [False] * len(entries)
     cursor = 0
     out = []
     for line in lines:
@@ -56,6 +59,8 @@ def main() -> int:
             if path.exists():
                 for sym in SYM_RE.findall(path.read_text()):
                     if sym in index:
+                        for i in range(cursor, index[sym] + 1):
+                            used[i] = True
                         cursor = max(cursor, index[sym] + 1)
             out.append(line)
             continue
@@ -65,9 +70,20 @@ def main() -> int:
             bits = float_bits(m.group(3))
             # Values the assembler builds with lui/mtc1 never touch .lit4.
             if bits & 0xFFFF:
-                if cursor < len(entries) and entries[cursor][1] == bits:
-                    sym = entries[cursor][0]
-                    cursor += 1
+                # A matching function takes the entries strictly in order. A
+                # function that is still being worked on may schedule its loads
+                # differently, so take the first unused entry with this value
+                # a little further on instead of giving up.
+                found = None
+                for i in range(cursor, min(cursor + LOOKAHEAD, len(entries))):
+                    if not used[i] and entries[i][1] == bits:
+                        found = i
+                        break
+                if found is not None:
+                    sym = entries[found][0]
+                    used[found] = True
+                    while cursor < len(entries) and used[cursor]:
+                        cursor += 1
                     # .extern with a size marks the symbol as small data, so the
                     # assembler turns the load into a single gp-relative lwc1.
                     out.append(f"{m.group(1)}.extern\t{sym},4")

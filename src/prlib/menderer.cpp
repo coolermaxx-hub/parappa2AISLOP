@@ -349,19 +349,19 @@ void DrawNoodleStrip(float ratio, float rot) {
 
     float width, length, distance;
     if (ratio <= 1.0f) {
-        distance = ratio * -0.2854f + 0.6054f;
+        distance = ratio * (0.32f - 0.6054f) + 0.6054f;
         length = 0.9375f;
         width = 0.7f;
     } else if (ratio <= 2.0f) {
         float t = ratio - 1.0f;
-        length = t * 0.6641f + 0.9375f;
-        width = t * 0.3f + 0.7f;
-        distance = t * -0.3786f + 0.32f;
+        length = t * (1.6016f - 0.9375f) + 0.9375f;
+        width = t * (1.0f - 0.7f) + 0.7f;
+        distance = t * (-0.0586f - 0.32f) + 0.32f;
     } else {
         float t = ratio - 2.0f;
-        length = t * -0.664f + 1.6016f;
-        width = t * -0.3f + 1.0f;
-        distance = t * 0.5086f + -0.0586f;
+        length = t * (0.9376f - 1.6016f) + 1.6016f;
+        width = t * (0.7f - 1.0f) + 1.0f;
+        distance = t * (0.45f - -0.0586f) + -0.0586f;
     }
 
     prMendererWidth = width;
