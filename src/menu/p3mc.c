@@ -14,9 +14,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* sdata 399830 */ extern char *HedderID; /* static */
-/* sdata 399834 */ extern char *FooterID; /* static */
-/* sdata 399838 */ extern GETUSER_WORK *pUChkWork; /* static */
+extern char D_00396180[];
+extern char D_00396190[];
+
+static char *HedderID = D_00396180;
+static char *FooterID = D_00396190;
+GETUSER_WORK *pUChkWork = NULL; /* static */
 /* bss 1c81100 */ extern P3MC_WORK P3MC_Work; /* static */
 /* sbss 399b60 */ extern int FreeSizeFlg; /* static */
 /* sbss 399b64 */ extern int portCheckFlg; /* static */
@@ -126,15 +129,6 @@ static void _P3MC_SetUserDirName(int mode, int fileNo) {
     memc_setDirName(_P3MC_GetFilePath(mode, fileNo));
 }
 
-extern char D_00399840[]; /* "LOG???"  */
-extern char D_00399848[]; /* "LOG%03d" */
-extern char D_00399850[]; /* "REP???"  */
-extern char D_00399858[]; /* "REP%03d" */
-extern char D_00399860[]; /* "??????"  */
-
-#ifndef NON_MATCHING /* Requires sdata split to match */
-INCLUDE_ASM("asm/nonmatchings/menu/p3mc", _P3MC_GetFilePath);
-#else
 static char* _P3MC_GetFilePath(int mode, int fileNo) {
     char *addName;
 
@@ -144,16 +138,16 @@ static char* _P3MC_GetFilePath(int mode, int fileNo) {
     switch (mode) {
     case 1:
         if (fileNo < 0) {
-            strcpy(addName, "REP???");
+            strcpy(addName, "LOG???");
         } else {
-            sprintf(addName, "REP%03d", fileNo);
+            sprintf(addName, "LOG%03d", fileNo);
         }
         break;
     case 2:
         if (fileNo < 0) {
-            strcpy(addName, "LOG???");
+            strcpy(addName, "REP???");
         } else {
-            sprintf(addName, "LOG%03d", fileNo);
+            sprintf(addName, "REP%03d", fileNo);
         }
         break;
     case 3:
@@ -164,7 +158,6 @@ static char* _P3MC_GetFilePath(int mode, int fileNo) {
 
     return filePath;
 }
-#endif
 
 static void _P3MC_EUC2SJIS(char *des, char *src) {
     u_char c1, c2;
@@ -669,9 +662,6 @@ static int _P3MCStrNum(char *nstr, int len) {
     return n;
 }
 
-extern char D_00399868[]; /* .sdata - "LOG" */
-extern char D_00399870[]; /* .sdata - "REP" */
-
 static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
     int re;
     int err;
@@ -752,9 +742,9 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
 
             fileNo = _P3MCStrNum(num, 3);
             if (fileNo < 80) {
-                if (_P3MCStrCmpLen(type, D_00399868, 3) == 0) {
+                if (_P3MCStrCmpLen(type, "LOG", 3) == 0) {
                     McLogFileFlg[fileNo] = 1;
-                } else if (_P3MCStrCmpLen(type, D_00399870, 3) == 0) {
+                } else if (_P3MCStrCmpLen(type, "REP", 3) == 0) {
                     McReplayFileFlg[fileNo] = 1;
                 }
             }

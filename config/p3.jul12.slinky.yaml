@@ -777,7 +777,7 @@ segments:
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
       - { path: asm/data/menu/menusub.sdata.s.o }
-      - { path: asm/data/menu/p3mc.sdata.s.o }
+      - { path: src/menu/p3mc.c.o }
       - { path: src/menu/memc.c.o }
       - { path: src/menu/mntm2hed.c.o }
       - { path: asm/data/menu/menufont.sdata.s.o }
