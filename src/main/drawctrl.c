@@ -914,7 +914,282 @@ void posAniOtherKill(OBJACTPRG *objactprg_pp, int objactprg_num, int ani_num, in
     }
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/main/drawctrl", DrawObjStrDisp);
+#else /* Regalloc around the PRtime subtraction (movz vs branch) */
+static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
+    OBJSTR    *objstr_pp;
+    OBJCTRL   *objctrl_pp, *objctrl_end_pp;
+    OBJACTPRG *objactprg_pp;
+    OBJACTPRG *objactprg_tmp_pp;
+    int        i, first_f, tmp_time, endflag, ret;
+
+    first_f = FALSE;
+    endflag = FALSE;
+    ret = FALSE;
+
+    if (sw) {
+        objstr_pp = &scn_pp->tapstr_pp[num];
+        objactprg_pp = scn_pp->objactprg_ctrl.objactprg[OBJACTPRG_TAP];
+    } else {
+        objstr_pp = &scn_pp->objstr_pp[num];
+        objactprg_pp = scn_pp->objactprg_ctrl.objactprg[OBJACTPRG_NORMAL];
+    }
+
+    if (objstr_pp->PRflag == 0) {
+        return FALSE;
+    }
+
+    if (objstr_pp->PRflag & OBJSTR_REQ) {
+        for (i = 0; i < objstr_pp->size; i++) {
+            DrawObjCtrlInit(&objstr_pp->objctrl_pp[i]);
+        }
+
+        objstr_pp->PRflag &= ~OBJSTR_REQ;
+        objstr_pp->PRflag |= OBJSTR_ON;
+
+        first_f = TRUE;
+
+        objstr_pp->PRdata = 0;
+        objstr_pp->current_pp = objstr_pp->objctrl_pp;
+        objstr_pp->loop_time = 0;
+        objstr_pp->loop_pp = NULL;
+    }
+
+    if (time <= objstr_pp->PRtime) {
+        time = 0;
+    } else {
+        time -= objstr_pp->PRtime;
+    }
+
+    tmp_time = time;
+
+    objctrl_pp = objstr_pp->objctrl_pp;
+    for (i = 0; i < objstr_pp->size; i++, objctrl_pp++) {
+        if (objctrl_pp->frame <= time && objctrl_pp->objctrl_type == OCTRL_TCTRL) {
+            tmp_time = GetSpfTimeCtrl(&scn_pp->objdat_pp[objctrl_pp->dat[0]], time - objctrl_pp->frame);
+        }
+    }
+
+    objctrl_end_pp = objstr_pp->objctrl_pp + objstr_pp->size;
+    objctrl_pp = objstr_pp->current_pp;
+
+    if (num == 0) {
+        for (i = 0; i < scn_pp->objactprg_ctrl.num; i++) {
+            objactprg_pp[i].job_type = OCTRL_NON;
+        }
+    }
+
+    while (objctrl_pp < objctrl_end_pp) {
+        if (objctrl_pp->frame <= tmp_time) {
+            switch (objctrl_pp->objctrl_type) {
+            case OCTRL_ANI:
+            case OCTRL_MDL:
+            case OCTRL_CAM:
+            case OCTRL_TM2:
+                objactprg_tmp_pp = &objactprg_pp[objctrl_pp->dat[0]];
+                objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
+                objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
+
+                if (objctrl_pp->status & 0x1) {
+                    objactprg_tmp_pp->job_type = OCTRL_NON;
+                    break;
+                }
+
+                objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
+
+                objactprg_tmp_pp->first_flag = 0;
+                if (objactprg_tmp_pp->now_time == 0) {
+                    objactprg_tmp_pp->first_flag = 1;
+                }
+
+                if (objctrl_pp->status & 0x80) {
+                    octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
+                }
+                if (objctrl_pp->status & 0x100) {
+                    if (first_f) {
+                        octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
+                    }
+                    objactprg_tmp_pp->now_time = octst_timeLoad[objctrl_pp->dat[4]];
+                }
+
+                objactprg_tmp_pp->job_type = objctrl_pp->objctrl_type;
+                objactprg_tmp_pp->status = objctrl_pp->status;
+
+                objactprg_tmp_pp->focal_lng = scn_pp->objdat_pp[objctrl_pp->dat[0]].subdat[0];
+                objactprg_tmp_pp->defocus_lng = scn_pp->objdat_pp[objctrl_pp->dat[0]].subdat[1];
+
+                if (objctrl_pp->objctrl_type == OCTRL_ANI) {
+                    objactprg_tmp_pp->focal_lng = objctrl_pp->subDat;
+                }
+
+                objactprg_tmp_pp->start_time = 0;
+                objactprg_tmp_pp->end_time = 0;
+
+                if (objctrl_pp->objctrl_type != OCTRL_ANI && objctrl_pp->objctrl_type != OCTRL_CAM) {
+                    break;
+                }
+
+                if (objctrl_pp->objctrl_type == OCTRL_CAM) {
+                    objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[0]].maxfr;
+                } else {
+                    objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[1]].maxfr;
+                }
+
+                if (objctrl_pp->status & 0x4) {
+                    objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
+                }
+                if (objctrl_pp->status & 0x8) {
+                    objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
+                }
+                if (objctrl_pp->status & 0x4) {
+                    objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
+                }
+                if (objctrl_pp->status & 0x8) {
+                    objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
+                }
+
+                if (objctrl_pp->status & 0x2) {
+                    objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+                    if (objctrl_pp->status & 0x80) {
+                        octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
+                    }
+                } else {
+                    if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time) {
+                        objactprg_tmp_pp->job_type = OCTRL_NON;
+                    }
+                }
+
+                if (objctrl_pp->objctrl_type == OCTRL_CAM && objactprg_tmp_pp->job_type != OCTRL_NON) {
+                    camOtherKill(objactprg_pp, scn_pp->objactprg_ctrl.num, objctrl_pp->dat[0]);
+                }
+                break;
+            case OCTRL_ANIPOS:
+                objactprg_tmp_pp = &objactprg_pp[objctrl_pp->dat[1]];
+                objactprg_tmp_pp->main_num = objctrl_pp->dat[1];
+                objactprg_tmp_pp->sub_num = objctrl_pp->dat[0];
+
+                if (objctrl_pp->status & 0x1) {
+                    objactprg_tmp_pp->job_type = OCTRL_NON;
+                    break;
+                }
+
+                objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
+
+                if (objctrl_pp->status & 0x80) {
+                    octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
+                }
+                if (objctrl_pp->status & 0x100) {
+                    if (first_f) {
+                        octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
+                    }
+                    objactprg_tmp_pp->now_time = octst_timeLoad[objctrl_pp->dat[4]];
+                }
+
+                objactprg_tmp_pp->job_type = objctrl_pp->objctrl_type;
+                objactprg_tmp_pp->status = objctrl_pp->status;
+
+                objactprg_tmp_pp->start_time = 0;
+                objactprg_tmp_pp->end_time = 0;
+
+                objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[1]].maxfr;
+
+                if (objctrl_pp->status & 0x4) {
+                    objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
+                }
+                if (objctrl_pp->status & 0x8) {
+                    objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
+                }
+
+                if (objctrl_pp->status & 0x2) {
+                    objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+                    if (objctrl_pp->status & 0x80) {
+                        octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
+                    }
+                } else {
+                    if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time) {
+                        objactprg_tmp_pp->job_type = OCTRL_NON;
+                    }
+                }
+
+                if (objactprg_tmp_pp->job_type != OCTRL_NON) {
+                    posAniOtherKill(objactprg_pp, scn_pp->objactprg_ctrl.num, objctrl_pp->dat[1], objctrl_pp->dat[0]);
+                }
+                break;
+            case OCTRL_CL2:
+                objactprg_tmp_pp = &objactprg_pp[objctrl_pp->dat[0]];
+                objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
+                objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
+
+                if (objctrl_pp->status & 0x1) {
+                    objactprg_tmp_pp->job_type = OCTRL_NON;
+                    break;
+                }
+
+                objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
+                objactprg_tmp_pp->job_type = objctrl_pp->objctrl_type;
+                objactprg_tmp_pp->status = objctrl_pp->status;
+                objactprg_tmp_pp->start_time = 0;
+                objactprg_tmp_pp->end_time = objctrl_pp->dat[2];
+
+                if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time) {
+                    objactprg_tmp_pp->job_type = OCTRL_NON;
+                }
+                break;
+            case OCTRL_BIBU:
+                if (objctrl_pp->frame <= tmp_time) {
+                    scn_pp->objactprg_ctrl.objactprg[OBJACTPRG_NORMAL][objctrl_pp->dat[0]].focal_lng = objctrl_pp->subDat;
+                }
+                break;
+            case OCTRL_SUB:
+                if (objctrl_pp->PRdata <= objstr_pp->PRdata) {
+                    if (objctrl_pp->status & 0x1) {
+                        DrawObjStrKill(scn_pp, objctrl_pp->dat[0]);
+                    } else {
+                        DrawObjStrReq(scn_pp, objctrl_pp->dat[0], objctrl_pp->frame);
+                    }
+                    objctrl_pp->PRdata = objstr_pp->PRdata + 1;
+                }
+                break;
+            case OCTRL_END:
+                ret = TRUE;
+                endflag = TRUE;
+                break;
+            case OCTRL_LOOP_P:
+                objstr_pp->loop_pp = objctrl_pp;
+                break;
+            case OCTRL_NEXT:
+                objstr_pp->PRdata++;
+                break;
+            case OCTRL_LOOP:
+                tmp_time -= objctrl_pp->frame;
+                if (tmp_time < 0) {
+                    endflag = TRUE;
+                }
+                objstr_pp->PRdata++;
+                objctrl_pp = objstr_pp->loop_pp;
+                break;
+            case OCTRL_EXIT:
+                objstr_pp->PRflag = 0;
+                endflag = TRUE;
+                ret = TRUE;
+                break;
+            case OCTRL_TCTRL:
+                break;
+            }
+
+            if (endflag) {
+                break;
+            }
+        }
+
+        objctrl_pp++;
+    }
+
+    objstr_pp->PRtimeOld = tmp_time;
+    return ret;
+}
+#endif
 
 static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
     OBJSTR    *objstr_pp;
@@ -1437,7 +1712,134 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
     usrFree(dat_pp);
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/main/drawctrl", DrawObjPrReq);
+#else /* Regalloc and stack slot order */
+void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
+    OBJACTPRG      *cam_pp[OBJACTPRG_MAX];
+    OBJACTPRG      *org_pp;
+    OBJACTPRG      *prg_pp;
+    int             i, j, set_f, chg_f;
+    int             first, blumove;
+    OBJACTPRG_CTRL *ctrl_pp = &scene_pp->objactprg_ctrl;
+
+    for (i = OBJACTPRG_MAX - 1; i >= 0; i--) {
+        cam_pp[i] = NULL;
+    }
+
+    org_pp = ctrl_pp->objactprg[OBJACTPRG_ORG];
+
+    for (i = 0; i < ctrl_pp->num; i++) {
+        set_f = FALSE;
+
+        for (j = OBJACTPRG_TAP; j > OBJACTPRG_ORG; j--) {
+            prg_pp = ctrl_pp->objactprg[j];
+
+            if (prg_pp[i].job_type == OCTRL_NON) {
+                continue;
+            }
+            if (prg_pp[i].status & 0x1) {
+                continue;
+            }
+
+            switch (prg_pp[i].job_type) {
+            case OCTRL_ANI:
+                blumove = 0;
+                if (prg_pp[i].status & 0x20) {
+                    blumove = 2;
+                }
+                if (prg_pp[i].status & 0x10) {
+                    blumove = 1;
+                }
+                if (prg_pp[i].status & 0x200) {
+                    blumove = 3;
+                }
+
+                first = prg_pp[i].first_flag;
+                if (org_pp[i].job_type == OCTRL_NON) {
+                    first = 1;
+                }
+
+                PrSetModelDisturbance(scene_pp->objdat_pp[i].handle, prg_pp[i].focal_lng);
+                XAnimationLinkOption(scene_pp->objdat_pp[i].handle, scene_pp->objdat_pp[prg_pp[i].sub_num].handle,
+                                     first, blumove, prg_pp[i].now_time + prg_pp[i].start_time);
+                set_f = TRUE;
+                org_pp[i] = prg_pp[i];
+                break;
+            case OCTRL_ANIPOS:
+                XAnimationPositionLink(scene_pp->objdat_pp[prg_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle,
+                                       prg_pp[i].now_time + prg_pp[i].start_time);
+                set_f = TRUE;
+                break;
+            case OCTRL_MDL:
+                set_f = TRUE;
+                if (org_pp[i].job_type == OCTRL_NON) {
+                    PrShowModel(scene_pp->objdat_pp[i].handle, NULL);
+                    org_pp[i] = prg_pp[i];
+                }
+                break;
+            case OCTRL_CAM:
+                cam_pp[j] = &prg_pp[i];
+                break;
+            case OCTRL_TM2:
+                chg_f = TRUE;
+                if (org_pp[i].job_type != OCTRL_NON) {
+                    chg_f = FALSE;
+                }
+                if (org_pp[i].sub_num != prg_pp[i].sub_num) {
+                    chg_f = TRUE;
+                }
+                if (chg_f) {
+                    set_f = TRUE;
+                    Tim2TransX(scene_pp->objdat_pp[i].handle, prg_pp[i].sub_num);
+                    org_pp[i] = prg_pp[i];
+                }
+                break;
+            case OCTRL_CL2:
+                Cl2MixTrans(prg_pp[i].now_time, prg_pp[i].end_time, scene_pp->objdat_pp[i].handle,
+                            scene_pp->objdat_pp[prg_pp[i].sub_num].handle);
+                org_pp[i] = prg_pp[i];
+                break;
+            }
+
+            if (set_f) {
+                break;
+            }
+        }
+
+        if (!set_f) {
+            switch (org_pp[i].job_type) {
+            case OCTRL_ANI:
+                PrResetPosture(scene_pp->objdat_pp[i].handle);
+                PrSetTransactionBlendRatio(scene_pp->objdat_pp[i].handle, -1.0f);
+                PrResetContour(scene_pp->objdat_pp[i].handle);
+                PrSetContourBlurAlpha(scene_pp->objdat_pp[i].handle, -1.0f, -1.0f);
+                PrHideModel(scene_pp->objdat_pp[i].handle);
+                break;
+            case OCTRL_MDL:
+                PrHideModel(scene_pp->objdat_pp[i].handle);
+                break;
+            case OCTRL_ANIPOS:
+                XAnimationPositionUnLink(scene_pp->objdat_pp[org_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle);
+                break;
+            }
+
+            org_pp[i].job_type = OCTRL_NON;
+        }
+    }
+
+    for (j = OBJACTPRG_MAX - 1; j >= 0; j--) {
+        if (cam_pp[j] != NULL) {
+            PrSelectCamera(scene_pp->objdat_pp[cam_pp[j]->main_num].handle, scene_pp->handle);
+            PrAnimateSceneCamera(scene_pp->handle, (float)(cam_pp[j]->now_time + cam_pp[j]->start_time) + 0.0f);
+            PrSetDepthOfField(scene_pp->handle, cam_pp[j]->focal_lng, cam_pp[j]->defocus_lng);
+            camOtherKill(org_pp, ctrl_pp->num, cam_pp[j]->main_num);
+            org_pp[cam_pp[j]->main_num] = *cam_pp[j];
+            break;
+        }
+    }
+}
+#endif
 
 void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
     int        i, max_num;
