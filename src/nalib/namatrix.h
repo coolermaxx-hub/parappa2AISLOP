@@ -9,6 +9,15 @@ template <typename T, int t0, int t1>
 class NaMATRIX {
 public:
     NaMATRIX() {}
+    NaMATRIX(const T& m00, const T& m01, const T& m10, const T& m11) {
+        Set(m00, m01, m10, m11);
+    }
+    NaMATRIX(const T& m00, const T& m01, const T& m02, const T& m10, const T& m11, const T& m12, const T& m20, const T& m21, const T& m22) {
+        Set(m00, m01, m02, m10, m11, m12, m20, m21, m22);
+    }
+    NaMATRIX(const T& m00, const T& m01, const T& m02, const T& m03, const T& m10, const T& m11, const T& m12, const T& m13, const T& m20, const T& m21, const T& m22, const T& m23, const T& m30, const T& m31, const T& m32, const T& m33) {
+        Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+    }
     NaMATRIX(const NaMATRIX<float, 4, 4>& rhs) {
         Copy(*this, rhs);
     }
@@ -52,6 +61,10 @@ public:
         : "$6", "$7", "$8", "$9");
         return lhs;
     }
+
+    NaMATRIX<T, t0, t1>& Set(const T& m00, const T& m01, const T& m10, const T& m11);
+    NaMATRIX<T, t0, t1>& Set(const T& m00, const T& m01, const T& m02, const T& m10, const T& m11, const T& m12, const T& m20, const T& m21, const T& m22);
+    NaMATRIX<T, t0, t1>& Set(const T& m00, const T& m01, const T& m02, const T& m03, const T& m10, const T& m11, const T& m12, const T& m13, const T& m20, const T& m21, const T& m22, const T& m23, const T& m30, const T& m31, const T& m32, const T& m33);
 
     static NaMATRIX<float, 4, 4> RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
     static NaMATRIX<float, 4, 4> RotateMatrix(int axis, const float& angle);
@@ -143,7 +156,52 @@ private:
     NaVECTOR<T, t0> m[t1];
 
 public:
-    static NaMATRIX<float, 4, 4> IDENT;
+    static NaMATRIX<T, t0, t1> ZERO;
+    static NaMATRIX<T, t0, t1> IDENT;
 };
+
+template <typename T, int t0, int t1>
+NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m10, const T& m11) {
+    ((T*)m)[0] = m00;
+    ((T*)m)[1] = m01;
+    ((T*)m)[2] = m10;
+    ((T*)m)[3] = m11;
+    return *this;
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m02, const T& m10, const T& m11, const T& m12, const T& m20, const T& m21, const T& m22) {
+    ((T*)m)[0] = m00;
+    ((T*)m)[1] = m01;
+    ((T*)m)[2] = m02;
+    ((T*)m)[3] = m10;
+    ((T*)m)[4] = m11;
+    ((T*)m)[5] = m12;
+    ((T*)m)[6] = m20;
+    ((T*)m)[7] = m21;
+    ((T*)m)[8] = m22;
+    return *this;
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m02, const T& m03, const T& m10, const T& m11, const T& m12, const T& m13, const T& m20, const T& m21, const T& m22, const T& m23, const T& m30, const T& m31, const T& m32, const T& m33) {
+    ((T*)m)[0] = m00;
+    ((T*)m)[1] = m01;
+    ((T*)m)[2] = m02;
+    ((T*)m)[3] = m03;
+    ((T*)m)[4] = m10;
+    ((T*)m)[5] = m11;
+    ((T*)m)[6] = m12;
+    ((T*)m)[7] = m13;
+    ((T*)m)[8] = m20;
+    ((T*)m)[9] = m21;
+    ((T*)m)[10] = m22;
+    ((T*)m)[11] = m23;
+    ((T*)m)[12] = m30;
+    ((T*)m)[13] = m31;
+    ((T*)m)[14] = m32;
+    ((T*)m)[15] = m33;
+    return *this;
+}
 
 #endif /* NALIB_NAMATRIX_H */

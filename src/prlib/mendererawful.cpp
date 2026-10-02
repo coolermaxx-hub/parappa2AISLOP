@@ -136,6 +136,6 @@ void PrUpdateAwfulMenderer() {
 #endif
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", func_00150CE8);
+INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", func_00150D10);

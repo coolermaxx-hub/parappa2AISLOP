@@ -357,8 +357,7 @@ segments:
       - { path: src/prlib/dma.cpp.o }
 
       - { path: asm/data/nalib/napacket.data.s.o }
-      - { path: asm/data/nalib/navector.data.s.o }
-      - { path: asm/data/nalib/namatrix.data.s.o }
+      - { path: src/nalib/navector.cpp.o }
 
       - { path: asm/data/sdk/graphdev.data.s.o }
       - { path: asm/data/sdk/libdma.data.s.o }
@@ -820,7 +819,7 @@ segments:
       - { path: asm/data/prlib/contour.sdata.s.o }
       - { path: src/prlib/dma.cpp.o }
 
-      - { path: asm/data/nalib/navector.sdata.s.o }
+      - { path: src/nalib/navector.cpp.o }
 
       - { path: asm/sdk/graphdev.s.o }
       - { path: asm/sdk/libdma.s.o }

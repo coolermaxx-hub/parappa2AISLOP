@@ -2720,3 +2720,19 @@ alphaModulationFramePacket = 0x0038CC70; // size:0xD0
 alphaModulationDmaPacket = 0x0038CD40; // size:0x40
 prSpramData_tmp_mendereralpha = 0x003999B0; // size:0x4
 mendererCreatePacket = 0x01C83A60; // size:0x60
+
+// nalib/navector.cpp
+Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1                             = 0x00147ce0; // type:func
+Set__t8NaMATRIX3Zfi2i2RCfT1T1T1                                                     = 0x00150ce8; // type:func
+Set__t8NaMATRIX3Zfi3i3RCfT1T1T1T1T1T1T1T1                                           = 0x00154580; // type:func
+_GLOBAL_$I$_t8NaVECTOR2Zfi4$ZERO                                                    = 0x001545d8; // type:func
+_t8NaVECTOR2Zfi4$ZERO                                                               = 0x0038cdc0; // size:0x10
+_t8NaVECTOR2Zfi4$ZEROH                                                              = 0x0038cdd0; // size:0x10
+_t8NaMATRIX3Zfi4i4$ZERO                                                             = 0x0038cde0; // size:0x40
+_t8NaVECTOR2Zfi3$ZERO                                                               = 0x0038ce60; // size:0xC
+_t8NaVECTOR2Zfi3$ZEROH                                                              = 0x0038ce70; // size:0xC
+_t8NaMATRIX3Zfi2i2$ZERO                                                             = 0x0038ce80; // size:0x10
+_t8NaMATRIX3Zfi3i3$ZERO                                                             = 0x0038ce90; // size:0x24
+_t8NaMATRIX3Zfi2i2$IDENT                                                            = 0x0038ceb8; // size:0x10
+_t8NaMATRIX3Zfi3i3$IDENT                                                            = 0x0038cec8; // size:0x24
+_t8NaVECTOR2Zfi2$ZERO                                                               = 0x003999d0; // size:0x8

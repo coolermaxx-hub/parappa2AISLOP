@@ -229,8 +229,7 @@ segments:
         - [0x28CD80, .data, prlib/dma]
 
         - [0x28CDB0, data, nalib/napacket]
-        - [0x28CDC0, data, nalib/navector]
-        - [0x28CDE0, data, nalib/namatrix]
+        - [0x28CDC0, .data, nalib/navector]
 
         - [0x28CEF0, data, sdk/graphdev]
         - [0x28CF40, data, sdk/libdma]
@@ -394,7 +393,7 @@ segments:
         - [0x2999C0, sdata, prlib/camera]
         - [0x2999C4, sdata, prlib/contour]
 
-        - [0x2999D0, sdata, nalib/navector]
+        - [0x2999D0, .sdata, nalib/navector]
 
         # .sbss
         - { type: .sbss, vram: 0x00399a00, name: dbug/dbgmsg          }

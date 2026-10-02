@@ -70,7 +70,7 @@ void PrSPRAM_DATA::SendDisplayHeader() {
 }
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00147CE0);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00147D90);
 

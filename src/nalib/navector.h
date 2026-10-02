@@ -5,6 +5,21 @@ template <typename T, int t0>
 class NaVECTOR {
 public:
     NaVECTOR() {}
+    NaVECTOR(const T& x, const T& y) {
+        v[0] = x;
+        v[1] = y;
+    }
+    NaVECTOR(const T& x, const T& y, const T& z) {
+        v[0] = x;
+        v[1] = y;
+        v[2] = z;
+    }
+    NaVECTOR(const T& x, const T& y, const T& z, const T& w) {
+        v[0] = x;
+        v[1] = y;
+        v[2] = z;
+        v[3] = w;
+    }
     NaVECTOR(const NaVECTOR<float, 4>& rhs) {
         Copy(*this, rhs);
     }
@@ -99,6 +114,10 @@ public:
 
 private:
     T v[t0];
+
+public:
+    static NaVECTOR<T, t0> ZERO;
+    static NaVECTOR<T, t0> ZEROH;
 };
 
 template <typename T, int t0>

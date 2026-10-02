@@ -93,7 +93,7 @@ NaMATRIX<float, 4, 4>& SetMatrix_tmp_spadata(NaMATRIX<float, 4, 4> *m,
     const float& m00, const float& m01, const float& m02, const float& m03,
     const float& m10, const float& m11, const float& m12, const float& m13,
     const float& m20, const float& m21, const float& m22, const float& m23,
-    const float& m30, const float& m31, const float& m32, const float& m33) asm("func_00147CE0");
+    const float& m30, const float& m31, const float& m32, const float& m33) asm("Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1");
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetMatrix__C12SpaTransformf);
