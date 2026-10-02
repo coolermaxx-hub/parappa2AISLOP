@@ -19,7 +19,9 @@ public:
         Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
     }
     NaMATRIX(const NaMATRIX<float, 4, 4>& rhs) {
-        Copy(*this, rhs);
+        NaMATRIX<float, 4, 4> *dst = this;
+        const NaMATRIX<float, 4, 4> *src = &rhs;
+        Copy(*dst, *src);
     }
 
     const NaVECTOR<T, t0>& operator[](int arg0) const {
@@ -103,6 +105,7 @@ public:
 
     NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
         NaMATRIX<float, 4, 4> ret;
+        NaMATRIX<float, 4, 4> *pret = &ret;
         asm volatile("
             lqc2         $vf4, 0x0(%1)
             lqc2         $vf5, 0x10(%1)
@@ -132,7 +135,7 @@ public:
             vmaddaz.xyzw ACC, $vf6, $vf8z
             vmaddw.xyzw  $vf9, $vf7, $vf8w
             sqc2         $vf9, 0x30(%0)
-        " : : "r"(&ret), "r"(this), "r"(&rhs) : "$6", "$7", "$8", "$9");
+        " : : "r"(pret), "r"(this), "r"(&rhs) : "$6", "$7", "$8", "$9");
         return ret;
     }
 
