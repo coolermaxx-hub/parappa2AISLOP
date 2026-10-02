@@ -3,6 +3,7 @@
 #include "main/cdctrl.h"
 
 #include "menu/memc.h"
+#include "menu/menu.h"
 #include "menu/menudata.h"
 #include "menu/menufont.h"
 
@@ -314,7 +315,75 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
     memc_setSaveIcon(2, NULL, 0);
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/p3mc", _P3MC_mainfile_chk);
+#else
+static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
+    int   n;
+    int   max;
+    int   isSave;
+    char *name;
+    int   flg;
+    int   flg1;
+
+    flg1 = 0;
+    if (need != NULL) {
+        *need = 0;
+    }
+
+    if (no > 0) {
+        return -1;
+    }
+
+    flg = _P3MC_file_chk(memc_getfilename(-1), 0x3c4, need);
+    if (flg == -2) {
+        flg = 0;
+    }
+
+    name = memc_getfilename(-2);
+    if (name != NULL) {
+        flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
+    }
+    name = memc_getfilename(-3);
+    if (name != NULL) {
+        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+            flg1 = 1;
+        }
+    }
+    name = memc_getfilename(-4);
+    if (name != NULL) {
+        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+            flg1 = 1;
+        }
+    }
+
+    isSave = 0;
+    if (flg == 0 && flg1 == 0) {
+        isSave = 1;
+    }
+
+    max = no + 1;
+    if (no < 0) {
+        no = 0;
+        max = 1;
+    }
+
+    for (n = no; n < max; n++) {
+        flg = _P3MC_file_chk(memc_getfilename(n), data_csize, need);
+        if (flg == -2) {
+            return -2;
+        }
+        if (flg == -1 && isSave) {
+            return -3;
+        }
+        if (flg == 0 && !isSave) {
+            return -1;
+        }
+    }
+
+    return isSave ? 0 : -1;
+}
+#endif
 
 static int _P3MC_file_chk(char *name, int size, int *need) {
     int             i, j;
@@ -1257,7 +1326,68 @@ void P3MC_SetUserWorkTime(USER_DATA *puser) {
     }
 }
 
+typedef struct {
+    char id[16];
+} P3MC_FILEID;
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/p3mc", P3MC_SaveUser);
+#else
+int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
+    P3MC_WORK  *pw = &P3MC_Work;
+    u_char     *pData;
+    u_char     *name;
+    int         mode;
+    int         stageNo;
+    int         roundNo;
+    int         fileNo;
+    int         isVs;
+    int         ParaCol;
+    P3LOG_VAL  *pLog;
+
+    ParaCol = 0;
+    pData = pdhdl->pMemTop;
+
+    mode = ((USER_HEADER *)pData)->user.mode;
+    stageNo = ((USER_HEADER *)pData)->user.stageNo;
+    roundNo = ((USER_HEADER *)pData)->user.roundNo;
+    fileNo = ((USER_HEADER *)pData)->user.fileNo;
+    isVs = ((USER_HEADER *)pData)->user.isVs;
+    name = (mode == 1) ? ((USER_HEADER *)pData)->user.name : ((USER_HEADER *)pData)->user.name1;
+
+    if (mode == 1) {
+        pLog = pdhdl->pData;
+        ParaCol = pLog->nRound;
+        if (ParaCol < 0) {
+            ParaCol = 0;
+        }
+        if (ParaCol >= 5) {
+            ParaCol = 4;
+        }
+    }
+
+    _P3MC_SetUserDirName(mode, fileNo);
+    _P3MC_SetBrowsInfo(mode, fileNo, name, stageNo, roundNo, isVs, ParaCol);
+
+    isFileFlgCash = 0;
+    P3MC_SetUserWorkTime(&pdhdl->pHead->user);
+
+    *(P3MC_FILEID *)pdhdl->pHead->header = *(P3MC_FILEID *)HedderID;
+    *(P3MC_FILEID *)pdhdl->pHead->footer = *(P3MC_FILEID *)FooterID;
+    *(P3MC_FILEID *)pdhdl->pFoot->footer = *(P3MC_FILEID *)FooterID;
+
+    P3MC_Work.prg = 0;
+    pw->data_no = fileNo;
+    pw->data_mode = mode;
+    pw->data_stage = (mode == 1) ? 0 : stageNo;
+    pw->dhdl = pdhdl;
+    pw->prgflag = flg;
+    pw->dstat = 0;
+
+    _P3MC_CheckUserDataHead(pw);
+    return 0;
+}
+#endif
 
 int P3MC_SaveCheck(void) {
     int        re;
