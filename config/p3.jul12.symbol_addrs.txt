@@ -2710,3 +2710,4 @@ noodleBaseColor = 0x0038C8C0; // size:0x78
 noodleHueOffset = 0x0039997C; // size:0x4
 noodleBrightnessPhase = 0x00399980; // size:0x4
 noodleStripHeaderPacket = 0x0038C840; // size:0x30
+mendererLastRatio = 0x00399990; // size:0x4

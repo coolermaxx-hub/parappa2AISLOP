@@ -10,6 +10,7 @@
 #include "utility.h"
 
 #include <eeregs.h>
+#include <math.h>
 #include <eestruct.h>
 
 /* sdata */
@@ -454,8 +455,144 @@ void PrRestartMenderer() {
     prMendererFade = 1.0f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawMenderer__Fv);
+/* sdata */
+extern float prSchoolLeaderIndex;
+extern float mendererLastRatio;
+
+void UpdateNoodleRotation();
+void DrawNoodleStrip(float ratio, float rot);
+void PrWaitDmaFinish(u_int channel);
+void PrFadeFrameImage(float arg0);
+void PrCreateAlphaModulation(float alpha);
+void PrStartAwfulRotation();
+void PrBlendNoodleImage(bool clear);
+
 void DrawMenderer();
+
+#ifndef NON_MATCHING
+INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawMenderer__Fv);
+#else /* Requires .lit4 migration */
+void DrawMenderer() {
+    float ratio = prMendererRatio;
+
+    if (ratio == 0.0f) {
+        StartNoodleRotation();
+        return;
+    }
+
+    float leader = prSchoolLeaderIndex + prMendererSpeed * 0.0032f;
+    if (leader > 1.0f) {
+        leader -= 1.0f;
+    }
+
+    if (prCurrentStage == 8 || prCurrentStage == 18) {
+        prSchoolLeaderIndex = leader;
+        return;
+    }
+
+    if (ratio != 1.0f && ratio != 2.0f) {
+        noodleChangeTimer = 900;
+    }
+
+    prSchoolLeaderIndex = leader;
+    UpdateNoodleRotation();
+
+    float delta = -0.01f;
+    if (noodleDeltaRotation >= 0.0f) {
+        delta = 0.01f;
+    }
+    delta *= prMendererSpeed;
+
+    if (ratio <= 1.0f) {
+        ratio = sqrtf(ratio) * 2.0f - 1.0f;
+        noodleRotation += delta * (1.0f - ratio);
+    } else {
+        float d = ratio - 1.5f;
+        if (d < 0.0f) {
+            d = -d;
+        }
+        noodleRotation += delta * (0.5f - d);
+        PrFadeFrameImage(1.0f - (d + d));
+        PrWaitDmaFinish(2);
+    }
+
+    if (noodleRotation > 1.0f) {
+        noodleRotation -= 1.0f;
+    }
+    if (noodleRotation < 0.0f) {
+        noodleRotation += 1.0f;
+    }
+
+    float alpha = 1.0f;
+    if (ratio > 1.5f) {
+        alpha = (ratio - 1.5f) * 0.5f;
+    } else if (ratio > 1.0f) {
+        alpha = (1.5f - ratio) * 2.0f;
+    }
+
+    if (ratio != 0.0f) {
+        PrCreateAlphaModulation(alpha);
+    }
+
+    PrStartMfifo();
+
+    if (mendererLastRatio <= 1.6f && ratio > 1.0f) {
+        PrStartAwfulRotation();
+    }
+
+    float strip;
+    if (prCurrentStage == 19 || prCurrentStage == 6) {
+        if (ratio <= 1.0f) {
+            strip = ratio;
+        } else if (ratio <= 1.4f) {
+            strip = (ratio - 1.0f) / 0.4f + 1.0f;
+        } else if (ratio <= 1.6f) {
+            strip = 2.0f;
+        } else {
+            strip = (ratio - 1.6f) * 0.6f / 0.4f + 2.0f;
+        }
+    } else if (prMendererGettingWorse) {
+        if (ratio <= 0.5f) {
+            strip = ratio + ratio;
+        } else if (ratio <= 0.6f) {
+            strip = 1.0f;
+        } else if (ratio <= 1.0f) {
+            strip = 1.0f - (ratio - 0.6f) * 0.5f / 0.4f;
+        } else if (ratio <= 1.13f) {
+            strip = (ratio - 1.0f) * 0.5f / 0.13f + 0.5f;
+        } else if (ratio <= 1.4f) {
+            strip = (ratio - 1.13f) / 0.26f + 1.0f;
+        } else if (ratio <= 1.6f) {
+            strip = 2.0f;
+        } else {
+            strip = (ratio - 1.6f) / 0.4f + 2.0f;
+        }
+    } else {
+        if (ratio <= 1.0f) {
+            strip = ratio * 0.5f;
+        } else if (ratio <= 1.13f) {
+            strip = (ratio - 1.0f) * 0.5f / 0.13f + 0.5f;
+        } else if (ratio <= 1.4f) {
+            strip = (ratio - 1.13f) / 0.26f + 1.0f;
+        } else if (ratio <= 1.6f) {
+            strip = 2.0f;
+        } else {
+            strip = (ratio - 1.6f) / 0.4f + 2.0f;
+        }
+    }
+
+    mendererLastRatio = ratio;
+    DrawNoodleStrip(strip, noodleRotation);
+
+    PrWaitDmaFinish(1);
+    while (*VIF1_STAT & 0x3) {
+        /* Wait for VIF1 to go idle */
+    }
+
+    PrBlendNoodleImage(ratio == 0.0f);
+    PrStopMfifo();
+}
+#endif
 
 PR_EXTERN
 void PrSetMendererRatio(float ratio) {
