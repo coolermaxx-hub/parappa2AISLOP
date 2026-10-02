@@ -7482,7 +7482,9 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
 
     if (pfw->dataMode == 1) {
         *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.logDate;
-        fileNo = CurFileInfo.logFileNo;
+        if (!pfw->isSave) {
+            fileNo = CurFileInfo.logFileNo;
+        }
     } else {
         *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.repDate;
         if (!pfw->isSave) {

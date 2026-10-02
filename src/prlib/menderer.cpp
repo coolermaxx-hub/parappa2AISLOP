@@ -372,16 +372,13 @@ void DrawNoodleStrip(float ratio, float rot) {
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", StartNoodleRotation__Fv);
-#else /* Requires .lit4 migration */
+extern const float D_003991AC;
 void StartNoodleRotation() {
     noodleChangeTimer = 900;
-    noodleDeltaRotation = 0.001f;
+    noodleDeltaRotation = D_003991AC; /* 0.001f */
     noodleStatus = 0;
     noodleRotation = 0.0f;
 }
-#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", UpdateNoodleRotation__Fv);

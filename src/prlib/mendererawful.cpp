@@ -62,15 +62,12 @@ float GetAwfulRotation() {
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrStartAwfulRotation__Fv);
-#else /* Requires .lit4 migration */
+extern const float D_00399250;
 void PrStartAwfulRotation() {
     awfulStatus = 0;
-    awfulRotation = 0.016f;
+    awfulRotation = D_00399250; /* 0.016f */
     SetNextSwitchRotationTimer();
 }
-#endif
 
 void PrFadeFrameImage(float arg0) {
     if (arg0 == 0.0f) {
