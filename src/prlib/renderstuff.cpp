@@ -14,6 +14,8 @@
 
 #include <stdlib.h>
 
+PrRenderStuff prRenderStuff;
+
 PrRenderStuff::PrRenderStuff() : m_dma_queue(1200) {
     m_transmit_array_size = 0;
     m_transmit_array_max = 0;
@@ -208,10 +210,6 @@ void PrRenderStuff::MergeRender() {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/renderstuff", _GLOBAL_$D$prRenderStuff);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/renderstuff", _GLOBAL_$I$prRenderStuff);
-
-void PrRenderStuff::AppendDmaTag(const sceDmaTag *tag) {
+inline void PrRenderStuff::AppendDmaTag(const sceDmaTag *tag) {
     m_dma_queue.Append((void*)tag);
 }

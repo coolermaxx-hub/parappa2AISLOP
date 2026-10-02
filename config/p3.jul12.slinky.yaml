@@ -324,7 +324,8 @@ segments:
       - { path: src/prlib/gifreg.cpp.o }
       - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
-      - { path: asm/data/prlib/renderstuff.data.s.o }
+      - { path: src/prlib/renderstuff.cpp.o }
+      - { kind: pad, pad_amount: 0x28, section: .data }  # alignment gap before render.data
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: asm/data/prlib/render.data.s.o }
