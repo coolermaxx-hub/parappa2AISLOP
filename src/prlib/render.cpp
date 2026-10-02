@@ -10,7 +10,11 @@
 #include "animation.h"
 #include "spadata.h"
 
+#include "mfifo.h"
+
 #include <nalib/namatrix.h>
+#include <eekernel.h>
+#include <eeregs.h>
 #include <math.h>
 
 /* render.cpp's own out-of-line copy of the NaVECTOR<float, 4> constructor */
@@ -23,7 +27,116 @@ extern bool AwfulStatus;
 
 extern PrVu1InitPacket initVu1DmaPacket;
 
+PR_EXTERN float PrGetMendererRatio();
+void PrDrawAwfulBackground(sceGsFrame frame);
+void PrWaitMendererTexture(sceGsDrawEnv1 *env, const sceGsFrame &frame, const sceGsXyoffset &xyoffset);
+
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", Render__13PrSceneObject);
+#else /* Scheduling: the AwfulStatus store and the frame/xyoffset copies */
+void PrSceneObject::Render() {
+    FlushCache(WRITEBACK_DCACHE);
+
+    if (PrGetMendererRatio() >= 1.5f && m_model_set.m_head != NULL) {
+        prRenderStuff.InitializeEECore(this);
+        PrDrawAwfulBackground(unk50);
+    }
+
+    bool awful = true;
+    prRenderStuff.ResetStatistics();
+    prRenderStuff.m_statistics.render_time0 = *T3_COUNT;
+    prSpramData_tmp_render->Initialize(this);
+
+    PrModelObject *model = m_model_set.m_head;
+    if (!(PrGetMendererRatio() >= 1.5f)) {
+        awful = false;
+    }
+    AwfulStatus = awful;
+
+    for (; model != NULL; model = model->m_list.next) {
+        if (model->m_flags & 1) {
+            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                prSpramData_tmp_render->InitializeModel(model);
+                model->CalculateCurrentMatrix();
+            }
+        }
+    }
+
+    prRenderStuff.m_statistics.render_time1 = *T3_COUNT;
+    sceGsFrame frame = unk50;
+    sceGsXyoffset xyoffset = unk58;
+    PrWaitMendererTexture(unk70, frame, xyoffset);
+    prRenderStuff.m_statistics.render_time2 = *T3_COUNT;
+
+    prRenderStuff.InitializeEECore(this);
+    InitializeVu1();
+    prSpramData_tmp_render->SendDisplayHeader();
+    prRenderStuff.StartRender(this);
+    prRenderStuff.m_transmit_array_size = 0;
+    PrStartMfifo();
+
+    model = m_model_set.m_head;
+    if (model != NULL) {
+        if (model->m_spm_image->m_flags & 0x200) {
+            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk4)->m_tag);
+            do {
+                if (model->m_flags & 1) {
+                    if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                        prSpramData_tmp_render->InitializeModel(model);
+                        model->RenderBackgroundScreenModel();
+                    }
+                }
+                model = model->m_list.next;
+            } while (model != unk98);
+        }
+
+        if (model != NULL && (model->m_spm_image->m_flags & 0x400)) {
+            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk5)->m_tag);
+            do {
+                if (model->m_flags & 1) {
+                    if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                        prSpramData_tmp_render->InitializeModel(model);
+                        model->RenderContext1Model();
+                    }
+                }
+                model = model->m_list.next;
+            } while (model != unk9C);
+        }
+    }
+
+    prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk0)->m_tag);
+    for (; model != m_screen_model_list; model = model->m_list.next) {
+        if (model->m_flags & 1) {
+            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                prSpramData_tmp_render->InitializeModel(model);
+                model->RenderContext1Model();
+            }
+        }
+    }
+
+    for (model = unk9C; model != m_screen_model_list; model = model->m_list.next) {
+        if (model->m_flags & 1) {
+            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                prSpramData_tmp_render->InitializeModel(model);
+                model->RenderContext2Model();
+            }
+        }
+    }
+
+    prRenderStuff.m_statistics.render_time3 = *T3_COUNT;
+    prRenderStuff.SortTransmitDmaArray();
+    prRenderStuff.m_statistics.render_time4 = *T3_COUNT;
+
+    if (prCurrentStage != 19) {
+        prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk1)->m_tag);
+    }
+
+    FlushCache(WRITEBACK_DCACHE);
+    PrWaitMfifo();
+    prRenderStuff.MergeRender();
+    prRenderStuff.m_statistics.render_time5 = *T3_COUNT;
+}
+#endif
 
 void PrSceneObject::InitializeVu1() {
     PrVu1InitPacket *packet = (PrVu1InitPacket*)PR_UNCACHED(&initVu1DmaPacket);
