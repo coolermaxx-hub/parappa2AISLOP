@@ -3543,7 +3543,208 @@ static int MpPopMenu_Flow(int flg, u_int tpad) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", MpMapMenu_Flow);
+static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
+    int       state;
+    int       bkNo;
+    int       posNo;
+    int       idx;
+    MNMAPPOS *mpos;
+
+    if (flg == 1) {
+        mpw->state = 0;
+        mpw->anmStop = 0;
+        mpw->bMove = 0;
+        mpw->curPos = 0;
+        mpw->mvFlag = 0;
+        MENUSubt_PadFontArrowSet(0);
+        return 0;
+    }
+
+    if (flg == 3) {
+        mpw->curPos = tpad;
+        if (mpw->mnmap != NULL) {
+            mpos = &mpw->mnmap[tpad];
+            mpw->mvFlag = _MapGetMovableDir(mpw);
+            MENUSubt_PadFontArrowSet(mpw->mvFlag);
+            TsCMPMes_SetMes(mpos->cmpmes);
+
+            if (mpw->pscene != NULL && mpw->panime != NULL) {
+                int anmNo;
+
+                anmNo = mpos->posanm0;
+                mpw->anmBit = 0x80000000;
+                if (anmNo != -1) {
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                }
+                anmNo = mpos->posanm1;
+                if (anmNo != -1) {
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                }
+                MNScene_SetAnimeEnd(mpw->pscene);
+            }
+        }
+        mpw->anmtrg = 0;
+        return 0;
+    }
+
+    if (flg == 4) {
+        bkNo = mpw->curPos;
+        if (mpw->mnmap != NULL) {
+            mpos = &mpw->mnmap[bkNo];
+            for (idx = 0; idx < 4; idx++) {
+                if (tpad == mpos->mapdir[idx].mapNo) {
+                    break;
+                }
+            }
+
+            if (idx < 4) {
+                posNo = mpos->mapdir[idx].mapNo & ~0x8000;
+                if (mpw->lmtPos != 0) {
+                    if (posNo >= mpw->lmtPos) {
+                        return 0;
+                    }
+                    if (mpos->mapdir[idx].mapNo & 0x8000) {
+                        if (bkNo == mpw->lmtPos - 1) {
+                            return 0;
+                        }
+                        if (posNo == mpw->lmtPos - 1) {
+                            return 0;
+                        }
+                    }
+                }
+
+                mpw->curPos = posNo;
+                mpw->anmLtim = mpos->mapdir[idx].anmLtim;
+                if (mpw->pscene != NULL && mpw->panime != NULL) {
+                    int anmNo;
+
+                    anmNo = mpos->movanm1;
+                    mpw->bMove = 1;
+                    mpw->anmBit = 0x80000000;
+                    if (anmNo != -1) {
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    }
+                    anmNo = mpos->mapdir[idx].anmNo;
+                    if (anmNo != -1) {
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    }
+                }
+                mpw->anmtrg = mpos->mapdir[idx].exflg;
+                mpw->sndtrg = 1;
+                mpw->state = 0x1100;
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    if (mpw->mnmap == NULL) {
+        return 0;
+    }
+
+    state = mpw->state;
+    posNo = mpw->curPos;
+    mpw->anmtrg = 0;
+    mpw->sndtrg = 0;
+    mpw->anmStop = 0;
+
+    switch (state) {
+    case 0:
+        mpw->bMove = 0;
+        state = 0x1000;
+    case 0x1000:
+        mpos = &mpw->mnmap[posNo];
+        if (mpw->bMove != 0 && !TsAnimeWait_withKeySkip(tpad, mpw->pscene, 0, mpw->anmBit)) {
+            mpw->bMove = 0;
+            if (mpw->pscene != NULL && mpw->panime != NULL) {
+                int anmNo;
+
+                anmNo = mpos->posanm0;
+                mpw->anmBit = 0x80000000;
+                if (anmNo != -1) {
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                }
+                anmNo = mpos->posanm1;
+                if (anmNo != -1) {
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                }
+                MNScene_SetAnimeBankEnd(mpw->pscene, mpw->anmBit);
+            }
+        }
+
+        idx = -1;
+        mpw->mvFlag = _MapGetMovableDir(mpw);
+        MENUSubt_PadFontArrowSet(mpw->mvFlag);
+        TsCMPMes_SetMes(mpos->cmpmes);
+
+        if (tpad & 0x20) {
+            state = 0x1200;
+            mpw->sndtrg = 2;
+        } else if (tpad & 0x40) {
+            state = 0x1f00;
+            mpw->sndtrg = 3;
+        }
+
+        if (tpad & 0x8000) {
+            idx = 0;
+        } else if (tpad & 0x2000) {
+            idx = 1;
+        } else if (tpad & 0x1000) {
+            idx = 2;
+        } else if (tpad & 0x4000) {
+            idx = 3;
+        }
+
+        if (idx >= 0 && ((mpw->mvFlag >> idx) & 1)) {
+            posNo = mpos->mapdir[idx].mapNo;
+            if (posNo != -1) {
+                posNo &= ~0x8000;
+                mpw->curPos = posNo;
+                mpw->anmLtim = mpos->mapdir[idx].anmLtim;
+                if (mpw->pscene != NULL && mpw->panime != NULL) {
+                    int anmNo;
+
+                    anmNo = mpos->movanm1;
+                    mpw->bMove = 1;
+                    mpw->anmBit = 0x80000000;
+                    if (anmNo != -1) {
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    }
+                    anmNo = mpos->mapdir[idx].anmNo;
+                    if (anmNo != -1) {
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    }
+                }
+                state = 0x1100;
+                mpw->anmtrg = mpos->mapdir[idx].exflg;
+                mpw->sndtrg = 1;
+            }
+        }
+        break;
+    case 0x1100:
+        if (!TsAnimeWait_withKeySkip(tpad, mpw->pscene, mpw->anmLtim, mpw->anmBit)) {
+            mpw->anmStop = 1;
+            state = 0x1000;
+        }
+        break;
+    case 0x1200:
+        state = 0x2000;
+        break;
+    case 0x2000:
+    case 0xf000:
+        mpw->state = 0;
+        MENUSubt_PadFontArrowSet(0);
+        return 1;
+    case 0x1f00:
+    case 0xf010:
+        mpw->state = 0;
+        MENUSubt_PadFontArrowSet(0);
+        return -1;
+    }
+
+    mpw->state = state;
+    return 0;
+}
 
 static int _MapGetMovableDir(MAPPOS *mpw) {
     int       posNo, ret, DirMask;
