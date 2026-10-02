@@ -17,7 +17,7 @@
 NaVECTOR<float, 4>* CtorVector_tmp_render(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("__t8NaVECTOR2Zfi4RCfT1T1T1");
 
 /* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_render;
+PrSPRAM_DATA *prSpramData_tmp_render = (PrSPRAM_DATA*)0x70000000;
 
 extern bool AwfulStatus;
 
@@ -183,9 +183,6 @@ void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", RenderContext1Node__7SpmNodeP13PrModelObject);
-#else /* Need to match .sdata */
 void SpmNode::RenderContext1Node(PrModelObject *model) {
     prRenderStuff.m_statistics.node_num++;
 
@@ -249,7 +246,9 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
         }
     }
 }
-#endif
+
+/* FLT_MAX literal of RenderContext2Node, which is still asm */
+float D_003998E8 = 3.40282347e+38f;
 
 void PrModelObject::RenderScreenModelNode() {
     m_spm_image->RenderScreenModelNode();

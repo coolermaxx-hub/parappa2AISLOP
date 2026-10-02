@@ -791,7 +791,7 @@ segments:
       - { path: asm/data/prlib/renderstuff.sdata.s.o }
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
-      - { path: asm/data/prlib/render.sdata.s.o }
+      - { path: src/prlib/render.cpp.o }
       - { path: asm/data/prlib/renderee.sdata.s.o }
       - { path: asm/data/prlib/transition.sdata.s.o }
       - { path: src/prlib/microprogram.cpp.o }
