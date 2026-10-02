@@ -1503,6 +1503,7 @@ MNS_StageMap                        = 0x0018cc38; // size:0x1154
 D_00395F20                          = 0x00395f20; // type:asciz
 
 UserName_InitialStr                 = 0x00399748;
+UserName_InitialStr2                = 0x0039974c;
 tblTex                              = 0x003997bc;
 UserList_Sw                         = 0x003997c0;
 OptionList_Sw                       = 0x003997c4;
