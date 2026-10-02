@@ -221,7 +221,27 @@ int SpaNodeAnimation::Optimize() {
     return remove_count;
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4Uif);
+#else /* Regalloc */
+template <>
+NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetLinearValue(u_int seg, float arg1) const {
+    /* FIXME: static local; see the note in GetSprineValue below */
+    extern NaVECTOR<float, 4> value_tmp_spadata_linear_vector;
+    extern int tmp_0_linear_vector;
+    if (tmp_0_linear_vector == 0) {
+        tmp_0_linear_vector = 1;
+    }
+
+    float *keys = this->unkC;
+    float d0 = arg1 - keys[seg];
+    float d1 = keys[seg + 1] - arg1;
+    NaVECTOR<float, 4> *values = (NaVECTOR<float, 4>*)this;
+
+    value_tmp_spadata_linear_vector = (values[seg + 1] * d1 + values[seg + 2] * d0) / (d1 + d0);
+    return &value_tmp_spadata_linear_vector;
+}
+#endif
 
 template <>
 NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const {

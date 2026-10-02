@@ -2690,3 +2690,5 @@ mendererInitialized = 0x00399974; // size:0x4
 noodlePositionData = 0x01C83C10; // size:0xE60
 noodlePolygonIndex = 0x01C84A70; // size:0x1D0
 value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
+tmp_0_linear_vector = 0x0039990C; // size:0x4
+value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
