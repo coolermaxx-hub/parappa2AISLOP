@@ -2,6 +2,10 @@
 
 #include "random.h"
 
+#include "nalib/namatrix.h"
+
+#include <math.h>
+
 struct PrNoodlePositionData {
     float index;
     float position[3];
@@ -13,11 +17,16 @@ extern float prMendererSpeed;
 extern float prMendererRatio;
 extern float prMendererSyncRatio;
 extern float prSchoolLeaderIndex;
+extern float prMendererDistance;
+extern float prMendererWidth;
+extern float prMendererLength;
 
 extern PrNoodlePositionData noodlePositionData[115];
 extern u_int noodlePolygonIndex[116];
 
 void SetNextTarget(PrNoodlePositionData *data);
+void UpdateNoodlePositionData(PrNoodlePositionData *data);
+float GetSynchronizeRatio(const PrNoodlePositionData *data);
 void InitializeNoodlePositionData();
 
 static inline float ABS_tmp(float x) {
@@ -118,11 +127,59 @@ void PrInitializeNoodlePolygonPosition() {
     InitializeNoodlePositionData();
 }
 
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", PrGetNoodlePolygonPosition__FPt8NaVECTOR2Zfi4Ui);
+#else /* First draft: the 2x2 rotate loops and Set argument setup still differ */
+static inline NaVECTOR<float, 2> RotateVector_tmp(const NaMATRIX<float, 2, 2>& m, const NaVECTOR<float, 2>& v) {
+    float r[2];
+    for (int i = 0; i < 2; i++) {
+        float sum = 0.0f;
+        for (int j = 0; j < 2; j++) {
+            sum += m[i][j] * v[j];
+        }
+        r[i] = sum;
+    }
+    return NaVECTOR<float, 2>(r[0], r[1]);
+}
+
+void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
+    u_int n = noodlePolygonIndex[index];
+    PrNoodlePositionData *data = &noodlePositionData[n];
+
+    UpdateNoodlePositionData(data);
+    float sync = 1.0f - GetSynchronizeRatio(data);
+
+    float ratio = prMendererRatio - 0.4f;
+    float y = data->position[1] * sync;
+    float x = data->position[0] * sync * MAX_tmp(ratio, 1.0f);
+    float z = data->position[2] * sync;
+
+    float angle = (float)n * 6.2831855f / 115.0f + z;
+    float c = cosf(angle);
+    float s = sinf(angle);
+    NaMATRIX<float, 2, 2> rot(c, s, -s, c);
+
+    float distance = prMendererDistance + x;
+    float width = prMendererWidth;
+    float length = prMendererLength;
+
+    NaVECTOR<float, 2> p0 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance, y + width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p1 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance + length * 0.5f, y + width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p2 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance, y + -width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p3 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance + length * 0.5f, y + -width * 0.5f * 0.093756f));
+
+    pos[0].Set(p0[0], p0[1], 0.0f, 1.0f);
+    pos[1].Set(p1[0], p1[1], 0.0f, 1.0f);
+    pos[2].Set(p2[0], p2[1], 0.0f, 1.0f);
+    pos[3].Set(p3[0], p3[1], 0.0f, 1.0f);
+}
+#endif
 
 /* nalib/navector.h */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151D78);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DA0);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DF8);
+#endif
