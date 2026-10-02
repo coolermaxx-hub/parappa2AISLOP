@@ -7943,9 +7943,8 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
-#else /* Needs .sdata match */
+extern char D_003997E8[];
+
 /* static */ void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     USERLIST_MENU *pfw = &UserListMenu;
     u_char         buf[16];
@@ -7990,11 +7989,11 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
 
     isScroll = 1;
 
-    sprintf(buf, "%d", pfw->curuser + pfw->curPageTop + 1);
+    sprintf(buf, D_003997E8, pfw->curuser + pfw->curPageTop + 1);
     ps = PAGENO_StrCOD;
     MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
     ps++;
-    sprintf(buf, "%d", pfw->userMax);
+    sprintf(buf, D_003997E8, pfw->userMax);
     MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
 
     if (pfw->sline == 0.0f) {
@@ -8021,13 +8020,12 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
         spr->uw = 0x230;
         spr->uh = 0x1a;
 
-        for (i = 0; i < 6; i++) {
+        for (i = 0; i < 6; i++, y += 0x1a) {
             spr->px = 0x26;
             spr->py = y;
             spr->sw = 0x230;
             spr->sh = 0x1a;
             PkNSprite_AddAdj(pk, spr, 1);
-            y += 0x1a;
         }
 
         spr->ofsy = ofsy;
@@ -8066,14 +8064,15 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
     }
 
     for (i = 0; i < n; i++) {
+        int jj;
         if (0.0f < pfw->sline) {
-            j = i - 1;
+            jj = i - 1;
         } else {
-            j = i;
+            jj = i;
         }
-        k  = pfw->curPageTop + j;
-        px = CellCusPos[j + 1].x;
-        py = CellCusPos[j + 1].y;
+        k  = jj + pfw->curPageTop;
+        px = CellCusPos[jj + 1].x;
+        py = CellCusPos[jj + 1].y;
 
         if (k >= 0 && k < pfw->userMax) {
             user = &pfw->pusrdspWk->pUserDisp[k];
@@ -8107,7 +8106,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Draw);
         TsNAMEINBox_Draw(pk, spr, px, py, dispColor, &pfw->nameinw[1], 1);
     }
 }
-#endif
 
 static void NameSpaceCut(u_char *dst, u_char *src) {
     int     i, l;
