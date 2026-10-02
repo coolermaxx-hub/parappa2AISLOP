@@ -2678,3 +2678,5 @@ sceVu0InversMatrix                                                              
 RotateMatrix__t8NaMATRIX3Zfi4i4iRCf                                                 = 0x0014ace8; // type:func
 prSpramData_tmp_contour = 0x003999c4; // size:0x4
 contour_max_depth = 0x003999c8; // size:0x8
+prSpramData_tmp_shape = 0x00399928; // size:0x4
+shape_max_depth = 0x0039992c; // size:0x4

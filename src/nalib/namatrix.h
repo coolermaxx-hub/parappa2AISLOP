@@ -82,6 +82,12 @@ public:
         return out;
     }
 
+    NaVECTOR<float, 4> operator*(const NaVECTOR<float, 4>& rhs) const {
+        NaVECTOR<float, 4> ret;
+        Apply(ret, *this, rhs);
+        return ret;
+    }
+
     NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
         NaMATRIX<float, 4, 4> ret;
         asm volatile("

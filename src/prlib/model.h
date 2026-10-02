@@ -146,14 +146,23 @@ public:
     float BlendTransactionWeight(PrModelObject *model, float weight, u_int index);
 
 public:
-    PR_PADDING(unk0, 0x17C);
+    PR_PADDING(unk0, 0x40);
+    NaMATRIX<float, 4, 4> unk40;
+    PR_PADDING(unk80, 0xC0);
+    NaVECTOR<float, 4> unk140;
+    int unk150;
+    PR_PADDING(unk154, 0x18);
+    PrVuNodeHeaderDmaPacket *unk16C[2];
+    PR_PADDING(unk174, 0x8);
     PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x14);
+    PR_PADDING(unk180, 0x8);
+    u_int unk188;
+    PR_PADDING(unk18C, 0x8);
     u_int unk194;
     u_int *unk198;
     PR_PADDING(unk19C, 0x14);
     u_int unk1B0;
-    PR_PADDING(unk1B4, 0x4);
+    u_long128 *unk1B4;
     u_int unk1B8;
     PR_PADDING(unk1BC, 0x4);
     u_long128 unk1C0[1];
