@@ -113,7 +113,7 @@ public:
             vmaddaz.xyzw ACC, $vf6, $vf8z
             vmaddw.xyzw  $vf9, $vf7, $vf8w
             sqc2         $vf9, 0x30(%0)
-        " : : "r"(&ret), "r"(this), "r"(&rhs));
+        " : : "r"(&ret), "r"(this), "r"(&rhs) : "$6", "$7", "$8", "$9");
         return ret;
     }
 

@@ -57,7 +57,7 @@ public:
 public:
     NaMATRIX<float, 4, 4> unk0;
     NaMATRIX<float, 4, 4> unk40;
-    PR_PADDING(unk80, 0x40);
+    NaMATRIX<float, 4, 4> unk80;
     NaMATRIX<float, 4, 4> unkC0;
     PR_PADDING(unk100, 0x40);
     NaVECTOR<float, 4> unk140;
