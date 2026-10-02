@@ -44,7 +44,14 @@ public:
 
 public:
     void ChangePointer() {
-        SpaTrackBase::ChangePointer(sizeof(T)*3, sizeof(T));
+        int ptr;
+        if (this->unk0 == 0) {
+            ptr = (int)((SpaTrackBase*)this + 1) + (this->unk4 * (sizeof(T) * 3));
+            this->unkC = (float*)ptr;
+        } else {
+            ptr = (int)((SpaTrackBase*)this + 1) + (this->unk4 * sizeof(T));
+            this->unkC = (float*)ptr;
+        }
     }
 
 private:
@@ -55,9 +62,16 @@ class SpaTransform {
 public:
     bool IsEverIdentical();
 
-private:
+    template <typename T>
+    SpaTrack<T>* GetTrack() {
+        return reinterpret_cast<SpaTrack<T>*>(&unk10);
+    }
+
+public:
     u_char unk0;
-    PR_PADDING(unk1, 0x13);
+    PR_PADDING(unk1, 0xF);
+    u_char unk10;
+    PR_PADDING(unk11, 0x3);
     int unk14;
     PR_PADDING(unk18, 0x8);
     NaMATRIX<float, 4, 4> unk20;
@@ -76,6 +90,12 @@ public:
     SpaTrack<int> *unk4;
     u_int unk8;
     SpaTransform **unkC;
+    int *unk10;
+    u_int unk14;
+    SpaTransform **unk18;
+    PR_PADDING(unk1C, 0x10);
+    u_int unk2C;
+    SpaTrack<float> *unk30[1];
 };
 
 #endif /* PRLIB_SPADATA_H */
