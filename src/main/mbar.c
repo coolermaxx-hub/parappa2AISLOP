@@ -17,20 +17,20 @@
 /* data 186a68 */ extern u_int tmpColor[]; /* static */
 /* data 186aa8 */ extern NIKO_CHAN_STR niko_chan_str_hook[]; /* static */
 /* data 186af8 */ extern NIKO_CHAN_STR niko_chan_str_vs[]; /* static */
-/* sdata 399558 */ extern NIKO_CHAN_STR *niko_chan_str_pp; /* static */
-/* sdata 39955c */ extern int niko_chan_str_cnt; /* static */
-/* sdata 399560 */ extern int hook_use_flag; /* static */
+/* sdata 399558 */ static NIKO_CHAN_STR *niko_chan_str_pp = NULL;
+/* sdata 39955c */ static int niko_chan_str_cnt = 0;
+/* sdata 399560 */ static int hook_use_flag = 0;
 /* data 186b28 */ extern MBHOOK_STR mbhook_str[2]; /* static */
 /* data 186b38 */ extern u_int hook_fr_dat[]; /* static */
-/* sdata 399564 */ extern int exam_disp_cursor_timer; /* static */
-/* sdata 399568 */ extern int scoreTentouFlag; /* static */
+/* sdata 399564 */ static int exam_disp_cursor_timer = -1;
+/* sdata 399568 */ static int scoreTentouFlag = 0;
 /* data 186b78 */ extern u_char scr_tenmetu_col[4][3]; /* static */
-/* sdata 39956c */ extern int otehonAniCnt; /* static */
-/* sdata 399570 */ extern int othon_frame; /* static */
-/* sdata 399574 */ extern int vs_mouse_disp_flag; /* static */
+/* sdata 39956c */ int otehonAniCnt = 0; /* static */
+/* sdata 399570 */ int othon_frame = 0; /* static */
+/* sdata 399574 */ static int vs_mouse_disp_flag = 0;
 /* data 186b88 */ extern METCOL_STR metcol_str[3]; /* static */
 /* data 186bb0 */ extern MBA_CHAR_DATA mba_char_data[]; /* static */
-/* sdata 399578 */ extern int mbar_pos_y_ofs; /* static */
+/* sdata 399578 */ static int mbar_pos_y_ofs = 0;
 /* data 186d78 */ extern u_char colp[][3]; /* static */
 /* data 17c2b8 */ extern GAME_STATUS game_status; /* static */
 /* data 186d90 */ extern void (*marSetPrgTbl[])(MBAR_REQ_STR*); /* static */
@@ -44,15 +44,13 @@ static GLOBAL_PLY *exam_global_ply_current;
 /* bss 1c70040 */ extern int exam_global_ply_current_ply[4]; /* static */
 /* bss 1c70050 */ extern int metFrameCnt[3]; /* static */
 /* bss 1c70060 */ extern int metFrameCntLight[3]; /* static */
-#if 0
 /* sdata 399584 */ enum SCR_TENMETU_ENUM {
     SCR_TENMETU_NORMAL = 0,
     SCR_TENMETU_PL = 1,
     SCR_TENMETU_MI = 2,
     SCR_TENMETU_BLACK = 3,
     SCR_TENMETU_MAX = 4
-};
-#endif
+} SCR_TENMETU_ENUM = SCR_TENMETU_NORMAL;
 /* bss 1c70070 */ extern u_char scr_tenmetu_col_dat[4][3]; /* static */
 /* bss 1c70080 */ extern int conditionFramCnt[4]; /* static */
 /* bss 1c70090 */ extern int vsScoreMove[4]; /* static */
@@ -1622,9 +1620,6 @@ void MbarDispSceneVsDrawInit(void) {
     vs_mouse_disp_flag = 0;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/main/mbar", guidisp_init_pr);
-#else
 /* Needs .sdata match */
 static void guidisp_init_pr(void) {
     GUIMAP *guim_pp;
@@ -1656,7 +1651,6 @@ static void guidisp_init_pr(void) {
 
     PrPreprocessSceneModel(guime_hdl);
 }
-#endif
 
 static void guidisp_draw_quit(int drapP) {
     GUIMAP *guim_pp;

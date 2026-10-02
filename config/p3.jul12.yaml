@@ -355,7 +355,7 @@ segments:
         - [0x299504, .sdata, main/sprite]
         - [0x299508, .sdata, main/subt]
         - [0x299518, sdata, main/drawctrl]
-        - [0x299558, sdata, main/mbar]
+        - [0x299558, .sdata, main/mbar]
         - [0x299588, .sdata, main/etc]
         - [0x299598, .sdata, main/wipe]
         - [0x2995D0, .sdata, main/main]
