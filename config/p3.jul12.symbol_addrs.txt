@@ -1868,6 +1868,7 @@ GetScreenPosition__13PrModelObjectPt8NaVECTOR2Zfi4                              
 
 prSpramData_tmp_model                                                               = 0x003998bc; // size:0x4
 workAreaTopAddress                                                                  = 0x003998c0; // size:0x4
+workAreaSize                                                                        = 0x00399b8c; // size:0x4
 
 // prlib/database.cpp
 __16PrObjectDatabase                                                                = 0x00140e60; // type:func

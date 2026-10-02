@@ -7,7 +7,9 @@
 
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", __13PrSceneObjectP13sceGsDrawEnv1PCcUi);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/scene", _$_13PrSceneObject);
+PrSceneObject::~PrSceneObject() {
+    /* Empty */
+}
 
 void PrSceneObject::SelectCamera(SpcFileHeader *camera) {
     m_camera = camera;
@@ -171,6 +173,3 @@ void PrSceneObject::PreprocessModel() {
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B988);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B9B0);
-
-/* prlib/objectset.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/scene", _$_t11PrObjectSet1Z13PrModelObject);

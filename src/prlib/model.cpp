@@ -2,9 +2,37 @@
 
 #include <nalib/navector.h>
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", PrSetPostureWorkArea);
+extern u_char *workAreaTopAddress;
+extern u_int workAreaSize;
 
-INCLUDE_ASM("asm/nonmatchings/prlib/model", AllocateFromWorkArea__FUi);
+PR_EXTERN
+void PrSetPostureWorkArea(void *addr, u_int size) {
+    u_char *p = (u_char*)addr;
+
+    while ((u_int)p & 0xF) {
+        p++;
+        size--;
+    }
+
+    workAreaTopAddress = p;
+    workAreaSize = size;
+}
+
+/* static */ void* AllocateFromWorkArea(u_int size) {
+    if (workAreaTopAddress == NULL) {
+        return NULL;
+    }
+
+    size = (size + 15) / 16 * 16;
+    if (workAreaSize < size) {
+        return NULL;
+    }
+
+    void *ret = workAreaTopAddress;
+    workAreaSize -= size;
+    workAreaTopAddress += size;
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/prlib/model", __13PrModelObjectP13SpmFileHeader);
 
