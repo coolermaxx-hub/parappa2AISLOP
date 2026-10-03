@@ -325,7 +325,6 @@ segments:
       - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
       - { path: src/prlib/renderstuff.cpp.o }
-      - { kind: pad, pad_amount: 0x28, section: .data }  # alignment gap before render.data
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: src/prlib/render.cpp.o }
@@ -761,6 +760,9 @@ segments:
       - { path: src/main/fadectrl.c.o }
       - { path: src/main/subt.c.o }
       - { path: src/main/drawctrl.c.o }
+      # The original drawctrl .sdata ends with 8 unreferenced zero bytes (0x399550).
+      # No source construct producing them has been identified; see docs/remaining-work.md.
+      - { kind: pad, pad_amount: 0x8, section: .sdata }
       - { path: src/main/effect.c.o }
       - { path: src/main/mbar.c.o }
       - { path: src/main/pack.c.o }

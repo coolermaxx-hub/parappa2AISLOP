@@ -7,6 +7,3 @@ _gp = gcc_except_table_VRAM_END + 0x7ff0;
 
 _end = 0x01dde800; /* todo */
 end = _end;
-
-/* The retained CRT constructor table uses the original TU initializer name. */
-_GLOBAL_$I$Initialize__12PrSPRAM_DATAP13PrSceneObject = _GLOBAL_$I$screenClipMatrix;

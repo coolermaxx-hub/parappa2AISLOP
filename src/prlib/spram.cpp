@@ -12,8 +12,8 @@
 
 #include <eestruct.h>
 
-NaMATRIX<float, 4, 4> screenClipMatrix;
-NaMATRIX<float, 4, 4> screenPrimitiveMatrix;
+static NaMATRIX<float, 4, 4> screenClipMatrix;
+static NaMATRIX<float, 4, 4> screenPrimitiveMatrix;
 
 extern "C" float tanf(float);
 
