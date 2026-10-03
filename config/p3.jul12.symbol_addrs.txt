@@ -565,8 +565,6 @@ SubtMsgDataPos                      = 0x00110328; // type:func
 SubtTapPrintWake                    = 0x00110410; // type:func
 SubtCtrlPrintBoxyWipe               = 0x001104f0; // type:func
 
-mcode_ascii                         = 0x00184ba0; // size:0x8C0 can_reference:false
-SubtGsTex0                          = 0x00185460; // size:0x18
 SUBT_POSX                           = 0x00399508; // size:0x4
 SUBT_POSY                           = 0x0039950c; // size:0x4
 subtSetNum                          = 0x00399510; // size:0x4
