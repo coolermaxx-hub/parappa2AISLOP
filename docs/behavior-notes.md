@@ -190,6 +190,36 @@ Provenance: direct reading of `src/main/mcctrl.c`, `include/main/mcctrl.h`, `src
 
 **Memory card I/O (`memc.c`, `p3mc.c`).** Plain `sceMcOpen/Read/Write` sequences driven by a small state machine (`pmw->...`), one call per frame, polled with `sceMcSync`. It also writes the icon and `sceMcIconSys` header. Names are converted to Shift-JIS by `setAscii2SjisCode` (`mcctrl.c`), which maps ASCII to full-width codes through `ascii2sjiscng_tbl`. A port should replace the transport (files in a save directory) but keep the `MC_REP_STR` layout, so original saves stay readable.
 
+## Random number generators (2026-10-03)
+
+Provenance: direct reading of `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp`, and a grep of every caller (matching C, unchanged).
+
+There are two unrelated generators.
+
+**1. libc `rand()` drives gameplay and menus.** `srand` is never called anywhere in the game, so the stream starts from the C library's default seed. Two things advance it:
+- `osFunc()` (`system.c:228`) calls `rand()` once at the top of every frame and throws the result away. The state therefore depends on how many frames have elapsed since boot, which makes gameplay randomness effectively a function of boot-to-moment frame count.
+- Every use below advances it too, in whatever order the game happens to run.
+
+`randMakeMax(max)` (`syssub.c:573`) is `((rand() & 0x7fff) * max) >> 15`. It is the gameplay entry point. Callers:
+
+| Caller | Decides |
+| --- | --- |
+| `commake.c` (`comMakeSubYure`, key swaps, `comMakeingTbl_tmp[randMakeMax(...)]`) | how the teacher's command pattern is varied |
+| `scrctrl.c:1149` `getLvlTblRand` | difficulty level move, picked from a percent table |
+| `scrctrl.c:4757, 4772` (`rand() % 130`, `% 2`) | bonus-game kotama timing |
+| `etc.c:157, 669` | demo stage choice, hook line choice |
+| `main.c:1304` | attract-mode pick |
+| `menu/menusub.c`, `menu/p3mc.c` | menu animation jitter and the save-file date pad |
+
+The `%` forms in `menusub.c` and `scrctrl.c` use the low bits of `rand()` directly, so they differ in distribution from `randMakeMax`. A port that swaps the generator for a different one changes these distributions: keep the exact libc algorithm if bit-exact replays of original behaviour are wanted.
+
+**2. `PrRandom()` (prlib, `random.cpp`) is cosmetic.** It is a 97-entry lagged pool seeded from a linear generator (`seed = seed*0x5d588b65 + 1`, initial seed 1, two warm-up draws in `PrInitializeRandomPool`). `PrFloatRandom` returns `PrRandom()/RAND_MAX` and re-draws if it reaches 1.0. Callers are all renderer effects: the noodle/menderer parameters (`mendererdata.cpp`, `mendereralpha.cpp`), the awful-mode change timer (`mendererawful.cpp:41`) and the SPRAM disturbance parameter (`spram.cpp:157`). None of them touches score, judgement or the pattern shown to the player.
+
+**Netplay consequences.**
+- The gameplay stream must be seeded explicitly and advanced identically on all peers. The original's "one `rand()` per frame, never seeded" makes every session differ unless boot timing is identical, so a port needs its own deterministic stream and must pick the seed from the host.
+- Menu and visual randomness can use any local generator; it never feeds back into the rhythm game. `PrRandom` can stay local to each peer.
+- Replays (see the replay log section) record the tap log and difficulty moves (`mccReqLvlSet`) but not the command-pattern randomness, so the command patterns are re-rolled on playback. That only works because the replay is played back against the same per-frame `rand()` history, i.e. it is not guaranteed to reproduce identical teacher patterns. Worth testing against a real recorded replay before relying on it.
+
 ## Boundary inventory (keyword search, not yet analysed)
 
 | Boundary | Files |
