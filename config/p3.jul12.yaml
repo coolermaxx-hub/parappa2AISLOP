@@ -368,26 +368,26 @@ segments:
         - [0x2998A0, .sdata, menu/pksprite]
 
         - [0x2998B8, .sdata, prlib/gifreg]
-        - [0x2998BC, sdata, prlib/model]
+        - [0x2998BC, .sdata, prlib/model]
         - [0x2998C4, .sdata, prlib/database]
         - [0x2998C8, sdata, prlib/renderstuff]
         - [0x2998CC, .sdata, prlib/prlib]
         - [0x2998E0, .sdata, prlib/render]
         - [0x2998EC, sdata, prlib/renderee]
-        - [0x2998F0, sdata, prlib/transition]
+        - [0x2998F0, .sdata, prlib/transition]
         - [0x2998F4, .sdata, prlib/mfifo]
         - [0x2998FC, sdata, prlib/spadata]
         - [0x299918, sdata, prlib/scene]
         - [0x299920, sdata, prlib/cluster]
         - [0x299928, sdata, prlib/shape]
         - [0x299930, .sdata, prlib/billboard]
-        - [0x299938, sdata, prlib/depthfield]
+        - [0x299938, .sdata, prlib/depthfield]
         - [0x29993C, .sdata, prlib/vram]
         - [0x299940, .sdata, prlib/random]
         - [0x299948, sdata, prlib/menderer]
         - [0x2999A0, sdata, prlib/menderercreate]
         - [0x2999AC, sdata, prlib/mendererawful]
-        - [0x2999B0, sdata, prlib/mendereralpha]
+        - [0x2999B0, .sdata, prlib/mendereralpha]
         - [0x2999B4, .sdata, prlib/dmaqueue]
         - [0x2999B8, .sdata, prlib/tim2]
         - [0x2999C0, sdata, prlib/camera]
@@ -419,7 +419,7 @@ segments:
         - { type: sbss,  vram: 0x00399b7c, name: menu/menufont        }
         - { type: .sbss, vram: 0x00399b84, name: menu/pksprite        }
 
-        - { type: sbss,  vram: 0x00399b8c, name: prlib/model          }
+        - { type: .sbss, vram: 0x00399b8c, name: prlib/model          }
         - { type: sbss,  vram: 0x00399b90, name: prlib/prlib          }
         - { type: sbss,  vram: 0x00399b94, name: prlib/render         }
         - { type: .sbss, vram: 0x00399b98, name: prlib/microprogram   }

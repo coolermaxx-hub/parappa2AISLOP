@@ -786,14 +786,14 @@ segments:
       - { path: src/iop_mdl/tapctrl_rpc.c.o }
 
       - { path: src/prlib/gifreg.cpp.o }
-      - { path: asm/data/prlib/model.sdata.s.o }
+      - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
       - { path: asm/data/prlib/renderstuff.sdata.s.o }
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: src/prlib/render.cpp.o }
       - { path: asm/data/prlib/renderee.sdata.s.o }
-      - { path: asm/data/prlib/transition.sdata.s.o }
+      - { path: src/prlib/transition.cpp.o }
       - { path: src/prlib/microprogram.cpp.o }
       - { path: src/prlib/spram.cpp.o }
       - { path: src/prlib/mfifo.cpp.o }
@@ -802,13 +802,13 @@ segments:
       - { path: asm/data/prlib/cluster.sdata.s.o }
       - { path: asm/data/prlib/shape.sdata.s.o }
       - { path: src/prlib/billboard.cpp.o }
-      - { path: asm/data/prlib/depthfield.sdata.s.o }
+      - { path: src/prlib/depthfield.cpp.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
       - { path: asm/data/prlib/menderer.sdata.s.o }
       - { path: asm/data/prlib/menderercreate.sdata.s.o }
       - { path: asm/data/prlib/mendererawful.sdata.s.o }
-      - { path: asm/data/prlib/mendereralpha.sdata.s.o }
+      - { path: src/prlib/mendereralpha.cpp.o }
       - { path: src/prlib/mendererdata.cpp.o }
       - { path: src/prlib/wave.cpp.o }
       - { path: src/prlib/dmaqueue.cpp.o }
@@ -899,7 +899,7 @@ segments:
       - { path: src/iop_mdl/tapctrl_rpc.c.o }
 
       - { path: src/prlib/gifreg.cpp.o }
-      - { path: asm/data/prlib/model.sbss.s.o }
+      - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
       - { path: src/prlib/renderstuff.cpp.o }
       - { path: asm/data/prlib/prlib.sbss.s.o }

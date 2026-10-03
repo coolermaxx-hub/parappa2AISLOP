@@ -19,7 +19,7 @@ extern u_int prMendererDrawFbp;
 extern int prCurrentStage;
 
 extern u_int prMendererWorkFbp;
-extern PrSPRAM_DATA *prSpramData_tmp_mendereralpha;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 /* data */
 extern float alphaModulationPacket[];   /* VIF unpack of the per-strip modulation parameters */
@@ -112,7 +112,7 @@ extern const u_long D_00396990[2];   /* GIFtag, A+D */
 INCLUDE_ASM("asm/nonmatchings/prlib/mendereralpha", PrBlendNoodleImage__Fb);
 #else /* Scheduling; the A+D tail is written through a pointer that is bumped per store */
 void PrBlendNoodleImage(bool clear) {
-    u_long128 *buf = prSpramData_tmp_mendereralpha->GetNextNoodleBuffer();
+    u_long128 *buf = prSpramData->GetNextNoodleBuffer();
 
     u_long *p = (u_long*)buf;
     *(sceDmaTag*)p = D_00396980;

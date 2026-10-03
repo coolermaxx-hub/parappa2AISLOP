@@ -10,10 +10,7 @@
 #include <libgraph.h>
 
 /* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_depthfield;
-
-/* bss */
-extern sceGifTag gifTag_tmp_depthfield;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", ApplyDepthOfField__13PrSceneObject);
@@ -58,10 +55,11 @@ void PrSceneObject::ApplyDepthOfField() {
 
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     NaGifPacket packet;
-    packet.Init((u_long128*)((char*)prSpramData_tmp_depthfield + 0x690));
+    /* The packet goes in scratchpad right after PrSPRAM_DATA */
+    packet.Init((u_long128*)(prSpramData + 1));
     packet.End(0, 0, 0);
 
-    sceGifTag& tag = gifTag_tmp_depthfield;
+    static sceGifTag tag;
     tag.NLOOP = 0;
     tag.EOP = 1;
     tag.PRE = 0;
@@ -81,7 +79,7 @@ void PrSceneObject::ApplyDepthOfField() {
         PrAddSpriteDefinitionSuperSampled(&packet, work, src);
 
         float depth = focal + (defocus - focal) * i * 0.25f;
-        const NaMATRIX<float, 4, 4>& m = prSpramData_tmp_depthfield->unk1A0;
+        const NaMATRIX<float, 4, 4>& m = prSpramData->unk1A0;
         PrSetSpriteDefinitionZ((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3]));
 
         packet.AddGifPackedAD_TEXFLUSH();

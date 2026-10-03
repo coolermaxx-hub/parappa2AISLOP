@@ -4,3 +4,6 @@
  * at the C definitions' addresses.
  */
 prSpramData_tmp_render = 0x003998e0; /* render.cpp: static PrSPRAM_DATA *prSpramData */
+prSpramData_tmp_transition = 0x003998f0; /* transition.cpp: static PrSPRAM_DATA *prSpramData */
+prSpramData_tmp_depthfield = 0x00399938; /* depthfield.cpp: static PrSPRAM_DATA *prSpramData */
+prSpramData_tmp_mendereralpha = 0x003999b0; /* mendereralpha.cpp: static PrSPRAM_DATA *prSpramData */

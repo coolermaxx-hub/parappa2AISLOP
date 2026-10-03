@@ -6,10 +6,11 @@
 
 #include <nalib/navector.h>
 
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_model;
-extern u_char *workAreaTopAddress;
-extern u_int workAreaSize;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+
+/* The posture work area the game hands over with PrSetPostureWorkArea */
+static u_char *workAreaTopAddress = NULL;
+static u_int workAreaSize;
 
 PR_EXTERN
 void PrSetPostureWorkArea(void *addr, u_int size) {
@@ -203,7 +204,7 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
         NaMATRIX<float, 4, 4>::Apply(*position, unk10, *position);
     }
 
-    NaMATRIX<float, 4, 4>::Apply(*position, prSpramData_tmp_model->m_view_projection_matrix, *position);
+    NaMATRIX<float, 4, 4>::Apply(*position, prSpramData->m_view_projection_matrix, *position);
 }
 
 void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
