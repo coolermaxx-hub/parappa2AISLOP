@@ -415,8 +415,8 @@ segments:
         - { type: .sbss, vram: 0x00399abc, name: menu/menu            }
         - { type: .sbss, vram: 0x00399ac4, name: menu/menu_mdl        }
         - { type: .sbss,  vram: 0x00399ac8, name: menu/menusub         }
-        - { type: sbss,  vram: 0x00399b60, name: menu/p3mc            }
-        - { type: sbss,  vram: 0x00399b7c, name: menu/menufont        }
+        - { type: .sbss,  vram: 0x00399b60, name: menu/p3mc            }
+        - { type: .sbss,  vram: 0x00399b7c, name: menu/menufont        }
         - { type: .sbss, vram: 0x00399b84, name: menu/pksprite        }
 
         - { type: sbss,  vram: 0x00399b8c, name: prlib/model          }
@@ -447,9 +447,9 @@ segments:
         - { type: .bss,  vram: 0x01c65b80, name: main/sprite          }
         - { type: .bss,  vram: 0x01c6db90, name: main/fadectrl        }
         - { type: .bss,  vram: 0x01c6dba0, name: main/subt            }
-        - { type: bss,   vram: 0x01c6e030, name: main/drawctrl        }
+        - { type: .bss,   vram: 0x01c6e030, name: main/drawctrl        }
         - { type: .bss,  vram: 0x01c6fef0, name: main/effect          }
-        - { type: bss,   vram: 0x01c6ffc0, name: main/mbar            }
+        - { type: .bss,   vram: 0x01c6ffc0, name: main/mbar            }
         - { type: .bss,  vram: 0x01c72000, name: main/pack            }
         - { type: .bss,  vram: 0x01c73018, name: main/etc             }
         - { type: .bss,  vram: 0x01c730e8, name: main/mcctrl          }
@@ -459,8 +459,8 @@ segments:
 
         - { type: bss,   vram: 0x01c778c8, name: menu/menu            }
         - { type: .bss,   vram: 0x01c77a50, name: menu/menusub         }
-        - { type: bss,   vram: 0x01c81100, name: menu/p3mc            }
-        - { type: bss,   vram: 0x01c81540, name: menu/memc            }
+        - { type: .bss,   vram: 0x01c81100, name: menu/p3mc            }
+        - { type: .bss,   vram: 0x01c81540, name: menu/memc            }
         - { type: .bss,  vram: 0x01c81880, name: menu/menufont        }
 
         - { type: .bss,  vram: 0x01c828c0, name: iop_mdl/wp2cd_rpc    }

@@ -368,8 +368,8 @@ static char Tbl_ASC2EUC[193] = {
 };
 /* sdata 399890 */ extern int _PadFont_SW; /* static */
 /* sdata 399894 */ extern int _PadArrowState; /* static */
-/* sbss 399b7c */ extern int _AnimeFontFlg; /* static */
-/* sbss 399b80 */ extern MCODE_STR *kanji_pp_TmpMenuFont; /* static */
+static int _AnimeFontFlg;
+static MCODE_STR *kanji_pp_TmpMenuFont;
 
 static MCODE_CHAR mcode_dat_pp[512];
 static MNFONT_INFO MnSubtFontInfo[3];

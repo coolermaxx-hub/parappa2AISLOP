@@ -33,7 +33,7 @@ static sceMcIconSys memc_iconsys = {
 };
 /* MEMC_INFO.flag bit for each card type value stored in pmw->type. */
 static u_int _memc_type[] = { 0x000, 0x100, 0x200, 0x400 };
-/* bss 1c81540 */ extern MEMC_STAT memc_stat; /* static */
+static MEMC_STAT memc_stat;
 
 static int memc_SaveFileClust(void);
 static void memc_clearMEMCINFO(MEMC_INFO *info);
@@ -124,7 +124,7 @@ void memc_setSaveIcon(int no, void *pIconData, int nIconSize) {
 
 char* memc_getfilename(int no) {
     char       *fbody;
-    extern char tmps0[64];
+    static char tmps0[64];
 
     switch (no) {
     case MEMC_FILE_ICON:
@@ -162,7 +162,7 @@ char* memc_getfilename(int no) {
 }
 
 char* memc_getfilepath(int no) {
-    extern char tmps1[130];
+    static char tmps1[130];
     char       *fbody;
 
     fbody = memc_getfilename(no);

@@ -23,11 +23,18 @@
 /* sdata 399574 */ static int vs_mouse_disp_flag = 0;
 /* sdata 399578 */ static int mbar_pos_y_ofs = 0;
 /* data 17c2b8 */ extern GAME_STATUS game_status; /* static */
-/* bss 1c70030 */ extern GLOBAL_PLY *exam_global_ply[4]; /* static */
+static GLOBAL_PLY *exam_global_ply[4];
+static int exam_global_ply_current_ply[4];
+static int metFrameCnt[3];
+static int metFrameCntLight[3];
+static u_char scr_tenmetu_col_dat[4][3];
+static int conditionFramCnt[4];
+static int vsScoreMove[4];
+static int vsScoreAni[4];
+static VS_SCR_CTRL vs_scr_ctrl[4];
+static MBAR_REQ_STR mbar_req_str[5];
+static sceGifPacket mbar_gif;
 static GLOBAL_PLY *exam_global_ply_current;
-/* bss 1c70040 */ extern int exam_global_ply_current_ply[4]; /* static */
-/* bss 1c70050 */ extern int metFrameCnt[3]; /* static */
-/* bss 1c70060 */ extern int metFrameCntLight[3]; /* static */
 /* sdata 399584 */ enum SCR_TENMETU_ENUM {
     SCR_TENMETU_NORMAL = 0,
     SCR_TENMETU_PL = 1,
@@ -35,16 +42,9 @@ static GLOBAL_PLY *exam_global_ply_current;
     SCR_TENMETU_BLACK = 3,
     SCR_TENMETU_MAX = 4
 } SCR_TENMETU_ENUM = SCR_TENMETU_NORMAL;
-/* bss 1c70070 */ extern u_char scr_tenmetu_col_dat[4][3]; /* static */
-/* bss 1c70080 */ extern int conditionFramCnt[4]; /* static */
-/* bss 1c70090 */ extern int vsScoreMove[4]; /* static */
-/* bss 1c700a0 */ extern int vsScoreAni[4]; /* static */
-/* bss 1c700b0 */ extern VS_SCR_CTRL vs_scr_ctrl[4]; /* static */
-/* bss 1c70110 */ extern MBAR_REQ_STR mbar_req_str[5]; /* static */
 static int mbar_ctrl_time;
 static int mbar_ctrl_stage;
 static int mbar_ctrl_stage_selT;
-/* bss 1c701c8 */ extern sceGifPacket mbar_gif; /* static */
 static PR_SCENEHANDLE guime_hdl;
 static PR_CAMERAHANDLE guime_camera_hdl;
 
@@ -290,7 +290,7 @@ void examCharSet(EX_CHAR_DISP *ecd_pp, sceGifPacket *gifpk_pp) {
 }
 
 static void clrColorBuffer(int id) {
-    extern sceGsLoadImage tp_tmp_72; /* static */
+    static sceGsLoadImage tp;
     TIM2_DAT *tim2_dat_pp;
     u_char   *tr_adr;
     u_int     cpsm, cbp;
@@ -301,10 +301,10 @@ static void clrColorBuffer(int id) {
     cpsm = PR_TEX0(tim2_dat_pp).CPSM;
     cbp = PR_TEX0(tim2_dat_pp).CBP;
 
-    sceGsSetDefLoadImage(&tp_tmp_72, cbp, 1, cpsm, 0, 0, 8, 2);
+    sceGsSetDefLoadImage(&tp, cbp, 1, cpsm, 0, 0, 8, 2);
     FlushCache(WRITEBACK_DCACHE);
 
-    sceGsExecLoadImage(&tp_tmp_72, (u_long128*)tr_adr);
+    sceGsExecLoadImage(&tp, (u_long128*)tr_adr);
     sceGsSyncPath(0, 0);
 }
 
@@ -1977,10 +1977,10 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
     PrSetMendererRatio(men_tmp);
 
     PR_SCOPE()
-    /* bss 1c70020 */ extern sceGifPacket mbarNiko_gif_tmp_301; /* static */
-    CmnGifADPacketMake(&mbarNiko_gif_tmp_301, NULL);
-    MbarNikoDisp(&mbarNiko_gif_tmp_301);
-    CmnGifADPacketMakeTrans(&mbarNiko_gif_tmp_301);
+    static sceGifPacket mbarNiko_gif;
+    CmnGifADPacketMake(&mbarNiko_gif, NULL);
+    MbarNikoDisp(&mbarNiko_gif);
+    CmnGifADPacketMakeTrans(&mbarNiko_gif);
     PR_SCOPEEND()
 
     return 0;

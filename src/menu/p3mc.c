@@ -17,17 +17,17 @@
 static char *HedderID = "P2_USERDATA_HED";
 static char *FooterID = "P2_USERDATA_FOT";
 GETUSER_WORK *pUChkWork = NULL; /* static */
-/* bss 1c81100 */ extern P3MC_WORK P3MC_Work; /* static */
-/* sbss 399b60 */ extern int FreeSizeFlg; /* static */
-/* sbss 399b64 */ extern int portCheckFlg; /* static */
-/* sbss 399b68 */ extern int NeedSize[2]; /* static */
-/* sbss 399b70 */ extern int UChkSize[2]; /* static */
-/* bss 1c81120 */ extern char filePath[64]; /* static */
-/* bss 1c81160 */ extern MEMC_INFO mcmenu_info; /* static */
-/* bss 1c81180 */ extern sceMcTblGetDir p3mcTblGetDir[8]; /* static */
-/* sbss 399b78 */ extern int isFileFlgCash; /* static */
-/* bss 1c81380 */ extern u_char McLogFileFlg[80]; /* static */
-/* bss 1c813d0 */ extern u_char McReplayFileFlg[80]; /* static */
+static P3MC_WORK P3MC_Work;
+static char filePath[64];
+static MEMC_INFO mcmenu_info;
+static sceMcTblGetDir p3mcTblGetDir[8];
+static u_char McLogFileFlg[80];
+static u_char McReplayFileFlg[80];
+static int FreeSizeFlg;
+static int portCheckFlg;
+static int NeedSize[2];
+static int UChkSize[2];
+static int isFileFlgCash;
 
 static int      P3MC_GetIconSize(int mode);
 static void*    P3MC_GetIconPtr(int mode, int stageNo);

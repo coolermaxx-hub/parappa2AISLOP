@@ -889,10 +889,10 @@ segments:
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
       - { path: src/menu/menusub.c.o }
-      - { path: asm/data/menu/p3mc.sbss.s.o }
+      - { path: src/menu/p3mc.c.o }
       - { path: src/menu/memc.c.o }
       - { path: src/menu/mntm2hed.c.o }
-      - { path: asm/data/menu/menufont.sbss.s.o }
+      - { path: src/menu/menufont.c.o }
       - { path: src/menu/pksprite.c.o }
 
       - { path: src/iop_mdl/wp2cd_rpc.c.o }
@@ -986,9 +986,9 @@ segments:
       - { path: src/main/sprite.c.o }
       - { path: src/main/fadectrl.c.o }
       - { path: src/main/subt.c.o }
-      - { path: asm/data/main/drawctrl.bss.s.o }
+      - { path: src/main/drawctrl.c.o }
       - { path: src/main/effect.c.o }
-      - { path: asm/data/main/mbar.bss.s.o }
+      - { path: src/main/mbar.c.o }
       - { path: src/main/pack.c.o }
       - { path: src/main/etc.c.o }
       - { path: src/main/wipe.c.o }
@@ -1002,8 +1002,8 @@ segments:
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
       - { path: src/menu/menusub.c.o }
-      - { path: asm/data/menu/p3mc.bss.s.o }
-      - { path: asm/data/menu/memc.bss.s.o }
+      - { path: src/menu/p3mc.c.o }
+      - { path: src/menu/memc.c.o }
       - { path: src/menu/mntm2hed.c.o }
       - { path: src/menu/menufont.c.o }
       - { path: src/menu/pksprite.c.o }

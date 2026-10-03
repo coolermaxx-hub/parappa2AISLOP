@@ -372,11 +372,14 @@ static MENTITLE_DAT mentitle_dat_dera[] = {
     { 0xffffffe, 0.0f },
 };
 static int bthrow_ctrl_time = 0;
-/* bss 1c6e030 */ extern DR_TAP_REQ dr_tap_req[16]; /* static */
+static DR_TAP_REQ dr_tap_req[16];
+static int octst_time[8];
+static int octst_timeLoad[8];
+static SCENECTRL scenectrl_outside[8];
+static BTHROW_CTRL bthrow_ctrl[2];
+static void *tmp_buf_adrs[16];
+static SCENECTRL *check_scenectrl[20];
 static int dr_tap_req_num;
-/* bss 1c6e0f0 */ extern int octst_time[8]; /* static */
-/* bss 1c6e110 */ extern int octst_timeLoad[8]; /* static */
-/* bss 1c6e130 */ extern SCENECTRL scenectrl_outside[8]; /* static */
 static int scenectrl_outside_cnt;
 static int scenectrl_outside_read_cnt;
 // /* sdata 399550 */ enum ANI_BLUMOVE_ENUM {
@@ -386,9 +389,7 @@ static int scenectrl_outside_read_cnt;
 //  BLMV_BLUR2 = 3,
 //  BLMV_MAX = 4
 // };
-/* bss 1c6e230 */ extern BTHROW_CTRL bthrow_ctrl[2]; /* static */
 static MOZAIKU_POLL_STR *mozaiku_poll_str_current_pp;
-/* bss 1c6fe58 */ extern void *tmp_buf_adrs[16]; /* static */
 static int drawCurrentLine;
 static int drawCurrentTime;
 static int drawCurrentTimeOld;
@@ -397,7 +398,6 @@ static u_int useDispFlag;
 static u_int drDispFlag;
 static float men_ctrl_ratio;
 static MEN_CTRL_ENUM men_ctrl_enum;
-/* bss 1c6fe98 */ extern SCENECTRL *check_scenectrl[20]; /* static */
 static u_char ddbg_pause_f;
 
 static void  UseGsRegSet(void);
