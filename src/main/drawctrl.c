@@ -2207,7 +2207,7 @@ int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGsFrame          *use_pp;
     sceGsFrame          *draw_pp;
     sceGifPacket         gifpk;
-    volatile sceGsFrame  sceGsFrameTmp; /* todo: find a way to match without marking as volatile */
+    sceGsFrame           maskedFrame;
 
     if (first_f == DRPRGF_INIT) {
         return 0;
@@ -2221,7 +2221,9 @@ int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
-    *(u_long*)&sceGsFrameTmp = *(u_int*)draw_pp | ((u_long)0x1f1f1f1f << 32);
+    /* The original builds a masked copy of the draw frame that is never submitted. */
+    maskedFrame = *draw_pp;
+    maskedFrame.FBMSK = 0x1f1f1f1f;
 
     UG_MozaikuDisp(para_pp, use_pp, &gifpk);
     CmnGifADPacketMakeTrans(&gifpk);
