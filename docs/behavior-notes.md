@@ -111,7 +111,8 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   and `off` the buttons newly released (`padMakeData`).
 - `ana[]` holds the analog sticks (0x80 = centre when absent) and `press[]` the
   DualShock 2 pressure bytes; on a DualShock 1 or a digital pad pressure is
-  zeroed. `padPrsTreate` forces pressure to 1 for a held button whose byte is 0.
+  zeroed. `padPrsTreate` bumps a held button's pressure from 0 to 1 and zeroes the
+  pressure of any button that is not held.
 - `mshot`/`mone` are `shot`/`one` with the left stick mixed in as a D-pad
   (below 0x40 or above 0xBF counts as pressed). **Only the menu code reads
   these** (`src/menu/menusub.c:847`); the rhythm code (`tapEventCheck`) uses the
