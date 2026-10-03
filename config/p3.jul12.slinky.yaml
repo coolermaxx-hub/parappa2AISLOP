@@ -1092,7 +1092,7 @@ segments:
     subalign: 0x10000
     segment_end_align: 0x10000
     files:
-      - { path: asm/data/prlib/mfifo.mfifo.s.o }
+      - { path: src/prlib/mfifo.cpp.o }
 
 entry: _start
 

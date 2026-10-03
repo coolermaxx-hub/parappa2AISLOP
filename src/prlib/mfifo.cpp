@@ -7,7 +7,8 @@
 #include <libdma.h>
 
 #define PR_MFIFOSIZE (0x10000)
-extern char mfifoBase[PR_MFIFOSIZE] __attribute__((section(".mfifo")));
+// Ring buffer for the GIF MFIFO; lives in its own section at the end of the image.
+char mfifoBase[PR_MFIFOSIZE] __attribute__((section(".mfifo")));
 
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 static bool mfifoProcessing = false;

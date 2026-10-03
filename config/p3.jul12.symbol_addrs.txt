@@ -1837,7 +1837,6 @@ PrMfifoUnsentDataSize__Fv                                                       
 prSpramData                                                                         = 0x003998f4; // allow_duplicated:true
 mfifoProcessing                                                                     = 0x003998f8;
 
-mfifoBase                                                                           = 0x01c90000; // size:0x10000
 
 // prlib/spadata.cpp
 SearchSegment__C12SpaTrackBasef                                                     = 0x00148590; // type:func
