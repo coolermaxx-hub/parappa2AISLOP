@@ -12,7 +12,7 @@ This is for whoever (person or bot) continues this work. Last updated 2026-10-03
 - Snake wants continuous work: after a milestone, post a short result and move on to the next item without waiting.
 
 ## State
-- Progress: 1339/1429 functions (93.7%), 80.3% of code, per the README at commit d9d4a1d. Seven more template copies moved to C after that (11227df), and progress has not been regenerated since.
+- Progress: 1344/1429 functions (94.1%), 80.3% of code (README).
 - What is left, and what blocks each item, is in **`docs/remaining-work.md`**:
   - 5 intentional VU routines (done by rule).
   - 49 NON_MATCHING C bodies, which compile but don't match yet.
@@ -33,6 +33,7 @@ git checkout config/p3.jul12.undefined_funcs_auto.txt config/p3.jul12.undefined_
 
 - Copy `build/` to `expected2/build/` once, while the build matches. `tools/dev/fdc.sh` diffs a function's object code against that copy.
 - Re-run `configure.py` after any `symbol_addrs` edit or any `INCLUDE_ASM` removal, because it regenerates `asm/`.
+- **ninja does not track header dependencies.** After editing a header, `rm -rf build` before checking the ROM, or a stale object can report OK. A header change in 11227df broke navector.cpp this way and was only caught by a clean build.
 
 ## Helper scripts (`tools/dev/`)
 | Script | Use |
@@ -60,14 +61,14 @@ python configure.py && ninja   # back to the normal build
 - **Weak template copies**:
   - gcc emits them at the end of a TU, in the order the templates were first *used*. An unused `static inline` that calls a template still emits the copy.
   - The linker binds every call to the first copy in link order. So a C-emitted copy must not come before the currently named first copy.
-  - See `scene.cpp`, `mendererdata.cpp`, `mendererawful.cpp` and `billboard.cpp` for the pattern.
+  - See `mendererdata.cpp`, `mendererawful.cpp` and `billboard.cpp` for the pattern.
 - **One-pass `do { } while (0)` loops** change gcc 2.95's reorg delay-slot prediction, its CSE path following and its label alignment. They are what matched `RotateMatrix(int)`; see the comment in `src/nalib/namatrix.h`.
 - **Conditional moves (`movz`/`movn`)** come from jump.c turning `x = a; if (cond) x = b;` into a cmov. The comparison operands are copied first, which explains a stray `daddu vN, sX, zero` before an `sltu`.
 - **Variable reuse:** an extra `mov.s` or copy in the target often means the original reused one variable for two things (this matched `GetSynchronizeRatio`).
 - **GCC 2.95.3 sources** (`reorg.c`, `cse.c`, `loop.c`, `final.c`, `jump.c`) can be fetched from `raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-2.95.3/gcc/`. Reading the relevant pass beats guessing.
 
 ## Suggested next steps
-1. **Regenerate progress** and push, since the last 7 template copies aren't counted yet.
+1. Find out why render.cpp and scene.cpp emit an out-of-line NaVECTOR constructor (see remaining-work.md).
 2. **`ScaleMatrix(const float&, const float&, const float&)`** is 44 lines off; the loop counter is in v0/v1 swapped and the temps are scheduled differently.
    - `TranslateMatrix` with the same signature already matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`.
    - Fixing ScaleMatrix unlocks menderer's 5 copies and most of spram's.

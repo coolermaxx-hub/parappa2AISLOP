@@ -14,7 +14,12 @@ public:
         v[1] = y;
         v[2] = z;
     }
-    NaVECTOR(const T& x, const T& y, const T& z, const T& w);
+    NaVECTOR(const T& x, const T& y, const T& z, const T& w) {
+        v[0] = x;
+        v[1] = y;
+        v[2] = z;
+        v[3] = w;
+    }
     NaVECTOR(const NaVECTOR<float, 4>& rhs) {
         Copy(*this, rhs);
     }
@@ -114,15 +119,6 @@ public:
     static NaVECTOR<T, t0> ZERO;
     static NaVECTOR<T, t0> ZEROH;
 };
-
-/* Out of line: the original emitted weak copies of this constructor */
-template <typename T, int t0>
-NaVECTOR<T, t0>::NaVECTOR(const T& x, const T& y, const T& z, const T& w) {
-    v[0] = x;
-    v[1] = y;
-    v[2] = z;
-    v[3] = w;
-}
 
 template <typename T, int t0>
 NaVECTOR<T, t0>& NaVECTOR<T, t0>::Set(const T& x, const T& y, const T& z, const T& w) {
