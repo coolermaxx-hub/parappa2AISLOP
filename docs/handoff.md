@@ -17,10 +17,10 @@ This is for whoever (person or bot) continues this work. Last updated 2026-10-03
   - Check every diff for these before committing.
 
 ## State
-- Progress: 1328/1429 functions (92.9%), 79.2% of code (README). It was 1346 before the readability pass moved hack-dependent matches back to asm.
+- Progress: 1327/1429 functions (92.9%), 79.1% of code (README). It was 1346 before the readability pass moved hack-dependent matches back to asm.
 - What is left, and what blocks each item, is in **`docs/remaining-work.md`**:
   - 5 intentional VU routines (done by rule).
-  - 46 NON_MATCHING C bodies, which compile but don't match yet.
+  - 47 NON_MATCHING C bodies, which compile but don't match yet.
   - 50 weak template copies that are still asm; each template has a real generic definition in its header.
 - Every function in a C/C++ file already has a C body. What remains is matching.
 
@@ -69,7 +69,8 @@ python configure.py && ninja   # back to the normal build
   - gcc emits implicit template instances at the end of a TU, in the order the templates were first *used*; `INCLUDE_ASM` lands in place. So C copies can't follow an asm copy in a TU's tail.
   - The linker binds every call to the first copy in link order.
   - **`extern template` works in ee-gcc 2.95.** `extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int, const float&);` stops the instantiation, so calls go to the mangled name the asm copy defines. Use it under `#ifndef NON_MATCHING` and guard the asm tail the same way (see `billboard.cpp`, `spadata.cpp`).
-  - A file-local static that asm still references (e.g. `prSpramData` in render.cpp) is given its address in `config/p3.jul12.undefined_syms.txt` under the asm's name.
+  - A file-local static that asm still references (e.g. `prSpramData` in render.cpp) is given its address in `config/p3.jul12.undefined_syms.txt` under the asm's name. To move a file's `.sdata`/`.sbss` to C, change its type in `config/p3.jul12.yaml` (`sdata` → `.sdata`) **and** point `config/p3.jul12.slinky.yaml` at the C object; slinky writes the linker script.
+  - Demoting a matching function to `INCLUDE_ASM` fails to link if its C string literals are shared with the asm; pick another fix.
 - **`objdump` prints `...` for runs of zero words**, which hides alignment differences. Compare raw `.text` bytes when only the size differs (that is how the 8-byte padding in `RotateMatrix(int)` was found).
 - **Unions change scheduling.** Accessing a field through a union made gcc treat the store as aliasing and reorder `_P3MC_AddUserBroken`; a plain nested struct didn't. An inline accessor also compiled differently from the same expression written out, so `P3MC_DATE_WORD` is a macro.
 - **Conditional moves (`movz`/`movn`)** come from jump.c turning `x = a; if (cond) x = b;` into a cmov. The comparison operands are copied first, which explains a stray `daddu vN, sX, zero` before an `sltu`.
@@ -77,7 +78,7 @@ python configure.py && ninja   # back to the normal build
 - **GCC 2.95.3 sources** (`reorg.c`, `cse.c`, `loop.c`, `final.c`, `jump.c`) can be fetched from `raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-2.95.3/gcc/`. Reading the relevant pass beats guessing.
 
 ## Suggested next steps
-0. Keep auditing for the banned patterns: `prSpramData_tmp_menderer` / `_mendereralpha` externs (asm-data aliases), the `template <> inline` constructor in `navector.cpp`, and the many `unkXX` struct fields that can be named from how they are used.
+0. Keep naming `unkXX` fields from how they are used (camera.h, spadata.h, renderstuff.h, PrVuNodeHeaderDmaPacket). The SpmNode family is now a real class hierarchy (`SpmClusterGeometryNode`, `SpmShapeNode`, `SpmComplexNode`, picked by the `SPM_NODE_*` flags); follow that pattern instead of padded copies of a layout. See "Known leftovers" in remaining-work.md.
 1. Match `ComposeGlobalMatrixWithoutVisibility` (6 lines: `m_flags` is reloaded before `prSpramData` after `BlendTransitionMatrix`). Then render.cpp's tail of weak copies can come from C; see remaining-work.md.
 2. **`ScaleMatrix(const float&, const float&, const float&)`** is 38 lines off at best (see remaining-work.md for the by-value finding).
    - `TranslateMatrix` with the same signature already matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`.

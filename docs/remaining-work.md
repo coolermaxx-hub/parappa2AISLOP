@@ -5,7 +5,7 @@ Snake's definition of 100% (see [porting-rules.md](porting-rules.md)) counts mat
 | Bucket | Functions | Meaning |
 | --- | --- | --- |
 | Intentional VU / hand asm | 5 | Treated as done. Not converted to C. |
-| NON_MATCHING C bodies | 46 | Reconstructed in clean C/C++, bytes still differ. Asm is used in the matching build. |
+| NON_MATCHING C bodies | 47 | Reconstructed in clean C/C++, bytes still differ. Asm is used in the matching build. |
 | Weak template copies still asm | 50 | The template has a real generic definition in a header; this TU's copy of it is still asm. |
 
 ## Intentional VU / hand asm (done by rule)
@@ -92,11 +92,11 @@ The `func_XXXXXXXX` names are copies whose first instance lives in another TU (t
 - `prlib/render.cpp`: 3
 - `main/drawctrl.c`: 2
 - `menu/p3mc.c`: 2
+- `prlib/contour.cpp`: 2
 - `prlib/mendererdata.cpp`: 2
 - `prlib/scene.cpp`: 2
 - `prlib/camera.cpp`: 1
 - `prlib/cluster.cpp`: 1
-- `prlib/contour.cpp`: 1
 - `prlib/depthfield.cpp`: 1
 - `prlib/shape.cpp`: 1
 - `prlib/spram.cpp`: 1
@@ -105,5 +105,11 @@ The `func_XXXXXXXX` names are copies whose first instance lives in another TU (t
 ### Moved to NON_MATCHING by the readability pass
 These matched before but only through hacks that the new rules ban:
 - `menu/p3mc.c` `_P3MC_mainfile_chk`: the match needed a `do { } while (0)` around the icon checks (register allocation).
+- `prlib/contour.cpp` `SpmComplexNode::SaveContour`: indexing the vertex array puts the base register first in two `addu`s; the original added the shifted index to the packet address as integers.
 - `menu/menusub.c` `TsUserList_SetCurTag`: the original copies the timestamp through a pointer; a plain struct copy of `P3MC_DATE` folds the address into the loads.
 - prlib: 16 functions, mostly the template copies listed above, which were previously emitted from C through asm-label aliases, unused anchor inlines and per-TU explicit specializations.
+
+### Known leftovers
+- `prSpramData_tmp_contour`, `_shape` and `_menderer` are still externs to asm data. Each file's `.sdata` holds more than the pointer: contour and shape also hold an unnamed `FLT_MAX` literal that only their (NON_MATCHING) render functions emit, and menderer holds the noodle state, including `lastRatio`, a static local of the asm `DrawMenderer`. They can become file statics once those functions match.
+- `*(u_long *)&gs_register_struct` is left as is: it is how the SCE libraries and samples turn `sceGs*` register structs into 64-bit GIF data, and the SDK has no union for it.
+- Code inherited from upstream still has a few of its own matching tricks (for example the `do {} while (0)` in `TsBGMStop`, which blocks a sibling call, and the `volatile` frame in `DrawMozaikuDisp`). They were left alone.
