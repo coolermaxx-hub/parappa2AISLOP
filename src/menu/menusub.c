@@ -341,9 +341,6 @@ static short AnmCHallFphs_Rep[] = { 15, 28, 4109, -1 };
 static short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
 static short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
 static short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
-extern MN_MDLTBL Mdl_StageMapH[], Mdl_StageMapA[], Mdl_StageMapY[], Mdl_CityHall[], Mdl_OptCounter[];
-extern MN_MDLTBL Mdl_RepCounter[], Mdl_StgCounterLoad[], Mdl_StgCounterSave[], Mdl_JimakuBak[];
-extern int Cam_StageMap[], Cam_CityHall[], Cam_Notdef[];
 
 MN_SCENETBL Scene_StageMap       = { Mdl_StageMapH,      Cam_StageMap };
 MN_SCENETBL Scene_StageMapA      = { Mdl_StageMapA,      Cam_StageMap };
