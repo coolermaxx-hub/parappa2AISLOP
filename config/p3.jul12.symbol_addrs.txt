@@ -1519,7 +1519,6 @@ sjisASCII0                          = 0x0018dd90;
 sjisASCII1                          = 0x0018ddd8;
 sjisASCII2                          = 0x0018dde8;
 
-D_00396190                          = 0x00396190; // type:asciz
 
 HedderID                            = 0x00399830; // size:0x4
 FooterID                            = 0x00399834; // size:0x4

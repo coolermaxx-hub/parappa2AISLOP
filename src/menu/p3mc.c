@@ -14,11 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern char D_00396180[];
-extern char D_00396190[];
-
-static char *HedderID = D_00396180;
-static char *FooterID = D_00396190;
+static char *HedderID = "P2_USERDATA_HED";
+static char *FooterID = "P2_USERDATA_FOT";
 GETUSER_WORK *pUChkWork = NULL; /* static */
 /* bss 1c81100 */ extern P3MC_WORK P3MC_Work; /* static */
 /* sbss 399b60 */ extern int FreeSizeFlg; /* static */
@@ -70,9 +67,6 @@ static int P3MC_GetIconSize(int mode) {
 
     return isize;
 }
-
-INCLUDE_RODATA("asm/nonmatchings/menu/p3mc", D_00396180);
-INCLUDE_RODATA("asm/nonmatchings/menu/p3mc", D_00396190);
 
 static void* P3MC_GetIconPtr(int mode, int stageNo) {
     int fn;
