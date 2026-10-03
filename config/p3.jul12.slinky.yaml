@@ -1027,7 +1027,7 @@ segments:
       - { path: src/prlib/microprogram.cpp.o }
       - { path: src/prlib/spram.cpp.o }
       - { path: src/prlib/mfifo.cpp.o }
-      - { path: asm/data/prlib/spadata.bss.s.o }
+      - { path: src/prlib/spadata.cpp.o }
       - { path: src/prlib/scene.cpp.o }
       - { path: src/prlib/cluster.cpp.o }
       - { path: src/prlib/shape.cpp.o }

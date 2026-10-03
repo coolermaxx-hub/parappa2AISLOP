@@ -80,6 +80,52 @@ float* SpaTrack<float>::GetLinearValue(unsigned int segment, float time) const {
     return &result;
 }
 
+template <>
+NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int segment, float time) const {
+    float duration = this->m_times[segment + 1] - this->m_times[segment];
+    NaVECTOR<float, 4> *start = &KeyValue(segment);
+    if (duration == 0.0f) {
+        return start;
+    }
+
+    float t = (time - this->m_times[segment]) / duration;
+
+    static NaVECTOR<float, 4> result;
+
+    // Preserve the original fused VU evaluation. start points to a spline key:
+    // value, incoming tangent, outgoing tangent, then the next key.
+    asm volatile(
+        "lqc2     $vf04,  0x00(%1)       \n\t"
+        "lqc2     $vf05,  0x30(%1)       \n\t"
+        "vsub     $vf01,  $vf04,  $vf05  \n\t"
+        
+        "lqc2     $vf06,  0x20(%1)       \n\t"
+        "lqc2     $vf07,  0x40(%1)       \n\t"
+        "vadd     $vf02,  $vf06,  $vf07  \n\t"
+        
+        "qmtc2    %2,     $vf08          \n\t"
+        "vadda    ACC,    $vf01,  $vf01  \n\t"
+        "vmaddx   $vf03,  $vf02,  $vf08  \n\t"
+        
+        "qmtc2    %3,     $vf09          \n\t"
+        "vadda    ACC,    $vf06,  $vf06  \n\t"
+        "vmaddw   $vf02,  $vf07,  $vf00  \n\t"
+        "vadda.w  ACC,    $vf00,  $vf00  \n\t"
+        "vmadd.w  $vf08,  $vf00,  $vf00  \n\t"
+        "vmulax   ACC,    $vf03,  $vf09  \n\t"
+        "vmsubax  ACC,    $vf02,  $vf08  \n\t"
+        "vmul.x   $vf10,  $vf09,  $vf08  \n\t"
+        "vmul.x   $vf02,  $vf09,  $vf09  \n\t"
+        "vmsubw   $vf03,  $vf01,  $vf08  \n\t"
+        "vaddax   ACC,    $vf04,  $vf00  \n\t"
+        "vmaddax  ACC,    $vf06,  $vf10  \n\t"
+        "vmaddx   $vf01,  $vf03,  $vf02  \n\t"
+        "sqc2     $vf01,  0(%0)          \n\t"
+    : : "r"(&result), "r"(start), "r"(duration), "r"(t) : "memory");
+
+    return &result;
+}
+
 NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float time) const {
     static NaVECTOR<float, 4> vector;
     static NaMATRIX<float, 4, 4> matrix;
@@ -259,68 +305,19 @@ int SpaNodeAnimation::Optimize() {
     return removedCount;
 }
 
-/* prlib/spadata.cpp */
-template <>
-NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(u_int segment, float time) const {
-    static NaMATRIX<float, 4, 4> result;
+template <typename T>
+T* SpaTrack<T>::GetSprineValue(unsigned int segment, float time) const {
+    static T result;
     const float duration = m_times[segment + 1] - m_times[segment];
-    NaMATRIX<float, 4, 4>& start = KeyValue(segment);
+    T& start = KeyValue(segment);
     if (duration == 0.0f) return &start;
-    const NaMATRIX<float, 4, 4>& end = KeyValue(segment + 1);
-    const NaMATRIX<float, 4, 4>& outgoing = OutgoingTangent(segment);
-    const NaMATRIX<float, 4, 4>& incoming = IncomingTangent(segment + 1);
+    const T& end = KeyValue(segment + 1);
+    const T& outgoing = OutgoingTangent(segment);
+    const T& incoming = IncomingTangent(segment + 1);
     const float t = (time - m_times[segment]) / duration;
-    NaMATRIX<float, 4, 4> difference = start - end;
+    T difference = start - end;
     result = ((((outgoing + incoming) * duration + difference * 2.0f) * t
               - (outgoing * 2.0f + incoming) * duration - difference * 3.0f) * t
               + outgoing * duration) * t + start;
-    return &result;
-}
-
-/* nalib/navector.h */
-
-template <>
-NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int segment, float time) const {
-    float duration = this->m_times[segment + 1] - this->m_times[segment];
-    NaVECTOR<float, 4> *start = &KeyValue(segment);
-    if (duration == 0.0f) {
-        return start;
-    }
-
-    float t = (time - this->m_times[segment]) / duration;
-
-    static NaVECTOR<float, 4> result;
-
-    // Preserve the original fused VU evaluation. start points to a spline key:
-    // value, incoming tangent, outgoing tangent, then the next key.
-    asm volatile(
-        "lqc2     $vf04,  0x00(%1)       \n\t"
-        "lqc2     $vf05,  0x30(%1)       \n\t"
-        "vsub     $vf01,  $vf04,  $vf05  \n\t"
-        
-        "lqc2     $vf06,  0x20(%1)       \n\t"
-        "lqc2     $vf07,  0x40(%1)       \n\t"
-        "vadd     $vf02,  $vf06,  $vf07  \n\t"
-        
-        "qmtc2    %2,     $vf08          \n\t"
-        "vadda    ACC,    $vf01,  $vf01  \n\t"
-        "vmaddx   $vf03,  $vf02,  $vf08  \n\t"
-        
-        "qmtc2    %3,     $vf09          \n\t"
-        "vadda    ACC,    $vf06,  $vf06  \n\t"
-        "vmaddw   $vf02,  $vf07,  $vf00  \n\t"
-        "vadda.w  ACC,    $vf00,  $vf00  \n\t"
-        "vmadd.w  $vf08,  $vf00,  $vf00  \n\t"
-        "vmulax   ACC,    $vf03,  $vf09  \n\t"
-        "vmsubax  ACC,    $vf02,  $vf08  \n\t"
-        "vmul.x   $vf10,  $vf09,  $vf08  \n\t"
-        "vmul.x   $vf02,  $vf09,  $vf09  \n\t"
-        "vmsubw   $vf03,  $vf01,  $vf08  \n\t"
-        "vaddax   ACC,    $vf04,  $vf00  \n\t"
-        "vmaddax  ACC,    $vf06,  $vf10  \n\t"
-        "vmaddx   $vf01,  $vf03,  $vf02  \n\t"
-        "sqc2     $vf01,  0(%0)          \n\t"
-    : : "r"(&result), "r"(start), "r"(duration), "r"(t) : "memory");
-
     return &result;
 }

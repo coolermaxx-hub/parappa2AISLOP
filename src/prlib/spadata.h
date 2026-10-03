@@ -13,7 +13,6 @@ class SpaFileHeader;
 #include "spatrack.h"
 
 template <> NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(unsigned int segment, float time) const;
-template <> NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(unsigned int segment, float time) const;
 
 template <typename T> class SpaTypedTransform;
 
