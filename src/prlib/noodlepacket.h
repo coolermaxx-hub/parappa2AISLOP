@@ -126,4 +126,42 @@ struct PrNoodleBlendPacket {
     PrGsAD secondPosition;
 };
 
+// Full-screen colour fade: a translucent sprite blended over the frame.
+struct PrFadeFramePacket {
+    sceGifTag tag;
+    PrGsAD test;
+    PrGsAD alpha;
+    PrGsAD color;
+    PrGsAD primitive;
+    PrGsAD firstPosition;
+    PrGsAD secondPosition;
+};
+
+struct PrAwfulBackgroundVertex {
+    PrGsAD uv;
+    PrGsAD position;
+};
+
+// Context 2 draw of the rotating "awful" background texture: a textured
+// triangle strip quad, then a second sprite pass under a different depth test.
+struct PrAwfulBackgroundPacket {
+    sceGifTag tag;
+    PrGsAD flush;
+    PrGsAD setupTest;
+    PrGsAD maskedZbuf;
+    PrGsAD alpha;
+    PrGsAD texture;
+    PrGsAD textureFilter;
+    PrGsAD clamp;
+    PrGsAD color;
+    PrGsAD primitive;
+    PrAwfulBackgroundVertex vertices[4];
+    PrGsAD overlayTest;
+    PrGsAD zbuf;
+    PrGsAD overlayPrimitive;
+    PrGsAD overlayFirstPosition;
+    PrGsAD overlaySecondPosition;
+    PrGsAD finalTest;
+};
+
 #endif /* PRLIB_NOODLEPACKET_H */

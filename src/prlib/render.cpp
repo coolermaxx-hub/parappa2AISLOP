@@ -22,7 +22,17 @@ PrSPRAM_DATA *prSpramData_tmp_render = (PrSPRAM_DATA*)0x70000000;
 
 extern bool AwfulStatus;
 
-extern PrVu1InitPacket initVu1DmaPacket;
+// Zero-initialised A+D packet: the frame, zbuf, xyoffset and scissor values are
+// filled in by InitializeVu1. The DMA tag is a "refe" transfer of the five
+// quadwords of the GIF tag and its four registers that follow it.
+PrVu1InitPacket initVu1DmaPacket = {
+    { 5, 0, 0, reinterpret_cast<sceDmaTag*>(&initVu1DmaPacket.giftag), { 0, 0 } },
+    { 4, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
+    {}, SCE_GS_FRAME_1,
+    {}, SCE_GS_ZBUF_1,
+    {}, SCE_GS_XYOFFSET_1,
+    {}, SCE_GS_SCISSOR_1,
+};
 
 PR_EXTERN float PrGetMendererRatio();
 void PrDrawAwfulBackground(sceGsFrame frame);

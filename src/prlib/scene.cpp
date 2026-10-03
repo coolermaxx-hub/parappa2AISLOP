@@ -6,7 +6,7 @@
 #include <float.h>
 
 /* data */
-extern char D_0038C720[]; /* "(noname)" */
+static char defaultSceneName[] = "(noname)";
 
 PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int arg2) {
     m_list.next = NULL;
@@ -16,7 +16,7 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
 
     m_camera = NULL;
     m_camera_time = 0.0f;
-    m_name = D_0038C720;
+    m_name = defaultSceneName;
     m_default_focal_len = 0.0f;
     m_default_defocus_len = 0.0f;
     m_default_depth_level = 3;

@@ -2091,7 +2091,6 @@ PrInitializeAwfulBackground__FPv                                                
 PrDrawAwfulBackground__FG10sceGsFrame                                               = 0x00150840; // type:func
 PrUpdateAwfulMenderer__Fv                                                           = 0x00150c80; // type:func
 
-mendererFadeData                                                                    = 0x0038c940; // size:0x38
 
 mendererAwfulColor                                                                  = 0x00399bb8;
 awfulChangeTimer                                                                    = 0x00399bc0;
@@ -2493,7 +2492,6 @@ prSpriteDefinitionZ                                                             
 prSpramData_tmp_transition                                                          = 0x003998f0; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func
-initVu1DmaPacket                                                                    = 0x0038c500;
 initEECoreDmaPacket                                                                 = 0x0038c580;
 value_tmp_spadata_linear_float                                                      = 0x00399ba4; // size:0x4
 __t8NaVECTOR2Zfi4RCfT1T1T1                                                          = 0x00145db0; // type:func

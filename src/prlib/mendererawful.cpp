@@ -7,6 +7,8 @@
 #include "utility.h"
 #include "wave.h"
 
+#include "noodlepacket.h"
+
 #include "nalib/namatrix.h"
 
 #include <eekernel.h>
@@ -17,8 +19,40 @@
 
 
 /* data */
-extern u_long mendererFadeData[7][2];
-extern u_long awfulBackgroundPacket[24][2] asm("D_0038C9B0");
+static PrFadeFramePacket mendererFadeData = {
+    { 6, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
+    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_1 },
+    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0), SCE_GS_ALPHA_1 },
+    { 0, SCE_GS_RGBAQ },
+    { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0), SCE_GS_PRIM },
+    { SCE_GS_SET_XYZ(0x6C00, 0x7900, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 },
+};
+
+static PrAwfulBackgroundPacket awfulBackgroundPacket = {
+    { 23, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
+    { 0, SCE_GS_TEXFLUSH },
+    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { 0, SCE_GS_ZBUF_2 },
+    { 0, SCE_GS_ALPHA_2 },
+    { 0, SCE_GS_TEX0_2 },
+    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { 0, SCE_GS_CLAMP_2 },
+    { SCE_GS_SET_RGBAQ(0xFF, 0xFF, 0xFF, 0x80, 0), SCE_GS_RGBAQ },
+    { SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 1, 0), SCE_GS_PRIM },
+    {
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x7900, 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x7900, 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x8700, 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 } },
+    },
+    { SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { 0, SCE_GS_ZBUF_2 },
+    { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 1, 0), SCE_GS_PRIM },
+    { SCE_GS_SET_XYZ(0x7C00, 0x7900, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(0x8D00, 0x7B00, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
+};
 
 extern float prMendererNoodleColor[];
 
@@ -84,7 +118,7 @@ void PrFadeFrameImage(float arg0) {
     }
 
     u_int alp = (u_int)(arg0 * 128.0f + 0.5f);
-    mendererFadeData[3][0] =
+    mendererFadeData.color.value =
         SCE_GS_SET_RGBAQ(
             (mendererAwfulColor >> 0 ) & 255,
             (mendererAwfulColor >> 8 ) & 255,
@@ -129,8 +163,8 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
     u_int tbp = (zbp + 4) * 32;
     u_int cbp = tbp + 0x80;
 
-    awfulBackgroundPacket[3][0] = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 1);
-    awfulBackgroundPacket[19][0] = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 0);
+    awfulBackgroundPacket.maskedZbuf.value = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 1);
+    awfulBackgroundPacket.zbuf.value = SCE_GS_SET_ZBUF(zbuf.ZBP, zbuf.PSM, 0);
 
     pic->GsTex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMT4, (u_int)PrGetBitSize(256), (u_int)PrGetBitSize(256),
                                   1, 1, cbp, SCE_GS_PSMCT16, 0, 0, 1);
@@ -139,8 +173,8 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
     pic->GsTexClut = 0;
     Tim2LoadPicture(pic);
 
-    awfulBackgroundPacket[5][0] = pic->GsTex0;
-    awfulBackgroundPacket[4][0] = SCE_GS_SET_ALPHA(0, 1, 2, 1, (u_int)(prMendererFade * 128.0f));
+    awfulBackgroundPacket.texture.value = pic->GsTex0;
+    awfulBackgroundPacket.alpha.value = SCE_GS_SET_ALPHA(0, 1, 2, 1, (u_int)(prMendererFade * 128.0f));
 
     float angle = -awfulAngle;
     float c = cosf(angle);
@@ -150,16 +184,16 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
     NaVECTOR<float, 2> p0 = rot.ApplyTransposed(NaVECTOR<float, 2>(2730.0f, 2048.0f));
     NaVECTOR<float, 2> p1 = rot.ApplyTransposed(NaVECTOR<float, 2>(-2730.0f, 2048.0f));
 
-    awfulBackgroundPacket[10][0] = SCE_GS_SET_UV((u_int)(p0[0] + 8192.0f), (u_int)(p0[1] + 8192.0f));
-    awfulBackgroundPacket[12][0] = SCE_GS_SET_UV((u_int)(p1[0] + 8192.0f), (u_int)(p1[1] + 8192.0f));
-    awfulBackgroundPacket[14][0] = SCE_GS_SET_UV((u_int)(8192.0f - p1[0]), (u_int)(8192.0f - p1[1]));
-    awfulBackgroundPacket[16][0] = SCE_GS_SET_UV((u_int)(8192.0f - p0[0]), (u_int)(8192.0f - p0[1]));
+    awfulBackgroundPacket.vertices[0].uv.value = SCE_GS_SET_UV((u_int)(p0[0] + 8192.0f), (u_int)(p0[1] + 8192.0f));
+    awfulBackgroundPacket.vertices[1].uv.value = SCE_GS_SET_UV((u_int)(p1[0] + 8192.0f), (u_int)(p1[1] + 8192.0f));
+    awfulBackgroundPacket.vertices[2].uv.value = SCE_GS_SET_UV((u_int)(8192.0f - p1[0]), (u_int)(8192.0f - p1[1]));
+    awfulBackgroundPacket.vertices[3].uv.value = SCE_GS_SET_UV((u_int)(8192.0f - p0[0]), (u_int)(8192.0f - p0[1]));
 
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);
     chan->chcr.TTE = 0;
     FlushCache(WRITEBACK_DCACHE);
-    sceDmaSendN(chan, awfulBackgroundPacket, 24);
+    sceDmaSendN(chan, &awfulBackgroundPacket, 24);
 
     WaveCtrlDisp(&awfulWave, &frame);
 }

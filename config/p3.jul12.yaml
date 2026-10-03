@@ -218,13 +218,13 @@ segments:
 
         - [0x28C458, .data, prlib/database]
         - [0x28C480, .data, prlib/renderstuff]
-        - [0x28C500, data, prlib/render]
+        - [0x28C500, .data, prlib/render]
         - [0x28C580, data, prlib/renderee]
         - [0x28C6B0, .data, prlib/microprogram]
         - [0x28C710, .data, prlib/spram]
-        - [0x28C720, data, prlib/scene]
+        - [0x28C720, .data, prlib/scene]
         - [0x28C730, data, prlib/menderer]
-        - [0x28C940, data, prlib/mendererawful]
+        - [0x28C940, .data, prlib/mendererawful]
         - [0x28CB30, data, prlib/mendereralpha]
         - [0x28CD80, .data, prlib/dma]
 
