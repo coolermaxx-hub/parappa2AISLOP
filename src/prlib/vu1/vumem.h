@@ -46,10 +46,10 @@
 
 typedef struct PrInnerDisplayHeader {
     NaMATRIX<float, 4, 4> view_projection_matrix;
-    NaMATRIX<float, 4, 4> unk70;
+    NaMATRIX<float, 4, 4> world_clip_matrix;
     NaMATRIX<float, 4, 4> camera_matrix;
     NaVECTOR<float, 4> camera_position;
-    NaMATRIX<float, 4, 4> unk100;
+    NaMATRIX<float, 4, 4> world_guard_matrix;
     u_int disturbance_param;
     char unk144[0xc];
     NaMATRIX<float, 4, 4> screen_clip_matrix;

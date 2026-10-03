@@ -79,7 +79,7 @@ void PrSceneObject::ApplyDepthOfField() {
         PrAddSpriteDefinitionSuperSampled(&packet, work, src);
 
         float depth = focal + (defocus - focal) * i * 0.25f;
-        const NaMATRIX<float, 4, 4>& m = prSpramData->unk1A0;
+        const NaMATRIX<float, 4, 4>& m = prSpramData->m_view_screen_matrix;
         PrSetSpriteDefinitionZ((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3]));
 
         packet.AddGifPackedAD_TEXFLUSH();

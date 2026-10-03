@@ -32,18 +32,21 @@ public:
     void SendDisplayHeader();
 
 public:
-    NaMATRIX<float, 4, 4> unk0;
+    /* The node matrix being composed (local or animated) */
+    NaMATRIX<float, 4, 4> m_node_matrix;
     u_long128 *m_noodle_buffer[3];
     char unk4C[0x4];
     PrPERSPECTIVE_CAMERA m_camera;
     NaVECTOR<float, 4> m_camera_direction;
     NaMATRIX<float, 4, 4> m_camera_matrix;
     NaMATRIX<float, 4, 4> m_view_projection_matrix;
-    NaMATRIX<float, 4, 4> unk120;
-    NaMATRIX<float, 4, 4> unk160;
-    NaMATRIX<float, 4, 4> unk1A0;
-    NaMATRIX<float, 4, 4> unk1E0;
-    NaMATRIX<float, 4, 4> unk220;
+    /* World to clip space, with a 1% margin, for VU culling */
+    NaMATRIX<float, 4, 4> m_world_clip_matrix;
+    /* World to the GS's 4096-pixel guard band */
+    NaMATRIX<float, 4, 4> m_world_guard_matrix;
+    NaMATRIX<float, 4, 4> m_view_screen_matrix;
+    NaMATRIX<float, 4, 4> m_view_clip_matrix;
+    NaMATRIX<float, 4, 4> m_view_guard_matrix;
     char unk260[0x40];
     sceDmaTag m_end_dmatag;
     char unk2B0[0x100];

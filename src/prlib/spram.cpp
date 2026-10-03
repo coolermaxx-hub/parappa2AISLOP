@@ -43,21 +43,21 @@ void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     float aspect = (float)width / (float)height * 3.0f / 4.0f;
     float scrz = 1.0f / tanf(m_camera.field_of_view * 0.5f);
 
-    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk1A0, scrz, height * 0.5f * aspect, height * 0.5f,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&m_view_screen_matrix, scrz, height * 0.5f * aspect, height * 0.5f,
         2048.0f, 2048.0f, zmin, zmax, m_camera.near_clip, m_camera.far_clip);
     zmax -= zmin;
-    m_view_projection_matrix = unk1A0 * m_camera_matrix;
+    m_view_projection_matrix = m_view_screen_matrix * m_camera_matrix;
 
-    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk1E0, scrz,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&m_view_clip_matrix, scrz,
         height * 1.00999999f * 0.5f * aspect / 2048.0f, height * 1.00999999f * 0.5f / 2048.0f,
         0.0f, 0.0f, -1.0f, 1.0f, m_camera.near_clip, m_camera.far_clip);
-    unk120 = unk1E0 * m_camera_matrix;
+    m_world_clip_matrix = m_view_clip_matrix * m_camera_matrix;
 
-    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk220, scrz,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&m_view_guard_matrix, scrz,
         4096.0f / (width + 2) * 0.99000001f * height * 0.5f * aspect / 2048.0f,
         4096.0f / (height + 2) * 0.99000001f * height * 0.5f / 2048.0f,
         0.0f, 0.0f, -1.0f, 1.0f, m_camera.near_clip, m_camera.far_clip);
-    unk160 = unk220 * m_camera_matrix;
+    m_world_guard_matrix = m_view_guard_matrix * m_camera_matrix;
 
     screenClipMatrix = NaMATRIX<float, 4, 4>::TranslateMatrix(width * 0.5f, -(float)height * 0.5f, 5010.0f);
     screenClipMatrix.Scale(0.000493164058f, 0.000493164058f, 0.000199600792f);
@@ -109,10 +109,10 @@ void PrSPRAM_DATA::SendDisplayHeader() {
     m_display_header.unpack[1] = SCE_VIF1_SET_UNPACK(PR_VU1_DISPLAYHDR_ADDR, sizeof(PrInnerDisplayHeader) / 16, PR_VIF_UNPACK_V4_32(0), 0);
 
     m_display_header.inner.view_projection_matrix = m_view_projection_matrix;
-    m_display_header.inner.unk70 = this->unk120;
+    m_display_header.inner.world_clip_matrix = this->m_world_clip_matrix;
     m_display_header.inner.camera_matrix = m_camera_matrix;
     m_display_header.inner.camera_position = m_camera.position;
-    m_display_header.inner.unk100 = this->unk160;
+    m_display_header.inner.world_guard_matrix = this->m_world_guard_matrix;
     m_display_header.inner.screen_clip_matrix = screenClipMatrix;
     m_display_header.inner.screen_primitive_matrix = screenPrimitiveMatrix;
 

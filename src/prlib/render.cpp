@@ -247,17 +247,17 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
     if (model->m_posture_matrices[0] != NULL) {
         /* Keep the local matrix for transitions, blended toward the previous one */
         if (m_flags & 0x1) {
-            prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+            prSpramData->m_node_matrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            prSpramData->unk0 = this->m_local_matrix;
+            prSpramData->m_node_matrix = this->m_local_matrix;
         }
 
         if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
-            BlendTransitionMatrix(model, prSpramData->unk0);
+            BlendTransitionMatrix(model, prSpramData->m_node_matrix);
         }
 
-        this->m_global_matrix = arg1 * prSpramData->unk0;
-        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->unk0;
+        this->m_global_matrix = arg1 * prSpramData->m_node_matrix;
+        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->m_node_matrix;
     } else if (m_flags & 0x1) {
         this->m_global_matrix = arg1;
     } else {
@@ -299,17 +299,17 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
     if (model->m_posture_matrices[0] != NULL) {
         /* Keep the local matrix for transitions, blended toward the previous one */
         if (identity) {
-            prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+            prSpramData->m_node_matrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            prSpramData->unk0 = *node_animation->GetMatrix(time);
+            prSpramData->m_node_matrix = *node_animation->GetMatrix(time);
         }
 
         if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
-            BlendTransitionMatrix(model, prSpramData->unk0);
+            BlendTransitionMatrix(model, prSpramData->m_node_matrix);
         }
 
-        this->m_global_matrix = arg1 * prSpramData->unk0;
-        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->unk0;
+        this->m_global_matrix = arg1 * prSpramData->m_node_matrix;
+        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->m_node_matrix;
     } else if (identity) {
         this->m_global_matrix = arg1;
     } else {
