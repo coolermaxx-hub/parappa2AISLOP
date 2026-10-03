@@ -196,20 +196,12 @@ typedef struct { // 0xc25a4
 
 typedef struct { // 0x18
     /* 0x00 */ int logFileNo;
-    /* 0x04 */ u_int logDate[2];
+    /* 0x04 */ P3MC_DATE logDate;
     /* 0x0c */ int repFileNo;
-    /* 0x10 */ u_int repDate[2];
+    /* 0x10 */ P3MC_DATE repDate;
 } CURFILEINFO;
 
-typedef struct { // 0x8
-    /* 0x0 */ u_char date_day;
-    /* 0x1 */ u_char date_month;
-    /* 0x2 */ u_short date_year;
-    /* 0x4 */ u_char date_pad;
-    /* 0x5 */ u_char date_second;
-    /* 0x6 */ u_char date_minute;
-    /* 0x7 */ u_char date_hour;
-} MAP_TIME;
+typedef P3MC_DATE MAP_TIME;
 
 typedef struct { // 0x14
     /* 0x00 */ u_int score;
@@ -443,7 +435,7 @@ typedef struct { // 0x118
     /* 0x03c */ int wtim;
     /* 0x040 */ int userMax;
     /* 0x044 */ int curFileNo;
-    /* 0x048 */ u_int curFileDate[2];
+    /* 0x048 */ P3MC_DATE curFileDate;
     /* 0x050 */ NAMEINW nameinw[2];
     /* 0x0d8 */ CELLOBJ cellcs[6];
     /* 0x108 */ float sline;

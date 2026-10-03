@@ -748,7 +748,7 @@ void vsTapdatSetMemorySave(void) {
         if (time >= 32) {
             printf("OTH SAVE OVER\n");
         } else {
-            vsothsave_tmp[time] = *(u_char*)&tapdat_pp->KeyIndex;
+            vsothsave_tmp[time] = (u_char)tapdat_pp->KeyIndex;
         }
     }
 
@@ -3063,18 +3063,9 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
         scex_pp = &sindv_pp->scr_exam_str;
 
-        /* TODO: Can we get rid of the gotos? */
-        if (scex_pp->exam_enum == EXAM_CANCEL) {
-            goto l_2d8;
-        }
-        if (scex_pp->exam_enum == EXAM_BONUS) {
-            goto l_2d8;
-        }
-        if (scex_pp->exam_enum == EXAM_NONE) {
-            goto l_107c;
-        }
-
-        if (scex_pp->exam_do == EXAM_DO_NON) {
+        /* Cancelled, bonus and empty exams skip the scoring step */
+        if (scex_pp->exam_enum != EXAM_CANCEL && scex_pp->exam_enum != EXAM_BONUS && scex_pp->exam_enum != EXAM_NONE &&
+            scex_pp->exam_do == EXAM_DO_NON) {
             ExamScoreCheck(sindv_pp);
 
             if (global_data.play_step == PSTEP_GAME) {
@@ -3154,7 +3145,6 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
             }
         }
 
-    l_2d8:
         if (scex_pp->exam_enum != EXAM_NONE) {
             int rank_saki = RLVL_COOL;
             int rank_moto = RLVL_COOL;
@@ -3677,7 +3667,6 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
         }
 
-    l_107c:
         if (sindv_pp->scr_exam_str.exam_do != EXAM_DO_END_GO && sindv_pp->scr_exam_str.exam_do != EXAM_DO_END_GO_RET) {
             ScrCtrlIndvNextRead(sindv_pp, 1);
             ScrLincChangTbl(sindv_pp->useLine);

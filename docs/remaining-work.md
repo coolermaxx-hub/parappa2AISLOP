@@ -65,3 +65,15 @@ Only verified semantic aliases are used by the mapping tool.
 assembly in the earlier audit. Their compiler-generated orchestration is now C++
 with typed hardware operations. The old two-instruction queue aliases are served
 by the actual `AppendDmaTag` class member rather than address-named helpers.
+
+## Menu and main-loop readability pass (2026-10-03)
+
+Inherited upstream code outside the reconstructed engine had its own compiler
+steering. Removed, with source kept as the active build: the `do { } while (0)`
+in `_P3MC_mainfile_chk` and `TsBGMStop`, the gotos in `ScrExamSetCheck`, the
+word-casts over save timestamps (now `P3MC_DATE`, whose two words are compared
+through `P3MC_DATE_WORD`), the `FILE_DATE` cast struct and the byte-offset cast
+in `TsOption_Flow`. Still open: the `*_tmp_NNN` externs in `menusub.c` and
+`mbar.c`, which stand for file-static variables that still live in splat data
+sections, and the `*(u_long *)&sceGs...` register-struct reads used to feed GIF
+packets.

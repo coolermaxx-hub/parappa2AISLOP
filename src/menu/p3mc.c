@@ -331,29 +331,26 @@ static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
     }
 
     name = memc_getfilename(-2);
-    /* do { } while (0) is needed for the register allocation to match */
-    do {
-        if (name != NULL) {
-            flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
+    if (name != NULL) {
+        flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
+    }
+    name = memc_getfilename(-3);
+    if (name != NULL) {
+        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+            flg1 = 1;
         }
-        name = memc_getfilename(-3);
-        if (name != NULL) {
-            if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
-                flg1 = 1;
-            }
+    }
+    name = memc_getfilename(-4);
+    if (name != NULL) {
+        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+            flg1 = 1;
         }
-        name = memc_getfilename(-4);
-        if (name != NULL) {
-            if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
-                flg1 = 1;
-            }
-        }
+    }
 
-        isSave = 0;
-        if (flg == 0 && flg1 == 0) {
-            isSave = 1;
-        }
-    } while (0);
+    isSave = 0;
+    if (flg == 0 && flg1 == 0) {
+        isSave = 1;
+    }
 
     max = no + 1;
     if (no < 0) {
@@ -1027,7 +1024,7 @@ static void _P3MC_AddUserBroken(P3MC_USRLST *pUser, int mode, int fno) {
     newUser->mode = mode;
     newUser->flg = 2;
 
-    newUser->date_year = -0xfb0 - fno;
+    newUser->date.year = -0xfb0 - fno;
 
     pUser->nGetUser++;
     if (pUser->nGetUser > 0x4f) {
@@ -1118,11 +1115,11 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave) {
         USER_DATA **pSrc = &pSort[i];
 
         for (l = i + 1; l < nSort; l++) {
-            u_int s = *(u_int*)&pSrc[0]->date_day;
-            u_int d = *(u_int*)&pSort[l]->date_day;
+            u_int s = P3MC_DATE_WORD(&pSrc[0]->date, 0);
+            u_int d = P3MC_DATE_WORD(&pSort[l]->date, 0);
 
             if (s <= d) {
-                if (s != d || *(u_int*)&pSrc[0]->date_pad <= *(u_int*)&pSort[l]->date_pad) {
+                if (s != d || P3MC_DATE_WORD(&pSrc[0]->date, 1) <= P3MC_DATE_WORD(&pSort[l]->date, 1)) {
                     USER_DATA *tmp = pSrc[0];
                     pSrc[0] = pSort[l]; pSort[l] = tmp;
                 }
@@ -1481,24 +1478,24 @@ void P3MC_SetUserWorkTime(USER_DATA *puser) {
     sceCdCLOCK clock;
 
     err = sceCdReadClock(&clock);
-    puser->date_pad = rand() % 200;
+    puser->date.pad = rand() % 200;
 
     if (err != 0 && clock.stat == 0) {
-        puser->date_second = clock.second;
-        puser->date_minute = clock.minute;
-        puser->date_hour   = clock.hour;
+        puser->date.second = clock.second;
+        puser->date.minute = clock.minute;
+        puser->date.hour   = clock.hour;
 
-        puser->date_day    = clock.day;
-        puser->date_month  = clock.month;
-        puser->date_year   = clock.year + 0x2000;
+        puser->date.day    = clock.day;
+        puser->date.month  = clock.month;
+        puser->date.year   = clock.year + 0x2000;
     } else {
-        puser->date_second = 0;
-        puser->date_minute = 0;
-        puser->date_hour   = 12;
+        puser->date.second = 0;
+        puser->date.minute = 0;
+        puser->date.hour   = 12;
 
-        puser->date_day    = 1;
-        puser->date_month  = 1;
-        puser->date_year   = 0x2000;
+        puser->date.day    = 1;
+        puser->date.month  = 1;
+        puser->date.year   = 0x2000;
     }
 }
 

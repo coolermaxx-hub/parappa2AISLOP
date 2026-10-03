@@ -290,14 +290,11 @@ static int   TsUserList_IsGetFileSave(void);
 static int   TsUserList_SortUser(void);
 static void  TsUserList_SetCurUserData(USER_DATA *psrc);
 static void  TsUserList_SetCurDispUserData(USER_DATA *psrc);
-/* static */ void  TsUserList_SetCurFileNoCusor(int fileNo, u_int *fDate);
+/* static */ void  TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate);
 static void  TsUserList_SetType(USERLISTTYPE_TABLE *ptbl, int mode, int curTag);
 static int   TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno);
 /* static */ int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
 
-typedef struct {
-    u_int date[2];
-} FILE_DATE;
 /* static */ int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
 /* static */ void  TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  NameSpaceCut(u_char *dst, u_char *src);
@@ -569,8 +566,6 @@ static void TsBGMStop(int time) {
             if (pbgm->ctim == 0) {
                 tsBGMONEVol(pbgm->sndno, 0x100);
             }
-
-            do {} while (0); /* TODO: Get rid of this? */
         } else {
             pbgm->chgReq = 0;
             pbgm->cstate = 0;
@@ -1099,29 +1094,29 @@ static void TsMENU_GetMapTimeState(int flg) {
     nTim = 30;
 
     err = sceCdReadClock(&clock);
-    mptim->date_pad = rand() % 200;
+    mptim->pad = rand() % 200;
     if (err != 0 && clock.stat == 0) {
-        mptim->date_second = clock.second;
-        mptim->date_minute = clock.minute;
-        mptim->date_hour = clock.hour;
-        mptim->date_day = clock.day;
-        mptim->date_month = clock.month;
-        mptim->date_year = clock.year + 0x2000;
+        mptim->second = clock.second;
+        mptim->minute = clock.minute;
+        mptim->hour = clock.hour;
+        mptim->day = clock.day;
+        mptim->month = clock.month;
+        mptim->year = clock.year + 0x2000;
         flg = FALSE;
     } else {
-        mptim->date_second = 0x0;
-        mptim->date_minute = 0x0;
-        mptim->date_hour = 12; /* BUG: Value isn't valid BCD, */
-        mptim->date_day = 0x1; /*      though it still works. */
-        mptim->date_month = 0x1;
-        mptim->date_year = 0x2000;
+        mptim->second = 0x0;
+        mptim->minute = 0x0;
+        mptim->hour = 12; /* BUG: Value isn't valid BCD, */
+        mptim->day = 0x1; /*      though it still works. */
+        mptim->month = 0x1;
+        mptim->year = 0x2000;
         flg = TRUE;
     }
 
     state = CurMapBakFlg;
 
     if (!flg) {
-        hour = PrBcdInt(mptim->date_hour);
+        hour = PrBcdInt(mptim->hour);
 
         /* Dumb nested ifs but required to match. */
         if (hour < 4) {
@@ -1879,16 +1874,16 @@ int DateChgInt(u_int n) {
 }
 
 void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
-    int year   = DateChgInt(mptim->date_year);
-    int second = DateChgInt(mptim->date_second);
-    int hour   = DateChgInt(mptim->date_hour);
-    int day    = DateChgInt(mptim->date_day);
-    int month  = DateChgInt(mptim->date_month);
-    int minute = DateChgInt(mptim->date_minute);
+    int year   = DateChgInt(mptim->year);
+    int second = DateChgInt(mptim->second);
+    int hour   = DateChgInt(mptim->hour);
+    int day    = DateChgInt(mptim->day);
+    int month  = DateChgInt(mptim->month);
+    int minute = DateChgInt(mptim->minute);
 
     dat[0] = (year % 50) * (12 * 31 * 24 * 60 * 60) + (month % 12) * (31 * 24 * 60 * 60) +
              (day % 31) * (24 * 60 * 60) + (hour % 24) * (60 * 60) + (minute % 60) * 60 + (second % 60);
-    dat[1] = ((rand() % 0x10000) << 8) + mptim->date_pad;
+    dat[1] = ((rand() % 0x10000) << 8) + mptim->pad;
 }
 
 /* static */ int TsRanking_Set(void) {
@@ -2617,10 +2612,10 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
     if (UserWork->mode == 1) {
         CurFileInfo.logFileNo = UserWork->fileNo;
-        *(FILE_DATE*)CurFileInfo.logDate = *(FILE_DATE*)&UserWork->date_day;
+        CurFileInfo.logDate = UserWork->date;
     } else {
         CurFileInfo.repFileNo = UserWork->fileNo;
-        *(FILE_DATE*)CurFileInfo.repDate = *(FILE_DATE*)&UserWork->date_day;
+        CurFileInfo.repDate = UserWork->date;
     }
 }
 
@@ -7165,6 +7160,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
         if (old != sel) {
             int max;
 
+            /* Start the press timer of the left or right arrow */
             pfw->btnlr[osel].tim[(sel < old) ? 0 : 1] = 6;
             max = OptionSelTbl[osel].nObj;
             pfw->sw[pfw->selno] = TSLOOP(sel, max);
@@ -7329,7 +7325,7 @@ static void TsUserList_SetCurDispUserData(USER_DATA *psrc) {
     *(pfw->pusrdspWk->pUserDisp + (pfw->curuser + pfw->curPageTop)) = *psrc;
 }
 
-/* static */ void TsUserList_SetCurFileNoCusor(int fileNo, u_int *fDate) {
+/* static */ void TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate) {
     USERLIST_MENU *pfw = &UserListMenu;
     USER_DATA     *puser;
     int            i;
@@ -7340,7 +7336,7 @@ static void TsUserList_SetCurDispUserData(USER_DATA *psrc) {
 
     for (i = 0; i < pfw->userMax; i++) {
         puser = pfw->pusrlst->pUserTbl[i];
-        if (puser->fileNo == fileNo && *(u_int*)&puser->date_day == fDate[0] && *(u_int*)&puser->date_pad == fDate[1]) {
+        if (puser->fileNo == fileNo && P3MC_DATE_WORD(&puser->date, 0) == P3MC_DATE_WORD(fDate, 0) && P3MC_DATE_WORD(&puser->date, 1) == P3MC_DATE_WORD(fDate, 1)) {
             break;
         }
     }
@@ -7414,14 +7410,14 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     pfw->nTag = no;
 
     if (pfw->dataMode == 1) {
-        *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.logDate;
+        pfw->curFileDate = CurFileInfo.logDate;
         if (!pfw->isSave) {
             fileNo = CurFileInfo.logFileNo;
         } else {
             fileNo = CurFileInfo.logFileNo;
         }
     } else {
-        *(FILE_DATE*)pfw->curFileDate = *(FILE_DATE*)CurFileInfo.repDate;
+        pfw->curFileDate = CurFileInfo.repDate;
         if (!pfw->isSave) {
             fileNo = CurFileInfo.repFileNo;
         }
@@ -7503,7 +7499,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         }
 
         if (pfw->curFileNo >= 0) {
-            TsUserList_SetCurFileNoCusor(pfw->curFileNo, pfw->curFileDate);
+            TsUserList_SetCurFileNoCusor(pfw->curFileNo, &pfw->curFileDate);
         }
         if (pfw->scene != NULL) {
             MNScene_StartAnime(pfw->scene, -1, &CounterAnime[nCell]);
@@ -8172,16 +8168,16 @@ char D_003997F0[] = "%s";
     ps = strpos;
     MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
 
-    if (user->flg != 2 && user->date_year != 0) {
-        m = user->date_month;
+    if (user->flg != 2 && user->date.year != 0) {
+        m = user->date.month;
         if (m >= 19) {
             m = 18;
         }
-        sprintf(buf, "%02x.%s.%04x", user->date_day, _MONTH_STR[m], user->date_year);
+        sprintf(buf, "%02x.%s.%04x", user->date.day, _MONTH_STR[m], user->date.year);
         ps = &strpos[1];
         MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
 
-        sprintf(buf, "%02x:%02x", user->date_hour, user->date_minute);
+        sprintf(buf, "%02x:%02x", user->date.hour, user->date.minute);
         ps = &strpos[2];
         MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
     } else {
