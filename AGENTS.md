@@ -1,3 +1,13 @@
+# Branches
+
+`codex-work` is the primary line (the owner, Snake, decided this on 2026-10-03).
+Work and push here. The older ROM-matching line is preserved, untouched, as
+`main-rom-matching` (and the original `main`); it keeps hack-dependent functions
+as guarded `INCLUDE_ASM`. Do not force-push over either. Never touch upstream
+parappadev/parappa2 (no pushes, PRs, issues or comments); work only in this fork.
+Readability on `codex-work` is the objective; the main ROM checksum is expected
+to mismatch and is reported candidly, never by restoring hacks.
+
 # Decompilation constraints
 
 Reconstruct idiomatic, maintainable C++ for a future open-source PC port.
