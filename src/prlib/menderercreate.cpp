@@ -19,7 +19,6 @@ extern int prCurrentStage;
 extern float mendererSyncPhase;
 extern float noodlePhase[5][3];
 extern PrNoodleTextureParameters noodleParameter[5];
-extern const float D_00396800[5][3][4];
 
 void PrUpdateMendererSpeed();
 void PrUpdateAwfulMenderer();
@@ -30,6 +29,51 @@ void PrSynchronizeMendererParameter(float ratio);
 extern int mendererTextureRequested;
 extern PrNoodleTextureCopyPacket mendererTexturePacket;
 
+/* Per-preset wave parameters: amplitude, spatial cycles, temporal frequency (x0.15), phase offset.
+   Only the first five presets are read by PrSynchronizeMendererParameter. */
+static const float noodleWavePresets[8][3][4] = {
+    {
+        { 1.0f, 2.0f, 1.6f, 0.0f },
+        { 1.0f, -3.0f, 3.2f, 0.6f },
+        { 1.0f, 5.0f, 4.0f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 2.1f, 0.0f },
+        { 1.0f, -3.0f, 0.8f, 0.6f },
+        { 1.0f, 5.0f, 3.6f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 0.6f, 0.0f },
+        { 1.0f, -3.0f, 2.7f, 0.6f },
+        { 1.0f, 5.0f, 1.9f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 2.4f, 0.0f },
+        { 1.0f, -3.0f, 1.4f, 0.6f },
+        { 1.0f, 5.0f, 3.0f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 0.9f, 0.0f },
+        { 1.0f, -3.0f, 3.4f, 0.6f },
+        { 1.0f, 5.0f, 2.5f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 1.2f, 0.0f },
+        { 1.0f, -3.0f, 2.3f, 0.6f },
+        { 1.0f, 5.0f, 4.3f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 0.7f, 0.0f },
+        { 1.0f, -3.0f, 1.8f, 0.6f },
+        { 1.0f, 5.0f, 2.9f, 0.2f },
+    },
+    {
+        { 1.0f, 2.0f, 2.2f, 0.0f },
+        { 1.0f, -3.0f, 0.5f, 0.6f },
+        { 1.0f, 5.0f, 1.7f, 0.2f },
+    },
+};
+
 void PrSynchronizeMendererParameter(float ratio) {
     float inv = 1.0f - ratio;
 
@@ -37,7 +81,7 @@ void PrSynchronizeMendererParameter(float ratio) {
         PrNoodleTextureParameters& param = noodleParameter[i];
 
         for (u_int j = 0; j < 3; j++) {
-            const float *src = D_00396800[i][j];
+            const float *src = noodleWavePresets[i][j];
 
             param.amplitude[j] = src[0];
             param.spatialCycles[j] = src[1];
@@ -303,4 +347,3 @@ void PrWaitMendererTexture(sceGsDrawEnv1 *env, const sceGsFrame &frame, const sc
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/prlib/menderercreate", D_00396800);

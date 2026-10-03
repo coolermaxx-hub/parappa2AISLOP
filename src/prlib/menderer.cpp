@@ -188,8 +188,13 @@ void PushNoodleColor(u_long *rgbaq) {
 extern PrNoodleStripHeader noodleStripHeaderPacket;
 
 /* rodata */
-extern const sceDmaTag noodleQuadDmaTag asm("D_003967E0");
-extern const sceGifTag noodleQuadGifTag asm("D_003967F0");
+// DMAcnt of six quadwords: the GIF tag plus five register-list quadwords.
+static const sceDmaTag noodleQuadDmaTag = { 6, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+// REGLIST, one loop, EOP, ten registers: PRIM, RGBAQ, then (UV, XYZ2) x4.
+static const sceGifTag noodleQuadGifTag = {
+    1, 1, 0, 0, 0, 0, 1, 10,
+    0, 1, 3, 5, 3, 5, 3, 5, 3, 5, 0, 0, 0, 0, 0, 0
+};
 
 void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
 
@@ -624,6 +629,3 @@ void _GLOBAL_$I$prMendererRatio(void) {
 }
 
 /* prlib/menderer.cpp */
-INCLUDE_RODATA("asm/nonmatchings/prlib/menderer", D_003967E0);
-
-INCLUDE_RODATA("asm/nonmatchings/prlib/menderer", D_003967F0);

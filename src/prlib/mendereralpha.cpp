@@ -98,8 +98,13 @@ void PrCreateAlphaModulation(float alpha) {
 }
 
 /* rodata */
-extern const sceDmaTag D_00396980;   /* DMAcnt */
-extern const sceGifTag D_00396990;   /* GIFtag, A+D */
+// DMAcnt of thirteen quadwords: the GIF tag plus twelve A+D registers.
+static const sceDmaTag alphaBlendDmaTag = { 13, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+// PACKED, twelve loops of one A+D register, EOP.
+static const sceGifTag alphaBlendGifTag = {
+    12, 1, 0, 0, 0, 0, 0, 1,
+    0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
 void PrBlendNoodleImage(bool clear) {
     u_long128 *buf = prSpramData_tmp_mendereralpha->m_noodle_buffer[0];
@@ -109,8 +114,8 @@ void PrBlendNoodleImage(bool clear) {
 
     // This scratchpad bank owns a DMA/GIF wire packet during the blend pass.
     PrNoodleBlendPacket &packet = *reinterpret_cast<PrNoodleBlendPacket*>(buf);
-    packet.dma = D_00396980;
-    packet.gif = D_00396990;
+    packet.dma = alphaBlendDmaTag;
+    packet.gif = alphaBlendGifTag;
 
     packet.flush.value = 0;
     packet.flush.address = SCE_GS_TEXFLUSH;
@@ -140,7 +145,3 @@ void PrBlendNoodleImage(bool clear) {
 
     PrSendMfifo(&packet.dma);
 }
-
-INCLUDE_RODATA("asm/nonmatchings/prlib/mendereralpha", D_00396980);
-
-INCLUDE_RODATA("asm/nonmatchings/prlib/mendereralpha", D_00396990);
