@@ -5,6 +5,7 @@
 #include "spram.h"
 
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static float clusterMaxDepth = 3.4028235e38f;
 
 void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     PrVuNodeHeaderDmaPacket *vertices = reinterpret_cast<PrVuNodeHeaderDmaPacket*>(PR_UNCACHEDACCEL(m_geometryPacket));
@@ -108,7 +109,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
 
         float z;
         if (pos[3] == 0.0f) {
-            z = pos[2] * 3.40282347e+38f;
+            z = pos[2] * clusterMaxDepth;
         } else {
             z = pos[2] / pos[3];
         }

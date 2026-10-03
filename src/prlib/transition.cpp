@@ -1,8 +1,7 @@
 #include "model.h"
 #include "spram.h"
 
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_transition;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 void PrModelObject::SavePosture() {
     if (!(m_spm_image->m_flags & 0x40)) {
@@ -20,7 +19,7 @@ void PrModelObject::ResetPosture() {
 }
 
 void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& mtx) {
-    float ratio = prSpramData_tmp_transition->m_model_transaction_blend_ratio;
+    float ratio = prSpramData->m_model_transaction_blend_ratio;
 
     if (!(model->m_flags & 0x4)) {
         return;
@@ -31,7 +30,7 @@ void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>&
 }
 
 float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u_int index) {
-    float ratio = prSpramData_tmp_transition->m_model_transaction_blend_ratio;
+    float ratio = prSpramData->m_model_transaction_blend_ratio;
 
     if (!(model->m_flags & 0x4)) {
         return weight;

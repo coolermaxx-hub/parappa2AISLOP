@@ -9,8 +9,7 @@
 #include <libdma.h>
 #include <libgraph.h>
 
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_depthfield;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 /* bss */
 
@@ -53,7 +52,7 @@ void PrSceneObject::ApplyDepthOfField() {
 
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     NaGifPacket packet;
-    packet.Init(prSpramData_tmp_depthfield->m_packet_workspace);
+    packet.Init(prSpramData->m_packet_workspace);
     packet.End(0, 0, 0);
 
     static sceGifTag tag;
@@ -76,7 +75,7 @@ void PrSceneObject::ApplyDepthOfField() {
         PrAddSpriteDefinitionSuperSampled(&packet, work, src);
 
         float depth = focal + (defocus - focal) * i * 0.25f;
-        const NaMATRIX<float, 4, 4>& m = prSpramData_tmp_depthfield->m_viewScreenMatrix;
+        const NaMATRIX<float, 4, 4>& m = prSpramData->m_viewScreenMatrix;
         PrSetSpriteDefinitionZ(static_cast<u_int>((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3])));
 
         packet.AddGifPackedAD_TEXFLUSH();

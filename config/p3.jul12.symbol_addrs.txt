@@ -1618,8 +1618,6 @@ UnionBoundaryBox__13PrModelObjectPt8NaVECTOR2Zfi4T1                             
 GetPrimitivePosition__13PrModelObjectPt8NaVECTOR2Zfi4                               = 0x00140cb8; // type:func
 GetScreenPosition__13PrModelObjectPt8NaVECTOR2Zfi4                                  = 0x00140dc0; // type:func
 
-prSpramData_tmp_model                                                               = 0x003998bc; // size:0x4
-workAreaTopAddress                                                                  = 0x003998c0; // size:0x4
 workAreaSize                                                                        = 0x00399b8c; // size:0x4
 
 // prlib/database.cpp
@@ -1863,7 +1861,6 @@ GetLinearValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif                               
 GetValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4f                                           = 0x0014aab0; // type:func
 GetSprineValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4Uif                                     = 0x0014b0b0; // type:func
 
-tmp_0_1744                                                                          = 0x003998fc;
 
 return_buffer                                                                       = 0x01c83260; // size:0x10
 
@@ -2383,17 +2380,13 @@ noodleStripDmaPacket                                                            
 prSpramData_tmp_menderer                                                            = 0x00399948; // size:0x4
 noodleRandomSeed                                                                    = 0x00399978; // size:0x4
 prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
-prSpramData_tmp_depthfield                                                          = 0x00399938; // size:0x4
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
-prSpramData_tmp_transition                                                          = 0x003998f0; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func
 value_tmp_spadata_linear_float                                                      = 0x00399ba4; // size:0x4
 __t8NaVECTOR2Zfi4RCfT1T1T1                                                          = 0x00145db0; // type:func
 sceVu0InversMatrix                                                                  = 0x001617c0; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4iRCf                                                 = 0x0014ace8; // type:func
-prSpramData_tmp_shape = 0x00399928; // size:0x4
-shape_max_depth = 0x0039992c; // size:0x4
 prMendererNoodleColor = 0x0038c730; // size:0x10
 awfulPicture = 0x00399bb4; // size:0x4
 awfulStatus = 0x00399bbc; // size:0x4
@@ -2404,7 +2397,6 @@ mendererInitialized = 0x00399974; // size:0x4
 noodlePositionData = 0x01C83C10; // size:0xE60
 noodlePolygonIndex = 0x01C84A70; // size:0x1D0
 value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
-tmp_0_linear_vector = 0x0039990C; // size:0x4
 value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
 mendererTextureCreationInitialized = 0x003999A0; // size:0x4
 mendererTextureRequested = 0x003999A4; // size:0x4
@@ -2412,14 +2404,9 @@ mendererTexturePacket = 0x01C83AC0; // size:0xE0
 mendererSyncPhase = 0x003999A8; // size:0x4
 noodlePhase = 0x01C83570; // size:0x40
 noodleParameter = 0x01C835B0; // size:0x4B0
-tmp_0_node_matrix = 0x00399908; // size:0x4
 matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
-tmp_0_transform_vector = 0x00399900; // size:0x4
-tmp_0_transform_matrix = 0x00399904; // size:0x4
 vector_tmp_spadata_transform = 0x01C83270; // size:0x10
 matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
-scene_bbox_max_init = 0x00399918; // size:0x4
-scene_bbox_min_init = 0x0039991C; // size:0x4
 noodleSaturationRange = 0x0038C870; // size:0x50
 noodleBaseColor = 0x0038C8C0; // size:0x78
 noodleHueOffset = 0x0039997C; // size:0x4

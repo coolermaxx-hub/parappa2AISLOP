@@ -60,19 +60,18 @@ PrPERSPECTIVE_CAMERA* PrSceneObject::GetCurrentCamera() {
 }
 
 void PrSceneObject::SetAppropriateDefaultCamera() {
-    /* static const float in .sdata */
-    extern float scene_bbox_max_init[];
-    extern float scene_bbox_min_init[];
+    static float boundsMinInit = 3.4028235e38f;
+    static float boundsMaxInit = -3.4028235e38f;
 
     NaVECTOR<float, 4> min;
     NaVECTOR<float, 4> max;
     float init;
 
-    init = scene_bbox_max_init[0];
+    init = boundsMinInit;
     for (int i = 0; i < 4; i++) {
         min[i] = init;
     }
-    init = scene_bbox_min_init[0];
+    init = boundsMaxInit;
     for (int i = 0; i < 4; i++) {
         max[i] = init;
     }

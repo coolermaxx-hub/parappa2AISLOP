@@ -6,9 +6,8 @@
 #include "spadata.h"
 #include "spram.h"
 
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_shape;
-extern float shape_max_depth[];
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static float shapeMaxDepth = 3.4028235e38f;
 
 void SpmShapeNode::AddShapePosition(u_int shapeIndex, float weight) {
     PrVuNodeHeaderDmaPacket *vertices = reinterpret_cast<PrVuNodeHeaderDmaPacket*>(PR_UNCACHEDACCEL(m_geometryPacket));
@@ -41,7 +40,7 @@ void SpmShapeNode::AddShapePosition(u_int shapeIndex, float weight) {
 void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     NaVECTOR<float, 4> result;
 
-    SpaFileHeader *animation = prSpramData_tmp_shape->m_animation;
+    SpaFileHeader *animation = prSpramData->m_animation;
     SpaNodeAnimation *node_anim = (animation != NULL) ? animation->m_nodes[this->m_animationIndex] : NULL;
     u_int track_num = (node_anim != NULL) ? node_anim->m_shapeWeightTrackCount : 0;
 
@@ -64,8 +63,8 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
 
     if (model->m_postureMatrices[0] != NULL) {
         for (u_int i = 0; i < track_num; i++) {
-            float weight = *node_anim->m_shapeWeightTracks[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
-            if (prSpramData_tmp_shape->m_model_transaction_blend_ratio != 1.0f) {
+            float weight = *node_anim->m_shapeWeightTracks[i]->GetValue(prSpramData->m_animation_time);
+            if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
                 weight = BlendTransactionWeight(model, weight, i);
             }
             if (weight != 0.0f) {
@@ -75,7 +74,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
         }
     } else {
         for (u_int i = 0; i < track_num; i++) {
-            float weight = *node_anim->m_shapeWeightTracks[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
+            float weight = *node_anim->m_shapeWeightTracks[i]->GetValue(prSpramData->m_animation_time);
             if (weight != 0.0f) {
                 AddShapePosition(i, weight);
             }
@@ -85,20 +84,20 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     if (this->m_context1Packets[0] != NULL) {
         PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_context1Packets[0] | 0x30000000);
         packet->m_matrix = this->m_worldMatrix;
-        packet->m_disturbance = prSpramData_tmp_shape->m_disturbance;
+        packet->m_disturbance = prSpramData->m_disturbance;
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)packet & 0x0FFFFFFF));
     }
 
     if (this->m_context1Packets[1] != NULL) {
         PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_context1Packets[1] | 0x30000000);
         packet->m_matrix = this->m_worldMatrix;
-        packet->m_disturbance = prSpramData_tmp_shape->m_disturbance;
+        packet->m_disturbance = prSpramData->m_disturbance;
         u_int arg = this->m_sortGroup;
 
-        NaMATRIX<float, 4, 4> m = prSpramData_tmp_shape->m_view_projection_matrix * this->m_worldMatrix;
+        NaMATRIX<float, 4, 4> m = prSpramData->m_view_projection_matrix * this->m_worldMatrix;
         result = m * this->m_sortPosition;
 
-        float depth = result[3] == 0.0f ? result[2] * shape_max_depth[0] : result[2] / result[3];
+        float depth = result[3] == 0.0f ? result[2] * shapeMaxDepth : result[2] / result[3];
 
         prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF), arg, depth);
     }
