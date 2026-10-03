@@ -37,21 +37,21 @@ public:
     float unk14;
     char m_name[32];
     PR_PADDING(unk38, 0x8);
-    NaVECTOR<float, 4> unk40;
-    NaVECTOR<float, 4> unk50;
-    float unk60;
-    float unk64;
-    float unk68;
-    float unk6C;
-    float unk70;
+    NaVECTOR<float, 4> m_position;
+    NaVECTOR<float, 4> m_interest;
+    float m_roll;
+    float m_field_of_view;
+    float m_aspect;
+    float m_near_clip;
+    float m_far_clip;
     int *unk74;
     PrLinkedList<SpcFileHeader> m_list;
     PrObjectSet<SpcFileHeader> *m_obj_set;
     void *m_user_data;
-    SpaTrack<NaVECTOR<float, 4> > *unk88;
-    SpaTrack<NaVECTOR<float, 4> > *unk8C;
-    SpaTrack<float> *unk90;
-    SpaTrack<float> *unk94;
+    SpaTrack<NaVECTOR<float, 4> > *m_position_track;
+    SpaTrack<NaVECTOR<float, 4> > *m_interest_track;
+    SpaTrack<float> *m_roll_track;
+    SpaTrack<float> *m_field_of_view_track;
 
     u_int m_depth_level;
 

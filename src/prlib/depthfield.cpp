@@ -39,13 +39,13 @@ void PrSceneObject::ApplyDepthOfField() {
         return;
     }
 
-    u_int width = this->unk74;
-    u_int height = this->unk78;
+    u_int width = this->m_width;
+    u_int height = this->m_height;
 
     PrVRAM_RECT src;
     src.x = 0;
     src.buffer_width = width;
-    src.y = ((u_long)this->unk50.FBP << 11) / width;
+    src.y = ((u_long)this->m_frame.FBP << 11) / width;
     src.w = width;
     src.h = height;
 
@@ -101,9 +101,9 @@ void PrSceneObject::ApplyDepthOfField() {
     zbuf.ZMSK = 0;
     packet.AddGsAD(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
 
-    sceGsDrawEnv1 *env = this->unk70;
+    sceGsDrawEnv1 *env = this->m_draw_env;
     packet.AddGsAD(SCE_GS_SCISSOR_1, *(u_long*)&env->scissor1);
-    packet.AddGsAD(SCE_GS_XYOFFSET_1, *(u_long*)&this->unk58);
+    packet.AddGsAD(SCE_GS_XYOFFSET_1, *(u_long*)&this->m_xyoffset);
     packet.AddGsAD(SCE_GS_TEST_1, *(u_long*)&env->test1);
     packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80));
     packet.CloseGifTag();

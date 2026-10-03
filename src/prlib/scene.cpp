@@ -8,20 +8,6 @@
 /* data */
 extern char D_0038C720[]; /* "(noname)" */
 
-/*
- * Never called. The constructor and SetAppropriateDefaultCamera use
- * NaVECTOR::Set and then the 4-argument constructor, which makes this TU
- * emit weak copies of both, in that order. While those two functions are
- * still asm (and call the copies through asm labels), this keeps the copies
- * and their order.
- */
-static inline void UnusedVector_tmp_scene(NaVECTOR<float, 4>& v, const float& a) {
-    v.Set(a, a, a, a);
-    NaVECTOR<float, 4> u(a, a, a, a);
-}
-
-NaVECTOR<float, 4>& SetVector_tmp_scene(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("Set__t8NaVECTOR2Zfi4RCfT1T1T1");
-
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", __13PrSceneObjectP13sceGsDrawEnv1PCcUi);
 #else /* Codegen differs (102 vs 106 instructions) */
@@ -29,7 +15,7 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_list.next = NULL;
     m_list.prev = NULL;
     m_obj_set = NULL;
-    *(u_int*)unkC = 0x19832B1A;
+    m_magic = 0x19832B1A;
 
     m_camera = NULL;
     m_camera_time = 0.0f;
@@ -40,15 +26,15 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     unk90 = NULL;
     unk94 = arg2;
 
-    unk70 = draw_env;
-    unk50 = draw_env->frame1;
-    unk74 = draw_env->frame1.FBW * 64;
-    unk58 = draw_env->xyoffset1;
-    unk78 = (2048 - (draw_env->xyoffset1.OFY >> 4)) * 2;
+    m_draw_env = draw_env;
+    m_frame = draw_env->frame1;
+    m_width = draw_env->frame1.FBW * 64;
+    m_xyoffset = draw_env->xyoffset1;
+    m_height = (2048 - (draw_env->xyoffset1.OFY >> 4)) * 2;
 
-    SetVector_tmp_scene(&m_default_camera.position, m_camera_time, m_camera_time, 1000.0f, 1.0f);
-    SetVector_tmp_scene(&m_default_camera.interest, m_camera_time, m_camera_time, m_camera_time, 1.0f);
-    SetVector_tmp_scene(&m_default_camera.up, m_camera_time, 1.0f, m_camera_time, 1.0f);
+    m_default_camera.position.Set(m_camera_time, m_camera_time, 1000.0f, 1.0f);
+    m_default_camera.interest.Set(m_camera_time, m_camera_time, m_camera_time, 1.0f);
+    m_default_camera.up.Set(m_camera_time, 1.0f, m_camera_time, 1.0f);
     m_default_camera.aspect = 1.0f;
     m_default_camera.field_of_view = 1.0471976f;
     m_default_camera.near_clip = 100.0f;
@@ -126,11 +112,11 @@ void PrSceneObject::SetAppropriateDefaultCamera() {
     float r = (size[2] <= size[1]) ? size[1] : size[2];
     NaVECTOR<float, 4> eye = center - dir * (size[2] + r * 1.7320508f * 1.3f);
 
-    SetVector_tmp_scene(&m_default_camera.position, ((float*)&eye)[0], ((float*)&eye)[1], ((float*)&eye)[2], 1.0f);
-    SetVector_tmp_scene(&m_default_camera.interest, ((float*)&center)[0], ((float*)&center)[1], ((float*)&center)[2], 1.0f);
+    m_default_camera.position.Set(eye[0], eye[1], eye[2], 1.0f);
+    m_default_camera.interest.Set(center[0], center[1], center[2], 1.0f);
 
     float depth = eye[2] - center[2];
-    SetVector_tmp_scene(&m_default_camera.up, 0.0f, 1.0f, 0.0f, 1.0f);
+    m_default_camera.up.Set(0.0f, 1.0f, 0.0f, 1.0f);
 
     m_default_camera.aspect = 1.0f;
     m_default_camera.field_of_view = 1.0471976f;
@@ -281,3 +267,10 @@ void PrSceneObject::PreprocessModel() {
     m_model_set.m_head = head;
     m_model_set.m_tail = tail;
 }
+
+/* nalib/navector.h: weak copies of NaVECTOR<float, 4>::Set and the 4-argument constructor */
+#ifndef NON_MATCHING
+INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B988);
+
+INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B9B0);
+#endif

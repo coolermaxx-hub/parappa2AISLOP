@@ -309,19 +309,19 @@ done:
 }
 #endif
 
-/* Declared as specialized so this TU doesn't instantiate the template; its weak copy is still asm below */
-template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
-
-/* Template instances emitted in spram.cpp */
-NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
+#ifndef NON_MATCHING
+/* This file's weak copies of these are still asm at the end of the file */
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::TranslateMatrix(const float& x, const float& y, const float& z);
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::ScaleMatrix(const float& x, const float& y, const float& z);
+#endif
 
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;
     matrix = NaMATRIX<float, 4, 4>::RotateMatrix(2, rot);
-    matrix = TransMatrix_tmp_menderer(0.5f, 0.5f, 0.0f) * matrix;
-    matrix = ScaleMatrix_tmp_menderer(10240.0f, 3584.0f, 0.0f) * matrix;
-    matrix = TransMatrix_tmp_menderer(32768.0f, 32768.0f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::TranslateMatrix(0.5f, 0.5f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::ScaleMatrix(10240.0f, 3584.0f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::TranslateMatrix(32768.0f, 32768.0f, 0.0f) * matrix;
 }
 
 static void PreDrawNoodleStrip() {
@@ -659,7 +659,7 @@ void PrRenderMenderer() {
 #endif
 }
 
-/* nalib/navector.h */
+/* nalib/namatrix.h: weak copies of the 9- and 16-argument NaMATRIX<float, 4, 4>::Set */
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F3B8);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F410);
@@ -669,12 +669,14 @@ PR_EXTERN
 void _GLOBAL_$I$prMendererRatio(void) {
 }
 
-/* nalib/navector.h */
+/* nalib/namatrix.h: weak copies of ScaleMatrix(x, y, z), TranslateMatrix(x, y, z) and RotateMatrix(int) */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F4C8);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F5D0);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F6D8);
+#endif
 
 /* prlib/menderer.cpp */
 INCLUDE_RODATA("asm/nonmatchings/prlib/menderer", D_003967E0);

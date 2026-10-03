@@ -158,24 +158,24 @@ void SpcFileHeader::ChangePointer() {
 
     this->unk74 = CalculatePointer<int>(this->unk74);
     
-    this->unk88 = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->unk88);
-    if (this->unk88 != NULL) {
-        this->unk88->ChangePointer();
+    this->m_position_track = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->m_position_track);
+    if (this->m_position_track != NULL) {
+        this->m_position_track->ChangePointer();
     }
 
-    this->unk8C = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->unk8C);
-    if (this->unk8C != NULL) {
-        this->unk8C->ChangePointer();
+    this->m_interest_track = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->m_interest_track);
+    if (this->m_interest_track != NULL) {
+        this->m_interest_track->ChangePointer();
     }
 
-    this->unk90 = CalculatePointer<SpaTrack<float> >(this->unk90);
-    if (this->unk90 != NULL) {
-        this->unk90->ChangePointer();
+    this->m_roll_track = CalculatePointer<SpaTrack<float> >(this->m_roll_track);
+    if (this->m_roll_track != NULL) {
+        this->m_roll_track->ChangePointer();
     }
 
-    this->unk94 = CalculatePointer<SpaTrack<float> >(this->unk94);
-    if (this->unk94 != NULL) {
-        this->unk94->ChangePointer();
+    this->m_field_of_view_track = CalculatePointer<SpaTrack<float> >(this->m_field_of_view_track);
+    if (this->m_field_of_view_track != NULL) {
+        this->m_field_of_view_track->ChangePointer();
     }
 
     if (m_flags & 0x8) {

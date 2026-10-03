@@ -11,10 +11,10 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
 
     sceGsZbuf zbuf = m_zbuf;
     packet[6] = *(u_long*)&zbuf;
-    packet[4] = *(u_long*)&scene->unk50;
-    packet[24] = *(u_long*)&scene->unk58;
-    packet[26] = *(u_long*)&scene->unk70->scissor1;
-    packet[28] = *(u_long*)&scene->unk70->dthe;
+    packet[4] = *(u_long*)&scene->m_frame;
+    packet[24] = *(u_long*)&scene->m_xyoffset;
+    packet[26] = *(u_long*)&scene->m_draw_env->scissor1;
+    packet[28] = *(u_long*)&scene->m_draw_env->dthe;
 
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);

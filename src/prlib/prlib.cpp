@@ -87,8 +87,8 @@ void PrSetSceneFrame() {
 
 PR_EXTERN
 void PrSetSceneEnv(PrSceneObject *scene, sceGsDrawEnv1 *draw_env) {
-    scene->unk50 = draw_env->frame1;
-    scene->unk58 = draw_env->xyoffset1;
+    scene->m_frame = draw_env->frame1;
+    scene->m_xyoffset = draw_env->xyoffset1;
 }
 
 PR_EXTERN

@@ -24,6 +24,10 @@ public:
         return v[arg0];
     }
 
+    T& operator[](int arg0) {
+        return v[arg0];
+    }
+
     bool inl0(const NaVECTOR<T, t0>& arg0) const {
         for (int i = 0; i < t0; i++) {
             if (arg0[i] != v[i]) {
@@ -90,6 +94,49 @@ public:
             vsub.xyzw  $vf6, $vf4, $vf5
             sqc2       $vf6, 0x0(%0)
         " : : "r"(&ret), "r"(this), "r"(&rhs));
+        return ret;
+    }
+
+    NaVECTOR<float, 4> operator-() const {
+        NaVECTOR<float, 4> ret;
+        for (int i = 0; i < 4; i++) {
+            ret[i] = 0.0f - v[i];
+        }
+        return ret;
+    }
+
+    /* Cross product of the xyz parts; w is cleared */
+    NaVECTOR<float, 4> Cross(const NaVECTOR<float, 4>& rhs) const {
+        NaVECTOR<float, 4> ret;
+        asm volatile("
+            lqc2         $vf4, 0x0(%1)
+            lqc2         $vf5, 0x0(%2)
+            vopmula.xyz  ACC, $vf4, $vf5
+            vopmsub.xyz  $vf6, $vf5, $vf4
+            vsub.w       $vf6, $vf6, $vf6
+            sqc2         $vf6, 0x0(%0)
+        " : : "r"(&ret), "r"(this), "r"(&rhs));
+        return ret;
+    }
+
+    /* Unit vector along the xyz part, with w = 1 */
+    NaVECTOR<float, 4> Normalize() const {
+        NaVECTOR<float, 4> ret;
+        asm volatile("
+            lqc2       $vf4, 0x0(%1)
+            vmul.xyz   $vf5, $vf4, $vf4
+            vaddy.x    $vf5, $vf5, $vf5y
+            vaddz.x    $vf5, $vf5, $vf5z
+            vsqrt      Q, $vf5x
+            vwaitq
+            vaddq.x    $vf5, $vf0, Q
+            vdiv       Q, $vf0w, $vf5x
+            vsub.xyzw  $vf6, $vf0, $vf0
+            vwaitq
+            vmulq.xyz  $vf6, $vf4, Q
+            sqc2       $vf6, 0x0(%0)
+        " : : "r"(&ret), "r"(this));
+        ret[3] = 1.0f;
         return ret;
     }
 

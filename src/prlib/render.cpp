@@ -143,9 +143,9 @@ void PrSceneObject::InitializeVu1() {
     PrVu1InitPacket *packet = (PrVu1InitPacket*)PR_UNCACHED(&initVu1DmaPacket);
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     packet->zbuf     = zbuf;
-    packet->frame    = this->unk50;
-    packet->xyoffset = this->unk58;
-    packet->scissor  = this->unk70->scissor1;
+    packet->frame    = this->m_frame;
+    packet->xyoffset = this->m_xyoffset;
+    packet->scissor  = this->m_draw_env->scissor1;
 
     PrWaitDmaFinish(SCE_DMA_GIF);
 

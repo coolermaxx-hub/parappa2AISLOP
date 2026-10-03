@@ -71,6 +71,13 @@ public:
 
     static NaMATRIX<float, 4, 4> RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
     static NaMATRIX<float, 4, 4> RotateMatrix(int axis, const float& angle);
+    static NaMATRIX<float, 4, 4> TranslateMatrix(const float& x, const float& y, const float& z);
+    static NaMATRIX<float, 4, 4> TranslateMatrix(const NaVECTOR<float, 4>& v);
+    static NaMATRIX<float, 4, 4> ScaleMatrix(const float& x, const float& y, const float& z);
+    static NaMATRIX<float, 4, 4> ScaleMatrix(const NaVECTOR<float, 4>& v);
+
+    NaMATRIX<float, 4, 4>& Translate(const float& x, const float& y, const float& z);
+    NaMATRIX<float, 4, 4>& Scale(const float& x, const float& y, const float& z);
 
     NaMATRIX<float, 4, 4> Inverse() const {
         NaMATRIX<float, 4, 4> ret;
@@ -222,6 +229,65 @@ NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const 
     ((T*)m)[13] = m31;
     ((T*)m)[14] = m32;
     ((T*)m)[15] = m33;
+    return *this;
+}
+
+/*
+ * Matrices are column-major like libvu0's: m[3] is the translation
+ * column and a vector is transformed as M * v (see Apply).
+ */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const float& y, const float& z) {
+    return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
+                                 0.0f, 1.0f, 0.0f, 0.0f,
+                                 0.0f, 0.0f, 1.0f, 0.0f,
+                                 x,    y,    z,    1.0f);
+}
+
+/* Identity with the translation column replaced by v (w included) */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& v) {
+    NaMATRIX<float, 4, 4> ret;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            ret.m[i][j] = (i == j) ? 1.0f : 0.0f;
+        }
+    }
+    ret.m[3] = v;
+    return ret;
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const float& x, const float& y, const float& z) {
+    return NaMATRIX<float, 4, 4>(x,    0.0f, 0.0f, 0.0f,
+                                 0.0f, y,    0.0f, 0.0f,
+                                 0.0f, 0.0f, z,    0.0f,
+                                 0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+/* Diagonal matrix of all four components of v */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& v) {
+    NaMATRIX<float, 4, 4> ret;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            ret.m[i][j] = (i == j) ? v[j] : 0.0f;
+        }
+    }
+    return ret;
+}
+
+/* Applies a translation after this transform */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4>& NaMATRIX<T, t0, t1>::Translate(const float& x, const float& y, const float& z) {
+    *this = TranslateMatrix(x, y, z) * *this;
+    return *this;
+}
+
+/* Applies a scale after this transform */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4>& NaMATRIX<T, t0, t1>::Scale(const float& x, const float& y, const float& z) {
+    *this = ScaleMatrix(x, y, z) * *this;
     return *this;
 }
 
