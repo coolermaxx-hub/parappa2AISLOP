@@ -132,6 +132,37 @@ replays must reproduce the frame count, not just the inputs.
 `src/os/syssub.c:574` builds a ranged random from `rand() & 0x7fff`.
 prlib has its own generator (`src/prlib/random.cpp`, `PrFloatRandom`).
 
+## Authoritative clock: GlobalTimeJob (2026-10-03)
+
+Provenance: direct reading of `src/main/etc.c`, `src/main/cdctrl.c`, `src/main/scrctrl.c`, `src/iop_mdl/wp2cd/iop/bgm_play.c` (all already matching C; nothing here was changed).
+
+**Two clock sources, one derived pair of values.** `global_data.TimeType` is `FGF_VSYNC` or `FGF_CD`. It is switched by `GlobalTimeJobChange` from the score setup (`scrctrl.c` around lines 3003, 3640, 3911, 4510) based on `GetTimeType()` of the current draw table. A stage line whose type is `GTIME_VSYNC` runs on the frame counter, every other line runs on the streamed BGM position.
+
+`GlobalTimeJob()` runs once per main-loop iteration, immediately before `ScrTimeRenew()` (`scrctrl.c:4211`). It writes:
+
+| Field | FGF_VSYNC | FGF_CD |
+| --- | --- | --- |
+| `vsyncTime` / `cdTime` | frames from `vsync_time[0]` | derived: `(Snd*3600 + tempo*48)/(tempo*96)` |
+| `Snd_currentTime` (ticks, 96/beat) | `(frames*96*tempo + 1800)/3600` | `cdSampleTmp * tempo * 16 / 1875` |
+| `Snd_cdSampleCnt` | derived from ticks via `CdctrlSndTime2WP2sample` | the raw stream counter |
+| `currentTime` (frames) | `vsyncTime` | `cdTime` |
+
+So the audio stream counter is the master in CD mode, and ticks are the unit the judgement code compares against. Frames are re-derived from it, not the other way round.
+
+**Frame counter.** `vsync_time[51]` (`etc.c`) is incremented for every channel by `TimeCallback`, which is registered with `sceGsSyncVCallback` in `TimeCallbackSet`. Channel 0 is the global clock, channels 1.. are per-score-line (`TimeCallbackTimeGetChan(i)`, used for `lineTime` / `lineTimeFrame`), and `TCBK_CHANNEL_WIPE` serves the wipe effects. This runs in interrupt context, so a port must increment it exactly once per displayed frame at the point VBlank fires. `TimeCallbackTimeSetChanTempo` converts a tick position back to a frame count: `(ticks*3600 + tempo*48)/(tempo*96)`.
+
+**Stream counter (`WP2_GETTIME`).** `CdctrlWp2GetSampleTmpBuf()` calls the IOP RPC `WP2Ctrl(WP2_GETTIME)` and stores the result in `cdSampleTmp`. It is called from `GlobalTimeJob` (CD mode) and from the logo/streamed-movie loop in `main.c:657`. It also prints `max cd time get[...]` when the RPC round trip, measured with `T0_COUNT`, sets a new maximum, which is a latency probe the original developers left in.
+
+The IOP side (`BgmGetTime`) builds the value from `ReadOutCnt` (advanced by `TrackSize/2` for every SPU block-transfer interrupt, `gBgmIntr`) plus the position inside the current SPU transfer buffer (`sceSdBlockTransStatus`, `/1024`). It retries until no interrupt fired during the read (`gBgmIntrTime`). The result is therefore the SPU playback position and not a decode or read position.
+
+**Unit.** One WP2 time unit is 256 samples at 48 kHz, i.e. 187.5 units per second. This is derived, not documented in the source, but three places agree: `ticks = units*tempo*16/1875` against `ticks/sec = 96*tempo/60`, `frames = units*24/75` against 60 frames/sec, and `ofsCdtime*48/256` in `scrctrl.c:4000` converts a line offset in 1/48000 s to units.
+
+**What a port must keep.**
+- Input sampling is against `Snd_currentTime`, which only advances when `GlobalTimeJob` runs. All taps within one frame see the same tick value (already noted for pads).
+- In CD mode the tick value comes from SPU playback position, so audio latency is built in: whatever the stream position says is what the player heard.
+- In VSYNC mode there is no audio dependency, which is what makes lines of that type deterministic and a natural netplay base.
+- Rounding: the `+1800` and `+tempo*48` terms round to nearest. Do not change them.
+
 ## Boundary inventory (keyword search, not yet analysed)
 
 | Boundary | Files |
