@@ -1642,7 +1642,6 @@ memc_stat                           = 0x01c81540; // size:0x340
 // menu/mntm2hed.c
 TsGetTM2Hed                         = 0x0013cbf0; // type:func
 
-menu_tm2_hed                        = 0x0018e1d0; // size:0x13b0
 
 // menu/menufont.c
 MenuFont_ASC2EUC                    = 0x0013cc08; // type:func

@@ -308,7 +308,7 @@ segments:
       - { path: src/menu/menusub.c.o }
       - { path: src/menu/p3mc.c.o }
       - { path: src/menu/memc.c.o }
-      - { path: asm/data/menu/mntm2hed.data.s.o }
+      - { path: src/menu/mntm2hed.c.o }
       - { path: src/menu/menufont.c.o }
       - { path: src/menu/pksprite.c.o }
 
