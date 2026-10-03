@@ -2695,6 +2695,7 @@ noodlePolygonIndex = 0x01C84A70; // size:0x1D0
 value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
 tmp_0_linear_vector = 0x0039990C; // size:0x4
 value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
+mendererTextureCreationInitialized = 0x003999A0; // size:0x4
 mendererTextureRequested = 0x003999A4; // size:0x4
 mendererTexturePacket = 0x01C83AC0; // size:0xE0
 mendererSyncPhase = 0x003999A8; // size:0x4
