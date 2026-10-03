@@ -220,6 +220,34 @@ The `%` forms in `menusub.c` and `scrctrl.c` use the low bits of `rand()` direct
 - Menu and visual randomness can use any local generator; it never feeds back into the rhythm game. `PrRandom` can stay local to each peer.
 - Replays (see the replay log section) record the tap log and difficulty moves (`mccReqLvlSet`) but not the command-pattern randomness, so the command patterns are re-rolled on playback. That only works because the replay is played back against the same per-frame `rand()` history, i.e. it is not guaranteed to reproduce identical teacher patterns. Worth testing against a real recorded replay before relying on it.
 
+## CD, file loading and the WP2 stream container (2026-10-03)
+
+Provenance: direct reading of `src/main/cdctrl.c`, `src/main/p3str.c`, `src/main/main.c`, `src/main/scrctrl.c`, `src/iop_mdl/wp2cd/iop/bgm_play.c` and `src/iop_mdl/wp2cd/wp2cd.h` (all matching C; nothing here was changed).
+
+**Loads run as a cooperative task.** `CdctrlRead` / `CdctrlReadOne` set `cdctrl_str.status = 1` and start `cdctrlReadData` on the `MTC_TASK_CDCTRL` task. Every wait inside it (`sceCdSync`, a failed read, the TapCt transfer check) is `MtcWait(1)`, i.e. "come back next frame". Callers poll `CdctrlStatus()` or spin in `CdctrlReadWait()`. Failed reads are retried forever, and a bad INT header (`PACKINT_MAGIC` mismatch) hangs in an `MtcWait` loop on purpose. A port can do loads synchronously, as long as the code that polls `CdctrlStatus()` still sees at least one frame of "busy" where it expects it.
+
+**Two file back ends.** `FILE_STR.frmode` picks `FRMODE_CD` (`sceCdSearchFile` + `sceCdRead` of whole 2048-byte sectors, rounded up) or `FRMODE_PC` (host0 `sceOpen`/`sceLseek`/`sceRead`, the development path). Both end with `FlushCache(WRITEBACK_DCACHE)`. For a port, FRMODE_PC is the model to follow: plain file reads by name.
+
+**INT archives.** An `.INT` file is a chain of packs, each with a header (`PACK`: id, head_size, name_size, data_size, ftype, fnum, adr[]) followed by LZSS data (`PackIntDecode`: 4 KiB ring buffer, F = 18, THRESHOLD = 2, ring initialised to 0, write position starts at N - F, decoded size in the first word, data at +8). The pack `ftype` decides what happens after decoding:
+
+| ftype | Action |
+| --- | --- |
+| `FT_VRAM` | every entry is a TIM2, sent to GS memory with `Tim2Trans` |
+| `FT_SND` | first half of `adr[]` is SPU sample data (`TAPCT_BDSPUTRANS`), second half is the matching header (`TAPCT_HDIOPTRANS`); waits for `TAPCT_TRANSCHECK` |
+| `FT_R1..FT_R4` | hat textures; only the pack matching `GetHatRound()` is uploaded |
+| `FT_ONMEM` | each entry becomes a `UsrMemAlloc` block (models, animations, etc.), addressed later by index via `GetIntAdrsCurrent` |
+| anything else | end of chain |
+
+`PackIntDecodeWait` is the variant used for every load: it yields (`MtcWait(1)`) whenever `T0_COUNT` passes 230 scanlines, so decompression is spread across frames instead of dropping one. This only affects loading time, not gameplay.
+
+**The WP2 stream is a multiplexed container, not just audio.** The IOP reads the file in blocks of `Tr1Size = maxChan * 512` bytes: one 512-byte slot per channel. Two slots, `ReqChan[0]` and `ReqChan[1]`, are copied to the SPU as the left and right ADPCM data. Every other slot that starts with a non-zero `P3STR_TRH.trSize` is a data packet, and the IOP DMAs `trSize` bytes of it straight into EE memory at `TransEEAdrs + trAdr` (`BgmTrans` in `bgm_play.c`). `TransEEAdrs` is set by `WP2_SETTRPOINT`: 0 for normal songs, the XTR buffer for streamed cutscenes.
+
+A port has to demultiplex the same way: pick two channels for audio and apply the data packets to the cutscene buffer as the stream position passes them.
+
+**Channel switching is how the music reacts to play.** The stream holds several stereo pairs, interleaved (inferred from the channel tables as alternative mixes of the same song; the audio itself was not inspected). `CdctrlWP2SetChannel(L, R)` changes which pair the IOP sends to the SPU, without seeking. `SetLineChannel` picks `scr_ctrl.cdChan` per score line. Each tap set can also carry its own pair (`tapset.chan`, checked in `scrctrl.c` around line 4360 while the current time is inside that tap set's window): -2 keeps the current pair, -1 picks from the line's "auto" table by the width of the tap window (`taptimeEnd - taptimeStart` against `scr_chan_auto_pp[i].time`), and anything else is used directly. `CdctrlWP2SetFileSeekChan` does a stop, seek and preload when play jumps to another line (`goto_job`, `scrctrl.c:3033`) or when an exam starts (`scrctrl.c:3664`); the seek target is the line's tick position converted to stream units minus the line's time offset (`ofs * 48 / 256`). Only lines with `gtime_type != GTIME_VSYNC` touch the stream. A port must switch at the same block boundary to stay in sync, since the stream position is the rhythm clock (see the clock section above).
+
+**XTR streamed cutscenes.** `CdctrlXTRset` reads the XTR header (`read_size`, `channel`, `seek`, `trbox_tr[]`), decodes each `trbox_tr` preload (LZSS) to `usebuf + trpos`, calls `p3StrInit`, and points `WP2_SETTRPOINT` at `usebuf`, so the rest of the scene data arrives inside the audio stream. A missing `channel` field defaults to 6 channels. Playback (`main.c` around line 650) polls `WP2_GETTIME` each frame, converts it to frames (`units * 24 / 75`) relative to the header's seek position, and calls `p3StrPoll(frame)`. `p3StrPoll` refuses to go backwards (`back time`), starts or stops each object (`OD_SCENE` models, animations, cameras, fades, sprites) by its start and end frame, and draws them sorted. The movie ends on Start, at the end of the stream, or after 6540 frames.
+
 ## Boundary inventory (keyword search, not yet analysed)
 
 | Boundary | Files |
@@ -229,7 +257,7 @@ The `%` forms in `menusub.c` and `scrctrl.c` use the low bits of `rand()` direct
 | Hardware timers (`T0..T3_COUNT`) | `src/os/system.c`, `src/main/cdctrl.c`, `src/prlib/render.cpp`, `src/prlib/renderstuff.cpp`, `src/prlib/menderer.cpp` |
 | Audio stream (WP2) and SE (TapCt) | `src/main/cdctrl.c`, `src/iop_mdl/wp2cd_rpc.c`, `src/iop_mdl/tapctrl_rpc.c`, `src/iop_mdl/wp2cd/iop/*`, `src/main/scrctrl.c` |
 | Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` |
-| CD / files | `src/main/cdctrl.c`, `src/os/system.c` |
+| CD / files | `src/main/cdctrl.c`, `src/main/p3str.c`, `src/os/system.c` (analysed above) |
 | Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` |
 | RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` |
 | GS / DMA / VU | `src/os/system.c`, `src/prlib/*` |
