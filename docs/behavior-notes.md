@@ -101,6 +101,30 @@ the file. A port that reproduces `{cell index per press, key per press}` and
 these tables reproduces judgement.
 *Inferred, not tested:* the exact meaning of the `yaku` pattern codes.
 
+**Pad input (checked in source, 2026-10-03).** `GPadSysRead()` (`src/os/syssub.c:55`)
+runs the libpad state machine for each port (identify the pad, switch a standard
+pad to analog mode, set vibration alignment) and copies the raw 32-byte report into
+`sysPad[i].rdata`. `GPadRead()` (line 354) then fills `PADD`:
+
+- `shot` is the held-button mask (the report is active-low, so it is inverted),
+  `old` the previous frame's `shot`, `one` the buttons newly pressed this frame
+  and `off` the buttons newly released (`padMakeData`).
+- `ana[]` holds the analog sticks (0x80 = centre when absent) and `press[]` the
+  DualShock 2 pressure bytes; on a DualShock 1 or a digital pad pressure is
+  zeroed. `padPrsTreate` forces pressure to 1 for a held button whose byte is 0.
+- `mshot`/`mone` are `shot`/`one` with the left stick mixed in as a D-pad
+  (below 0x40 or above 0xBF counts as pressed). **Only the menu code reads
+  these** (`src/menu/menusub.c:847`); the rhythm code (`tapEventCheck`) uses the
+  plain digital `shot` and `one`, so the stick never taps notes.
+- Vibration is requested by writing `padvib[]` during the frame; `padActSet`
+  copies it to the next report and `padActClear` zeroes it afterwards, so a
+  rumble lasts for the frames it is re-requested.
+
+Because `GPadRead` runs once per frame in `osFunc` and edge detection is a
+pure function of consecutive frames, a port can replace this layer with
+`{held mask per frame}` and recompute `one`/`off` itself. A rollback netcode
+only needs that 16-bit mask per player per frame.
+
 **RNG (checked).** `osFunc()` calls `rand()` once every frame and discards the
 result, so the RNG state depends on how many frames have elapsed. Netplay or
 replays must reproduce the frame count, not just the inputs.
