@@ -11,7 +11,6 @@
 
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
-/* bss */
 
 void PrSceneObject::ApplyDepthOfField() {
     u_int level = GetDepthLevel();

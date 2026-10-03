@@ -390,7 +390,7 @@ segments:
         - [0x2999B0, .sdata, prlib/mendereralpha]
         - [0x2999B4, .sdata, prlib/dmaqueue]
         - [0x2999B8, .sdata, prlib/tim2]
-        - [0x2999C0, sdata, prlib/camera]
+        - [0x2999C0, .sdata, prlib/camera]
         - [0x2999C4, .sdata, prlib/contour]
 
         - [0x2999D0, .sdata, nalib/navector]
@@ -473,14 +473,14 @@ segments:
         - { type: .bss,  vram: 0x01c831e0, name: prlib/spram          }
         - { type: bss,   vram: 0x01c83260, name: prlib/spadata        }
         - { type: .bss,  vram: 0x01c83390, name: prlib/billboard      }
-        - { type: bss,   vram: 0x01c833d0, name: prlib/depthfield     }
+        - { type: .bss,   vram: 0x01c833d0, name: prlib/depthfield     }
         - { type: .bss,  vram: 0x01c833e0, name: prlib/random         }
         - { type: .bss,   vram: 0x01c83570, name: prlib/menderercreate }
         - { type: .bss,   vram: 0x01c83ba0, name: prlib/mendererawful  }
         - { type: .bss,   vram: 0x01c83bd0, name: prlib/mendereralpha  }
         - { type: .bss,   vram: 0x01c83c10, name: prlib/mendererdata   }
         - { type: .bss,  vram: 0x01c84c40, name: prlib/wave           }
-        - { type: bss,   vram: 0x01c884c0, name: prlib/camera         }
+        - { type: .bss,   vram: 0x01c884c0, name: prlib/camera         }
 
         - { type: bss,   vram: 0x01c88500, name: sdk/scelib           }
         - { type: bss,   vram: 0x01c8df00, name: sdk/newlib           }

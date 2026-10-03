@@ -1888,7 +1888,6 @@ ApplyBillboardMatrix__7SpmNode                                                  
 // prlib/depthfield.cpp
 ApplyDepthOfField__13PrSceneObject                                                  = 0x0014c8e8; // type:func
 
-gifTag_tmp_depthfield                                                               = 0x01c833d0; // size:0x10
 
 // nalib/napacket.h (weak copies kept by the linker)
 AddGifPackedAD_TEXFLUSH__11NaGifPacket                                              = 0x0014cd38; // type:func

@@ -817,7 +817,7 @@ segments:
       - { path: src/prlib/utility.cpp.o }
       - { path: src/prlib/tim2.cpp.o }
       - { path: src/prlib/animation.cpp.o }
-      - { path: asm/data/prlib/camera.sdata.s.o }
+      - { path: src/prlib/camera.cpp.o }
       - { path: src/prlib/contour.cpp.o }
       - { path: src/prlib/dma.cpp.o }
 
@@ -1032,7 +1032,7 @@ segments:
       - { path: src/prlib/cluster.cpp.o }
       - { path: src/prlib/shape.cpp.o }
       - { path: src/prlib/billboard.cpp.o }
-      - { path: asm/data/prlib/depthfield.bss.s.o }
+      - { path: src/prlib/depthfield.cpp.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
       - { path: src/prlib/menderer.cpp.o }
@@ -1045,7 +1045,7 @@ segments:
       - { path: src/prlib/utility.cpp.o }
       - { path: src/prlib/tim2.cpp.o }
       - { path: src/prlib/animation.cpp.o }
-      - { path: asm/data/prlib/camera.bss.s.o }
+      - { path: src/prlib/camera.cpp.o }
       - { path: src/prlib/contour.cpp.o }
       - { path: src/prlib/dma.cpp.o }
 

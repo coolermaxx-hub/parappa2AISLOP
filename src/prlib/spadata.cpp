@@ -5,6 +5,54 @@
 
 #include <math.h>
 
+template <typename T>
+T* SpaTrack<T>::GetValue(float time) const {
+    if (m_flags & Loop) {
+        const float duration = m_times[m_keyCount - 1];
+        if (time < 0.0f || time >= duration) {
+            time = fmodf(time, duration);
+        }
+    }
+
+    const unsigned int segment = SearchSegment(time);
+    if (segment == (unsigned int)-1) {
+        return &KeyValue(0);
+    }
+    if (segment == m_keyCount) {
+        return &KeyValue(m_keyCount - 1);
+    }
+    switch (m_interpolation) {
+    case Spline: return GetSprineValue(segment, time);
+    case Linear: return GetLinearValue(segment, time);
+    case Step: return &KeyValue(segment);
+    default: return NULL;
+    }
+}
+
+template <typename T>
+T* SpaTrack<T>::GetLinearValue(unsigned int segment, float time) const {
+    static T result;
+    const float afterStart = time - m_times[segment];
+    const float beforeEnd = m_times[segment + 1] - time;
+    result = (KeyValue(segment) * beforeEnd + KeyValue(segment + 1) * afterStart)
+             / (beforeEnd + afterStart);
+    return &result;
+}
+
+template <>
+int* SpaTrack<int>::GetValue(float time) const {
+    if (m_flags & Loop) {
+        const float duration = m_times[m_keyCount - 1];
+        if (time < 0.0f || time >= duration) {
+            time = fmodf(time, duration);
+        }
+    }
+    const unsigned int segment = SearchSegment(time);
+    if (segment == (unsigned int)-1) return &m_values[0];
+    if (segment == m_keyCount) return &m_values[m_keyCount - 1];
+    return &m_values[segment];
+}
+
 template <>
 float* SpaTrack<float>::GetSprineValue(unsigned int segment, float time) const {
     static float result;
