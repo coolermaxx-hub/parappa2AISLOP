@@ -18,5 +18,6 @@ extern float prSchoolLeaderIndex;
 extern u_int prMendererTbp;
 extern u_int prMendererWorkFbp;
 extern u_int prMendererDrawFbp;
+extern float prMendererNoodleColor[4];
 
 #endif /* PRLIB_MENDERER_H */

@@ -20,10 +20,47 @@ extern int prCurrentStage;
 
 
 /* data */
-extern PrNoodleAlphaParameters alphaModulationPacket;
-extern PrNoodleAlphaGsPacket alphaModulationGsPacket;
-extern PrNoodleAlphaFramePacket alphaModulationFramePacket;
-extern PrNoodleAlphaDmaPacket alphaModulationDmaPacket;
+// Parameter block uploaded to VU1 memory; only the GIF-style header is static.
+// PACKED, 24 loops of RGBAQ then XYZ2, with the PRIM field enabled.
+static PrNoodleAlphaParameters alphaModulationPacket = {
+    { 24, 1, 0, 0, 1, 0, 0, 2, 1 /* RGBAQ */, 5 /* XYZ2 */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+};
+
+// Frame and test setup for the modulation pass. The frame value is patched
+// in PrInitializeAlphaModulation.
+static PrNoodleAlphaGsPacket alphaModulationGsPacket = {
+    { 3, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, SCE_GS_FRAME_1 },
+    { 0, SCE_GS_XYOFFSET_1 },
+    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_1 },
+};
+
+// Draws the modulated buffer back to the frame as a region-clamped sprite.
+// Frame and texture values are patched at runtime.
+static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
+    { 12, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, SCE_GS_FRAME_1 },
+    { 0, SCE_GS_TEX0_1 },
+    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_1 },
+    { SCE_GS_SET_CLAMP(2, 2, 0, 23, 0, 15), SCE_GS_CLAMP_1 },
+    { 0, SCE_GS_TEXFLUSH },
+    { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 1, 0, 0), SCE_GS_PRIM },
+    { SCE_GS_SET_UV(0, 0), SCE_GS_UV },
+    { SCE_GS_SET_XYZ(0, 0, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_UV(0x180, 0x100), SCE_GS_UV },
+    { SCE_GS_SET_XYZ(0x2800, 0xE00, 0), SCE_GS_XYZ2 },
+    { 0, SCE_GS_FRAME_1 },
+    { SCE_GS_SET_XYOFFSET(0x6C00, 0x7900), SCE_GS_XYOFFSET_1 },
+};
+
+// VIF1 chain: GS state (REF), parameters (REF, UNPACK), microprogram (MSCAL,
+// patched at runtime) and the frame draw (REFE).
+static PrNoodleAlphaDmaPacket alphaModulationDmaPacket = {
+    { 4, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationGsPacket, { 0x10000000 /* FLUSHE */, 0x50000004 /* DIRECT 4 */ } },
+    { 16, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationPacket, { 0x11000000 /* FLUSH */, 0x6C100000 /* UNPACK V4-32 x16 */ } },
+    { 0, 0, 0x10 /* DMAcnt */, NULL, { 0x14000000 /* MSCAL */, 0 } },
+    { 13, 0, 0x00 /* DMArefe */, (sceDmaTag*)&alphaModulationFramePacket, { 0x10000000 /* FLUSHE */, 0x5000000D /* DIRECT 13 */ } },
+};
 
 static float mendererDeltaRotation[8];
 static float alphaWeight[8];

@@ -56,8 +56,6 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
     { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
 };
 
-extern float prMendererNoodleColor[];
-
 float awfulAngle = 0.0f;
 
 static TIM2_PICTUREHEADER *awfulPicture;

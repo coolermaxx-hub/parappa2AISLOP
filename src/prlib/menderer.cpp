@@ -43,14 +43,65 @@ u_int prMendererWorkFbp = 0;
 u_int prMendererDrawFbp = 0;
 
 
-struct PrNoodleStripPacket {
-    sceDmaTag dmatag;
-    sceGifTag giftag;
-    u_long ad[14][2];
+
+float prMendererNoodleColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+// Work-buffer copy and draw state for the noodle strips. Frame and texture
+// are filled in by InitializeNoodleStripRendering.
+static PrNoodleStripPacket noodleStripDmaPacket = {
+    { 15, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } },
+    { 14, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, SCE_GS_BITBLTBUF },
+    { 0, SCE_GS_TRXPOS },
+    { SCE_GS_SET_TRXREG(640, 224), SCE_GS_TRXREG },
+    { SCE_GS_SET_TRXDIR(2), SCE_GS_TRXDIR },
+    { 0, SCE_GS_FRAME_2 },
+    { SCE_GS_SET_XYOFFSET(0x8000, 0x8000), SCE_GS_XYOFFSET_2 },
+    { SCE_GS_SET_SCISSOR(0, 639, 0, 223), SCE_GS_SCISSOR_2 },
+    { 0, SCE_GS_RGBAQ },
+    { 0, SCE_GS_TEX0_2 },
+    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { SCE_GS_SET_COLCLAMP(1), SCE_GS_COLCLAMP },
+    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80), SCE_GS_ALPHA_2 },
+    { SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { 0, SCE_GS_TEXFLUSH },
 };
 
-/* data */
-extern PrNoodleStripPacket noodleStripDmaPacket;
+// DMAcnt of two quadwords: the GIF tag and one clamp register write.
+static PrNoodleStripHeader noodleStripHeaderPacket = {
+    { 2, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } },
+    { 1, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    0,
+    SCE_GS_CLAMP_2,
+};
+
+// Saturation range (min, max) per stage.
+static float noodleSaturationRange[10][2] = {
+    { 0.3f, 0.7f },
+    { 0.2f, 0.4f },
+    { 0.05f, 0.2f },
+    { 0.0f, 0.2f },
+    { 0.1f, 0.3f },
+    { 0.0f, 0.4f },
+    { 0.1f, 0.3f },
+    { 0.1f, 0.2f },
+    { 0.1f, 0.3f },
+    { 0.1f, 0.3f },
+};
+
+// Base RGB per stage.
+static float noodleBaseColor[10][3] = {
+    { 0.6000000238f, 0.6000000238f, 0.6000000238f },
+    { 0.9284310341f, 0.5455880165f, 0.2882350087f },
+    { 0.5458824039f, 0.3764706254f, 0.3764706254f },
+    { 0.3764710128f, 0.4705890119f, 0.3294119835f },
+    { 0.7215690017f, 0.3137260079f, 0.3450979888f },
+    { 0.6807842851f, 0.5929412842f, 0.3074511886f },
+    { 0.0f, 0.0f, 0.4705879986f },
+    { 0.4517648816f, 0.4517648816f, 0.1694114953f },
+    { 0.3764710128f, 0.3137260079f, 0.4392159879f },
+    { 1.0f, 1.0f, 1.0f },
+};
 
 static int noodleStatus;
 static int noodleChangeTimer;
@@ -66,8 +117,8 @@ void StartNoodleRotation();
 void PushNoodleColor(u_long *rgbaq);
 
 void InitializeNoodleStripRendering(u_int tbp, u_int fbp, u_int tw, u_int th) {
-    noodleStripDmaPacket.ad[4][0] = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
-    noodleStripDmaPacket.ad[8][0] = SCE_GS_SET_TEX0(tbp, 4, 0, tw, th, 1, 0, 0, 0, 0, 0, 0);
+    noodleStripDmaPacket.frame.value = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
+    noodleStripDmaPacket.texture.value = SCE_GS_SET_TEX0(tbp, 4, 0, tw, th, 1, 0, 0, 0, 0, 0, 0);
 }
 
 static float GetRandom() {
@@ -83,13 +134,6 @@ static int StageIndexForColor() {
     }
     return (u_int)prCurrentStage % 10;
 }
-
-/* data */
-extern float noodleSaturationRange[][2];
-extern float noodleBaseColor[][3];
-
-/* data */
-extern float prMendererNoodleColor[4];
 
 void PushNoodleColor(u_long *rgbaq) {
     if (!prMendererColorModulation || prCurrentStage == 6) {
@@ -183,9 +227,6 @@ void PushNoodleColor(u_long *rgbaq) {
     u_int b8 = static_cast<u_int>(b * 255.99f);
     *rgbaq = r8 | ((u_long)g8 << 8) | ((u_long)b8 << 16) | (0x80UL << 24);
 }
-
-/* data */
-extern PrNoodleStripHeader noodleStripHeaderPacket;
 
 /* rodata */
 // DMAcnt of six quadwords: the GIF tag plus five register-list quadwords.
@@ -307,9 +348,9 @@ static void PreDrawNoodleStrip() {
 
     PrNoodleStripPacket *packet = (PrNoodleStripPacket*)buf;
     *packet = noodleStripDmaPacket;
-    packet->ad[0][0] = SCE_GS_SET_BITBLTBUF(prMendererDrawFbp * 32, 10, 0, prMendererWorkFbp * 32, 10, 0);
+    packet->bitbltbuf.value = SCE_GS_SET_BITBLTBUF(prMendererDrawFbp * 32, 10, 0, prMendererWorkFbp * 32, 10, 0);
 
-    PrSendMfifo(&packet->dmatag);
+    PrSendMfifo(&packet->dma);
 }
 
 void DrawNoodleStrip(float ratio, float rot) {

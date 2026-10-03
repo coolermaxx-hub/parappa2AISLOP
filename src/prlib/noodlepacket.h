@@ -164,4 +164,25 @@ struct PrAwfulBackgroundPacket {
     PrGsAD finalTest;
 };
 
+// Local-to-local copy of the work buffer, then a context 2 draw state setup.
+// The packet is copied to the GIF each frame with only frame and texture patched.
+struct PrNoodleStripPacket {
+    sceDmaTag dma;
+    sceGifTag gif;
+    PrGsAD bitbltbuf;
+    PrGsAD trxpos;
+    PrGsAD trxreg;
+    PrGsAD trxdir;
+    PrGsAD frame;
+    PrGsAD offset;
+    PrGsAD scissor;
+    PrGsAD color;
+    PrGsAD texture;
+    PrGsAD textureFilter;
+    PrGsAD colorClamp;
+    PrGsAD alpha;
+    PrGsAD test;
+    PrGsAD flush;
+};
+
 #endif /* PRLIB_NOODLEPACKET_H */

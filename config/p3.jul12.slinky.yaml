@@ -341,10 +341,10 @@ segments:
       - { path: src/prlib/depthfield.cpp.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
-      - { path: asm/data/prlib/menderer.data.s.o }
+      - { path: src/prlib/menderer.cpp.o }
       - { path: src/prlib/menderercreate.cpp.o }
       - { path: src/prlib/mendererawful.cpp.o }
-      - { path: asm/data/prlib/mendereralpha.data.s.o }
+      - { path: src/prlib/mendereralpha.cpp.o }
       - { path: src/prlib/mendererdata.cpp.o }
       - { path: src/prlib/wave.cpp.o }
       - { path: src/prlib/dmaqueue.cpp.o }
