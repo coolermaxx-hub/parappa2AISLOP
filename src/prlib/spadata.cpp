@@ -419,6 +419,17 @@ static inline NaMATRIX<float, 4, 4> MakeMatrix_tmp_spadata(
     SetMatrix_tmp_spadata(&ret, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
 }
 
+/* Same as above with a one-pass loop around Set; see RotateMatrix(int) */
+static inline NaMATRIX<float, 4, 4> MakeMatrixLoop_tmp_spadata(
+    const float& m00, const float& m01, const float& m02, const float& m03,
+    const float& m10, const float& m11, const float& m12, const float& m13,
+    const float& m20, const float& m21, const float& m22, const float& m23,
+    const float& m30, const float& m31, const float& m32, const float& m33) return ret {
+    do {
+        SetMatrix_tmp_spadata(&ret, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+    } while (0);
+}
+
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf);
 #else
@@ -622,19 +633,20 @@ NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) co
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ABE0);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4iRCf);
-#else
 template <>
 NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle) {
     float c = cosf(angle);
     float s = sinf(angle);
 
     /*
-     * The do-while(0) stops CSE from carrying sinf()'s register into the
-     * last arm, so it reloads s like the original. Still off: reorg fills
-     * the axis == 1 branch delay slot from the fall-through instead of
-     * using bnel + the reload.
+     * None of these loops repeat. They recreate loop notes that the
+     * original code had, which steer three ee-gcc passes:
+     * - the outer loop keeps the axis == 1 test from being a loop exit,
+     *   so reorg predicts it taken (bnel with the reload of s in the slot);
+     * - the loop around the axis == 1 return ends right before the last
+     *   arm, so CSE stops there and that arm reloads s from the stack;
+     * - the loop in MakeMatrixLoop_tmp_spadata leaves a NOTE_INSN_LOOP_BEG
+     *   before the last arm's label, so final aligns it to 8 bytes.
      */
     do {
         if (axis == 0) {
@@ -643,20 +655,22 @@ NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float&
                                           0.0f, -s, c, 0.0f,
                                           0.0f, 0.0f, 0.0f, 1.0f);
         }
-        if (axis == 1) {
-            return MakeMatrix_tmp_spadata(c, 0.0f, -s, 0.0f,
-                                          0.0f, 1.0f, 0.0f, 0.0f,
-                                          s, 0.0f, c, 0.0f,
-                                          0.0f, 0.0f, 0.0f, 1.0f);
-        }
-    } while (0);
 
-    return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
-                                  -s, c, 0.0f, 0.0f,
-                                  0.0f, 0.0f, 1.0f, 0.0f,
-                                  0.0f, 0.0f, 0.0f, 1.0f);
+        if (axis == 1) {
+            do {
+                return MakeMatrixLoop_tmp_spadata(c, 0.0f, -s, 0.0f,
+                                                  0.0f, 1.0f, 0.0f, 0.0f,
+                                                  s, 0.0f, c, 0.0f,
+                                                  0.0f, 0.0f, 0.0f, 1.0f);
+            } while (0);
+        }
+
+        return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
+                                      -s, c, 0.0f, 0.0f,
+                                      0.0f, 0.0f, 1.0f, 0.0f,
+                                      0.0f, 0.0f, 0.0f, 1.0f);
+    } while (0);
 }
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014AFE0);
 
