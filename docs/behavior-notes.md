@@ -348,3 +348,19 @@ Linear interpolation header. A nonzero integer, including a negative value,
 means visible. Original loop wrapping and parent/default visibility flags remain
 in effect. See [spa-animation-layout.md](spa-animation-layout.md) for evidence
 and unverified fields.
+
+## EE-core init packet register slots (2026-10-03)
+
+**The original `PrRenderStuff::InitializeEECore` stores three draw-environment
+registers one slot ahead of the register address that follows them.** The
+static A+D packet (`initEECoreDmaPacket`, `src/prlib/renderee.cpp`) lists, for
+drawing context 2: FRAME_2, ZBUF_2, TEST_2, ALPHA_2, TEX1_2, FBA_2, PRMODECONT,
+TEXA, COLCLAMP, PABE, XYOFFSET_2, SCISSOR_2, DTHE. The function writes the
+scene's `xyoffset` into the PABE slot, `scissor1` into the XYOFFSET_2 slot and
+`dthe` into the SCISSOR_2 slot (checked from the instruction offsets +176,
++192 and +208 against the data addresses). The DTHE slot is never written. The
+source reproduces this exactly because the stores are part of the matching
+code; whether it is a latent bug in the shipped game or is harmless (the
+EE-core path may only run with defaults that make the shifted values inert)
+is *not known*. A port should verify this on hardware or in an emulator
+before copying the behaviour or fixing it.

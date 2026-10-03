@@ -11,6 +11,9 @@
 
 /* data */
 // Decoded from the original 14-quadword DMA payload (13 A+D registers).
+// The 14-quadword A+D payload targets drawing context 2. The three draw
+// environment stores in InitializeEECore land one slot before the registers
+// that follow them in this table, see docs/behavior-notes.md.
 struct PrEECoreInitializationPacket {
     sceDmaTag dma;
     sceGifTag gif;
@@ -23,20 +26,36 @@ struct PrEECoreInitializationPacket {
     PrGsAD primitiveControl;
     PrGsAD textureFunction;
     PrGsAD colorClamp;
+    PrGsAD alphaBlendControl;
     PrGsAD offset;
     PrGsAD scissor;
     PrGsAD dithering;
-    PrGsAD ditherMatrix;
 };
-extern PrEECoreInitializationPacket initEECoreDmaPacket;
+PrEECoreInitializationPacket initEECoreDmaPacket = {
+    { 14, 0, 0, reinterpret_cast<sceDmaTag*>(&initEECoreDmaPacket.gif), { 0, 0 } },
+    { 13, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
+    { 0, SCE_GS_FRAME_2 },
+    { 0, SCE_GS_ZBUF_2 },
+    { SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
+    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80), SCE_GS_ALPHA_2 },
+    { SCE_GS_SET_TEX1(1, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { 0, SCE_GS_FBA_2 },
+    { 1, SCE_GS_PRMODECONT },
+    { SCE_GS_SET_TEXA(0, 0, 0x80), SCE_GS_TEXA },
+    { 1, SCE_GS_COLCLAMP },
+    { 0, SCE_GS_PABE },
+    { 0, SCE_GS_XYOFFSET_2 },
+    { 0, SCE_GS_SCISSOR_2 },
+    { 0, SCE_GS_DTHE },
+};
 
 void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     PrEECoreInitializationPacket *packet = reinterpret_cast<PrEECoreInitializationPacket*>(PR_UNCACHED(&initEECoreDmaPacket));
     packet->zbuf.value = NaGifPacket::EncodeRegister(m_zbuf);
     packet->frame.value = NaGifPacket::EncodeRegister(scene->m_frame);
-    packet->offset.value = NaGifPacket::EncodeRegister(scene->m_xyoffset);
-    packet->scissor.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->scissor1);
-    packet->dithering.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->dthe);
+    packet->alphaBlendControl.value = NaGifPacket::EncodeRegister(scene->m_xyoffset);
+    packet->offset.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->scissor1);
+    packet->scissor.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->dthe);
 
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);
@@ -58,9 +77,15 @@ void PrRenderStuff::RenderVertexEECoreContour() {
 
 // These handwritten kernels use a persistent VU register convention. They
 // consume the context input and produce its output without a C++ this pointer.
-extern PrEECoreVertexKernel eeCoreVertexKernels[4] asm("D_0038C670");
-extern const sceDmaTag eeCoreChunkDmaTag asm("D_0038C690");
-extern const NaVECTOR<float, 4> eeCoreRandomCenter asm("D_0038C6A0");
+// Slots 4-7 are zero in the original data.
+static PrEECoreVertexKernel eeCoreVertexKernels[8] = {
+    PrRenderStuff::RenderVertexEECoreNormal,
+    PrRenderStuff::RenderVertexEECoreBothface,
+    PrRenderStuff::RenderVertexEECoreContour,
+    PrRenderStuff::RenderVertexEECoreRefmap,
+};
+static sceDmaTag eeCoreChunkDmaTag = { 0, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+static float eeCoreRandomCenter[4] __attribute__((aligned(16))) = { 1.5f, 1.5f, 1.5f, 1.5f };
 struct PrEECoreDisturbance {
     u_int seed;
     u_int reserved;
@@ -154,7 +179,7 @@ void PrRenderStuff::RenderChunkEECore(PrVuDataChunkPacketHeader *chunk, float di
                 "vmsubaz.xyz ACC, $vf23, $vf24z\n\t"
                 "vmaddz.xyz $vf25, $vf26, $vf24z\n\t"
                 "sqc2 $vf25, 0x0(%2)\n\t"
-                : : "r"(&eeCoreRandomCenter), "r"(&eeCoreDisturbance), "r"(&context.input.position)
+                : : "r"(eeCoreRandomCenter), "r"(&eeCoreDisturbance), "r"(&context.input.position)
                 : "memory");
         }
         context.vertexKernel();
