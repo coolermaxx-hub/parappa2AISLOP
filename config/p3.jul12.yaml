@@ -198,7 +198,7 @@ segments:
         - [0x84B88, .data, main/fadectrl]
         - [0x84BA0,  data, main/subt]
         - [0x85478,  data, main/drawctrl]
-        - [0x86288,  data, main/mbar]
+        - [0x86288, .data, main/mbar]
         - [0x86F10, .data, main/etc]
         - [0x87000, .data, main/wipe]
         - [0x87340, .data, main/mcctrl]

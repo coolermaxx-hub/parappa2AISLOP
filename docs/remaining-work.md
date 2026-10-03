@@ -73,10 +73,13 @@ steering. Removed, with source kept as the active build: the `do { } while (0)`
 in `_P3MC_mainfile_chk` and `TsBGMStop`, the gotos in `ScrExamSetCheck`, the
 word-casts over save timestamps (now `P3MC_DATE`, whose two words are compared
 through `P3MC_DATE_WORD`), the `FILE_DATE` cast struct and the byte-offset cast
-in `TsOption_Flow`. Still open: the `*_tmp_NNN` externs in `menusub.c` and
-`mbar.c`, which stand for file-static variables that still live in splat data
-sections, and the `*(u_long *)&sceGs...` register-struct reads used to feed GIF
-packets.
+in `TsOption_Flow`. The whole `main/mbar` data section is now typed C in `mbar.c` (texture
+descriptor table with decoded TEX0 fields, GUI maps, niko/hook layouts), with
+byte-identical contents. Still open: the `*_tmp_NNN` externs in `menusub.c` and
+`mbar.c`'s sbss/bss statics (`tp_tmp_72` and friends), which stand for
+file-static variables that still live in splat sections. The remaining
+`*(u_long *)&sceGs...` reads in `wipe.c` follow the SDK idiom of submitting a
+register struct as one 64-bit GIF A+D value.
 
 ## Known byte differences from readability changes
 

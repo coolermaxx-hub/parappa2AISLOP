@@ -832,7 +832,6 @@ lessonCl2InfoGet                    = 0x0011bbb8; // type:func
 MbarDemoCharDisp                    = 0x0011bc18; // type:func
 
 // TODO: match .data to get rid of temporary name
-tim2spr_tbl_tmp1                    = 0x00186288; // size:0x7e0 allow_duplicated:true can_reference:false
 tmpColor                            = 0x00186a68; // size:0x40
 niko_chan_str_hook                  = 0x00186aa8; // size:0x50 can_reference:false
 niko_chan_str_vs                    = 0x00186af8; // size:0x30 can_reference:false

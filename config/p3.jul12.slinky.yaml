@@ -292,7 +292,7 @@ segments:
       - { path: asm/data/main/subt.data.s.o }
       - { path: asm/data/main/drawctrl.data.s.o }
       - { path: src/main/effect.c.o }
-      - { path: asm/data/main/mbar.data.s.o }
+      - { path: src/main/mbar.c.o }
       - { path: src/main/pack.c.o }
       - { path: src/main/etc.c.o }
       - { path: src/main/wipe.c.o }

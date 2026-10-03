@@ -13,32 +13,16 @@
 #include <math.h>
 #include <stdio.h>
 
-/* data 186288 */ extern TIM2_DAT tim2spr_tbl_tmp1[]; /* static, tim2spr_tbl */
-/* data 186a68 */ extern u_int tmpColor[]; /* static */
-/* data 186aa8 */ extern NIKO_CHAN_STR niko_chan_str_hook[]; /* static */
-/* data 186af8 */ extern NIKO_CHAN_STR niko_chan_str_vs[]; /* static */
 /* sdata 399558 */ static NIKO_CHAN_STR *niko_chan_str_pp = NULL;
 /* sdata 39955c */ static int niko_chan_str_cnt = 0;
 /* sdata 399560 */ static int hook_use_flag = 0;
-/* data 186b28 */ extern MBHOOK_STR mbhook_str[2]; /* static */
-/* data 186b38 */ extern u_int hook_fr_dat[]; /* static */
 /* sdata 399564 */ static int exam_disp_cursor_timer = -1;
 /* sdata 399568 */ static int scoreTentouFlag = 0;
-/* data 186b78 */ extern u_char scr_tenmetu_col[4][3]; /* static */
 /* sdata 39956c */ int otehonAniCnt = 0; /* static */
 /* sdata 399570 */ int othon_frame = 0; /* static */
 /* sdata 399574 */ static int vs_mouse_disp_flag = 0;
-/* data 186b88 */ extern METCOL_STR metcol_str[3]; /* static */
-/* data 186bb0 */ extern MBA_CHAR_DATA mba_char_data[]; /* static */
 /* sdata 399578 */ static int mbar_pos_y_ofs = 0;
-/* data 186d78 */ extern u_char colp[][3]; /* static */
 /* data 17c2b8 */ extern GAME_STATUS game_status; /* static */
-/* data 186d90 */ extern void (*marSetPrgTbl[])(MBAR_REQ_STR*); /* static */
-/* data 186da0 */ extern GUIMAP guimap[]; /* static */
-/* data 186ee0 */ extern int guimap_single[]; /* static */
-/* data 186ef0 */ extern int guimap_vs[]; /* static */
-/* data 186f00 */ extern int guimap_sr[]; /* static */
-/* data 186f08 */ extern int guimap_hk[]; /* static */
 /* bss 1c70030 */ extern GLOBAL_PLY *exam_global_ply[4]; /* static */
 static GLOBAL_PLY *exam_global_ply_current;
 /* bss 1c70040 */ extern int exam_global_ply_current_ply[4]; /* static */
@@ -94,6 +78,189 @@ static void   mbar_othon_frame_set(MBAR_REQ_STR *mr_pp);
 static void   guidisp_init_pr(void);
 static void   guidisp_draw_quit(int drapP);
 
+/* GS texture descriptors for the mbar sprites. */
+static TIM2_DAT tim2spr_tbl[63] = {
+    { SCE_GS_SET_TEX0(0x3cb6, 2, 20, 5, 5, 1, 0, 0x3d1a, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cb8, 2, 20, 5, 5, 1, 0, 0x3d1b, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ceb, 2, 20, 4, 4, 1, 0, 0x3d3e, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c72, 2, 20, 4, 4, 1, 0, 0x3d34, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c85, 2, 20, 4, 4, 1, 0, 0x3d35, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c94, 2, 20, 4, 4, 1, 0, 0x3d36, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ce4, 2, 20, 4, 4, 1, 0, 0x3d37, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ce5, 2, 20, 4, 4, 1, 0, 0x3d38, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ce6, 2, 20, 4, 4, 1, 0, 0x3d39, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cba, 2, 20, 5, 5, 1, 0, 0x3d1c, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cbc, 2, 20, 5, 5, 1, 0, 0x3d1d, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cbe, 2, 20, 5, 5, 1, 0, 0x3d1e, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cc0, 2, 20, 5, 5, 1, 0, 0x3d1f, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cc6, 2, 20, 5, 5, 1, 0, 0x3d23, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c6a, 2, 20, 3, 3, 1, 0, 0x3d32, 0, 0, 0, 1), 0x260, 0x0, 0x0, 8, 8, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ce7, 2, 20, 4, 4, 1, 0, 0x3d3a, 0, 0, 0, 1), 0x260, 0x0, 0x0, 16, 16, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c23, 2, 20, 5, 5, 1, 0, 0x3d09, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c27, 2, 20, 5, 5, 1, 0, 0x3d0a, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c35, 2, 20, 5, 5, 1, 0, 0x3d0b, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c37, 2, 20, 5, 5, 1, 0, 0x3d0c, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c53, 2, 20, 5, 5, 1, 0, 0x3d0d, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c6c, 2, 20, 5, 5, 1, 0, 0x3d0e, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c6e, 2, 20, 5, 5, 1, 0, 0x3d0f, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ca0, 2, 20, 5, 5, 1, 0, 0x3d10, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ca4, 2, 20, 5, 5, 1, 0, 0x3d11, 2, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b8b, 2, 20, 5, 5, 1, 0, 0x3d08, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3ccc, 2, 20, 5, 5, 1, 0, 0x3d26, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c31, 4, 20, 8, 5, 1, 0, 0x3cf9, 2, 0, 0, 1), 0x260, 0x0, 0x0, 160, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3bf9, 2, 19, 7, 7, 1, 0, 0x3cf5, 0, 0, 0, 1), 0x260, 0x0, 0x0, 120, 88, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d3f, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d40, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d41, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d42, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d43, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d44, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d45, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d03, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d03, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d03, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d01, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d01, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d01, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d02, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d02, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d02, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d46, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d47, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d48, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d49, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 0, 20, 1, 1, 1, 0, 0x3d4a, 0, 0, 0, 1), 0x0, 0x0, 0x0, 0, 0, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cea, 2, 20, 3, 3, 1, 0, 0x3d3d, 0, 0, 0, 1), 0x260, 0x0, 0x0, 8, 8, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c70, 2, 20, 3, 3, 1, 0, 0x3d33, 0, 0, 0, 1), 0x260, 0x0, 0x0, 8, 8, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3b6d, 6, 20, 9, 5, 1, 0, 0x3cec, 0, 0, 0, 1), 0x260, 0x0, 0x0, 376, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c3d, 2, 19, 7, 6, 1, 0, 0x3cfa, 0, 0, 0, 1), 0x260, 0x0, 0x0, 96, 64, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cc8, 2, 20, 5, 5, 1, 0, 0x3d24, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cca, 2, 20, 5, 5, 1, 0, 0x3d25, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3caa, 2, 20, 5, 5, 1, 0, 0x3d14, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cac, 2, 20, 5, 5, 1, 0, 0x3d15, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cae, 2, 20, 5, 5, 1, 0, 0x3d16, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cb0, 2, 20, 5, 5, 1, 0, 0x3d17, 0, 0, 0, 1), 0x260, 0x0, 0x0, 32, 32, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cb2, 2, 20, 5, 5, 1, 0, 0x3d18, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3cb4, 2, 20, 5, 5, 1, 0, 0x3d19, 0, 0, 0, 1), 0x260, 0x0, 0x0, 24, 24, {0, 0} },
+    { SCE_GS_SET_TEX0(0x3c96, 2, 20, 7, 6, 1, 0, 0x3d04, 0, 0, 0, 1), 0x260, 0x0, 0x0, 72, 64, {0, 0} },
+};
+
+static u_int tmpColor[16] = {0};
+
+static NIKO_CHAN_STR niko_chan_str_hook[] = {
+    { 146, 169, NIKO_KAGE },
+    { 182, 169, NIKO_KAGE },
+    { 218, 169, NIKO_KAGE },
+    { 254, 169, NIKO_KAGE },
+    { 290, 169, NIKO_KAGE },
+    { 326, 169, NIKO_KAGE },
+    { 362, 169, NIKO_KAGE },
+    { 398, 169, NIKO_KAGE },
+    { 434, 169, NIKO_KAGE },
+    { 470, 169, NIKO_KAGE },
+};
+
+static NIKO_CHAN_STR niko_chan_str_vs[] = {
+    { 24, 11, NIKO_KAGE },
+    { 24, 25, NIKO_KAGE },
+    { 24, 39, NIKO_KAGE },
+    { 592, 11, NIKO_KAGE },
+    { 592, 25, NIKO_KAGE },
+    { 592, 39, NIKO_KAGE },
+};
+
+static MBHOOK_STR mbhook_str[2] = {
+    { 90, 91, 0 },
+    { 92, 93, 0 },
+};
+
+static u_int hook_fr_dat[16] = { 0, 38, 76, 128, 128, 128, 115, 102, 89, 76, 64, 51, 38, 25, 12, 0 };
+
+static u_char scr_tenmetu_col[4][3] = {
+    { 0xff, 0x80, 0x00 },
+    { 0x80, 0x80, 0xff },
+    { 0xff, 0x40, 0x40 },
+    { 0xff, 0x80, 0x00 },
+};
+
+static METCOL_STR metcol_str[3] = {
+    { 82, 81, 83 },
+    { 85, 84, 86 },
+    { 88, 87, 89 },
+};
+
+static MBA_CHAR_DATA mba_char_data[] = {
+    { &tim2spr_tbl[0], 0.0f, 0.0f },
+    { &tim2spr_tbl[12], 1.0f, 1.0f },
+    { &tim2spr_tbl[9], 1.0f, 1.0f },
+    { &tim2spr_tbl[10], 1.0f, 1.0f },
+    { &tim2spr_tbl[13], 1.0f, 1.0f },
+    { &tim2spr_tbl[1], 1.0f, 1.0f },
+    { &tim2spr_tbl[11], 1.0f, 1.0f },
+    { &tim2spr_tbl[0], 1.0f, 1.0f },
+    { &tim2spr_tbl[7], 1.0f, 1.0f },
+    { &tim2spr_tbl[4], 1.0f, 1.0f },
+    { &tim2spr_tbl[5], 1.0f, 1.0f },
+    { &tim2spr_tbl[8], 1.0f, 1.0f },
+    { &tim2spr_tbl[3], 1.0f, 1.0f },
+    { &tim2spr_tbl[6], 1.0f, 1.0f },
+    { &tim2spr_tbl[2], 1.0f, 1.0f },
+    { &tim2spr_tbl[34], 1.0f, 1.0f },
+    { &tim2spr_tbl[31], 1.0f, 1.0f },
+    { &tim2spr_tbl[32], 1.0f, 1.0f },
+    { &tim2spr_tbl[35], 1.0f, 1.0f },
+    { &tim2spr_tbl[30], 1.0f, 1.0f },
+    { &tim2spr_tbl[33], 1.0f, 1.0f },
+    { &tim2spr_tbl[29], 1.0f, 1.0f },
+    { &tim2spr_tbl[14], 1.0f, 1.0f },
+    { &tim2spr_tbl[15], 1.0f, 1.0f },
+    { &tim2spr_tbl[0], 0.0f, 0.0f },
+    { &tim2spr_tbl[16], 1.0f, 1.0f },
+    { &tim2spr_tbl[17], 1.0f, 1.0f },
+    { &tim2spr_tbl[18], 1.0f, 1.0f },
+    { &tim2spr_tbl[19], 1.0f, 1.0f },
+    { &tim2spr_tbl[20], 1.0f, 1.0f },
+    { &tim2spr_tbl[21], 1.0f, 1.0f },
+    { &tim2spr_tbl[22], 1.0f, 1.0f },
+    { &tim2spr_tbl[22], 1.0f, 1.0f },
+    { &tim2spr_tbl[23], 1.0f, 1.0f },
+    { &tim2spr_tbl[24], 1.0f, 1.0f },
+    { &tim2spr_tbl[26], 1.0f, 1.0f },
+    { &tim2spr_tbl[50], 1.0f, 1.0f },
+    { &tim2spr_tbl[51], 1.0f, 1.0f },
+};
+
+static u_char colp[][3] = {
+    { 0, 0, 0 },
+    { 25, 50, 25 },
+    { 50, 25, 25 },
+    { 35, 25, 50 },
+    { 50, 25, 40 },
+    { 50, 50, 25 },
+    { 25, 25, 50 },
+    { 0, 0, 0 },
+};
+
+static void (*marSetPrgTbl[])(MBAR_REQ_STR*) = { MbarPosOffsetSet, MbarBackSet, MbarOthSet, MbarCurSet };
+
+static GUIMAP guimap[] = {
+    { 22, -1, -1, 0, 0, 0, NULL, NULL },
+    { 44, 63, 64, 0, 0, 0, metFrameCnt, metFrameCntLight },
+    { 45, 67, 68, 0, 0, 0, &metFrameCnt[1], &metFrameCntLight[1] },
+    { 46, 69, 70, 0, 0, 0, &metFrameCnt[2], &metFrameCntLight[2] },
+    { 42, -1, -1, 0, 0, 0, NULL, NULL },
+    { 43, -1, -1, 0, 0, 0, NULL, NULL },
+    { 14, 52, -1, 0, 0, 0, &otehonAniCnt, NULL },
+    { 13, 50, -1, 0, 0, 0, &othon_frame, NULL },
+    { 23, 55, 56, 0, 0, 0, vsScoreAni, vsScoreMove },
+    { 24, 57, 58, 0, 0, 0, &vsScoreAni[1], &vsScoreMove[1] },
+};
+
+static int guimap_single[] = { 0, 1, 4, 0 };
+static int guimap_vs[] = { 1, 4, 8, 9 };
+static int guimap_sr[] = { 5, 0 };
+static int guimap_hk[] = { 5, 0 };
+
 void examCharSet(EX_CHAR_DISP *ecd_pp, sceGifPacket *gifpk_pp) {
     int wl, hl;
     int xp, yp;
@@ -128,7 +295,7 @@ static void clrColorBuffer(int id) {
     u_char   *tr_adr;
     u_int     cpsm, cbp;
 
-    tim2_dat_pp = &tim2spr_tbl_tmp1[id];
+    tim2_dat_pp = &tim2spr_tbl[id];
     tr_adr = (u_char*)&tmpColor;
 
     cpsm = PR_TEX0(tim2_dat_pp).CPSM;
@@ -289,17 +456,17 @@ static void MbarNikoDisp(sceGifPacket *gifpk_pp) {
 
         switch (niko_chan_str_pp[i].niko_enum) {
         case NIKO_KAGE:
-            tim2_dat_pp = &tim2spr_tbl_tmp1[60];
+            tim2_dat_pp = &tim2spr_tbl[60];
             break;
         case NIKO_HALF:
-            tim2_dat_pp = &tim2spr_tbl_tmp1[60];
+            tim2_dat_pp = &tim2spr_tbl[60];
             tim2_dat2_pp = tim2_dat_pp + 1;
             break;
         case NIKO_MARU:
-            tim2_dat_pp = &tim2spr_tbl_tmp1[61];
+            tim2_dat_pp = &tim2spr_tbl[61];
             break;
         case NIKO_SKIP:
-            tim2_dat_pp = &tim2spr_tbl_tmp1[62];
+            tim2_dat_pp = &tim2spr_tbl[62];
             break;
         }
 
@@ -706,7 +873,7 @@ void examNumDisp(sceGifPacket *ex_gif_pp, long score, short x, short y, int keta
     EX_CHAR_DISP ex_ecd;
 
     first_f = FALSE;
-    examCharBasic(&ex_ecd, &tim2spr_tbl_tmp1[27]);
+    examCharBasic(&ex_ecd, &tim2spr_tbl[27]);
     examCharKidoSet(&ex_ecd, coldat_pp[0], coldat_pp[1], coldat_pp[2]);
     
     if (plmi) {
@@ -780,7 +947,7 @@ static void examLevelDisp(sceGifPacket *ex_gif_pp) {
 
     plevel = conditionFramCnt[0] * 96 / 240;
 
-    examCharBasic(&ex_ecd, &tim2spr_tbl_tmp1[28]);
+    examCharBasic(&ex_ecd, &tim2spr_tbl[28]);
     examCharUVWHSet(&ex_ecd, plevel, 0, 24, 88);
     examCharPosSet(&ex_ecd, 616, 136);
     examCharSet(&ex_ecd, ex_gif_pp);
@@ -1862,7 +2029,7 @@ int MbarDispGuiSceneMbarArea(void *para_pp, int frame, int first_f, int useDisp,
 }
 
 TIM2_DAT* lessonTim2InfoGet(void) {
-    return &tim2spr_tbl_tmp1[52];
+    return &tim2spr_tbl[52];
 }
 
 TIM2_DAT* lessonCl2InfoGet(SCRRJ_LESSON_ROUND_ENUM type) {
@@ -1880,7 +2047,7 @@ TIM2_DAT* lessonCl2InfoGet(SCRRJ_LESSON_ROUND_ENUM type) {
         /* SCRRJ_LR_ROUND_5  */ 0x31,
     };
 
-    return &tim2spr_tbl_tmp1[le_num[type]];
+    return &tim2spr_tbl[le_num[type]];
 }
 
 void MbarDemoCharDisp(void) {
@@ -1898,7 +2065,7 @@ void MbarDemoCharDisp(void) {
 
     SprInit();
     ChangeDrawArea(DrawGetDrawEnvP(2));
-    tim2_dat_pp = &tim2spr_tbl_tmp1[53];
+    tim2_dat_pp = &tim2spr_tbl[53];
     spr_prim.w = tim2_dat_pp->w;
     spr_prim.h = tim2_dat_pp->h;
     SprClear();
