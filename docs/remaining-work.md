@@ -97,7 +97,8 @@ register struct as one 64-bit GIF A+D value.
 ## Data sections still in asm
 
 Typed C already: `mbar`, `p3mc`, `memc`, `subt`, `drawctrl` (data and sdata,
-including the debug menu table with real string literals). Still asm
-(`asm/data/...`): `menu/menusub`, `menu/menufont`, `menu/mntm2hed`,
+including the debug menu table with real string literals) and `menusub` (data
+and sdata; the sdata layout is byte-identical to the original). Still asm
+(`asm/data/...`): `menu/menufont`, `menu/mntm2hed`,
 `menu/menu_mdl`, `main/stdat`, `sdk/libgcc` and `common_ipk`. The rodata blobs
 that remain `INCLUDE_RODATA` are listed by `grep -rn INCLUDE_RODATA src`.

@@ -207,7 +207,7 @@ segments:
 
         - [0x87558, .data, menu/menudata]
         - [0x886F8,  data, menu/menu_mdl]
-        - [0x8B0E0,  data, menu/menusub]
+        - [0x8B0E0, .data, menu/menusub]
         - [0x8DD90, .data, menu/p3mc]
         - [0x8DDF8, .data, menu/memc]
         - [0x8E1D0,  data, menu/mntm2hed]

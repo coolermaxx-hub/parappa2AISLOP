@@ -22,128 +22,988 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* data 18b0e0 */ extern MNMAPPOS mnmapMap1[]; /* static */
-/* data 18b160 */ extern MNMAPPOS mnmapMap[]; /* static */
-/* data 18b3a0 */ extern MNMAPPOS mnmapMap2[]; /* static */
+/* bss 1c7b0b8 */ extern MN_SCENE MNS_RepCounter; /* static */
+/* bss 1c7c210 */ extern MN_SCENE MNS_StgCounter[2]; /* static */
+static MNMAPPOS mnmapMap1[] = {
+    {
+        0,
+        8,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 1, 7, 10, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        1,
+        7,
+        0,
+        1,
+        {
+            { 0, 8, 10, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+};
+static MNMAPPOS mnmapMap[] = {
+    {
+        2,
+        8,
+        0,
+        1,
+        {
+            { 32773, 11, 10, 0 },
+            { 1, 7, 10, 0 },
+            { 32771, 9, 10, 0 },
+            { 32775, 13, 10, 0 },
+        },
+    },
+    {
+        3,
+        7,
+        0,
+        1,
+        {
+            { 0, 8, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 2, 15, 10, 0 },
+            { 32776, 30, 10, 0 },
+        },
+    },
+    {
+        4,
+        15,
+        0,
+        1,
+        {
+            { 3, 17, 10, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { 1, 16, 10, 0 },
+        },
+    },
+    {
+        5,
+        17,
+        0,
+        1,
+        {
+            { 4, 19, 10, 0 },
+            { 2, 18, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 32768, 10, 10, 0 },
+        },
+    },
+    {
+        6,
+        19,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 3, 20, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 5, 21, 10, 0 },
+        },
+    },
+    {
+        7,
+        21,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 32768, 12, 0, 0 },
+            { 4, 22, 10, 0 },
+            { 6, 23, 10, 0 },
+        },
+    },
+    {
+        8,
+        23,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 7, 25, 10, 0 },
+            { 5, 24, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        9,
+        25,
+        0,
+        1,
+        {
+            { 6, 26, 10, 0 },
+            { 8, 27, 10, 0 },
+            { 32768, 14, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        10,
+        27,
+        0,
+        1,
+        {
+            { 7, 28, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 32769, 29, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+};
+static MNMAPPOS mnmapMap2[] = {
+    {
+        2,
+        8,
+        0,
+        1,
+        {
+            { 5, 11, 10, 0 },
+            { 1, 7, 10, 0 },
+            { 3, 9, 10, 0 },
+            { 7, 13, 10, 0 },
+        },
+    },
+    {
+        3,
+        7,
+        0,
+        1,
+        {
+            { 0, 8, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 2, 15, 10, 0 },
+            { 8, 30, 10, 0 },
+        },
+    },
+    {
+        4,
+        15,
+        0,
+        1,
+        {
+            { 3, 17, 10, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { 1, 16, 10, 0 },
+        },
+    },
+    {
+        5,
+        17,
+        0,
+        1,
+        {
+            { 4, 19, 10, 0 },
+            { 2, 18, 10, 0 },
+            { 9, 31, 10, 0 },
+            { 0, 10, 10, 0 },
+        },
+    },
+    {
+        6,
+        19,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 3, 20, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 5, 21, 10, 0 },
+        },
+    },
+    {
+        7,
+        21,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 0, 12, 0, 0 },
+            { 4, 22, 10, 0 },
+            { 6, 23, 10, 0 },
+        },
+    },
+    {
+        8,
+        23,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { 7, 25, 10, 0 },
+            { 5, 24, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        9,
+        25,
+        0,
+        1,
+        {
+            { 6, 26, 10, 0 },
+            { 8, 27, 10, 0 },
+            { 0, 14, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        10,
+        27,
+        0,
+        1,
+        {
+            { 7, 28, 10, 0 },
+            { -1, -1, 0, 0 },
+            { 1, 29, 10, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        11,
+        31,
+        0,
+        1,
+        {
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { 3, 32, 10, 0 },
+        },
+    },
+};
 // /* data 18b620 */ static short RShopRute0[0];
 // /* data 18b630 */ static short RShopRute1[0];
 // /* data 18b638 */ static short RShopRute2[0];
-/* data 18b648 */ extern short *RecordShopRute[]; /* static */
-/* data 18b670 */ extern MNMAPPOS mnmapCityHall[]; /* static */
-/* data 18b730 */ extern short AnmCHallPara_OptRet[]; /* static */
-/* data 18b738 */ extern short AnmCHallPara_Opt[]; /* static */
-/* data 18b740 */ extern short AnmCHallPara_RepRet[]; /* static */
-/* data 18b748 */ extern short AnmCHallPara_Rep[]; /* static */
-/* data 18b750 */ extern short AnmCHallFphs_OptRet[]; /* static */
-/* data 18b758 */ extern short AnmCHallFphs_Opt[]; /* static */
-/* data 18b760 */ extern short AnmCHallFphs_RepRet[]; /* static */
-/* data 18b768 */ extern short AnmCHallFphs_Rep[]; /* static */
-/* data 18b770 */ extern short AnmCHallChar_Log[]; /* static */
-/* data 18b780 */ extern short AnmCHallChar_Opt[]; /* static */
-/* data 18b790 */ extern short AnmCHallChar_Rep[]; /* static */
-/* sdata 399748 */ extern u_char *UserName_InitialStr; /* static */
-/* sdata 39974c */ extern u_char *UserName_InitialStr2; /* static */
-// /* data 18b7a0 */ static u_char UserName_AsciiSetB[41];
-// /* data 18b7d0 */ static u_char UserName_AsciiSetS[41];
-/* data 18b800 */ extern USERNAME_CSET UserName_CharSet[];
-/* data 18b810 */ extern u_char *TeachersName_Tbl[]; /* static */
-/* sdata 39975c */ extern u_char *UserName_RankingNoSave; /* static */
-/* data 18b830 */ extern char *_MONTH_STR[]; /* static */
-/* data 18b880 */ extern MAPBGM MapBgmTbl[]; /* static */
-/* data 18b908 */ extern TSVOICE_TBL TsVoiceTbl[]; /* static */
+static short RecordShopRute_Route0[20] = { 5, 4, 3, 9, -1, 0, 0, 0, 0, 3, 9, -1, 1, 2, 3, 9, -1, 0, 0, 0 };
+static short *RecordShopRute[] = {
+    &RecordShopRute_Route0[9], &RecordShopRute_Route0[13], &RecordShopRute_Route0[14],
+    &RecordShopRute_Route0[15], &RecordShopRute_Route0[2], &RecordShopRute_Route0[1],
+    RecordShopRute_Route0, &RecordShopRute_Route0[8], &RecordShopRute_Route0[12],
+    &RecordShopRute_Route0[15],
+};
+static MNMAPPOS mnmapCityHall[] = {
+    {
+        32,
+        2,
+        -1,
+        -1,
+        {
+            { 1, 5, 5, 1 },
+            { 2, 8, 5, 2 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        34,
+        5,
+        -1,
+        -1,
+        {
+            { -1, -1, 0, 0 },
+            { 0, 4, 5, 3 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+    {
+        33,
+        8,
+        -1,
+        -1,
+        {
+            { 0, 7, 5, 4 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+            { -1, -1, 0, 0 },
+        },
+    },
+};
+static short AnmCHallPara_OptRet[] = { 14, 20, 4108, -1 };
+static short AnmCHallPara_Opt[] = { 14, 21, 4108, -1 };
+static short AnmCHallPara_RepRet[] = { 14, 22, 4108, -1 };
+static short AnmCHallPara_Rep[] = { 14, 23, 4108, -1 };
+static short AnmCHallFphs_OptRet[] = { 15, 25, 4109, -1 };
+static short AnmCHallFphs_Opt[] = { 15, 26, 4109, -1 };
+static short AnmCHallFphs_RepRet[] = { 15, 27, 4109, -1 };
+static short AnmCHallFphs_Rep[] = { 15, 28, 4109, -1 };
+static short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
+static short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
+static short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
+extern MN_MDLTBL Mdl_StageMapH[], Mdl_StageMapA[], Mdl_StageMapY[], Mdl_CityHall[], Mdl_OptCounter[];
+extern MN_MDLTBL Mdl_RepCounter[], Mdl_StgCounterLoad[], Mdl_StgCounterSave[], Mdl_JimakuBak[];
+extern int Cam_StageMap[], Cam_CityHall[], Cam_Notdef[];
+
+MN_SCENETBL Scene_StageMap       = { Mdl_StageMapH,      Cam_StageMap };
+MN_SCENETBL Scene_StageMapA      = { Mdl_StageMapA,      Cam_StageMap };
+MN_SCENETBL Scene_StageMapY      = { Mdl_StageMapY,      Cam_StageMap };
+MN_SCENETBL Scene_CityHall       = { Mdl_CityHall,       Cam_CityHall };
+MN_SCENETBL Scene_OptCounter     = { Mdl_OptCounter,     Cam_Notdef };
+MN_SCENETBL Scene_RepCounter     = { Mdl_RepCounter,     Cam_Notdef };
+MN_SCENETBL Scene_StgCounterLoad = { Mdl_StgCounterLoad, Cam_Notdef };
+MN_SCENETBL Scene_StgCounterSave = { Mdl_StgCounterSave, Cam_Notdef };
+MN_SCENETBL Scene_JimakuBak      = { Mdl_JimakuBak,      Cam_Notdef };
+static u_char *UserName_InitialStr  = (u_char*)"AAAAAAAA";
+static u_char *UserName_InitialStr2 = (u_char*)"        ";
+static u_char UserName_AsciiSetB[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!?&1234567890 ";
+static u_char UserName_AsciiSetS[] = "abcdefghijklmnopqrstuvwxyz.,-:;#$%\"'()- ";
+USERNAME_CSET UserName_CharSet[] = {
+    { UserName_AsciiSetB, 41 },
+    { UserName_AsciiSetS, 41 },
+};
+static u_char *TeachersName_Tbl[] = { "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER" };
+static u_char *UserName_RankingNoSave = (u_char*)"";
+static char *_MONTH_STR[] = {
+    "", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JLY", "AUG", "SEP", "", "", "", "", "", "",
+    "OCT", "NOV", "DEC", NULL,
+};
+static MAPBGM MapBgmTbl[] = {
+    { 4, 24, 72, 144 },
+    { 5, 25, 576, 1728 },
+    { 6, 26, 1152, 1728 },
+    { 7, 27, 1728, 1728 },
+    { 8, 28, 576, 1728 },
+    { 9, 29, 288, 576 },
+    { 10, 30, 1152, 1152 },
+    { 11, 31, 1152, 1728 },
+    { 12, 32, 1728, 1728 },
+    { 13, 33, 576, 1152 },
+    { 14, 23, 0, 0 },
+};
+static TSVOICE_TBL TsVoiceTbl[] = {
+    { 0, 0, 0, 0 },
+    { 0, 1, 0, 0 },
+    { 0, 2, 0, 0 },
+    { 0, 3, 0, 0 },
+    { 0, 4, 0, 0 },
+    { 0, 5, 0, 0 },
+    { 0, 6, 0, 0 },
+    { 0, 7, 0, 0 },
+    { 0, 8, 0, 0 },
+    { 0, 9, 0, 0 },
+    { 0, 10, 0, 120 },
+    { 0, 11, 0, 120 },
+    { 0, 10, 20, 120 },
+    { 1, 12, 0, 0 },
+    { 1, 13, 0, 0 },
+    { 1, 14, 0, 0 },
+    { 1, 15, 0, 0 },
+    { 1, 16, 0, 0 },
+    { 1, 17, 0, 0 },
+    { 1, 18, 0, 120 },
+    { 1, 19, 0, 0 },
+    { 1, 20, 0, 0 },
+    { 1, 21, 0, 0 },
+    { 1, 22, 0, 0 },
+    { 4, 23, 0, 0 },
+    { 4, 24, 0, 0 },
+    { 5, 25, 0, 0 },
+    { 6, 26, 0, 0 },
+    { 7, 27, 0, 0 },
+    { 8, 28, 0, 0 },
+    { 9, 29, 0, 0 },
+    { 10, 30, 0, 0 },
+    { 11, 31, 0, 0 },
+    { 12, 32, 0, 0 },
+    { 13, 33, 0, 0 },
+    { 1, 34, 0, 0 },
+    { 1, 35, 0, 0 },
+    { 1, 36, 0, 0 },
+    { 1, 37, 0, 0 },
+    { 1, 38, 0, 0 },
+    { 1, 39, 0, 0 },
+    { 1, 40, 0, 120 },
+    { 2, 41, 0, 120 },
+    { 2, 42, 0, 140 },
+    { 2, 43, 0, 120 },
+    { 2, 44, 0, 120 },
+    { 2, 45, 0, 120 },
+    { 2, 46, 0, 120 },
+    { 1, 47, 0, 0 },
+    { 1, 48, 0, 0 },
+    { 1, 49, 0, 0 },
+    { 1, 50, 0, 0 },
+    { 3, 51, 10, 120 },
+    { 3, 52, 0, 240 },
+    { 1, 53, 0, 150 },
+    { 1, 22, 0, 120 },
+};
 // /* data 18bac8 */ static u_short FussenWAIT0[0];
 // /* data 18bad8 */ static u_short FussenWAIT1[0];
 // /* data 18bae8 */ static u_short LoadConfLst[0];
-/* data 18baf8 */ extern TSVSNDSEQ VSNDSEQ_Tbl[]; /* static */
-/* data 18bb10 */ extern TSTEX_TBL TexTable[]; /* static */
-/* data 18bcb0 */ extern PATPOS PAT_ALERT_WIN_ABOVE; /* static */
-/* data 18bcc0 */ extern PATPOS PAT_ALERT_WIN_CENTER; /* static */
-/* data 18bcd0 */ extern PATPOS PAT_ALERT_WIN_BELOW; /* static */
-/* data 18bce0 */ extern PATPOS PAT_ALERT_WIN_FFACE[]; /* static */
-/* data 18bd10 */ extern PATPOS SAVE_MENU_SELPAT[]; /* static */
-/* data 18bd28 */ extern PTPOS SAVEWZoom_CXY[]; /* static */
-/* data 18bd30 */ extern PATPOS LG_SCROLL_MARK[]; /* static */
-/* data 18bd48 */ extern PATPOS RP_SCROLL_MARK[]; /* static */
-/* data 18bd60 */ extern PATPOS LLG_SCROLL_MARK[]; /* static */
-/* data 18bd78 */ extern PATPOS CSSLASH_MARK; /* static */
-/* data 18bd88 */ extern STRPOS PAGENO_StrCOD[]; /* static */
-/* data 18bd98 */ extern PTPOS CellCusPos[]; /* static */
-/* data 18bdb8 */ extern STRPOS LOGS_StrCOD[]; /* static */
-/* data 18bde0 */ extern STRPOS LOGL_StrCOD[]; /* static */
-/* data 18be08 */ extern STRPOS REPLAY_StrCOD[]; /* static */
-/* data 18be38 */ extern STRPOS VSREPLAY_StrCOD[]; /* static */
-/* data 18be78 */ extern PATPOS VS_MARK; /* static */
-/* data 18be88 */ extern PATPOS VS_WINMARK1; /* static */
-/* data 18be98 */ extern PATPOS VS_WINMARK2; /* static */
-/* data 18bea8 */ extern PATPOS LG_NEWDATA_MARK; /* static */
-/* data 18beb8 */ extern PATPOS RP_NEWDATA_MARK; /* static */
-/* data 18bec8 */ extern PATPOS STGCNameBox[]; /* static */
-/* data 18bf08 */ extern PATPOS STGCNameBoxOK; /* static */
-/* data 18bf18 */ extern PATPOS VS1PNameBox[]; /* static */
-/* data 18bf58 */ extern PATPOS VS1PNameBoxOK; /* static */
-/* data 18bf68 */ extern PATPOS VS2PNameBox[]; /* static */
-/* data 18bfa8 */ extern PATPOS VS2PNameBoxOK; /* static */
+static u_short VSNDSEQ_Tbl_Seq0[] = { 65535, 360, 52, 65535, 65534 };
+static u_short VSNDSEQ_Tbl_Seq1[] = { 65535, 240, 52, 65535, 65534 };
+static u_short VSNDSEQ_Tbl_Seq2[] = { 36, 100, 37, 100, 65533 };
+static TSVSNDSEQ VSNDSEQ_Tbl[] = {
+    { 1, VSNDSEQ_Tbl_Seq2 },
+    { 3, VSNDSEQ_Tbl_Seq0 },
+    { 3, VSNDSEQ_Tbl_Seq1 },
+};
+static TSTEX_TBL TexTable[] = {
+    { 0, 0 },
+    { 2, 0 },
+    { 3, 0 },
+    { 4, 0 },
+    { 5, 0 },
+    { 6, 0 },
+    { 7, 0 },
+    { 8, 0 },
+    { 9, 0 },
+    { 10, 0 },
+    { 11, 0 },
+    { 12, 0 },
+    { 15, 0 },
+    { 13, 0 },
+    { 14, 0 },
+    { 21, 0 },
+    { 22, 0 },
+    { 23, 0 },
+    { 18, 0 },
+    { 17, 0 },
+    { 16, 0 },
+    { 19, 0 },
+    { 20, 0 },
+    { 24, 0 },
+    { 25, 0 },
+    { 26, 0 },
+    { 27, 0 },
+    { 28, 0 },
+    { 29, 0 },
+    { 30, 0 },
+    { 31, 0 },
+    { 32, 0 },
+    { 33, 0 },
+    { 34, 0 },
+    { 35, 0 },
+    { 36, 0 },
+    { 37, 0 },
+    { 38, 0 },
+    { 39, 0 },
+    { 40, 0 },
+    { 41, 0 },
+    { 42, 0 },
+    { 43, 0 },
+    { 44, 0 },
+    { 45, 0 },
+    { 46, 0 },
+    { 47, 0 },
+    { 48, 0 },
+    { 49, 0 },
+    { 50, 0 },
+    { 51, 0 },
+    { 52, 0 },
+    { 53, 0 },
+    { 54, 0 },
+    { 55, 0 },
+    { 56, 0 },
+    { 57, 0 },
+    { 58, 0 },
+    { 59, 0 },
+    { 60, 0 },
+    { 61, 0 },
+    { 62, 0 },
+    { 63, 0 },
+    { 64, 0 },
+    { 65, 0 },
+    { 66, 0 },
+    { 67, 0 },
+    { 68, 0 },
+    { 69, 0 },
+    { 70, 0 },
+    { 71, 0 },
+    { 72, 0 },
+    { 73, 0 },
+    { 74, 0 },
+    { 75, 0 },
+    { 76, 0 },
+    { 77, 0 },
+    { 78, 0 },
+    { 79, 0 },
+    { 80, 0 },
+    { 81, 0 },
+    { 82, 0 },
+    { 83, 0 },
+    { 84, 0 },
+    { 85, 0 },
+    { 86, 0 },
+    { 87, 0 },
+    { 88, 0 },
+    { 89, 0 },
+    { 90, 0 },
+    { 91, 0 },
+    { 92, 0 },
+    { 93, 0 },
+    { 94, 0 },
+    { 95, 0 },
+    { 96, 0 },
+    { 97, 0 },
+    { 98, 0 },
+    { 99, 0 },
+    { 100, 0 },
+    { 101, 0 },
+    { 102, 0 },
+    { 103, 0 },
+    { 104, 0 },
+};
+static PATPOS PAT_ALERT_WIN_ABOVE = { 69, 0, 0, 0, 0 };
+static PATPOS PAT_ALERT_WIN_CENTER = { 70, 0, 0, 0, 0 };
+static PATPOS PAT_ALERT_WIN_BELOW = { 71, 0, 0, 0, 0 };
+static PATPOS PAT_ALERT_WIN_FFACE[] = {
+    { 72, 0, 0, 0, 0 },
+    { 73, 0, 0, 0, 0 },
+    { 74, 0, 0, 0, 0 },
+    { 75, 0, 0, 0, 0 },
+};
+static PATPOS SAVE_MENU_SELPAT[] = {
+    { 67, 48, 40, 0, 0 },
+    { 68, 348, 40, 0, 0 },
+};
+static PTPOS SAVEWZoom_CXY[] = {
+    { 320, 160 },
+};
+static PATPOS LG_SCROLL_MARK[] = {
+    { 20, 309, 27, 0, 0 },
+    { 20, 309, 174, 0, -1 },
+};
+static PATPOS RP_SCROLL_MARK[] = {
+    { 18, 309, 27, 0, 0 },
+    { 18, 309, 174, 0, -1 },
+};
+static PATPOS LLG_SCROLL_MARK[] = {
+    { 22, 309, 27, 0, 0 },
+    { 22, 309, 174, 0, -1 },
+};
+static PATPOS CSSLASH_MARK = { 15, 552, 174, 0, 0 };
+static STRPOS PAGENO_StrCOD[] = {
+    { 542, 182, 0x807f7f7f },
+    { 572, 182, 0x807f7f7f },
+};
+static PTPOS CellCusPos[] = {
+    { 33, 14 },
+    { 33, 40 },
+    { 33, 66 },
+    { 33, 92 },
+    { 33, 118 },
+    { 33, 144 },
+    { 33, 170 },
+};
+static STRPOS LOGS_StrCOD[] = {
+    { 47, 16, 0x804d2200 },
+    { 483, 12, 0x804d2200 },
+    { 483, 20, 0x804d2200 },
+    { 549, 16, 0x804d2200 },
+    { 253, 18, 0x80660000 },
+};
+static STRPOS LOGL_StrCOD[] = {
+    { 47, 16, 0x80003e14 },
+    { 483, 12, 0x80003e14 },
+    { 483, 20, 0x80003e14 },
+    { 549, 16, 0x80003e14 },
+    { 253, 18, 0x801e4000 },
+};
+static STRPOS REPLAY_StrCOD[] = {
+    { 43, 16, 0x80330853 },
+    { 483, 12, 0x80330853 },
+    { 483, 20, 0x80330853 },
+    { 549, 16, 0x80330853 },
+    { 253, 14, 0x80000061 },
+    { 253, 21, 0x80330853 },
+};
+static STRPOS VSREPLAY_StrCOD[] = {
+    { 43, 16, 0x80330853 },
+    { 483, 12, 0x80330853 },
+    { 483, 20, 0x80330853 },
+    { 549, 16, 0x80330853 },
+    { 157, 14, 0x80000061 },
+    { 151, 21, 0x80330853 },
+    { 353, 14, 0x80000061 },
+    { 355, 21, 0x80330853 },
+};
+static PATPOS VS_MARK = { 16, 240, 7, 0, 0 };
+static PATPOS VS_WINMARK1 = { 17, 86, 14, 0, 0 };
+static PATPOS VS_WINMARK2 = { 17, 291, 14, 0, 0 };
+static PATPOS LG_NEWDATA_MARK = { 21, 203, 7, 0, 0 };
+static PATPOS RP_NEWDATA_MARK = { 19, 203, 7, 0, 0 };
+static PATPOS STGCNameBox[] = {
+    { 8, 123, -6, 0, 0 },
+    { 9, 159, -6, 185, 0 },
+    { 10, 344, -6, 0, 0 },
+    { 14, 159, 3, 0, 0 },
+    { 11, 134, 6, 0, 0 },
+};
+static PATPOS STGCNameBoxOK = { 13, 322, 6, 0, 0 };
+static PATPOS VS1PNameBox[] = {
+    { 8, -1, -6, 0, 0 },
+    { 9, 35, -6, 185, 0 },
+    { 10, 220, -6, 0, 0 },
+    { 14, 35, 3, 0, 0 },
+    { 11, 10, 6, 0, 0 },
+};
+static PATPOS VS1PNameBoxOK = { 13, 198, 6, 0, 0 };
+static PATPOS VS2PNameBox[] = {
+    { 8, 269, -6, 0, 0 },
+    { 9, 305, -6, 185, 0 },
+    { 10, 490, -6, 0, 0 },
+    { 14, 305, 3, 0, 0 },
+    { 12, 278, 6, 0, 0 },
+};
+static PATPOS VS2PNameBoxOK = { 13, 468, 6, 0, 0 };
 // /* data 18bfb8 */ static MNOPT_OBJ MNOptObj_Lang[0];
 // /* data 18bfd8 */ static MNOPT_OBJ MNOptObj_Subt[0];
 // /* data 18bff8 */ static MNOPT_OBJ MNOptObj_Vibr[0];
 // /* data 18c018 */ static MNOPT_OBJ MNOptObj_Oneb[0];
-/* data 18c038 */ extern PATPOS MNOptMiniFrm[]; /* static */
-/* data 18c068 */ extern PATPOS MNOptLRBtn[]; /* static */
-/* data 18c0c8 */ extern PATPOS PopMenuSel_Pat[]; /* static */
-/* data 18c108 */ extern PATPOS VSComMenuSel_Pat[]; /* static */
-/* data 18c138 */ extern PATPOS VSComMenuSelH_Pat[]; /* static */
-/* data 18c168 */ extern PATPOS SIRanking_Pat[]; /* static */
-/* data 18c180 */ extern PATPOS Ranking_PatScroll[]; /* static */
-/* data 18c198 */ extern PATPOS RankSISTNo_PAT[]; /* static */
+static MNOPT_OBJ OptionSelTbl_Sel0[] = {
+    { 0, { 3, 406, 49, 0, 0 } },
+    { 1, { 2, 397, 49, 0, 0 } },
+};
+static MNOPT_OBJ OptionSelTbl_Sel1[] = {
+    { 1, { 4, 430, 75, 0, 0 } },
+    { 0, { 5, 426, 75, 0, 0 } },
+};
+static MNOPT_OBJ OptionSelTbl_Sel2[] = {
+    { 0, { 5, 426, 101, 0, 0 } },
+    { 1, { 4, 430, 101, 0, 0 } },
+};
+static MNOPT_OBJ OptionSelTbl_Sel3[] = {
+    { 0, { 5, 426, 127, 0, 0 } },
+    { 1, { 4, 430, 127, 0, 0 } },
+};
+static PATPOS MNOptMiniFrm[] = {
+    { 6, 387, 44, 0, 0 },
+    { 6, 387, 70, 0, 0 },
+    { 6, 387, 96, 0, 0 },
+    { 6, 387, 122, 0, 0 },
+};
+static PATPOS MNOptLRBtn[] = {
+    { 7, 360, 49, 0, 0 },
+    { 7, 500, 49, 0, 0 },
+    { 7, 360, 75, 0, 0 },
+    { 7, 500, 75, 0, 0 },
+    { 7, 360, 101, 0, 0 },
+    { 7, 500, 101, 0, 0 },
+    { 7, 360, 127, 0, 0 },
+    { 7, 500, 127, 0, 0 },
+};
+static PATPOS PopMenuSel_Pat[] = {
+    { 23, 56, 18, 0, 0 },
+    { 24, 235, 21, 0, 0 },
+    { 25, 402, 13, 0, 0 },
+    { 26, 104, 42, 0, 0 },
+    { 27, 466, 47, 0, 0 },
+};
+static PATPOS VSComMenuSel_Pat[] = {
+    { 28, 402, 13, 0, 0 },
+    { 30, 402, 13, 0, 0 },
+    { 32, 402, 13, 0, 0 },
+    { 34, 402, 13, 0, 0 },
+};
+static PATPOS VSComMenuSelH_Pat[] = {
+    { 29, 402, 13, 0, 0 },
+    { 31, 402, 13, 0, 0 },
+    { 33, 402, 13, 0, 0 },
+    { 35, 402, 13, 0, 0 },
+};
+static PATPOS SIRanking_Pat[] = {
+    { 36, 0, 0, 0, 0 },
+    { 48, 16, 31, 0, 0 },
+};
+static PATPOS Ranking_PatScroll[] = {
+    { 38, 104, 21, 0, 0 },
+    { 39, 104, 121, 0, 0 },
+};
+static PATPOS RankSISTNo_PAT[] = {
+    { 37, 34, 3, 0, 0 },
+    { 40, 167, 6, 0, 0 },
+    { 41, 167, 6, 0, 0 },
+    { 42, 167, 6, 0, 0 },
+    { 43, 167, 6, 0, 0 },
+    { 44, 167, 6, 0, 0 },
+    { 45, 167, 6, 0, 0 },
+    { 46, 167, 6, 0, 0 },
+    { 47, 167, 6, 0, 0 },
+};
 // /* data 18c208 */ static PATPOS VSL1Ranking_Pat[0];
 // /* data 18c248 */ static PATPOS VSL2Ranking_Pat[0];
 // /* data 18c288 */ static PATPOS VSL3Ranking_Pat[0];
 // /* data 18c2c8 */ static PATPOS VSL4Ranking_Pat[0];
-/* data 18c308 */ extern PATPOS *VSRanking_PatTbl[]; /* static */
-/* data 18c318 */ extern PATPOS RankVSSTNo_PAT[]; /* static */
-/* data 18c388 */ extern STRPOS SRanking_Str[]; /* static */
-/* data 18c3a0 */ extern STRPOS VRanking_Str[]; /* static */
+static PATPOS VSRanking_PatTbl_Pat0[] = {
+    { 49, 0, 0, 0, 0 },
+    { 61, 8, 17, 0, 0 },
+    { 63, 8, 17, 0, 0 },
+    { 65, 8, 17, 0, 0 },
+    { 60, 8, 17, 0, 0 },
+};
+static PATPOS VSRanking_PatTbl_Pat1[] = {
+    { 49, 0, 0, 0, 0 },
+    { 59, 8, 17, 0, 0 },
+    { 63, 8, 17, 0, 0 },
+    { 65, 8, 17, 0, 0 },
+    { 62, 8, 17, 0, 0 },
+};
+static PATPOS VSRanking_PatTbl_Pat2[] = {
+    { 49, 0, 0, 0, 0 },
+    { 59, 8, 17, 0, 0 },
+    { 61, 8, 17, 0, 0 },
+    { 65, 8, 17, 0, 0 },
+    { 64, 8, 17, 0, 0 },
+};
+static PATPOS VSRanking_PatTbl_Pat3[] = {
+    { 49, 0, 0, 0, 0 },
+    { 59, 8, 17, 0, 0 },
+    { 61, 8, 17, 0, 0 },
+    { 63, 8, 17, 0, 0 },
+    { 66, 8, 17, 0, 0 },
+};
+static PATPOS *VSRanking_PatTbl[] = { VSRanking_PatTbl_Pat0, VSRanking_PatTbl_Pat1, VSRanking_PatTbl_Pat2, VSRanking_PatTbl_Pat3 };
+static PATPOS RankVSSTNo_PAT[] = {
+    { 50, 51, 0, 0, 0 },
+    { 51, 157, 2, 0, 0 },
+    { 52, 157, 2, 0, 0 },
+    { 53, 157, 2, 0, 0 },
+    { 54, 157, 2, 0, 0 },
+    { 55, 157, 2, 0, 0 },
+    { 56, 157, 2, 0, 0 },
+    { 57, 157, 2, 0, 0 },
+    { 58, 157, 2, 0, 0 },
+};
+static STRPOS SRanking_Str[] = {
+    { 26, 40, 0x8056063d },
+    { 204, 40, 0x8056063d },
+    { 49, 40, 0x8056063d },
+};
+static STRPOS VRanking_Str[] = {
+    { 26, 46, 0x8056063d },
+    { 204, 46, 0x8056063d },
+    { 49, 46, 0x8056063d },
+};
 // /* data 18c3b8 */ static PTPOS PopMenu_Pos[0];
 // /* data 18c3c0 */ static PTPOS Ranking_Pos[0];
-/* data 18c3c8 */ extern POPRNK_PPOS PopRnk_pPos[]; /* static */
-/* data 18c420 */ extern int PopRnkPos_No[][9]; /* static */
-/* data 18c4b0 */ extern int PopBubblePat_No[][9]; /* static */
-/* data 18c540 */ extern PTPOS POPWZoom_CXY[]; /* static */
-/* data 18c588 */ extern PTPOS JUKEBOX_Pos[]; /* static */
-/* data 18c5b0 */ extern PATPOS JUKEJKT_Pat[]; /* static */
-/* data 18c628 */ extern float JUKEWAV_INITBL[]; /* static */
-/* data 18c650 */ extern PATPOS JUKEJKT_PatS[]; /* static */
-/* data 18c660 */ extern PATPOS JUKEREC_Pat[]; /* static */
-/* data 18c6d8 */ extern PATPOS JUKEREC_PatS[]; /* static */
-/* data 18c6e8 */ extern u_int HosiColor[][8]; /* static */
-/* data 18c748 */ extern HOSI_TYPE hTypeTable[17];
-/* sdata 3997bc */ extern TSTEX_INF *tblTex; /* static */
-/* data 18c8e0 */ extern u_int RPPadBit[]; /* static */
-/* data 18c8f0 */ extern MCDATA_TBL McVoiceTbl[23]; /* static */
-/* data 18c9a8 */ extern MCDATA_TBL McFaceTbl[23]; /* static */
-/* sdata 3997c0 */ extern int UserList_Sw; /* static */
-/* sdata 3997c4 */ extern int OptionList_Sw; /* static */
-/* sdata 3997c8 */ extern int PopMenu_Sw; /* static */
-/* sdata 3997cc */ extern int SaveMenu_Sw; /* static */
-/* sdata 3997d0 */ extern int JukeMenu_Sw; /* static */
-/* data 18ca60 */ extern USERLISTTYPE_TABLE ULTypeT_CITY_STGCLR; /* static */
-/* data 18ca70 */ extern USERLISTTYPE_TABLE ULTypeT_CITY_REPLAY; /* static */
-/* data 18ca80 */ extern USERLISTTYPE_TABLE ULTypeT_SAVE_LOG; /* static */
-/* data 18ca90 */ extern USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY; /* static */
-/* data 18caa0 */ extern int POPBtn2Sel[]; /* static */
-/* data 18cab8 */ extern int POPSel2Btn[]; /* static */
-/* data 18cad0 */ extern int Pop_CmpMesNo[]; /* static */
-/* data 18cae8 */ extern int POPSel2BtnDir[]; /* static */
-/* data 18cb00 */ extern int SaveMenu_CmpMesNo[]; /* static */
+static PTPOS PopRnk_pPos_Pos0[4] = {
+    { 0, 0 },
+    { 0, 0 },
+    { 32, 50 },
+    { 376, 50 },
+};
+static POPRNK_PPOS PopRnk_pPos[] = {
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[3] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[3] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[2] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[3] },
+    { PopRnk_pPos_Pos0, &PopRnk_pPos_Pos0[3] },
+};
+static int PopRnkPos_No[][9] = {
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 1, 1, 2, 3, 0, 0, 0, 0 },
+    { 0, 4, 4, 5, 6, 6, 0, 0, 0 },
+    { 0, 7, 7, 8, 9, 9, 9, 10, 7 },
+};
+static int PopBubblePat_No[][9] = {
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 1, 2, 3, 3, 0, 0, 0, 0 },
+    { 0, 4, 5, 6, 7, 8, 0, 0, 0 },
+    { 0, 9, 10, 11, 12, 13, 14, 15, 16 },
+};
+static PTPOS POPWZoom_CXY[] = {
+    { 446, 132 },
+    { 446, 144 },
+    { 446, 97 },
+    { 371, 97 },
+    { 446, 156 },
+    { 446, 109 },
+    { 371, 109 },
+    { 202, 109 },
+    { 202, 156 },
+    { 446, 121 },
+    { 446, 85 },
+    { 371, 85 },
+    { 202, 85 },
+    { 202, 121 },
+    { 202, 156 },
+    { 277, 156 },
+    { 446, 156 },
+    { 0, 0 },
+};
+static PTPOS JUKEBOX_Pos[] = {
+    { 70, 73 },
+    { 164, 73 },
+    { 258, 73 },
+    { 352, 73 },
+    { 446, 73 },
+    { 110, 129 },
+    { 204, 129 },
+    { 298, 129 },
+    { 392, 129 },
+    { 486, 129 },
+};
+static PATPOS JUKEJKT_Pat[] = {
+    { 82, 0, 0, 0, 0 },
+    { 83, 0, 0, 0, 0 },
+    { 84, 0, 0, 0, 0 },
+    { 85, 0, 0, 0, 0 },
+    { 86, 0, 0, 0, 0 },
+    { 87, 0, 0, 0, 0 },
+    { 88, 0, 0, 0, 0 },
+    { 89, 0, 0, 0, 0 },
+    { 90, 0, 0, 0, 0 },
+    { 91, 0, 0, 0, 0 },
+};
+static float JUKEWAV_INITBL[] = { 0.5f, 1.0f, -0.5f, 0.0f, 0.5f, 1.0f, -0.5f, 0.0f, 0.5f, 1.0f };
+static PATPOS JUKEJKT_PatS[] = {
+    { 92, 0, 0, 0, 0 },
+};
+static PATPOS JUKEREC_Pat[] = {
+    { 93, 0, 0, 0, 0 },
+    { 94, 0, 0, 0, 0 },
+    { 95, 0, 0, 0, 0 },
+    { 96, 0, 0, 0, 0 },
+    { 97, 0, 0, 0, 0 },
+    { 98, 0, 0, 0, 0 },
+    { 99, 0, 0, 0, 0 },
+    { 100, 0, 0, 0, 0 },
+    { 101, 0, 0, 0, 0 },
+    { 102, 0, 0, 0, 0 },
+};
+static PATPOS JUKEREC_PatS[] = {
+    { 103, 0, 0, 0, 0 },
+};
+static u_int HosiColor[][8] = {
+    { 0x80c80000, 0x7c7c68, 0x7c3400, 0x706864, 0x604040, 0x784c38, 0x643834, 0x7c3400 },
+    { 0x80f8b000, 0x7c7c7c, 0x707800, 0x7c7c7c, 0x7c744c, 0x7c7c30, 0x707800, 0x786834 },
+    { 0x8000d0ff, 0x7c7c7c, 20604, 0x7c7c7c, 0x447c7c, 0x447c7c, 20604, 20604 },
+};
+HOSI_TYPE hTypeTable[17] = {
+    { 20, 5, 16, 480, 7, 50 },
+    { 15, 5, 16, 720, 6, 70 },
+    { 15, 5, 16, 640, 5, 80 },
+    { 20, 5, 16, 480, 1, 100 },
+    { 10, 4, 16, 560, 7, 70 },
+    { 10, 4, 16, 400, 6, 80 },
+    { 5, 4, 16, 480, 5, 90 },
+    { 8, 4, 16, 320, 1, 100 },
+    { 10, 3, 16, 150, 7, 60 },
+    { 10, 3, 16, 140, 6, 80 },
+    { 10, 3, 16, 120, 5, 100 },
+    { 4, 2, 32, 280, 2, 40 },
+    { 4, 2, 32, 240, 4, 100 },
+    { 4, 1, 32, 300, 3, 60 },
+    { 3, 1, 32, 180, 1, 100 },
+    { 3, 0, 64, 320, 2, 80 },
+    { 3, 0, 64, 240, 1, 100 },
+};
+static TSTEX_INF *tblTex = NULL;
+static u_int RPPadBit[] = { 4096, 16384, 8192, 32768 };
+static MCDATA_TBL McVoiceTbl[23] = {
+    { 3, 22 },
+    { 7, 39 },
+    { 19, 17 },
+    { 17, 14 },
+    { 201326602, 41 },
+    { 201326613, 19 },
+    { 201326616, 55 },
+    { 201326615, 54 },
+    { 33554434, 20 },
+    { 33554443, 20 },
+    { 33554444, 20 },
+    { 33554445, 21 },
+    { 33554446, 21 },
+    { 33554436, 23 },
+    { 268435478, 32768 },
+    { 33554437, 35 },
+    { 33554438, 36 },
+    { 33554440, 40 },
+    { 33554441, 40 },
+    { 268435471, 16 },
+    { 268435472, 13 },
+    { 33554450, 15 },
+    { 33554452, 18 },
+};
+static MCDATA_TBL McFaceTbl[23] = {
+    { 3, 3 },
+    { 7, 3 },
+    { 19, 3 },
+    { 17, 3 },
+    { 201326602, 4 },
+    { 201326613, 4 },
+    { 201326616, 2 },
+    { 201326615, 2 },
+    { 33554434, 2 },
+    { 33554443, 2 },
+    { 33554444, 2 },
+    { 33554445, 2 },
+    { 33554446, 2 },
+    { 33554436, 2 },
+    { 268435478, 1 },
+    { 33554437, 1 },
+    { 33554438, 1 },
+    { 33554440, 2 },
+    { 33554441, 2 },
+    { 268435471, 1 },
+    { 268435472, 1 },
+    { 33554450, 2 },
+    { 33554452, 2 },
+};
+static int UserList_Sw = 0;
+static int OptionList_Sw = 0;
+static int PopMenu_Sw = 0;
+static int SaveMenu_Sw = 0;
+static int JukeMenu_Sw = 0;
+static USERLISTTYPE_TABLE ULTypeT_CITY_STGCLR = { 2, { 0, 1 } };
+static USERLISTTYPE_TABLE ULTypeT_CITY_REPLAY = { 1, { 2, 0 } };
+static USERLISTTYPE_TABLE ULTypeT_SAVE_LOG = { 1, { 3, 0 } };
+static USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY = { 1, { 4, 0 } };
+static int POPBtn2Sel[] = { 0, 1, 2, 3, 3, 4 };
+static int POPSel2Btn[] = { 0, 1, 2, 0, 2, 0 };
+static int Pop_CmpMesNo[] = { 22, 25, 23, 26, 27, 0 };
+static int POPSel2BtnDir[] = { 15, 3, 15, 15, 15, 0 };
+static int SaveMenu_CmpMesNo[] = { 44, 45 };
 typedef struct { // 0x8
     /* 0x0 */ MENU_DISKSND_ENUM bgmNo;
     /* 0x4 */ int endV;
 } BGM_TABLE;
 
-/* data 18cb08 */ extern BGM_TABLE JukeBgmTbl[]; /* static */
-/* data 18cb58 */ extern int JukeMenu_CmpMesNo[]; /* static */
-/* data 18cb80 */ extern MNOPT_SELINF OptionSelTbl[]; /* static */
-/* data 18cbc0 */ extern USERLIST_TYPE UserListTbl[]; /* static */
+static BGM_TABLE JukeBgmTbl[] = {
+    { 1, 10532 },
+    { 2, 12834 },
+    { 3, 14492 },
+    { 4, 13410 },
+    { 5, 11108 },
+    { 6, 13834 },
+    { 7, 12126 },
+    { 8, 14254 },
+    { 9, 14914 },
+    { 0, 9890 },
+};
+static int JukeMenu_CmpMesNo[] = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 };
+static MNOPT_SELINF OptionSelTbl[] = {
+    { 2, OptionSelTbl_Sel0, 40, 48 },
+    { 2, OptionSelTbl_Sel1, 41, 49 },
+    { 2, OptionSelTbl_Sel2, 42, 50 },
+    { 2, OptionSelTbl_Sel3, 43, 51 },
+};
+static USERLIST_TYPE UserListTbl[] = {
+    { MNS_StgCounter, 0, 1, 1, { 36, -1 } },
+    { &MNS_StgCounter[1], 1, 1, 0, { 49, 47 } },
+    { &MNS_RepCounter, 0, 2, 2, { 38, -1 } },
+    { &MNS_StgCounter[1], 1, 1, 0, { 46, 47 } },
+    { &MNS_RepCounter, 1, 2, 2, { 46, 47 } },
+};
 /* sdata 399820 */ extern int _TexFunc; /* static */
 /* sdata 399824 */ extern HOSI_OBJ *HOSIObj; /* static */
 /* bss 1c77ac0 */ extern TSREPPAD menuPadState[2][4]; /* static */
@@ -152,12 +1012,565 @@ typedef struct { // 0x8
 /* sbss 399b18 */ extern P3GAMESTATE *pP3GameState; /* static */
 /* sbss 399b1c */ extern int _bMapCaptureReq; /* static */
 /* sbss 399b20 */ extern int _MNwaitTime; /* static */
-/* data 18cc38 */ extern MN_SCENE MNS_StageMap;
+MN_SCENE MNS_StageMap = {
+    0,
+    0,
+    NULL,
+    0,
+    {
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+        {
+            NULL,
+            { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+            {
+                NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                NULL, NULL,
+            },
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.0f,
+            0.0f,
+        },
+    },
+    0,
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+    { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    0,
+    0,
+};
 /* bss 1c77cb0 */ extern MN_SCENE MNS_StageMap2; /* static */
 /* bss 1c78e08 */ extern MN_SCENE MNS_CityHall; /* static */
 /* bss 1c79f60 */ extern MN_SCENE MNS_OptCounter; /* static */
-/* bss 1c7b0b8 */ extern MN_SCENE MNS_RepCounter; /* static */
-/* bss 1c7c210 */ extern MN_SCENE MNS_StgCounter[2]; /* static */
 /* bss 1c7e4b8 */ extern MN_SCENE MNS_JimakuBak; /* static */
 /* sbss 399b24 */ extern int CurMapOldFlg; /* static */
 /* sbss 399b28 */ extern int CurMapNo; /* static */
@@ -748,8 +2161,6 @@ static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
     return pgifpk->pCurrent;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00395F10);
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00395F20);
 
 static void TsCmnPkClose(sceGifPacket *pgifpk, void *pk, int pri) {
     u_long giftag[2] = { 0x1000000000008000, 0xe };
@@ -1067,7 +2478,7 @@ static inline int PrBcdInt(u_int n) {
 }
 
 static void TsMENU_GetMapTimeState(int flg) {
-    /* sdata 3997d4 */ extern int nTim; /* static */
+    static int nTim = 0;
     int         err;
     short       hour;
     short       state;
@@ -1148,7 +2559,7 @@ static void TsMENU_GetMapTimeState(int flg) {
     P3LOG_VAL *pLog;
     int        i;
     int        nRound;
-    /* sdata 3997d8 */ extern char map0Msk_tmp_250[8];
+    static char map0Msk[8] = { 1, 0, 0, 0, 1, 1, 1, 1 };
     int        clrno;
     int        nCrown;
     int        cwCol[4];
@@ -1194,7 +2605,7 @@ static void TsMENU_GetMapTimeState(int flg) {
 
     for (i = 0; i < 8; i++) {
         clrno = pLog->clrCount[i];
-        if (mapNo == 0 && map0Msk_tmp_250[i]) {
+        if (mapNo == 0 && map0Msk[i]) {
             clrno = 0;
         }
 
@@ -3952,9 +5363,8 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 }
 
 /* static */ int McUserCheckFlow(int type, int mode, int *bError) {
-    /* sdata 3997e0 */ extern int isRun_tmp_267; /* static int isRun; */
+    static int isRun = -2;
     int flg;
-    #define isRun isRun_tmp_267
 
     switch (subStatus) {
     case 0:
@@ -4140,7 +5550,6 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     }
 
     return isRun;
-    #undef isRun
 }
 
 /* static */ int McUserSaveFlow(USER_DATA *puser) {
@@ -7872,8 +9281,6 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return 0;
 }
 
-extern char D_003997E8[];
-
 /* static */ void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     USERLIST_MENU *pfw = &UserListMenu;
     u_char         buf[16];
@@ -7918,11 +9325,11 @@ extern char D_003997E8[];
 
     isScroll = 1;
 
-    sprintf(buf, D_003997E8, pfw->curuser + pfw->curPageTop + 1);
+    sprintf(buf, "%d", pfw->curuser + pfw->curPageTop + 1);
     ps = PAGENO_StrCOD;
     MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
     ps++;
-    sprintf(buf, D_003997E8, pfw->userMax);
+    sprintf(buf, "%d", pfw->userMax);
     MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
 
     if (pfw->sline == 0.0f) {
@@ -8064,50 +9471,6 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
         dst[i] = '\0';
     }
 }
-
-/* .sdata, in link order. Strings used only by functions that are still asm are named here. */
-extern MN_MDLTBL Mdl_StageMapH[], Mdl_StageMapA[], Mdl_StageMapY[], Mdl_CityHall[], Mdl_OptCounter[];
-extern MN_MDLTBL Mdl_RepCounter[], Mdl_StgCounterLoad[], Mdl_StgCounterSave[], Mdl_JimakuBak[];
-extern int Cam_StageMap[], Cam_CityHall[], Cam_Notdef[];
-extern u_char D_00395F10[], D_00395F20[];
-
-MN_SCENETBL Scene_StageMap       = { Mdl_StageMapH,      Cam_StageMap };
-MN_SCENETBL Scene_StageMapA      = { Mdl_StageMapA,      Cam_StageMap };
-MN_SCENETBL Scene_StageMapY      = { Mdl_StageMapY,      Cam_StageMap };
-MN_SCENETBL Scene_CityHall       = { Mdl_CityHall,       Cam_CityHall };
-MN_SCENETBL Scene_OptCounter     = { Mdl_OptCounter,     Cam_Notdef };
-MN_SCENETBL Scene_RepCounter     = { Mdl_RepCounter,     Cam_Notdef };
-MN_SCENETBL Scene_StgCounterLoad = { Mdl_StgCounterLoad, Cam_Notdef };
-MN_SCENETBL Scene_StgCounterSave = { Mdl_StgCounterSave, Cam_Notdef };
-MN_SCENETBL Scene_JimakuBak      = { Mdl_JimakuBak,      Cam_Notdef };
-u_char *UserName_InitialStr  = D_00395F10;
-u_char *UserName_InitialStr2 = D_00395F20;
-char D_00399750[] = "TEACHER";
-char D_00399758[] = "";
-u_char *UserName_RankingNoSave = (u_char*)D_00399758;
-char D_00399760[] = "DEC";
-char D_00399768[] = "NOV";
-char D_00399770[] = "OCT";
-char D_00399778[] = "SEP";
-char D_00399780[] = "AUG";
-char D_00399788[] = "JLY";
-char D_00399790[] = "JUN";
-char D_00399798[] = "MAY";
-char D_003997A0[] = "APR";
-char D_003997A8[] = "MAR";
-char D_003997B0[] = "FEB";
-char D_003997B8[] = "JAN";
-TSTEX_INF *tblTex = NULL;
-int UserList_Sw = 0;
-int OptionList_Sw = 0;
-int PopMenu_Sw = 0;
-int SaveMenu_Sw = 0;
-int JukeMenu_Sw = 0;
-int nTim = 0;
-char map0Msk_tmp_250[8] = { 1, 0, 0, 0, 1, 1, 1, 1 };
-int isRun_tmp_267 = -2;
-char D_003997E8[] = "%d";
-char D_003997F0[] = "%s";
 
 /* static */ void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
     u_char  buf[32];
