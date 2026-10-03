@@ -3,6 +3,19 @@
 #include "navector.h"
 #include "namatrix.h"
 
+/*
+ * The 4-argument constructor is out of line in navector.h (render.cpp and
+ * scene.cpp emit weak copies of it), but this TU's static initializer has it
+ * inlined, so it sees an inline definition.
+ */
+template <>
+inline NaVECTOR<float, 4>::NaVECTOR(const float& x, const float& y, const float& z, const float& w) {
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+    v[3] = w;
+}
+
 NaVECTOR<float, 4> NaVECTOR<float, 4>::ZERO(0.0f, 0.0f, 0.0f, 0.0f);
 NaVECTOR<float, 4> NaVECTOR<float, 4>::ZEROH(0.0f, 0.0f, 0.0f, 1.0f);
 
