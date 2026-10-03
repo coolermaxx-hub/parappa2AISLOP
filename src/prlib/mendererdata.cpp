@@ -83,9 +83,6 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data) {
     data->position[2] += prMendererSpeed * data->velocity[2];
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", GetSynchronizeRatio__FPC20PrNoodlePositionData);
-#else /* Regalloc: diff is copied to another register before the min */
 static inline float MIN_tmp(float a, float b) {
     return (a <= b) ? a : b;
 }
@@ -94,7 +91,9 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data) {
     float diff = ABS_tmp(data->index - prSchoolLeaderIndex);
     float dist = MIN_tmp(diff, 1.0f - diff);
 
-    float ratio = ((1.0f - dist) * 3.0f - 1.8f) * prMendererSyncRatio;
+    diff = 1.0f - dist;
+    float ratio = diff * 3.0f - 1.8f;
+    ratio *= prMendererSyncRatio;
     if (ratio > 1.0f) {
         ratio = 1.0f;
     } else if (ratio < 0.0f) {
@@ -108,7 +107,6 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data) {
 
     return ratio;
 }
-#endif
 
 void PrInitializeNoodlePolygonPosition() {
     for (u_int k = 0; k < 115; k++) {
