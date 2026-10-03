@@ -6,8 +6,33 @@
 #include <stdio.h>
 #include <string.h>
 
-/* data 18ddf8 */ extern sceMcIconSys memc_iconsys; /* static */
-/* data 18e1c0 */ extern u_int _memc_type[]; /* static */
+/* Default icon.sys contents; the title, file names and line-feed offset are filled in at save time. */
+static sceMcIconSys memc_iconsys = {
+    {'P', 'S', '2', 'D'}, /* Head */
+    0,                    /* Reserv1 */
+    0,                    /* OffsLF */
+    0,                    /* Reserv2 */
+    0,                    /* TransRate */
+    {                     /* BgColor (corners) */
+        {0x80, 0, 0, 0},
+        {0, 0x80, 0, 0},
+        {0, 0, 0x80, 0},
+        {0x80, 0x80, 0x80, 0},
+    },
+    {                     /* LightDir */
+        {0.5f, 0.5f, 0.5f, 0.0f},
+        {0.0f, -0.4f, -0.1f, 0.0f},
+        {-0.5f, -0.5f, 0.5f, 0.0f},
+    },
+    {                     /* LightColor */
+        {0.38f, 0.4f, 0.45f, 0.0f},
+        {0.1f, 0.1f, 0.1f, 0.0f},
+        {0.11f, 0.11f, 0.1f, 0.0f},
+    },
+    {0.5f, 0.5f, 0.5f, 0.0f}, /* Ambient */
+};
+/* MEMC_INFO.flag bit for each card type value stored in pmw->type. */
+static u_int _memc_type[] = { 0x000, 0x100, 0x200, 0x400 };
 /* bss 1c81540 */ extern MEMC_STAT memc_stat; /* static */
 
 static int memc_SaveFileClust(void);

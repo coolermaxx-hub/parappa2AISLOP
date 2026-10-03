@@ -1746,8 +1746,6 @@ memc_manager_overwrite              = 0x0013c850; // type:func
 memc_manager_chk                    = 0x0013c9f0; // type:func
 memc_manager                        = 0x0013cba0; // type:func
 
-memc_iconsys                        = 0x0018ddf8; // size:0x3c4
-_memc_type                          = 0x0018e1c0; // type:u32 size:0x4
 
 tmps0                               = 0x01c81440; // size:0x40
 tmps1                               = 0x01c81480; // size:0x82
