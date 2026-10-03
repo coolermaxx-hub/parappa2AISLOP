@@ -473,7 +473,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
         }
 
         if (this->m_flags & 0x40) {
-            SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
+            SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
     }
@@ -630,7 +630,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
         }
 
         if (this->m_flags & 0x40) {
-            SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
+            SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
     }

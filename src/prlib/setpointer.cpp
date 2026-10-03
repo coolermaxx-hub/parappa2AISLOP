@@ -56,9 +56,9 @@ void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
             this->m_cluster_weights = model->CalculatePointer<SpmClusterWeight>(this->m_cluster_weights);
         }
 
-        this->unk1A0 = model->CalculatePointer<int>(this->unk1A0);
-        this->unk1A4 = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk1A4);
-        PrVuNodeHeaderDmaPacket *s0 = this->unk1A4;
+        this->m_contour_index = model->CalculatePointer<SpmContourIndex>(this->m_contour_index);
+        this->m_contour_packet = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_contour_packet);
+        PrVuNodeHeaderDmaPacket *s0 = this->m_contour_packet;
         if (s0 != NULL) {
             s0->unk194 = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(PR_MICRO_PROGRAM_CONTOUR), 0);
         }

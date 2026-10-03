@@ -47,6 +47,12 @@ union SpmClusterWeight {
     float weight;
 };
 
+/* Which source vertex feeds which slot of the contour packet */
+struct SpmContourIndex {
+    u_int m_src;
+    u_int m_dst;
+};
+
 struct SpmNode {
 public:
     void ChangePointer(SpmFileHeader *arg0, SpmNode *arg1);
@@ -89,9 +95,9 @@ public:
     PR_PADDING(unk18C, 0x8);
     u_int unk194;
     int *unk198;
-    PR_PADDING(unk19C, 0x4);
-    int *unk1A0;
-    PrVuNodeHeaderDmaPacket *unk1A4;
+    u_int m_contour_index_num;
+    SpmContourIndex *m_contour_index;
+    PrVuNodeHeaderDmaPacket *m_contour_packet;
     PR_PADDING(unk1A8, 0xc);
     SpmClusterWeight *m_cluster_weights;
     int *unk1B8;
@@ -179,25 +185,12 @@ public:
     u_long128 unk1C0[1];
 };
 
-struct SpmContourIndex {
-    u_int m_src;
-    u_int m_dst;
-};
 
-class SpmComplexNode {
+/* A node with an outline: flag 0x40 */
+class SpmComplexNode : public SpmNode {
 public:
     void SaveContour(PrModelObject *model);
     void RenderContour(PrModelObject *model);
-
-public:
-    PR_PADDING(unk0, 0x140);
-    NaVECTOR<float, 4> unk140;
-    PR_PADDING(unk150, 0x2C);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x1C);
-    u_int unk19C;
-    SpmContourIndex *unk1A0;
-    PrVuNodeHeaderDmaPacket *unk1A4;
 };
 
 class PrModelObject {
