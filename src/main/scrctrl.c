@@ -748,7 +748,7 @@ void vsTapdatSetMemorySave(void) {
         if (time >= 32) {
             printf("OTH SAVE OVER\n");
         } else {
-            vsothsave_tmp[time] = *(u_char*)&tapdat_pp->KeyIndex;
+            vsothsave_tmp[time] = (u_char)tapdat_pp->KeyIndex;
         }
     }
 
