@@ -313,8 +313,8 @@ done:
 template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
 
 /* Template instances emitted in spram.cpp */
-NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148248");
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148140");
+NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
+NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
 
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;

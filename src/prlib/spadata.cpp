@@ -89,8 +89,8 @@ template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVE
 template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
 
 /* Template instances emitted later in this TU */
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("func_0014AFE0");
-NaMATRIX<float, 4, 4> TransMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("func_0014ABE0");
+NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4");
+NaMATRIX<float, 4, 4> TransMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4");
 NaMATRIX<float, 4, 4>& SetMatrix_tmp_spadata(NaMATRIX<float, 4, 4> *m,
     const float& m00, const float& m01, const float& m02, const float& m03,
     const float& m10, const float& m11, const float& m12, const float& m13,
@@ -631,7 +631,7 @@ NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) co
 }
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014ABE0);
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4);
 
 template <>
 NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle) {
@@ -672,7 +672,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float&
     } while (0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_0014AFE0);
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", ScaleMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4);
 
 template <>
 NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float arg1) const {

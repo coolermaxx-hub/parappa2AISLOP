@@ -21,10 +21,10 @@ INCLUDE_ASM("asm/nonmatchings/prlib/spram", Initialize__12PrSPRAM_DATAP13PrScene
 extern "C" float tanf(float);
 
 /* Out-of-line NaMATRIX helpers emitted at the end of this file */
-NaMATRIX<float, 4, 4> TransMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("func_00148248");
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("func_00148140");
-NaMATRIX<float, 4, 4>& Scale_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("func_00147FB8");
-NaMATRIX<float, 4, 4>& Trans_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("func_00147E38");
+NaMATRIX<float, 4, 4> TransMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
+NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
+NaMATRIX<float, 4, 4>& Scale_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("Scale__t8NaMATRIX3Zfi4i4RCfT1T1");
+NaMATRIX<float, 4, 4>& Trans_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("Translate__t8NaMATRIX3Zfi4i4RCfT1T1");
 
 void sceVu0CameraMatrix_tmp_spram(sceVu0FMATRIX m, sceVu0FVECTOR p, sceVu0FVECTOR zd, sceVu0FVECTOR yd) asm("func_00161CB0");
 void sceVu0ViewScreenMatrix_tmp_spram(sceVu0FMATRIX m, float scrz, float ax, float ay,
@@ -167,18 +167,18 @@ void PrSPRAM_DATA::SendDisplayHeader() {
 /* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spram", Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00147D90);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1);
 
 /* prlib/spram.cpp */
 INCLUDE_ASM("asm/nonmatchings/prlib/spram", _GLOBAL_$I$Initialize__12PrSPRAM_DATAP13PrSceneObject);
 
 /* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00147E38);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", Translate__t8NaMATRIX3Zfi4i4RCfT1T1);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00147FB8);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", Scale__t8NaMATRIX3Zfi4i4RCfT1T1);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00148140);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", func_00148248);
+INCLUDE_ASM("asm/nonmatchings/prlib/spram", TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1);
 
 INCLUDE_RODATA("asm/nonmatchings/prlib/spram", D_00396790);

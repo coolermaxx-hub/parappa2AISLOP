@@ -207,5 +207,5 @@ void PrUpdateAwfulMenderer() {
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", func_00150D10);
+INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1T1T1T1T1T1);
 #endif
