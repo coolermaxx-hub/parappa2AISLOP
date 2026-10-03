@@ -33,7 +33,7 @@ void PrWaitMendererTexture(sceGsDrawEnv1 *env, const sceGsFrame &frame, const sc
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", Render__13PrSceneObject);
-#else /* Scheduling: the AwfulStatus store and the frame/xyoffset copies */
+#else /* Scheduling: only register allocation of the frame/xyoffset copies (s3/s4 swapped) */
 void PrSceneObject::Render() {
     FlushCache(WRITEBACK_DCACHE);
 
@@ -51,8 +51,8 @@ void PrSceneObject::Render() {
     if (!(PrGetMendererRatio() >= 1.5f)) {
         awful = false;
     }
+    if (model != NULL) {
     AwfulStatus = awful;
-
     for (; model != NULL; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
@@ -61,6 +61,7 @@ void PrSceneObject::Render() {
             }
         }
     }
+    } else { AwfulStatus = awful; }
 
     prRenderStuff.m_statistics.render_time1 = *T3_COUNT;
     sceGsFrame frame = unk50;
