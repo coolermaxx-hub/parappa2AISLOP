@@ -10,13 +10,13 @@
 extern PrSPRAM_DATA *prSpramData_tmp_shape;
 extern float shape_max_depth[];
 
-void SpmShapeNode::AddShapePosition(u_int arg0, float arg1) {
+void SpmShapeNode::AddShapePosition(u_int target, float weight) {
     u_int vertex = (u_int)this->unk17C;
     vertex |= 0x30000000;
-    u_int num = this->unk194;
-    u_long128 *src = &this->unk1C0[arg0];
-    u_int stride = this->unk1B0;
-    u_int *index = this->unk198;
+    u_int num = m_vertex_num;
+    u_long128 *src = &m_target_offsets[target];
+    u_int stride = m_target_num;
+    u_int *index = m_vertex_index;
 
     for (u_int i = 0; i < num; i++) {
         asm volatile("lqc2 $vf17, 0x0(%0)" : : "r"(src));
@@ -25,7 +25,7 @@ void SpmShapeNode::AddShapePosition(u_int arg0, float arg1) {
         asm volatile("
             qmtc2.ni %0, $vf4
             vmulx.xyz $vf17, $vf17, $vf4x
-        " : : "r"(arg1));
+        " : : "r"(weight));
 
         for (u_int j = 0; j < n; j++) {
             u_long128 *v = (u_long128 *)((*index++ << 4) + vertex);
@@ -51,9 +51,9 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
 
     u_int vertex = (u_int)this->unk17C;
     vertex |= 0x30000000;
-    u_int num = this->unk194;
-    u_long128 *src = this->unk1B4;
-    u_int *index = this->unk198;
+    u_int num = m_vertex_num;
+    u_long128 *src = m_base_vertices;
+    u_int *index = m_vertex_index;
 
     for (u_int i = 0; i < num; i++) {
         asm volatile("lqc2 $vf17, 0x0(%0)" : : "r"(src));
@@ -75,7 +75,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
             if (weight != 0.0f) {
                 AddShapePosition(i, weight);
             }
-            model->unk74[model->m_active_transition][this->unk1B8 + i] = weight;
+            model->unk74[model->m_active_transition][m_weight_index + i] = weight;
         }
     } else {
         for (u_int i = 0; i < track_num; i++) {

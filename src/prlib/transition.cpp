@@ -42,5 +42,5 @@ float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u
     }
 
     float *posture = model->unk74[1 - model->m_active_transition];
-    return (1.0f - ratio) * posture[this->unk1B8 + index] + ratio * weight;
+    return (1.0f - ratio) * posture[m_weight_index + index] + ratio * weight;
 }

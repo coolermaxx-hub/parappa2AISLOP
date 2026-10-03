@@ -15,7 +15,7 @@ void PrModelObject::SaveContour() {
     u_int node_num = spm->m_node_num;
     for (int i = 0; i < node_num; i++) {
         SpmNode *node = spm->m_nodes[i];
-        if (node->m_flags & 0x40) {
+        if (node->m_flags & SPM_NODE_CONTOUR) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(node);
             complex->SaveContour(this);
         }

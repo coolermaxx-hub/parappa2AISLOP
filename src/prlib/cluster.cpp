@@ -14,10 +14,10 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     u_int vertex = (u_int)this->unk17C;
     vertex |= 0x30000000;
     SpmNode **nodes = this->unk158->m_nodes;
-    u_int num = this->unk194;
-    const SpmClusterWeight *weight = this->m_cluster_weights;
-    u_int *index = (u_int*)this->unk198;
-    NaVECTOR<float, 4> *position = (NaVECTOR<float, 4>*)this->unk1B8;
+    u_int num = m_vertex_num;
+    const SpmClusterWeight *weight = m_weights;
+    u_int *index = m_vertex_index;
+    NaVECTOR<float, 4> *position = m_positions;
 
     for (u_int i = 0; i < num; i++) {
         u_int weight_num = (weight++)->count;
@@ -65,7 +65,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
     if (uc != NULL) {
         uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
-        weight = this->m_cluster_weights;
+        weight = m_weights;
         u_int weight_num = (weight++)->count;
 
         asm volatile("vsub.xyzw $vf17, $vf0, $vf0");

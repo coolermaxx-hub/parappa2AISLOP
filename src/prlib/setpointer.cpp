@@ -48,12 +48,14 @@ void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
     }
 
     if (m_flags & 0xff0) {
-        this->unk198 = model->CalculatePointer<int>(this->unk198);
-        if (m_flags & 0x10) {
-            this->m_cluster_weights = model->CalculatePointer<SpmClusterWeight>(this->m_cluster_weights);
-            this->unk1B8 = model->CalculatePointer<int>(this->unk1B8);
-        } else if (m_flags & 0x20) {
-            this->m_cluster_weights = model->CalculatePointer<SpmClusterWeight>(this->m_cluster_weights);
+        this->m_vertex_index = model->CalculatePointer<u_int>(this->m_vertex_index);
+        if (m_flags & SPM_NODE_CLUSTER) {
+            SpmClusterGeometryNode *cluster = static_cast<SpmClusterGeometryNode*>(this);
+            cluster->m_weights = model->CalculatePointer<SpmClusterWeight>(cluster->m_weights);
+            cluster->m_positions = model->CalculatePointer<NaVECTOR<float, 4> >(cluster->m_positions);
+        } else if (m_flags & SPM_NODE_SHAPE) {
+            SpmShapeNode *shape = static_cast<SpmShapeNode*>(this);
+            shape->m_base_vertices = model->CalculatePointer<u_long128>(shape->m_base_vertices);
         }
 
         this->m_contour_index = model->CalculatePointer<SpmContourIndex>(this->m_contour_index);

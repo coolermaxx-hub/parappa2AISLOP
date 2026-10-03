@@ -93,14 +93,20 @@ public:
     float unk184;
     u_int unk188;
     PR_PADDING(unk18C, 0x8);
-    u_int unk194;
-    int *unk198;
+    /* Cluster and shape nodes: vertex count, and for each vertex the number of
+       VU vertex slots it feeds followed by those slot indices */
+    u_int m_vertex_num;
+    u_int *m_vertex_index;
     u_int m_contour_index_num;
     SpmContourIndex *m_contour_index;
     PrVuNodeHeaderDmaPacket *m_contour_packet;
-    PR_PADDING(unk1A8, 0xc);
-    SpmClusterWeight *m_cluster_weights;
-    int *unk1B8;
+};
+
+/* SpmNode::m_flags: which subclass a node is */
+enum SpmNodeType {
+    SPM_NODE_CLUSTER = 0x10,
+    SPM_NODE_SHAPE = 0x20,
+    SPM_NODE_CONTOUR = 0x40,
 };
 
 enum SpmFlags {
@@ -150,43 +156,38 @@ public:
     int unk78;
 };
 
+/* A skinned node: each vertex is a weighted blend of other nodes' matrices */
 class SpmClusterGeometryNode : public SpmNode {
 public:
     void RenderClusterNode(PrModelObject *model);
+
+public:
+    PR_PADDING(unk1A8, 0xC);
+    SpmClusterWeight *m_weights;
+    NaVECTOR<float, 4> *m_positions;
 };
 
-class SpmShapeNode {
+/* A morph-target node: base vertices plus weighted per-target offsets */
+class SpmShapeNode : public SpmNode {
 public:
-    void AddShapePosition(u_int arg0, float arg1);
+    void AddShapePosition(u_int target, float weight);
     void RenderShapeNode(PrModelObject *model);
 
     float BlendTransactionWeight(PrModelObject *model, float weight, u_int index);
 
 public:
-    PR_PADDING(unk0, 0x40);
-    NaMATRIX<float, 4, 4> unk40;
-    PR_PADDING(unk80, 0xC0);
-    NaVECTOR<float, 4> unk140;
-    int unk150;
-    PR_PADDING(unk154, 0x18);
-    PrVuNodeHeaderDmaPacket *unk16C[2];
-    PR_PADDING(unk174, 0x8);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x8);
-    u_int unk188;
-    PR_PADDING(unk18C, 0x8);
-    u_int unk194;
-    u_int *unk198;
-    PR_PADDING(unk19C, 0x14);
-    u_int unk1B0;
-    u_long128 *unk1B4;
-    u_int unk1B8;
+    PR_PADDING(unk1A8, 0x8);
+    /* Offsets are stored per vertex, one for each target */
+    u_int m_target_num;
+    u_long128 *m_base_vertices;
+    /* Where this node's target weights start in PrModelObject's posture weights */
+    u_int m_weight_index;
     PR_PADDING(unk1BC, 0x4);
-    u_long128 unk1C0[1];
+    u_long128 m_target_offsets[1];
 };
 
 
-/* A node with an outline: flag 0x40 */
+/* A node that draws an outline (SPM_NODE_CONTOUR) */
 class SpmComplexNode : public SpmNode {
 public:
     void SaveContour(PrModelObject *model);

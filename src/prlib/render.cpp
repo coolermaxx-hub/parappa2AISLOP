@@ -472,7 +472,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
             prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->unk188, f12);
         }
 
-        if (this->m_flags & 0x40) {
+        if (this->m_flags & SPM_NODE_CONTOUR) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
@@ -590,11 +590,11 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
     if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
         prRenderStuff.m_statistics.opaque_context2_node_num++;
 
-        if (this->m_flags & 0x10) {
-            SpmClusterGeometryNode *cluster = reinterpret_cast<SpmClusterGeometryNode*>(this);
+        if (this->m_flags & SPM_NODE_CLUSTER) {
+            SpmClusterGeometryNode *cluster = static_cast<SpmClusterGeometryNode*>(this);
             cluster->RenderClusterNode(model);
-        } else if (this->m_flags & 0x20) {
-            SpmShapeNode *shape = reinterpret_cast<SpmShapeNode*>(this);
+        } else if (this->m_flags & SPM_NODE_SHAPE) {
+            SpmShapeNode *shape = static_cast<SpmShapeNode*>(this);
             shape->RenderShapeNode(model);
         } else {
             PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
@@ -629,7 +629,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             }
         }
 
-        if (this->m_flags & 0x40) {
+        if (this->m_flags & SPM_NODE_CONTOUR) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
