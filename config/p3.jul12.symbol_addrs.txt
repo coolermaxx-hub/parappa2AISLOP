@@ -673,21 +673,11 @@ ddbg_tctrl_sub                      = 0x001167f0; // type:func
 DrawCtrlMainDebug                   = 0x001168b8; // type:func
 DrawCtrlInitDebug                   = 0x00116ad0; // type:func
 
-draw_dbg_str                        = 0x00186248; // size:0x3C
 
 D_00393128                          = 0x00393128; // type:u16 size:0x18
 D_00393140                          = 0x00393140; // type:u16 size:0x18
 
-vclr_black_tmp                      = 0x00399518; // size:0x4
-bthrow_ctrl_time                    = 0x0039951c; // size:0x4
-mend_title_req                      = 0x00399528;
 
-ddbg_event_num                      = 0x0039952c;
-ddbg_scene_num                      = 0x00399530;
-ddbg_go_event_scene                 = 0x00399534;
-ddbg_tap_num                        = 0x00399538;
-ddbg_bmp_frame                      = 0x0039953c;
-ANI_BLUMOVE_ENUM                    = 0x00399550;
 
 dr_tap_req_num                      = 0x00399a4c;
 scenectrl_outside_cnt               = 0x00399a50;

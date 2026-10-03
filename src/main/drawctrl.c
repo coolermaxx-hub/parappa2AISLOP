@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* sdata 399518 */ extern VCLR_PARA vclr_black_tmp; /* static */
+static VCLR_PARA vclr_black_tmp = { 0, 0, 0, 0 };
 /* Tap-bar layouts, mosaic stage tables and title-cut timings. */
 static float bra_tap[10][2] = {
     { 0.25f, 0.1f },
@@ -68,7 +68,6 @@ static float bra_ret[49] = {
     0.58f, 0.6f, 0.62f, 0.64f, 0.66f, 0.68f, 0.7f,
     0.72f, 0.74f, 0.76f, 0.78f, 0.8f, 0.82f, 0.84f,
     0.86f, 0.88f, 0.9f, 0.92f, 0.94f, 0.96f, 0.98f,
-    0.0f,
 };
 
 static MOZAIKU_STR mozaiku_str_poll_00[17] = {
@@ -372,14 +371,7 @@ static MENTITLE_DAT mentitle_dat_dera[] = {
     { 13532, 0.0f },
     { 0xffffffe, 0.0f },
 };
-/* sdata 39951c */ extern int bthrow_ctrl_time; /* static */
-/* sdata 399528 */ extern int mend_title_req; /* static */
-/* sdata 39952c */ extern int ddbg_event_num; /* static */
-/* sdata 399530 */ extern int ddbg_scene_num; /* static */
-/* sdata 399534 */ extern int ddbg_go_event_scene; /* static */
-/* sdata 399538 */ extern int ddbg_tap_num; /* static */
-/* sdata 39953c */ extern int ddbg_bmp_frame; /* static */
-/* data 186248 */ extern DRAW_DBG_STR draw_dbg_str[5/*undef*/]; /* static */
+static int bthrow_ctrl_time = 0;
 /* bss 1c6e030 */ extern DR_TAP_REQ dr_tap_req[16]; /* static */
 static int dr_tap_req_num;
 /* bss 1c6e0f0 */ extern int octst_time[8]; /* static */
@@ -2222,8 +2214,6 @@ void DrawObjTapCtrl(SCENE_OBJDATA *sod_pp, DR_TAP_REQ *tap_pp, int tap_num) {
     }
 }
 
-extern const char D_00399520[]; /* .sdata - "nome_" */
-
 int DrawSceneObjData(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     int            i;
     SCENE_OBJDATA *scn_pp = (SCENE_OBJDATA*)para_pp;
@@ -2268,7 +2258,7 @@ int DrawSceneObjData(void *para_pp, int frame, int first_f, int useDisp, int drD
     PrPreprocessSceneModel(scn_pp->handle);
 
     /* Disable menderer if scene is named "nome_" */
-    if (strncmp(scn_pp->usrName, D_00399520, 5) != 0) {
+    if (strncmp(scn_pp->usrName, "nome_", 5) != 0) {
         PrRender(scn_pp->handle);
         PrWaitRender();
     } else {
@@ -2809,8 +2799,6 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     return 0;
 }
 
-extern const char D_00393300[]; /* "local vram copy\n" */
-
 int DrawVramLocalCopy(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     sceGsMoveImage mi;
     short          sbp, dbp;
@@ -2819,7 +2807,7 @@ int DrawVramLocalCopy(void *para_pp, int frame, int first_f, int useDisp, int dr
         return 0;
     }
 
-    printf(D_00393300);
+    printf("local vram copy\n");
 
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
@@ -2844,7 +2832,7 @@ int DrawVramLocalCopy2(void *para_pp, int frame, int first_f, int useDisp, int d
         return 0;
     }
 
-    printf(D_00393300);
+    printf("local vram copy\n");
 
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
@@ -2933,6 +2921,8 @@ static int DrawScenectrlReq(SCENECTRL *scenectrl_pp, u_int time) {
     return ret;
 }
 
+static int mend_title_req = 0;
+
 void MendererCtrlInit(void) {
     men_ctrl_ratio = 0.0f;
     men_ctrl_enum = MEN_CTRL_BtoG;
@@ -2950,8 +2940,6 @@ void MendererCtrlTitleDera(void) {
     men_ctrl_enum = MEN_CTRL_BtoA;
     mend_title_req = 2;
 }
-
-INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_00393300);
 
 static void MendererCtrl(void) {
     float Mmax = 0.0f;
@@ -3487,6 +3475,12 @@ int DrawTapReqTbl(int atap, PLAYER_INDEX pindx, u_char *prs_pp) {
     return 0;
 }
 
+static int ddbg_event_num = 0;
+static int ddbg_scene_num = 0;
+static int ddbg_go_event_scene = 0;
+static int ddbg_tap_num = 0;
+static int ddbg_bmp_frame = 0;
+
 /* static */ int ddbg_event_sel(int pad) {
     ddbg_event_num += pad;
 
@@ -3504,10 +3498,8 @@ int DrawTapReqTbl(int atap, PLAYER_INDEX pindx, u_char *prs_pp) {
     return 0;
 }
 
-extern const char D_00399540[]; // .sdata - "#%02X"
-
 /* static */ void ddbg_event_msg(char *buf) {
-    sprintf(buf, D_00399540, ddbg_event_num);
+    sprintf(buf, "#%02X", ddbg_event_num);
 }
 
 /* static */ int ddbg_scene_sel(int pad) {
@@ -3527,7 +3519,7 @@ extern const char D_00399540[]; // .sdata - "#%02X"
 }
 
 /* static */ void ddbg_scene_msg(char *buf) {
-    sprintf(buf, D_00399540, ddbg_scene_num);
+    sprintf(buf, "#%02X", ddbg_scene_num);
 }
 
 /* static */ int ddbg_event_check(int pad) {
@@ -3595,13 +3587,14 @@ static void ddbg_event_sub(void) {
     UseGsRegSet();
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_003933B0);
-
-INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_003933C0);
-
-INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_003933D0);
-
-INCLUDE_RODATA("asm/nonmatchings/main/drawctrl", D_003933E0);
+/* Debug menu entries: label, selection handler, optional value printer. */
+static DRAW_DBG_STR draw_dbg_str[5] = {
+    { "EVENT LINE",  ddbg_event_sel,   ddbg_event_msg },
+    { "SCENE LINE",  ddbg_scene_sel,   ddbg_scene_msg },
+    { "EVENT CHECK", ddbg_event_check, NULL },
+    { "SCENE CHECK", ddbg_scene_check, NULL },
+    { "BMP OUT",     ddbg_bmp_check,   NULL },
+};
 
 static void ddbg_event_sub_bmp(void) {
     int        i, j, lsjkl;

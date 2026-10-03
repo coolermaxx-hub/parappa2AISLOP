@@ -96,7 +96,8 @@ register struct as one 64-bit GIF A+D value.
 
 ## Data sections still in asm
 
-`main/drawctrl_dbg` (`draw_dbg_str`, the debug-menu table) is the only part of
-`drawctrl`'s data left as asm: it points at debug-menu strings that are still
-`INCLUDE_RODATA` blobs (`D_003933B0`..`D_003933E0`, `D_00399548`). Replace those
-with string literals first, then move the table into `drawctrl.c`.
+Typed C already: `mbar`, `p3mc`, `memc`, `subt`, `drawctrl` (data and sdata,
+including the debug menu table with real string literals). Still asm
+(`asm/data/...`): `menu/menusub`, `menu/menufont`, `menu/mntm2hed`,
+`menu/menu_mdl`, `main/stdat`, `sdk/libgcc` and `common_ipk`. The rodata blobs
+that remain `INCLUDE_RODATA` are listed by `grep -rn INCLUDE_RODATA src`.
