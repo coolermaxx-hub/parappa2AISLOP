@@ -178,13 +178,13 @@ void PrSceneObject::PrepareScreenModelRender() {
 
 void PrModelObject::CalculateCurrentMatrix() {
     PrSPRAM_DATA *spram = prSpramData;
-    const NaMATRIX<float, 4, 4> *mtx = &this->unk10;
+    const NaMATRIX<float, 4, 4> *mtx = &this->m_matrix;
 
     spram->m_animation_time = m_animation_time;
     spram->m_current_model = this;
     SpaFileHeader *animation = m_animation;
     spram->m_animation = animation;
-    this->unkA4 = 1.0f;
+    this->m_scaled_disturbance = 1.0f;
 
     SpmFileHeader *spm = m_spm_image;
 
@@ -212,7 +212,7 @@ void PrModelObject::CalculateCurrentMatrix() {
                 len += v[i] * v[i];
             }
 
-            this->unkA4 = disturbance * sqrtf(len);
+            this->m_scaled_disturbance = disturbance * sqrtf(len);
         } else {
             spm->CalculateCurrentMatrixAnimation(this, *mtx);
         }
@@ -244,7 +244,7 @@ INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13
  * schedules the m_flags load differently.
  */
 inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    if (model->unk7C[0] != NULL) {
+    if (model->m_posture_matrices[0] != NULL) {
         /* Keep the local matrix for transitions, blended toward the previous one */
         if (m_flags & 0x1) {
             prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
@@ -257,7 +257,7 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
         }
 
         this->m_global_matrix = arg1 * prSpramData->unk0;
-        model->unk7C[model->m_active_transition][this->m_index] = prSpramData->unk0;
+        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->unk0;
     } else if (m_flags & 0x1) {
         this->m_global_matrix = arg1;
     } else {
@@ -296,7 +296,7 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
     }
 
     bool identity = node_animation->m_transform_count == 0;
-    if (model->unk7C[0] != NULL) {
+    if (model->m_posture_matrices[0] != NULL) {
         /* Keep the local matrix for transitions, blended toward the previous one */
         if (identity) {
             prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
@@ -309,7 +309,7 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
         }
 
         this->m_global_matrix = arg1 * prSpramData->unk0;
-        model->unk7C[model->m_active_transition][this->m_index] = prSpramData->unk0;
+        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->unk0;
     } else if (identity) {
         this->m_global_matrix = arg1;
     } else {
@@ -391,7 +391,7 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
 void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
     uc->m_matrix = this->m_global_matrix;
-    uc->unk68 = prSpramData->m_disturbance;
+    uc->m_disturbance = prSpramData->m_disturbance;
 
     float du = this->m_u_scroll;
     float dv = this->m_v_scroll;
@@ -601,7 +601,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 uc->m_matrix = this->m_global_matrix;
-                uc->unk68 = prSpramData->m_disturbance;
+                uc->m_disturbance = prSpramData->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
@@ -610,7 +610,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
                 const NaMATRIX<float, 4, 4>& m = this->m_global_matrix;
                 uc->m_matrix = m;
-                uc->unk68 = prSpramData->m_disturbance;
+                uc->m_disturbance = prSpramData->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {

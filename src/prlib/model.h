@@ -29,7 +29,7 @@ struct PrVuNodeHeaderDmaPacket {
     float m_contour_blur_alpha[2];
     PrMICRO_PROGRAM_MODULE unk60;
     PR_PADDING(unk64, 0x4);
-    float unk68;
+    float m_disturbance;
     PR_PADDING(unk6C, 0x4);
     /* Texture offset, advanced by SpmNode::m_u_scroll/m_v_scroll */
     float m_u_offset;
@@ -148,18 +148,21 @@ public:
     u_short m_flags;
     PR_PADDING(unk8, 0x8);
     char m_name[32];
-    NaVECTOR<float, 4> unk30;
-    NaVECTOR<float, 4> unk40;
-    PrModelObject *unk50;
+    NaVECTOR<float, 4> m_bound_min;
+    NaVECTOR<float, 4> m_bound_max;
+    /* The PrModelObject currently using this image */
+    PrModelObject *m_model;
     PR_PADDING(unk54, 0x8);
     int m_vertex_num;
     PR_PADDING(unk60, 0x4);
     int *unk64;
     u_int m_node_num;
-    u_int unk6C;
+    /* Total morph target weights across the shape nodes */
+    u_int m_shape_weight_num;
     int unk70;
     SpmNode **m_nodes;
-    int unk78;
+    /* Draw order among models with flag 0x200 */
+    int m_sort_order;
 };
 
 /* A skinned node: each vertex is a weighted blend of other nodes' matrices */
@@ -235,8 +238,8 @@ public:
     PrLinkedList<PrModelObject> m_list;
     PrObjectSet<PrModelObject> *m_obj_set;
     PrSceneObject *m_linked_scene;
-    NaMATRIX<float, 4, 4> unk10;
-    u_int unk50;
+    NaMATRIX<float, 4, 4> m_matrix;
+    u_int m_magic;
     void *m_user_data;
     SpmFileHeader *m_spm_image;
     u_int m_flags;
@@ -245,8 +248,10 @@ public:
     SpaFileHeader *m_animation;
     SpaFileHeader *m_position_animation;
     int m_active_transition;
-    float *unk74[2];
-    NaMATRIX<float, 4, 4> *unk7C[2];
+    /* Node matrices and shape weights of the last two postures, for blending
+       transitions; indexed by m_active_transition */
+    float *m_posture_weights[2];
+    NaMATRIX<float, 4, 4> *m_posture_matrices[2];
     int m_rendered_once;
     int *unk88;
     int *unk8C;
@@ -254,7 +259,8 @@ public:
     float m_contour_blur_alpha[2];
     float m_transaction_blend_ratio;
     float m_disturbance;
-    float unkA4;
+    /* m_disturbance scaled by the root node's scale */
+    float m_scaled_disturbance;
     PR_PADDING(unkA8, 0x8);
 };
 

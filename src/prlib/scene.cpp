@@ -173,8 +173,8 @@ void PrSceneObject::PreprocessModel() {
         } else if (spm->m_flags & 0x200) {
             PrModelObject *a1 = sp;
             PrModelObject **a3 = &sp;
-            u_int t0_1 = spm->unk78;
-            while (a1 != NULL && a1->m_spm_image->unk78 < t0_1) {
+            u_int t0_1 = spm->m_sort_order;
+            while (a1 != NULL && a1->m_spm_image->m_sort_order < t0_1) {
                 a3 = (PrModelObject**)a1;
                 a1 = *a3;
             }

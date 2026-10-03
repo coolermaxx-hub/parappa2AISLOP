@@ -313,9 +313,9 @@ PR_EXTERN
 void PrShowModel(PrModelObject *model, NaMATRIX<float, 4, 4> *position) {
     model->m_flags |= 1;
     if (position != NULL) {
-        model->unk10 = *position;
+        model->m_matrix = *position;
     } else {
-        model->unk10 = NaMATRIX<float, 4, 4>::IDENT;
+        model->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
     }
 }
 
@@ -324,7 +324,7 @@ NaMATRIX<float, 4, 4>* PrGetModelMatrix(PrModelObject *model) {
     if ((model->m_flags & 1) == 0) {
         return NULL;
     }
-    return &model->unk10;
+    return &model->m_matrix;
 }
 
 PR_EXTERN

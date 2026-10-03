@@ -29,7 +29,7 @@ void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>&
         return;
     }
 
-    NaMATRIX<float, 4, 4>& posture = model->unk7C[1 - model->m_active_transition][this->m_index];
+    NaMATRIX<float, 4, 4>& posture = model->m_posture_matrices[1 - model->m_active_transition][this->m_index];
     mtx = posture * (1.0f - ratio) + mtx * ratio;
 }
 #endif
@@ -41,6 +41,6 @@ float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u
         return weight;
     }
 
-    float *posture = model->unk74[1 - model->m_active_transition];
+    float *posture = model->m_posture_weights[1 - model->m_active_transition];
     return (1.0f - ratio) * posture[m_weight_index + index] + ratio * weight;
 }

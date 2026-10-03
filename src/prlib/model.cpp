@@ -47,9 +47,9 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_obj_set = NULL;
     m_linked_scene = NULL;
 
-    unk10 = NaMATRIX<float, 4, 4>::IDENT;
+    m_matrix = NaMATRIX<float, 4, 4>::IDENT;
 
-    unk50 = 0x55668899;
+    m_magic = 0x55668899;
     m_user_data = NULL;
     m_spm_image = spm;
     m_flags = 0;
@@ -59,10 +59,10 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_animation = NULL;
     m_position_animation = NULL;
 
-    unk7C[0] = NULL;
-    unk7C[1] = NULL;
-    unk74[0] = NULL;
-    unk74[1] = NULL;
+    m_posture_matrices[0] = NULL;
+    m_posture_matrices[1] = NULL;
+    m_posture_weights[0] = NULL;
+    m_posture_weights[1] = NULL;
     m_rendered_once = 0;
     m_active_transition = 0;
 
@@ -73,9 +73,9 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_contour_blur_alpha[1] = 0.0f;
     m_transaction_blend_ratio = 1.0f;
     m_disturbance = 0.0f;
-    unkA4 = 1.0f;
+    m_scaled_disturbance = 1.0f;
 
-    spm->unk50 = this;
+    spm->m_model = this;
 }
 
 PrModelObject::~PrModelObject() {
@@ -85,17 +85,17 @@ PrModelObject::~PrModelObject() {
     CleanupAnimation();
     CleanupPositionAnimation();
 
-    m_spm_image->unk50 = NULL;
+    m_spm_image->m_model = NULL;
 
     delete unk88;
     delete unk8C;
 
-    if ((m_flags & 0x8) && unk74[0] != NULL) {
-        delete[] unk74[0];
+    if ((m_flags & 0x8) && m_posture_weights[0] != NULL) {
+        delete[] m_posture_weights[0];
     }
 
-    if ((m_flags & 0x10) && unk7C[0] != NULL) {
-        delete[] unk7C[0];
+    if ((m_flags & 0x10) && m_posture_matrices[0] != NULL) {
+        delete[] m_posture_matrices[0];
     }
 }
 
@@ -108,23 +108,23 @@ void PrModelObject::Initialize() {
         if (node_num != 0) {
             NaMATRIX<float, 4, 4> *matrix = (NaMATRIX<float, 4, 4>*)AllocateFromWorkArea(node_num * sizeof(NaMATRIX<float, 4, 4>) * 2);
             if (matrix == NULL) {
-                unk7C[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
+                m_posture_matrices[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
                 m_flags |= 0x10;
             } else {
-                unk7C[0] = matrix;
+                m_posture_matrices[0] = matrix;
             }
-            unk7C[1] = unk7C[0] + node_num;
+            m_posture_matrices[1] = m_posture_matrices[0] + node_num;
 
-            u_int weight_num = spm->unk6C;
+            u_int weight_num = spm->m_shape_weight_num;
             if (weight_num != 0) {
                 float *weight = (float*)AllocateFromWorkArea(weight_num * sizeof(float) * 2);
                 if (weight == NULL) {
-                    unk74[0] = new float[weight_num * 2];
+                    m_posture_weights[0] = new float[weight_num * 2];
                     m_flags |= 0x8;
                 } else {
-                    unk74[0] = weight;
+                    m_posture_weights[0] = weight;
                 }
-                unk74[1] = unk74[0] + weight_num;
+                m_posture_weights[1] = m_posture_weights[0] + weight_num;
             }
         }
     }
@@ -164,7 +164,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "lqc2       $vf14,  0x10(%0)       \n\t"
         "lqc2       $vf15,  0x20(%0)       \n\t"
         "lqc2       $vf16,  0x30(%0)       \n\t"
-    : : "r"(&this->unk10));
+    : : "r"(&this->m_matrix));
 
     asm volatile(
         "lqc2       $vf17,  0x0(%0)        \n\t"
@@ -172,7 +172,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "vmadday    ACC,    $vf14,  $vf17  \n\t"
         "vmaddaz    ACC,    $vf15,  $vf17  \n\t"
         "vmaddw     $vf17,  $vf16,  $vf17  \n\t"
-    : : "r"(&m_spm_image->unk30));
+    : : "r"(&m_spm_image->m_bound_min));
 
     asm volatile(
         "lqc2       $vf04,  0x0(%0)        \n\t"
@@ -186,7 +186,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "vmadday    ACC,    $vf14,  $vf17  \n\t"
         "vmaddaz    ACC,    $vf15,  $vf17  \n\t"
         "vmaddw     $vf17,  $vf16,  $vf17  \n\t"
-    : : "r"(&m_spm_image->unk40));
+    : : "r"(&m_spm_image->m_bound_max));
 
     asm volatile(
         "lqc2       $vf04,  0x0(%0)        \n\t"
@@ -201,7 +201,7 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
     if (m_position_animation != NULL) {
         NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->unk50[0]->GetMatrix(m_position_animation_time), *position);
     } else {
-        NaMATRIX<float, 4, 4>::Apply(*position, unk10, *position);
+        NaMATRIX<float, 4, 4>::Apply(*position, m_matrix, *position);
     }
 
     NaMATRIX<float, 4, 4>::Apply(*position, prSpramData->m_view_projection_matrix, *position);

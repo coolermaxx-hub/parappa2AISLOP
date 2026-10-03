@@ -58,7 +58,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     if (packet != NULL) {
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
         uc->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
-        uc->unk68 = prSpramData->m_disturbance * model->unkA4;
+        uc->m_disturbance = prSpramData->m_disturbance * model->m_scaled_disturbance;
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
     }
 
@@ -92,7 +92,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         }
 
         uc->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
-        uc->unk68 = prSpramData->m_disturbance * model->unkA4;
+        uc->m_disturbance = prSpramData->m_disturbance * model->m_scaled_disturbance;
 
         NaVECTOR<float, 4> pos;
         asm volatile(

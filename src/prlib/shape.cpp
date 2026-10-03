@@ -66,7 +66,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
         }
     }
 
-    if (model->unk7C[0] != NULL) {
+    if (model->m_posture_matrices[0] != NULL) {
         for (u_int i = 0; i < track_num; i++) {
             float weight = *node_anim->unk30[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
             if (prSpramData_tmp_shape->m_model_transaction_blend_ratio != 1.0f) {
@@ -75,7 +75,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
             if (weight != 0.0f) {
                 AddShapePosition(i, weight);
             }
-            model->unk74[model->m_active_transition][m_weight_index + i] = weight;
+            model->m_posture_weights[model->m_active_transition][m_weight_index + i] = weight;
         }
     } else {
         for (u_int i = 0; i < track_num; i++) {
@@ -89,14 +89,14 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     if (this->m_packets[0] != NULL) {
         PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_packets[0] | 0x30000000);
         packet->m_matrix = this->m_global_matrix;
-        packet->unk68 = prSpramData_tmp_shape->m_disturbance;
+        packet->m_disturbance = prSpramData_tmp_shape->m_disturbance;
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)packet & 0x0FFFFFFF));
     }
 
     if (this->m_packets[1] != NULL) {
         PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_packets[1] | 0x30000000);
         packet->m_matrix = this->m_global_matrix;
-        packet->unk68 = prSpramData_tmp_shape->m_disturbance;
+        packet->m_disturbance = prSpramData_tmp_shape->m_disturbance;
         u_int arg = this->m_draw_group;
 
         NaMATRIX<float, 4, 4> m = prSpramData_tmp_shape->m_view_projection_matrix * this->m_global_matrix;
