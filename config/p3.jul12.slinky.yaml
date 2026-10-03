@@ -306,7 +306,7 @@ segments:
       - { path: src/menu/menudata.c.o }
       - { path: asm/data/menu/menu_mdl.data.s.o }
       - { path: asm/data/menu/menusub.data.s.o }
-      - { path: asm/data/menu/p3mc.data.s.o }
+      - { path: src/menu/p3mc.c.o }
       - { path: asm/data/menu/memc.data.s.o }
       - { path: asm/data/menu/mntm2hed.data.s.o }
       - { path: asm/data/menu/menufont.data.s.o }

@@ -89,3 +89,7 @@ register struct as one 64-bit GIF A+D value.
   differs.
 - `DrawMozaikuDisp` (src/main/drawctrl.c) builds its unused masked frame copy
   as a typed struct instead of a volatile `u_long` store.
+- `_P3MC_ASC2SJIS` (src/menu/p3mc.c) uses typed `u_short` lookup tables
+  (the `menu/p3mc` data section is now C) and writes the two output bytes
+  separately instead of one `u_short` store through a `char*`. Same bytes on
+  little-endian; the code is a few instructions longer than the original.

@@ -190,9 +190,12 @@ static void _P3MC_EUC2SJIS(char *des, char *src) {
 }
 
 static void _P3MC_ASC2SJIS(char *des, char *src) {
-    /* static */ extern char sjisASCII0[65]; // = "！”＃＄％＆’（）＊＋，−．／０１２３４５６７８９：；＜＝＞？＠";
-    /* static */ extern char sjisASCII1[13]; // = "［￥］＾＿’";
-    /* static */ extern char sjisASCII2[11]; // = "｛｜｝〜　";
+    /* NUL-terminated EUC-JP full-width forms of the ASCII range starting at '!': ！”＃＄％＆’（）＊＋，−．／０１２３４５６７８９：；＜＝＞？＠ */
+    static u_short sjisASCII0[33] = { 0xAAA1, 0xC9A1, 0xF4A1, 0xF0A1, 0xF3A1, 0xF5A1, 0xC7A1, 0xCAA1, 0xCBA1, 0xF6A1, 0xDCA1, 0xA4A1, 0xDDA1, 0xA5A1, 0xBFA1, 0xB0A3, 0xB1A3, 0xB2A3, 0xB3A3, 0xB4A3, 0xB5A3, 0xB6A3, 0xB7A3, 0xB8A3, 0xB9A3, 0xA7A1, 0xA8A1, 0xE3A1, 0xE1A1, 0xE4A1, 0xA9A1, 0xF7A1, 0 };
+    /* NUL-terminated EUC-JP full-width forms of the ASCII range starting at '[': ［￥］＾＿’ */
+    static u_short sjisASCII1[7] = { 0xCEA1, 0xEFA1, 0xCFA1, 0xB0A1, 0xB2A1, 0xC7A1, 0 };
+    /* NUL-terminated EUC-JP full-width forms of the ASCII range starting at '{': ｛｜｝〜　 */
+    static u_short sjisASCII2[6] = { 0xD0A1, 0xC3A1, 0xD1A1, 0xC1A1, 0xA1A1, 0 };
 
     char    *des0;
     u_char   c;
@@ -205,24 +208,26 @@ static void _P3MC_ASC2SJIS(char *des, char *src) {
             n = 0xa1a1; /* Space */
         } else if (c <= '@') {
             c = (c - '!');
-            n = ((u_short*)sjisASCII0)[c];
+            n = sjisASCII0[c];
         } else if (c <= 'Z') {
             c = (c - 'A');
             n = (c << 8) + 0xc1a3 /* A */;
         } else if (c <= '`') {
             c = (c - '[');
-            n = ((u_short*)sjisASCII1)[c];
+            n = sjisASCII1[c];
         } else if (c <= 'z') {
             c = (c - 'a');
             n = (c << 8) + 0xe1a3 /* a */;
         } else if (c <= '~') {
             c = (c - '{');
-            n = ((u_short*)sjisASCII2)[c];
+            n = sjisASCII2[c];
         } else {
             n = 0xa1a1; /* Space */
         }
 
-        *(u_short*)des = n;
+        /* Table values are little-endian pairs: the low byte is the EUC lead byte. */
+        des[0] = (char)(n & 0xff);
+        des[1] = (char)((n >> 8) & 0xff);
     }
 
     *des = '\0';
