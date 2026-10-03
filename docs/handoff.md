@@ -12,7 +12,7 @@ This is for whoever (person or bot) continues this work. Last updated 2026-10-03
 - Snake wants continuous work: after a milestone, post a short result and move on to the next item without waiting.
 
 ## State
-- Progress: 1344/1429 functions (94.1%), 80.3% of code (README).
+- Progress: 1346/1429 functions (94.2%), 80.4% of code (README).
 - What is left, and what blocks each item, is in **`docs/remaining-work.md`**:
   - 5 intentional VU routines (done by rule).
   - 49 NON_MATCHING C bodies, which compile but don't match yet.
@@ -68,8 +68,8 @@ python configure.py && ninja   # back to the normal build
 - **GCC 2.95.3 sources** (`reorg.c`, `cse.c`, `loop.c`, `final.c`, `jump.c`) can be fetched from `raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-2.95.3/gcc/`. Reading the relevant pass beats guessing.
 
 ## Suggested next steps
-1. Find out why render.cpp and scene.cpp emit an out-of-line NaVECTOR constructor (see remaining-work.md).
-2. **`ScaleMatrix(const float&, const float&, const float&)`** is 44 lines off; the loop counter is in v0/v1 swapped and the temps are scheduled differently.
+1. Match `ComposeGlobalMatrixWithoutVisibility` (6 lines: `m_flags` is reloaded before `prSpramData` after `BlendTransitionMatrix`). Then render.cpp's tail of weak copies can come from C; see remaining-work.md.
+2. **`ScaleMatrix(const float&, const float&, const float&)`** is 38 lines off at best (see remaining-work.md for the by-value finding).
    - `TranslateMatrix` with the same signature already matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`.
    - Fixing ScaleMatrix unlocks menderer's 5 copies and most of spram's.
    - Test harness: take `&NaMATRIX<float, 4, 4>::ScaleMatrix` in a scratch TU, then compare against `expected2/build/src/prlib/spram.cpp.o` `func_00148140`.

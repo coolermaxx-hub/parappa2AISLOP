@@ -6,7 +6,7 @@ Snake's definition of 100% (see [porting-rules.md](porting-rules.md)) counts mat
 | --- | --- | --- |
 | Intentional VU / hand asm | 5 | Treated as done. Not converted to C. |
 | NON_MATCHING C bodies | 49 | Reconstructed in C, bytes still differ (scheduling or register allocation). Asm is used in the matching build. |
-| Compiler-generated, no C yet | 31 | All are weak template copies, see below. |
+| Compiler-generated, no C yet | 29 | All are weak template copies, see below. |
 
 ## Intentional VU / hand asm (done by rule)
 | File | Function | Insns |
@@ -20,12 +20,12 @@ Snake's definition of 100% (see [porting-rules.md](porting-rules.md)) counts mat
 ## Compiler-generated, no C body yet
 These are all weak template copies (NaMATRIX/NaVECTOR/NaGifPacket helpers instantiated per TU). A TU emits its copies at the end, in the order the templates were first used, so a copy can only come from C once the TU's own code (or an unused inline standing in for it, see `mendererdata.cpp`) marks the same templates in the same order, and every helper body matches.
 
-Done so far: `RotateMatrix(int)` matches and has a generic definition in `nalib/namatrix.h`; `billboard.cpp`, `mendererdata.cpp` and `mendererawful.cpp` emit their copies from C. What blocks the rest:
-- `menderer.cpp`, `spram.cpp`: `ScaleMatrix(const float&, const float&, const float&)` is still 44 lines off. `TranslateMatrix` with the same signature matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`. `spram.cpp` also needs `Initialize`.
+Done so far: `RotateMatrix(int)` matches and has a generic definition in `nalib/namatrix.h`; `billboard.cpp`, `mendererdata.cpp`, `mendererawful.cpp` and `scene.cpp` emit their copies from C. What blocks the rest:
+- `menderer.cpp`, `spram.cpp`: `ScaleMatrix(const float&, const float&, const float&)` is still off. `TranslateMatrix` with the same signature matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`, but the same shape for `ScaleMatrix` is 44 lines off. In the target the loop counter is set early (`v1`) and the addresses of the literal temporaries are computed after it, which is what gcc does when the literals reach the inlined constructor by value: a constructor taking `x`, `y`, `z` as `const T&` and the 13 literals as `const T` gets to 38 lines. What is left is a basic-block boundary between the parameter moves and the body. `spram.cpp` also needs `Initialize`.
 - `camera.cpp`: needs `RotateMatrix(const NaVECTOR<float, 4>&, const float&)` to match.
 - `spadata.cpp`: its template functions are explicit specializations that are emitted in place, while the original emitted every one as a weak copy at the end of the TU.
 - `depthfield.cpp`: needs `ApplyDepthOfField`.
-- `render.cpp`, `scene.cpp`: they emit out-of-line copies of the 4-argument NaVECTOR constructor, which is inline everywhere else (navector.cpp inlines it). The construct that stops gcc inlining it is not known yet, and making the constructor out of line breaks navector.cpp.
+- `render.cpp`: the 4-argument NaVECTOR constructor is out of line in `navector.h` now (navector.cpp keeps an inline specialization for its static initializer). The original ELF shows that render.cpp ends with weak copies of the constructor, `SpmNode::ComposeGlobalMatrix`, `PrRenderStuff::AppendDmaTag` (`func_00145E50`) and `SpmNode::ComposeGlobalMatrixWithoutVisibility`. All but the constructor are inline functions that gcc can't inline because they end in a tail call. They can only come out of C in that order once `ComposeGlobalMatrixWithoutVisibility` matches (6 lines off).
 
 The original ELF (`iso/SCPS_150.17`) keeps the symbol of the first copy of each instance, so `mips-linux-gnu-nm -n iso/SCPS_150.17` names them.
 
@@ -49,8 +49,6 @@ The original ELF (`iso/SCPS_150.17`) keeps the symbol of the first copy of each 
 | `prlib/menderer.cpp` | `func_0014F6D8` | 190 |
 | `prlib/render.cpp` | `__t8NaVECTOR2Zfi4RCfT1T1T1` | 10 |
 | `prlib/render.cpp` | `func_00145E50` | 2 |
-| `prlib/scene.cpp` | `func_0014B988` | 10 |
-| `prlib/scene.cpp` | `func_0014B9B0` | 10 |
 | `prlib/spadata.cpp` | `func_00149168` | 22 |
 | `prlib/spadata.cpp` | `func_001491C0` | 44 |
 | `prlib/spadata.cpp` | `TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4` | 66 |
