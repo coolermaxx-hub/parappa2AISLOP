@@ -193,7 +193,7 @@ segments:
         - [0x7BBC0, .data, os/system]
         - [0x808D8, .data, os/tim2]
 
-        - [0x808F0,  data, main/stdat]
+        - [0x808F0,  .data, main/stdat]
         - [0x83258, .data, main/scrctrl]
         - [0x84B88, .data, main/fadectrl]
         - [0x84BA0, .data, main/subt]
@@ -349,7 +349,7 @@ segments:
         - [0x299350, .sdata, os/tim2]
 
         - [0x299360, .sdata, main/cdctrl]
-        - [0x299378, sdata, main/stdat]
+        - [0x299378, .sdata, main/stdat]
         - [0x299438, .sdata, main/scrctrl]
         - [0x299504, .sdata, main/sprite]
         - [0x299508, .sdata, main/subt]

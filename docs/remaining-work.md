@@ -96,9 +96,16 @@ register struct as one 64-bit GIF A+D value.
 
 ## Data sections still in asm
 
-Typed C already: `mbar`, `p3mc`, `memc`, `subt`, `drawctrl` (data and sdata,
-including the debug menu table with real string literals) and `menusub` (data
-and sdata; the sdata layout is byte-identical to the original). Still asm
-(`asm/data/...`): `menu/menufont`, `menu/mntm2hed`,
-`menu/menu_mdl`, `main/stdat`, `sdk/libgcc` and `common_ipk`. The rodata blobs
-that remain `INCLUDE_RODATA` are listed by `grep -rn INCLUDE_RODATA src`.
+Typed C already: `mbar`, `p3mc`, `memc`, `subt`, `drawctrl`, `menusub`,
+`menufont`, `mntm2hed`, `menu_mdl` and `stdat` (data, sdata and the file-name
+strings, which are now ordinary literals). Each was checked section by section
+against the original object: contents are identical apart from relocation words
+and trailing alignment pad. Still asm (`asm/data/...`): `sdk/libgcc` (compiler
+runtime tables) and `common_ipk` (a binary archive, kept as a data asset). The
+sbss/bss/lit4 segments and the `*_tmp_NNN` function statics in `menusub.c` and
+`mbar.c` are also still asm-backed. The rodata blobs that remain `INCLUDE_RODATA`
+are listed by `grep -rn INCLUDE_RODATA src`.
+
+`stdat_dat_*` overlay pointers (event, scene and subtitle records inside the
+stage overlays) are written as fixed addresses because those objects live in
+the separately loaded `.OLM` overlays and have no symbols in this executable.

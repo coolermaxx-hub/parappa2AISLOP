@@ -285,7 +285,7 @@ segments:
       - { path: src/os/tim2.c.o }
 
       - { path: src/main/cdctrl.c.o }
-      - { path: asm/data/main/stdat.data.s.o }
+      - { path: src/main/stdat.c.o }
       - { path: src/main/scrctrl.c.o }
       - { path: src/main/sprite.c.o }
       - { path: src/main/fadectrl.c.o }
@@ -755,7 +755,7 @@ segments:
       - { path: src/os/tim2.c.o }
 
       - { path: src/main/cdctrl.c.o }
-      - { path: asm/data/main/stdat.sdata.s.o }
+      - { path: src/main/stdat.c.o }
       - { path: src/main/scrctrl.c.o }
       - { path: src/main/sprite.c.o }
       - { path: src/main/fadectrl.c.o }
