@@ -163,6 +163,33 @@ The IOP side (`BgmGetTime`) builds the value from `ReadOutCnt` (advanced by `Tra
 - In VSYNC mode there is no audio dependency, which is what makes lines of that type deterministic and a natural netplay base.
 - Rounding: the `+1800` and `+tempo*48` terms round to nearest. Do not change them.
 
+## Replay log and memory card (2026-10-03)
+
+Provenance: direct reading of `src/main/mcctrl.c`, `include/main/mcctrl.h`, `src/main/scrctrl.c`, `src/menu/memc.c` (matching C, unchanged).
+
+**The replay is an input log, not a state dump.** `MC_REP_STR` (0x4528 bytes) is what the memory card stores for a replay. It holds the play mode/type/round/stage, up to 256 per-line score records, 128 level (difficulty move) bytes, up to 2560 tap records and up to 100 "versus other" snapshots of 32 bytes. Playback re-runs the game and feeds the recorded taps back in through the `PAD_REPLAY` pad type, so the game logic itself must be deterministic given the same taps, tempo and RNG stream.
+
+**Tap record (`MC_REP_DAT`, 4 bytes).**
+
+| Field | Bits | Meaning |
+| --- | --- | --- |
+| `timeP` | 17 | the tick value (`Ttime`) at which the tap was accepted |
+| `padId` | 3 | key index (the logical button, after `KiTR` remapping in one-button play) |
+| `resT` | 1 | a "reset" request was pending for this player |
+| `holdT` | 1 | a "hold" request was pending for this player |
+| `ply` | 2 | player slot, 0..3 |
+| `useL` | 8 | score line the tap belongs to |
+
+`mccReqTapSet` is called from `tapEventCheck` (`scrctrl.c:2003`, `:2088`) once per accepted tap, after the pad-type switch has decided which key it was. `mccReqTapGet` is its mirror: per player it walks the log with a private cursor, and returns a tap only when its recorded tick is `<=` the current tick and the line matches. So during replay a tap is delivered on the first frame whose tick has reached the recorded one, which is the same frame it was originally accepted on.
+
+**Why this matters for the port.**
+- A replay or a netplay input packet only needs `(tick, line, key, player, reset/hold)`, which fits in 4 bytes. The 17-bit tick limits one recording to 131071 ticks.
+- `mccReqTapForward` / `mccReqTapForwardOwn` skip log entries that are already in the past when a line starts (printing `TAP forward!!`). That is the resynchronisation path, and is the model for late-input handling.
+- `mccReqLvlSet/Get` (`scrctrl.c:1251`, `:4477`) store the difficulty moves, so the replay does not re-decide them. Anything else in the game that varies at runtime (RNG, the `vsothsave` snapshots in versus mode, `vsTapdat*`) must be recorded the same way or be derived from the log.
+- Capacity limits (256 scores, 128 levels, 2560 taps, 100 versus snapshots) print `... save over!!` and drop the entry silently. They are real limits of the original format.
+
+**Memory card I/O (`memc.c`, `p3mc.c`).** Plain `sceMcOpen/Read/Write` sequences driven by a small state machine (`pmw->...`), one call per frame, polled with `sceMcSync`. It also writes the icon and `sceMcIconSys` header. Names are converted to Shift-JIS by `setAscii2SjisCode` (`mcctrl.c`), which maps ASCII to full-width codes through `ascii2sjiscng_tbl`. A port should replace the transport (files in a save directory) but keep the `MC_REP_STR` layout, so original saves stay readable.
+
 ## Boundary inventory (keyword search, not yet analysed)
 
 | Boundary | Files |
