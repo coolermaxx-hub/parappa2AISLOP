@@ -308,9 +308,6 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
     memc_setSaveIcon(2, NULL, 0);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/p3mc", _P3MC_mainfile_chk);
-#else
 static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
     int   n;
     int   max;
@@ -334,26 +331,29 @@ static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
     }
 
     name = memc_getfilename(-2);
-    if (name != NULL) {
-        flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
-    }
-    name = memc_getfilename(-3);
-    if (name != NULL) {
-        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
-            flg1 = 1;
+    /* do { } while (0) is needed for the register allocation to match */
+    do {
+        if (name != NULL) {
+            flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
         }
-    }
-    name = memc_getfilename(-4);
-    if (name != NULL) {
-        if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
-            flg1 = 1;
+        name = memc_getfilename(-3);
+        if (name != NULL) {
+            if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+                flg1 = 1;
+            }
         }
-    }
+        name = memc_getfilename(-4);
+        if (name != NULL) {
+            if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
+                flg1 = 1;
+            }
+        }
 
-    isSave = 0;
-    if (flg == 0 && flg1 == 0) {
-        isSave = 1;
-    }
+        isSave = 0;
+        if (flg == 0 && flg1 == 0) {
+            isSave = 1;
+        }
+    } while (0);
 
     max = no + 1;
     if (no < 0) {
@@ -376,7 +376,6 @@ static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
 
     return isSave ? 0 : -1;
 }
-#endif
 
 static int _P3MC_file_chk(char *name, int size, int *need) {
     int             i, j;
