@@ -638,11 +638,9 @@ void TsBGMChangePos(int no) {
     pbgm->chgReq = no + 1;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPoll);
-#else
 /* static */ void TsBGMPoll(void) {
     BGMSTATE *pbgm = &TsBGMState;
+    int ct;
 
     MNSceneMusicFitTimerFrame();
     if (pbgm->state == 0) {
@@ -675,16 +673,19 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPoll);
             pbgm->ctim = 0;
         } else {
             if (pbgm->ctim < 2) {
-                tsBGMONEVol(0, pbgm->ctim * pbgm->vol);
+                ct = pbgm->ctim;
+                tsBGMONEVol(0, ct * pbgm->vol);
             } else if (pbgm->ctim == 72) {
                 tsBGMONEVol(0, 0);
                 MenuVoicePlay(3, 23);
             } else if (pbgm->ctim > 72) {
-                MenuVoiceSetVol(3, 23, ((75 - pbgm->ctim) * pbgm->vol) / 3);
+                ct = 75 - pbgm->ctim;
+                MenuVoiceSetVol(3, 23, (ct * pbgm->vol) / 3);
             }
 
             if (pbgm->ctim < 2) {
-                tsBGMONEVol(pbgm->oldno, (1 - pbgm->ctim) * pbgm->vol);
+                ct = 1 - pbgm->ctim;
+                tsBGMONEVol(pbgm->oldno, ct * pbgm->vol);
             } else if (pbgm->ctim == 72) {
                 if (pbgm->sndno == 10) {
                     tsBGMONETop(pbgm->sndno, pbgm->vol);
@@ -693,7 +694,8 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPoll);
                 }
             } else if (pbgm->ctim > 72) {
                 if (pbgm->sndno != 10) {
-                    tsBGMONEVol(pbgm->sndno, ((pbgm->ctim - 72) * pbgm->vol) / 72);
+                    ct = pbgm->ctim - 72;
+                    tsBGMONEVol(pbgm->sndno, (ct * pbgm->vol) / 72);
                 }
             }
 
@@ -737,7 +739,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsBGMPoll);
         }
     }
 }
-#endif
+
 
 static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
     CmnGifOpenCmnPk(pgifpk);
