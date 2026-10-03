@@ -25,21 +25,72 @@ class SpaFileHeader;
 struct PrVuNodeHeaderDmaPacket {
     sceDmaTag m_tag;
     NaMATRIX<float, 4, 4> m_matrix;
-    PR_PADDING(unk50, 0x8);
+    float m_eeDepthBias;
+    float m_eeColorScale;
     float m_contour_blur_alpha[2];
-    PrMICRO_PROGRAM_MODULE unk60;
+    PrMICRO_PROGRAM_MODULE m_microprogram;
     PR_PADDING(unk64, 0x4);
-    float unk68;
+    float m_disturbance;
     PR_PADDING(unk6C, 0x4);
-    float unk70;
-    float unk74;
+    float m_textureOffsetU;
+    float m_textureOffsetV;
     PR_PADDING(unk78, 0x11C);
-    int unk194;
+    int m_microprogramCall;
+
+    NaVECTOR<float, 4>& PositionAtQuadword(u_int index) {
+        // SPM geometry tables contain absolute quadword indices into the
+        // variable DMA packet. The vertex portion follows its VIF/header data.
+        return reinterpret_cast<NaVECTOR<float, 4>*>(this)[index];
+    }
+};
+
+// Each deformed source position fans out to a variable number of quadword
+// indices in the geometry DMA packet. A zero-count record occupies one word.
+struct SpmPositionTargets {
+    u_int count;
+    u_int quadwordIndices[1];
+
+    const SpmPositionTargets *Next() const {
+        return reinterpret_cast<const SpmPositionTargets*>(quadwordIndices + count);
+    }
+};
+
+// Serialized cluster streams contain a count followed by (node, weight)
+// pairs for each position. Records have variable length, without padding.
+struct SpmClusterInfluence {
+    u_int nodeIndex;
+    float weight;
+};
+
+struct SpmClusterInfluences {
+    u_int count;
+    SpmClusterInfluence influences[1];
+
+    const SpmClusterInfluences *Next() const {
+        return reinterpret_cast<const SpmClusterInfluences*>(influences + count);
+    }
+};
+
+struct SpmClusterData {
+    u_int reserved;
+    SpmClusterInfluences *influences;
+    NaVECTOR<float, 4> *positions;
+};
+
+struct SpmShapeData {
+    u_int stride;
+    NaVECTOR<float, 4> *basePositions;
+    u_int postureWeightOffset;
+};
+
+struct SpmContourIndex {
+    u_int m_src;
+    u_int m_dst;
 };
 
 struct SpmNode {
 public:
-    void ChangePointer(SpmFileHeader *arg0, SpmNode *arg1);
+    void ChangePointer(SpmFileHeader *file, SpmNode *parent);
 
     void ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet);
 
@@ -49,6 +100,7 @@ public:
     void RenderContext2Node(PrModelObject *model);
 
     void ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
     void ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
 
     void BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& arg1);
@@ -56,38 +108,48 @@ public:
     void ApplyBillboardMatrix();
 
 public:
-    NaMATRIX<float, 4, 4> unk0;
-    NaMATRIX<float, 4, 4> unk40;
-    NaMATRIX<float, 4, 4> unk80;
-    NaMATRIX<float, 4, 4> unkC0;
+    NaMATRIX<float, 4, 4> m_localMatrix;
+    NaMATRIX<float, 4, 4> m_worldMatrix;
+    // Original skinning composition: worldMatrix * bindCorrectionMatrix.
+    // An inverse-bind interpretation still needs original model assets.
+    NaMATRIX<float, 4, 4> m_bindCorrectionMatrix;
+    NaMATRIX<float, 4, 4> m_skinningMatrix;
     PR_PADDING(unk100, 0x40);
-    NaVECTOR<float, 4> unk140;
-    int unk150;
+    NaVECTOR<float, 4> m_sortPosition;
+    int m_animationIndex;
     u_int m_flags;
-    SpmFileHeader *unk158;
-    SpmNode *unk15C;
-    SpmNode *unk160;
-    SpmNode *unk164;
+    SpmFileHeader *m_owner;
+    SpmNode *m_firstChild;
+    SpmNode *m_nextSibling;
+    SpmNode *m_parent;
     PR_PADDING(unk168, 0x4);
-    PrVuNodeHeaderDmaPacket *unk16C[2];
+    // Opaque packet first, depth-sorted translucent packet second.
+    PrVuNodeHeaderDmaPacket *m_context1Packets[2];
     PR_PADDING(unk174, 0x8);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    float unk180;
-    float unk184;
-    u_int unk188;
+    PrVuNodeHeaderDmaPacket *m_geometryPacket;
+    float m_textureScrollU;
+    float m_textureScrollV;
+    u_int m_sortGroup;
     PR_PADDING(unk18C, 0x8);
-    u_int unk194;
-    int *unk198;
-    PR_PADDING(unk19C, 0x4);
-    int *unk1A0;
-    PrVuNodeHeaderDmaPacket *unk1A4;
-    PR_PADDING(unk1A8, 0xc);
-    int *unk1B4;
-    int *unk1B8;
+    u_int m_deformPositionCount;
+    SpmPositionTargets *m_positionTargets;
+    u_int m_contourCount;
+    SpmContourIndex *m_contourIndices;
+    PrVuNodeHeaderDmaPacket *m_contourPacket;
+    PR_PADDING(unk1A8, 0x8);
+    // m_flags selects cluster (0x10) or shape (0x20) payloads.
+    union {
+        SpmClusterData m_cluster;
+        SpmShapeData m_shape;
+    };
+    u_int m_reserved1BC;
 };
 
 enum SpmFlags {
     eSpmIsScreenModel = 0x80,
+    eSpmVisible = 0x4000,
+    eSpmDefaultHidden = 0x20000,
+    eSpmAnimatedVisibility = 0x40000,
 };
 
 class SpmFileHeader {
@@ -138,55 +200,20 @@ public:
     void RenderClusterNode(PrModelObject *model);
 };
 
-class SpmShapeNode {
+class SpmShapeNode : public SpmNode {
 public:
-    void AddShapePosition(u_int arg0, float arg1);
+    void AddShapePosition(u_int shapeIndex, float weight);
     void RenderShapeNode(PrModelObject *model);
-
     float BlendTransactionWeight(PrModelObject *model, float weight, u_int index);
 
-public:
-    PR_PADDING(unk0, 0x40);
-    NaMATRIX<float, 4, 4> unk40;
-    PR_PADDING(unk80, 0xC0);
-    NaVECTOR<float, 4> unk140;
-    int unk150;
-    PR_PADDING(unk154, 0x18);
-    PrVuNodeHeaderDmaPacket *unk16C[2];
-    PR_PADDING(unk174, 0x8);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x8);
-    u_int unk188;
-    PR_PADDING(unk18C, 0x8);
-    u_int unk194;
-    u_int *unk198;
-    PR_PADDING(unk19C, 0x14);
-    u_int unk1B0;
-    u_long128 *unk1B4;
-    u_int unk1B8;
-    PR_PADDING(unk1BC, 0x4);
-    u_long128 unk1C0[1];
+    // The node's inline tail is a position-major array of shape deltas.
+    NaVECTOR<float, 4> m_shapeDeltas[1];
 };
 
-struct SpmContourIndex {
-    u_int m_src;
-    u_int m_dst;
-};
-
-class SpmComplexNode {
+class SpmComplexNode : public SpmNode {
 public:
     void SaveContour(PrModelObject *model);
     void RenderContour(PrModelObject *model);
-
-public:
-    PR_PADDING(unk0, 0x140);
-    NaVECTOR<float, 4> unk140;
-    PR_PADDING(unk150, 0x2C);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    PR_PADDING(unk180, 0x1C);
-    u_int unk19C;
-    SpmContourIndex *unk1A0;
-    PrVuNodeHeaderDmaPacket *unk1A4;
 };
 
 class PrModelObject {
@@ -234,8 +261,8 @@ public:
     SpaFileHeader *m_animation;
     SpaFileHeader *m_position_animation;
     int m_active_transition;
-    float *unk74[2];
-    NaMATRIX<float, 4, 4> *unk7C[2];
+    float *m_postureWeights[2];
+    NaMATRIX<float, 4, 4> *m_postureMatrices[2];
     int m_rendered_once;
     int *unk88;
     int *unk8C;

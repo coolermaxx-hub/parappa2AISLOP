@@ -13,12 +13,7 @@
 extern PrSPRAM_DATA *prSpramData_tmp_depthfield;
 
 /* bss */
-extern sceGifTag gifTag_tmp_depthfield;
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", ApplyDepthOfField__13PrSceneObject);
-#else
-/* Register allocation: zbuf and the packet pointer swap s0/s1 */
 void PrSceneObject::ApplyDepthOfField() {
     u_int level = GetDepthLevel();
     if (level == 0) {
@@ -58,20 +53,20 @@ void PrSceneObject::ApplyDepthOfField() {
 
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     NaGifPacket packet;
-    packet.Init((u_long128*)((char*)prSpramData_tmp_depthfield + 0x690));
+    packet.Init(prSpramData_tmp_depthfield->m_packet_workspace);
     packet.End(0, 0, 0);
 
-    sceGifTag& tag = gifTag_tmp_depthfield;
+    static sceGifTag tag;
     tag.NLOOP = 0;
     tag.EOP = 1;
     tag.PRE = 0;
     tag.FLG = 0;
     tag.NREG = 1;
     tag.REGS0 = 0xe;
-    packet.OpenGifTag(*(u_long128*)&tag);
+    packet.OpenGifTag(tag);
 
     zbuf.ZMSK = 1;
-    packet.AddGsAD(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
+    packet.AddGsRegister(SCE_GS_ZBUF_1, zbuf);
 
     bool first = true;
     for (u_int i = 1; i <= level; i++) {
@@ -82,7 +77,7 @@ void PrSceneObject::ApplyDepthOfField() {
 
         float depth = focal + (defocus - focal) * i * 0.25f;
         const NaMATRIX<float, 4, 4>& m = prSpramData_tmp_depthfield->unk1A0;
-        PrSetSpriteDefinitionZ((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3]));
+        PrSetSpriteDefinitionZ(static_cast<u_int>((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3])));
 
         packet.AddGifPackedAD_TEXFLUSH();
         packet.AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 1, 2);
@@ -99,12 +94,12 @@ void PrSceneObject::ApplyDepthOfField() {
     }
 
     zbuf.ZMSK = 0;
-    packet.AddGsAD(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
+    packet.AddGsRegister(SCE_GS_ZBUF_1, zbuf);
 
     sceGsDrawEnv1 *env = this->unk70;
-    packet.AddGsAD(SCE_GS_SCISSOR_1, *(u_long*)&env->scissor1);
-    packet.AddGsAD(SCE_GS_XYOFFSET_1, *(u_long*)&this->unk58);
-    packet.AddGsAD(SCE_GS_TEST_1, *(u_long*)&env->test1);
+    packet.AddGsRegister(SCE_GS_SCISSOR_1, env->scissor1);
+    packet.AddGsRegister(SCE_GS_XYOFFSET_1, this->unk58);
+    packet.AddGsRegister(SCE_GS_TEST_1, env->test1);
     packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80));
     packet.CloseGifTag();
     sceGifPkTerminate(&packet);
@@ -114,24 +109,3 @@ void PrSceneObject::ApplyDepthOfField() {
     FlushCache(0);
     sceDmaSend(dma, (u_long128*)(((u_int)packet.pBase & 0x3fff) | 0x80000000));
 }
-#endif
-
-
-/* nalib/napacket.h (emitted by the C version above) */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEXFLUSH__11NaGifPacket);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEST_1__11NaGifPacketbiUcibibi);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__11NaGifPacketUI80);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGsAD__18NaGifPacketWrapperUiUl);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", CloseGifTag__18NaGifPacketWrapper);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__18NaGifPacketWrapperUI80);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", End__18NaGifPacketWrapperUiUiUi);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", Init__18NaGifPacketWrapperPUI80);
-#endif

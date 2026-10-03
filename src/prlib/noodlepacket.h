@@ -1,0 +1,129 @@
+#ifndef PRLIB_NOODLEPACKET_H
+#define PRLIB_NOODLEPACKET_H
+
+#include <eetypes.h>
+#include <eestruct.h>
+#include <libdma.h>
+
+// Wire layouts decoded from the original DMA/GIF templates. REGLIST packets
+// carry PRIM, RGBAQ, then four UV/XY pairs; addresses are in the GIF tag.
+struct PrNoodleStripHeader {
+    sceDmaTag dma;
+    sceGifTag gif;
+    u_long clamp;
+    u_long clampAddress;
+};
+
+struct PrNoodleStripVertex {
+    u_long uv;
+    u_long xy;
+};
+
+struct PrNoodleStripQuadPacket {
+    sceDmaTag dma;
+    sceGifTag gif;
+    u_long primitive;
+    u_long color;
+    PrNoodleStripVertex vertices[4];
+};
+
+struct PrGsAD {
+    u_long value;
+    u_long address;
+};
+
+struct PrNoodleTextureDrawPacket {
+    sceGifTag stateTag;
+    PrGsAD state[8];
+    sceGifTag spriteTag;
+};
+
+// VU texture input: three sine waves in XYZ, with W reserved. Amplitudes are
+// normalized by their sum; spatialCycles counts cycles across 256 texels.
+// See docs/noodle-texture-model.md for the microprogram derivation.
+struct PrNoodleTextureParameters {
+    float amplitude[4];
+    float spatialCycles[4];
+    float temporalFrequency[4];
+    float phaseOffsetCycles[4];
+    float phaseTime[3];
+    float bandOffset;
+    PrNoodleTextureDrawPacket packet;
+};
+
+struct PrNoodleTextureCreationPacket {
+    sceDmaTag stateDma;
+    sceGifTag stateGif;
+    PrGsAD state[2];
+    sceDmaTag parameterDma;
+    sceDmaTag endDma;
+};
+
+struct PrNoodleTextureCopyPacket {
+    sceGifTag tag;
+    PrGsAD state[13];
+};
+
+// Modulation input is a REGLIST GIF header followed by seven eight-strip
+// parameter groups and a final control vector. The last lane controls fade.
+struct PrNoodleAlphaParameters {
+    sceGifTag tag;
+    float radius[8];
+    float phase[8];
+    float horizontalJitter[8];
+    float verticalJitter[8];
+    float weight[8];
+    float signedWeight[8];
+    float alpha[8];
+    float control[3];
+    float fade;
+};
+
+struct PrNoodleAlphaGsPacket {
+    sceGifTag tag;
+    PrGsAD frame;
+    PrGsAD offset;
+    PrGsAD test;
+};
+
+struct PrNoodleAlphaFramePacket {
+    sceGifTag tag;
+    PrGsAD maskedFrame;
+    PrGsAD texture;
+    PrGsAD textureFilter;
+    PrGsAD clamp;
+    PrGsAD textureFunction;
+    PrGsAD primitive;
+    PrGsAD firstUv;
+    PrGsAD firstPosition;
+    PrGsAD secondUv;
+    PrGsAD secondPosition;
+    PrGsAD frame;
+    PrGsAD offset;
+};
+
+struct PrNoodleAlphaDmaPacket {
+    sceDmaTag state;
+    sceDmaTag parameters;
+    sceDmaTag microprogram;
+    sceDmaTag frame;
+};
+
+struct PrNoodleBlendPacket {
+    sceDmaTag dma;
+    sceGifTag gif;
+    PrGsAD flush;
+    PrGsAD texture;
+    PrGsAD textureFilter;
+    PrGsAD clamp;
+    PrGsAD test;
+    PrGsAD alpha;
+    PrGsAD primitive;
+    PrGsAD color;
+    PrGsAD firstUv;
+    PrGsAD firstPosition;
+    PrGsAD secondUv;
+    PrGsAD secondPosition;
+};
+
+#endif /* PRLIB_NOODLEPACKET_H */

@@ -470,7 +470,7 @@ segments:
         - { type: .bss,  vram: 0x01c83190, name: prlib/prlib          }
         - { type: bss,   vram: 0x01c831b0, name: prlib/renderee       }
         - { type: .bss,  vram: 0x01c831c0, name: prlib/microprogram   }
-        - { type: bss,   vram: 0x01c831e0, name: prlib/spram          }
+        - { type: .bss,  vram: 0x01c831e0, name: prlib/spram          }
         - { type: bss,   vram: 0x01c83260, name: prlib/spadata        }
         - { type: .bss,  vram: 0x01c83390, name: prlib/billboard      }
         - { type: bss,   vram: 0x01c833d0, name: prlib/depthfield     }

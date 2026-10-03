@@ -4,99 +4,84 @@
 #include "common.h"
 
 #include <eetypes.h>
+#include <math.h>
 
 #include <nalib/namatrix.h>
 
 class SpaFileHeader;
 
-class SpaTrackBase {
-public:
-    u_int SearchSegment(float arg0) const;
+#include "spatrack.h"
 
-public:
-    void ChangePointer(u_int arg0, u_int arg1) {
-        int ptr;
-        if (this->unk0 == 0) {
-            ptr = (int)(this + 1) + (this->unk4 * arg0);
-            this->unkC = (float*)ptr;
-        } else {
-            ptr = (int)(this + 1) + (this->unk4 * arg1);
-            this->unkC = (float*)ptr;
-        }
-    }
+template <> NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(unsigned int segment, float time) const;
+template <> NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(unsigned int segment, float time) const;
 
-protected:
-    u_char unk0;
-    u_char unk1;
-    u_short unk2;
-    u_int unk4;
-    mutable u_int unk8;
-    float *unkC;
-};
-
-template <typename T>
-class SpaTrack : public SpaTrackBase {
-public:
-    T* GetValue(float arg0) const;
-
-    T* GetSprineValue(u_int seg, float arg1) const;
-    T* GetLinearValue(u_int seg, float arg1) const;
-
-public:
-    void ChangePointer() {
-        int ptr;
-        if (this->unk0 == 0) {
-            ptr = (int)((SpaTrackBase*)this + 1) + (this->unk4 * (sizeof(T) * 3));
-            this->unkC = (float*)ptr;
-        } else {
-            ptr = (int)((SpaTrackBase*)this + 1) + (this->unk4 * sizeof(T));
-            this->unkC = (float*)ptr;
-        }
-    }
-
-private:
-    T *unk10;
-};
+template <typename T> class SpaTypedTransform;
 
 class SpaTransform {
 public:
-    NaMATRIX<float, 4, 4>* GetMatrix(float arg0) const;
+    NaMATRIX<float, 4, 4>* GetMatrix(float time) const;
     bool IsEverIdentical();
 
-    template <typename T>
-    SpaTrack<T>* GetTrack() {
-        return reinterpret_cast<SpaTrack<T>*>(&unk10);
-    }
+    template <typename T> SpaTrack<T>* GetTrack();
+    template <typename T> const SpaTrack<T>* GetTrack() const;
 
-public:
-    u_char unk0;
+    enum Kind {
+        Scale = 0, AxisAngle = 1, RotateX = 2, RotateY = 3, RotateZ = 4,
+        Translate = 5, Matrix = 6, Shear = 7
+    };
+
+    u_char m_kind;
+    // The remaining transform header bytes are reserved/unknown in this format.
     PR_PADDING(unk1, 0xF);
-    u_char unk10;
-    PR_PADDING(unk11, 0x3);
-    int unk14;
-    PR_PADDING(unk18, 0x8);
-    NaMATRIX<float, 4, 4> unk20;
 };
-    
+
+// The transform kind determines the actual payload type. Keeping the header
+// separate avoids pretending every transform owns a matrix-sized payload.
+template <typename T>
+class SpaTypedTransform : public SpaTransform {
+public:
+    SpaTrack<T> track;
+};
+
+template <typename T>
+SpaTrack<T>* SpaTransform::GetTrack() {
+    return &static_cast<SpaTypedTransform<T>*>(this)->track;
+}
+
+template <typename T>
+const SpaTrack<T>* SpaTransform::GetTrack() const {
+    return &static_cast<const SpaTypedTransform<T>*>(this)->track;
+}
+
 class SpaNodeAnimation {
 public:
-    NaMATRIX<float, 4, 4>* GetMatrix(float) const;
-    bool IsVisible(float arg0) const;
+    NaMATRIX<float, 4, 4>* GetMatrix(float time) const;
+    bool IsVisible(float time) const;
     int Optimize();
 
     void ChangePointer(SpaFileHeader *animation);
 
+    void BindInlineTables() {
+        // Known serialized boundary: scalar track pointers, transform pointers,
+        // then extra vector-transform pointers. Bind before Optimize compacts
+        // the first transform group; its count can subsequently decrease.
+        m_transforms = reinterpret_cast<SpaTransform**>(
+            m_shapeWeightTracks + m_shapeWeightTrackCount);
+        m_extraVectorTransforms = m_transforms + m_transformCount;
+    }
+
 public:
     PR_PADDING(unk0, 0x4);
-    SpaTrack<int> *unk4;
-    u_int unk8;
-    SpaTransform **unkC;
+    SpaTrack<int> *m_visibilityTrack;
+    u_int m_transformCount;
+    SpaTransform **m_transforms;
+    // Relocated by the original code; contents and purpose remain unknown.
     int *unk10;
-    u_int unk14;
-    SpaTransform **unk18;
+    u_int m_extraVectorTransformCount;
+    SpaTransform **m_extraVectorTransforms;
     PR_PADDING(unk1C, 0x10);
-    u_int unk2C;
-    SpaTrack<float> *unk30[1];
+    u_int m_shapeWeightTrackCount;
+    SpaTrack<float> *m_shapeWeightTracks[1];
 };
 
 #endif /* PRLIB_SPADATA_H */

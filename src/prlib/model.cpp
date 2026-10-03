@@ -58,10 +58,10 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_animation = NULL;
     m_position_animation = NULL;
 
-    unk7C[0] = NULL;
-    unk7C[1] = NULL;
-    unk74[0] = NULL;
-    unk74[1] = NULL;
+    m_postureMatrices[0] = NULL;
+    m_postureMatrices[1] = NULL;
+    m_postureWeights[0] = NULL;
+    m_postureWeights[1] = NULL;
     m_rendered_once = 0;
     m_active_transition = 0;
 
@@ -89,12 +89,12 @@ PrModelObject::~PrModelObject() {
     delete unk88;
     delete unk8C;
 
-    if ((m_flags & 0x8) && unk74[0] != NULL) {
-        delete[] unk74[0];
+    if ((m_flags & 0x8) && m_postureWeights[0] != NULL) {
+        delete[] m_postureWeights[0];
     }
 
-    if ((m_flags & 0x10) && unk7C[0] != NULL) {
-        delete[] unk7C[0];
+    if ((m_flags & 0x10) && m_postureMatrices[0] != NULL) {
+        delete[] m_postureMatrices[0];
     }
 }
 
@@ -107,23 +107,23 @@ void PrModelObject::Initialize() {
         if (node_num != 0) {
             NaMATRIX<float, 4, 4> *matrix = (NaMATRIX<float, 4, 4>*)AllocateFromWorkArea(node_num * sizeof(NaMATRIX<float, 4, 4>) * 2);
             if (matrix == NULL) {
-                unk7C[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
+                m_postureMatrices[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
                 m_flags |= 0x10;
             } else {
-                unk7C[0] = matrix;
+                m_postureMatrices[0] = matrix;
             }
-            unk7C[1] = unk7C[0] + node_num;
+            m_postureMatrices[1] = m_postureMatrices[0] + node_num;
 
             u_int weight_num = spm->unk6C;
             if (weight_num != 0) {
                 float *weight = (float*)AllocateFromWorkArea(weight_num * sizeof(float) * 2);
                 if (weight == NULL) {
-                    unk74[0] = new float[weight_num * 2];
+                    m_postureWeights[0] = new float[weight_num * 2];
                     m_flags |= 0x8;
                 } else {
-                    unk74[0] = weight;
+                    m_postureWeights[0] = weight;
                 }
-                unk74[1] = unk74[0] + weight_num;
+                m_postureWeights[1] = m_postureWeights[0] + weight_num;
             }
         }
     }
@@ -198,7 +198,7 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
     position->Set(0.0f, 0.0f, 0.0f, 1.0f);
 
     if (m_position_animation != NULL) {
-        NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->unk50[0]->GetMatrix(m_position_animation_time), *position);
+        NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->m_nodes[0]->GetMatrix(m_position_animation_time), *position);
     } else {
         NaMATRIX<float, 4, 4>::Apply(*position, unk10, *position);
     }
@@ -209,9 +209,8 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
 void PrModelObject::GetScreenPosition(NaVECTOR<float, 4> *position) {
     GetPrimitivePosition(position);
 
-    float *p = reinterpret_cast<float*>(position);
-    float w = p[3];
-    p[0] = p[0] / w - 1728.0f;
-    p[1] = p[1] / w - 1936.0f;
-    p[3] = 1.0f;
+    float w = (*position)[3];
+    (*position)[0] = (*position)[0] / w - 1728.0f;
+    (*position)[1] = (*position)[1] / w - 1936.0f;
+    (*position)[3] = 1.0f;
 }

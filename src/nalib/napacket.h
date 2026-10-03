@@ -4,6 +4,7 @@
 #include <eetypes.h>
 #include <eestruct.h>
 #include <libgifpk.h>
+#include <string.h>
 
 /*
  * The compiler never inlines these member functions, so every
@@ -24,8 +25,29 @@ public:
         sceGifPkOpenGifTag(this, tag);
     }
 
+    void OpenGifTag(const sceGifTag& tag) {
+        u_long128 encoded;
+        memcpy(&encoded, &tag, sizeof(encoded));
+        OpenGifTag(encoded);
+    }
+
     void CloseGifTag() {
         sceGifPkCloseGifTag(this);
+    }
+
+    template <typename Register>
+    static u_long EncodeRegister(const Register& value) {
+        typedef char RegisterMustBe64Bits[sizeof(Register) == sizeof(u_long) ? 1 : -1];
+        (void)sizeof(RegisterMustBe64Bits);
+        u_long encoded;
+        memcpy(&encoded, &value, sizeof(encoded));
+        return encoded;
+    }
+
+    template <typename Register>
+    void AddGsRegister(u_int address, const Register& value) {
+        // Preserve all bits of the SDK register without scalar type punning.
+        AddGsAD(address, EncodeRegister(value));
     }
 
     void AddGsAD(u_int addr, u_long data) {
@@ -35,6 +57,9 @@ public:
 
 class NaGifPacket : public NaGifPacketWrapper {
 public:
+    void OpenGifTag(const sceGifTag& tag) {
+        NaGifPacketWrapper::OpenGifTag(tag);
+    }
     void OpenGifTag(u_long128 tag) {
         NaGifPacketWrapper::OpenGifTag(tag);
     }

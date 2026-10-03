@@ -19,10 +19,8 @@ public:
     NaMATRIX(const T& m00, const T& m01, const T& m02, const T& m03, const T& m10, const T& m11, const T& m12, const T& m13, const T& m20, const T& m21, const T& m22, const T& m23, const T& m30, const T& m31, const T& m32, const T& m33) {
         Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
     }
-    NaMATRIX(const NaMATRIX<float, 4, 4>& rhs) {
-        NaMATRIX<float, 4, 4> *dst = this;
-        const NaMATRIX<float, 4, 4> *src = &rhs;
-        Copy(*dst, *src);
+    NaMATRIX(const NaMATRIX<T, t0, t1>& rhs) {
+        Copy(*this, rhs);
     }
 
     const NaVECTOR<T, t0>& operator[](int arg0) const {
@@ -30,7 +28,7 @@ public:
     }
 
     bool inl0() const {
-        const NaMATRIX<float, 4, 4>& a0 = NaMATRIX<float, 4, 4>::IDENT;
+        const NaMATRIX<T, t0, t1>& a0 = IDENT;
         for (int i = 0; i < t1; i++) {
             if (a0[i].inl0(this->m[i])) {
                 return false;
@@ -50,20 +48,7 @@ public:
         return false;
     }
 
-    static NaMATRIX<float, 4, 4>& Copy(NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
-        asm volatile("
-            lq $6, 0(%1)
-            lq $7, 0x10(%1)
-            lq $8, 0x20(%1)
-            lq $9, 0x30(%1)
-            sq $6, 0(%0)
-            sq $7, 0x10(%0)
-            sq $8, 0x20(%0)
-            sq $9, 0x30(%0)
-        " : : "r"(&lhs), "r"(&rhs)
-        : "$6", "$7", "$8", "$9");
-        return lhs;
-    }
+    static NaMATRIX<T, t0, t1>& Copy(NaMATRIX<T, t0, t1>& lhs, const NaMATRIX<T, t0, t1>& rhs);
 
     NaMATRIX<T, t0, t1>& Set(const T& m00, const T& m01, const T& m10, const T& m11);
     NaMATRIX<T, t0, t1>& Set(const T& m00, const T& m01, const T& m02, const T& m10, const T& m11, const T& m12, const T& m20, const T& m21, const T& m22);
@@ -72,13 +57,19 @@ public:
     static NaMATRIX<float, 4, 4> RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
     static NaMATRIX<float, 4, 4> RotateMatrix(int axis, const float& angle);
 
+    static NaMATRIX<float, 4, 4> ScaleMatrix(const float& x, const float& y, const float& z);
+
+    static NaMATRIX<float, 4, 4> TranslateMatrix(const float& x, const float& y, const float& z);
+    static NaMATRIX<float, 4, 4> TranslateMatrix(const NaVECTOR<float, 4>& translation);
+    static NaMATRIX<float, 4, 4> ScaleMatrix(const NaVECTOR<float, 4>& scale);
+
     NaMATRIX<float, 4, 4> Inverse() const {
         NaMATRIX<float, 4, 4> ret;
         sceVu0InversMatrix((sceVu0FVECTOR*)&ret, (sceVu0FVECTOR*)this);
         return ret;
     }
 
-    NaMATRIX<float, 4, 4>& operator=(const NaMATRIX<float, 4, 4>& rhs) {
+    NaMATRIX<T, t0, t1>& operator=(const NaMATRIX<T, t0, t1>& rhs) {
         return Copy(*this, rhs);
     }
 
@@ -94,8 +85,25 @@ public:
             vmaddaz.xyzw ACC, $vf6, $vf8z
             vmaddw.xyzw  $vf9, $vf7, $vf8w
             sqc2         $vf9, 0x0(%0)
-        " : : "r"(&out), "r"(&lhs), "r"(&rhs));
+        " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
         return out;
+    }
+
+    // Scalar callers use the transpose of the VU column-vector convention.
+    // Keep the original left-to-right accumulation, including the initial zero.
+    NaVECTOR<T, t1>& ApplyTransposed(NaVECTOR<T, t1>& result, const NaVECTOR<T, t0>& value) const {
+        for (int i = 0; i < t1; i++) {
+            T sum = 0;
+            for (int j = 0; j < t0; j++) sum += m[i][j] * value[j];
+            result[i] = sum;
+        }
+        return result;
+    }
+
+    NaVECTOR<T, t1> ApplyTransposed(const NaVECTOR<T, t0>& value) const {
+        NaVECTOR<T, t1> result;
+        ApplyTransposed(result, value);
+        return result;
     }
 
     NaVECTOR<float, 4> operator*(const NaVECTOR<float, 4>& rhs) const {
@@ -104,10 +112,7 @@ public:
         return ret;
     }
 
-    NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
-        NaMATRIX<float, 4, 4> ret;
-        NaMATRIX<float, 4, 4> *pret = &ret;
-        const NaMATRIX<float, 4, 4> *pthis = this;
+    static NaMATRIX<float, 4, 4>& Multiply(NaMATRIX<float, 4, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
         asm volatile("
             lqc2         $vf4, 0x0(%1)
             lqc2         $vf5, 0x10(%1)
@@ -137,43 +142,58 @@ public:
             vmaddaz.xyzw ACC, $vf6, $vf8z
             vmaddw.xyzw  $vf9, $vf7, $vf8w
             sqc2         $vf9, 0x30(%0)
-        " : : "r"(pret), "r"(pthis), "r"(&rhs) : "$6", "$7", "$8", "$9");
-        return ret;
+        " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
+        return out;
     }
 
-    NaMATRIX<float, 4, 4> operator*(const float& s) const {
-        NaMATRIX<float, 4, 4> ret;
-        for (int i = 0; i < 4; i++) {
+    NaMATRIX<float, 4, 4>& Translate(const float& x, const float& y, const float& z);
+    NaMATRIX<float, 4, 4>& Scale(const float& x, const float& y, const float& z);
+
+    NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
+        NaMATRIX<float, 4, 4> result;
+        Multiply(result, *this, rhs);
+        return result;
+    }
+
+    NaMATRIX<T, t0, t1> operator*(const T& s) const {
+        NaMATRIX<T, t0, t1> ret;
+        for (int i = 0; i < t1; i++) {
             ret.m[i] = m[i] * s;
         }
         return ret;
     }
 
-    NaMATRIX<float, 4, 4> operator+(const NaMATRIX<float, 4, 4>& rhs) const {
-        NaMATRIX<float, 4, 4> ret;
-        for (int i = 0; i < 4; i++) {
+    NaMATRIX<T, t0, t1> operator+(const NaMATRIX<T, t0, t1>& rhs) const {
+        NaMATRIX<T, t0, t1> ret;
+        for (int i = 0; i < t1; i++) {
             ret.m[i] = m[i] + rhs.m[i];
         }
         return ret;
     }
 
-    NaMATRIX<float, 4, 4> operator-(const NaMATRIX<float, 4, 4>& rhs) const {
-        NaMATRIX<float, 4, 4> ret;
-        for (int i = 0; i < 4; i++) {
+    NaMATRIX<T, t0, t1> operator-(const NaMATRIX<T, t0, t1>& rhs) const {
+        NaMATRIX<T, t0, t1> ret;
+        for (int i = 0; i < t1; i++) {
             ret.m[i] = m[i] - rhs.m[i];
         }
         return ret;
     }
 
-    NaMATRIX<float, 4, 4> operator/(const float& s) const {
-        NaMATRIX<float, 4, 4> ret;
-        for (int i = 0; i < 4; i++) {
+    NaMATRIX<T, t0, t1> operator/(const T& s) const {
+        NaMATRIX<T, t0, t1> ret;
+        for (int i = 0; i < t1; i++) {
             ret.m[i] = m[i] / s;
         }
         return ret;
     }
 
 private:
+    // VU matrices store consecutive column vectors. The Set overloads write
+    // a packed prefix, including the historical nine-scalar Set on a 4x4.
+    T& Element(int index) {
+        return m[index / t0][index % t0];
+    }
+
     NaVECTOR<T, t0> m[t1];
 
 public:
@@ -182,113 +202,163 @@ public:
 };
 
 template <typename T, int t0, int t1>
+inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Copy(NaMATRIX<T, t0, t1>& lhs, const NaMATRIX<T, t0, t1>& rhs) {
+    for (int column = 0; column < t1; column++) lhs.m[column] = rhs.m[column];
+    return lhs;
+}
+
+// Keep the original four-quadword MMI transfer for the actual EE 4x4 type.
+template <>
+inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
+        asm volatile("
+            lq $6, 0(%1)
+            lq $7, 0x10(%1)
+            lq $8, 0x20(%1)
+            lq $9, 0x30(%1)
+            sq $6, 0(%0)
+            sq $7, 0x10(%0)
+            sq $8, 0x20(%0)
+            sq $9, 0x30(%0)
+        " : : "r"(&lhs), "r"(&rhs)
+        : "$6", "$7", "$8", "$9", "memory");
+        return lhs;
+    }
+
+template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m10, const T& m11) {
-    ((T*)m)[0] = m00;
-    ((T*)m)[1] = m01;
-    ((T*)m)[2] = m10;
-    ((T*)m)[3] = m11;
+    Element(0) = m00;
+    Element(1) = m01;
+    Element(2) = m10;
+    Element(3) = m11;
     return *this;
 }
 
 template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m02, const T& m10, const T& m11, const T& m12, const T& m20, const T& m21, const T& m22) {
-    ((T*)m)[0] = m00;
-    ((T*)m)[1] = m01;
-    ((T*)m)[2] = m02;
-    ((T*)m)[3] = m10;
-    ((T*)m)[4] = m11;
-    ((T*)m)[5] = m12;
-    ((T*)m)[6] = m20;
-    ((T*)m)[7] = m21;
-    ((T*)m)[8] = m22;
+    Element(0) = m00;
+    Element(1) = m01;
+    Element(2) = m02;
+    Element(3) = m10;
+    Element(4) = m11;
+    Element(5) = m12;
+    Element(6) = m20;
+    Element(7) = m21;
+    Element(8) = m22;
     return *this;
 }
 
 template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m02, const T& m03, const T& m10, const T& m11, const T& m12, const T& m13, const T& m20, const T& m21, const T& m22, const T& m23, const T& m30, const T& m31, const T& m32, const T& m33) {
-    ((T*)m)[0] = m00;
-    ((T*)m)[1] = m01;
-    ((T*)m)[2] = m02;
-    ((T*)m)[3] = m03;
-    ((T*)m)[4] = m10;
-    ((T*)m)[5] = m11;
-    ((T*)m)[6] = m12;
-    ((T*)m)[7] = m13;
-    ((T*)m)[8] = m20;
-    ((T*)m)[9] = m21;
-    ((T*)m)[10] = m22;
-    ((T*)m)[11] = m23;
-    ((T*)m)[12] = m30;
-    ((T*)m)[13] = m31;
-    ((T*)m)[14] = m32;
-    ((T*)m)[15] = m33;
+    Element(0) = m00;
+    Element(1) = m01;
+    Element(2) = m02;
+    Element(3) = m03;
+    Element(4) = m10;
+    Element(5) = m11;
+    Element(6) = m12;
+    Element(7) = m13;
+    Element(8) = m20;
+    Element(9) = m21;
+    Element(10) = m22;
+    Element(11) = m23;
+    Element(12) = m30;
+    Element(13) = m31;
+    Element(14) = m32;
+    Element(15) = m33;
     return *this;
 }
 
-/*
- * Helpers for RotateMatrix(int): build a matrix through the 4x4 Set.
- * Templates so they only instantiate Set where used.
- * The Loop variant wraps Set in a one-pass loop; see RotateMatrix(int).
- */
-template <typename T>
-static inline NaMATRIX<T, 4, 4> NaMakeMatrix_tmp(
-    const T& m00, const T& m01, const T& m02, const T& m03,
-    const T& m10, const T& m11, const T& m12, const T& m13,
-    const T& m20, const T& m21, const T& m22, const T& m23,
-    const T& m30, const T& m31, const T& m32, const T& m33) return ret {
-    ret.Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle) {
+    const float yz = axis[1] * axis[1] + axis[2] * axis[2];
+    const float length = sqrtf(axis[0] * axis[0] + yz);
+    const float radius = sqrtf(yz);
+    float p, q;
+
+    if (radius < 1.1920929e-07f) {
+        p = 0.0f;
+        q = 1.0f;
+    } else {
+        p = axis[1] / radius;
+        q = axis[2] / radius;
+    }
+
+    const float a = radius / length;
+    const float b = -axis[0] / length;
+    const float s = sinf(angle);
+    const float c = cosf(angle);
+    const float k = a * (c - 1.0f);
+
+    return NaMATRIX<float, 4, 4>(a * k + 1.0f, p * b * k + q * a * s, q * b * k - p * a * s, 0.0f,
+                                  p * b * k - q * a * s, -p * p * a * k + c, -p * q * a * k - b * s, 0.0f,
+                                  q * b * k + p * a * s, -p * q * a * k + b * s, -q * q * a * k + c, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-template <typename T>
-static inline NaMATRIX<T, 4, 4> NaMakeMatrixLoop_tmp(
-    const T& m00, const T& m01, const T& m02, const T& m03,
-    const T& m10, const T& m11, const T& m12, const T& m13,
-    const T& m20, const T& m21, const T& m22, const T& m23,
-    const T& m30, const T& m31, const T& m32, const T& m33) return ret {
-    do {
-        ret.Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
-    } while (0);
-}
-
-/*
- * Weak copies of this are emitted by billboard.cpp and menderer.cpp;
- * spadata.cpp has the first copy as an explicit specialization.
- * None of the loops repeat. They recreate loop notes that the original
- * code had, which steer three ee-gcc passes:
- * - the outer loop keeps the axis == 1 test from being a loop exit,
- *   so reorg predicts it taken (bnel with the reload of s in the slot);
- * - the loop around the axis == 1 return ends right before the last
- *   arm, so CSE stops there and that arm reloads s from the stack;
- * - the loop in NaMakeMatrixLoop_tmp leaves a NOTE_INSN_LOOP_BEG
- *   before the last arm's label, so final aligns it to 8 bytes.
- */
+// These are column-major transforms; translation occupies the last column.
 template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const float& angle) {
-    float c = cosf(angle);
-    float s = sinf(angle);
+    const float c = cosf(angle);
+    const float s = sinf(angle);
 
-    do {
-        if (axis == 0) {
-            return NaMakeMatrix_tmp(1.0f, 0.0f, 0.0f, 0.0f,
-                                    0.0f, c, s, 0.0f,
-                                    0.0f, -s, c, 0.0f,
-                                    0.0f, 0.0f, 0.0f, 1.0f);
-        }
+    if (axis == 0) {
+        return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
+                                   0.0f, c, s, 0.0f,
+                                   0.0f, -s, c, 0.0f,
+                                   0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    if (axis == 1) {
+        return NaMATRIX<float, 4, 4>(c, 0.0f, -s, 0.0f,
+                                   0.0f, 1.0f, 0.0f, 0.0f,
+                                   s, 0.0f, c, 0.0f,
+                                   0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    return NaMATRIX<float, 4, 4>(c, s, 0.0f, 0.0f,
+                               -s, c, 0.0f, 0.0f,
+                               0.0f, 0.0f, 1.0f, 0.0f,
+                               0.0f, 0.0f, 0.0f, 1.0f);
+}
 
-        if (axis == 1) {
-            do {
-                return NaMakeMatrixLoop_tmp(c, 0.0f, -s, 0.0f,
-                                            0.0f, 1.0f, 0.0f, 0.0f,
-                                            s, 0.0f, c, 0.0f,
-                                            0.0f, 0.0f, 0.0f, 1.0f);
-            } while (0);
-        }
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const float& x, const float& y, const float& z) {
+    return NaMATRIX<float, 4, 4>(x, 0.0f, 0.0f, 0.0f,
+                               0.0f, y, 0.0f, 0.0f,
+                               0.0f, 0.0f, z, 0.0f,
+                               0.0f, 0.0f, 0.0f, 1.0f);
+}
 
-        return NaMakeMatrix_tmp(c, s, 0.0f, 0.0f,
-                                -s, c, 0.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f);
-    } while (0);
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const float& y, const float& z) {
+    return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
+                               0.0f, 1.0f, 0.0f, 0.0f,
+                               0.0f, 0.0f, 1.0f, 0.0f,
+                               x, y, z, 1.0f);
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& translation) {
+    return TranslateMatrix(translation[0], translation[1], translation[2]);
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& scale) {
+    // Unlike the three-scalar overload, this overload preserves scale.w.
+    return NaMATRIX<float, 4, 4>(scale[0], 0.0f, 0.0f, 0.0f,
+                               0.0f, scale[1], 0.0f, 0.0f,
+                               0.0f, 0.0f, scale[2], 0.0f,
+                               0.0f, 0.0f, 0.0f, scale[3]);
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4>& NaMATRIX<T, t0, t1>::Translate(const float& x, const float& y, const float& z) {
+    const NaMATRIX<float, 4, 4> translation = TranslateMatrix(x, y, z);
+    return Multiply(*this, translation, *this);
+}
+
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4>& NaMATRIX<T, t0, t1>::Scale(const float& x, const float& y, const float& z) {
+    const NaMATRIX<float, 4, 4> scale = ScaleMatrix(x, y, z);
+    return Multiply(*this, scale, *this);
 }
 
 #endif /* NALIB_NAMATRIX_H */

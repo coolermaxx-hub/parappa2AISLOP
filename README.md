@@ -1,3 +1,9 @@
+> Current reconstruction priorities: readable, typed C++ takes precedence over
+> exact instruction matching. See [the rules](docs/porting-rules.md) and
+> [source reconstruction](docs/source-reconstruction.md). Compiler-generated
+> assembly fallbacks are removed from the active build; validation and matching
+> remain incomplete. Published progress below is a historical matching snapshot.
+
 # PaRappa the Rapper 2 Decompilation
 ![progress](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/coolermaxx-hub/parappa2AISLOP/main/progress/total_progress.json)
 
@@ -8,7 +14,7 @@ We are currently targeting the July 12th NTSC-J prototype, but we aim to target 
 
 > **Unofficial AI-assisted fork.** This is not the official project and is not affiliated with parappadev. The official decompilation lives at [parappadev/parappa2](https://github.com/parappadev/parappa2). Please don't take questions about this fork to the upstream maintainers or their Discord servers.
 
-### Fork progress compared to upstream
+### Historical fork progress compared to upstream
 Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against upstream `main` (45694de). Every number counts only code that builds byte-for-byte identical to the original; functions that still compile from asm, or only have a `NON_MATCHING` C version, do not count. Compiler-emitted helper copies that splat names `func_XXXXXXXX` are paired with their C++ names by `tools/objdiff_symbol_mappings.py` (objdiff still diffs each pair).
 
 | Folder | Upstream functions | Fork functions | Upstream code bytes | Fork code bytes

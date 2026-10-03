@@ -36,7 +36,7 @@ public:
 public:
     PrLinkedList<PrSceneObject> m_list;
     PrObjectSet<PrSceneObject> *m_obj_set;
-    PR_PADDING(unkC, 0x4);
+    u_int m_signature;
     PrPERSPECTIVE_CAMERA m_default_camera;
     sceGsFrame unk50;
     sceGsXyoffset unk58;

@@ -17,6 +17,7 @@
 #include <prlib/prlib.h>
 
 #include <malloc.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1825,9 +1826,6 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRestoreSaveData);
-#else
 /* static */ void TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode) {
     int i;
 
@@ -1870,7 +1868,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRestoreSaveData);
         }
     }
 }
-#endif
 
 int DateChgInt(u_int n) {
     /* Convert BCD to decimal */
@@ -1894,9 +1891,6 @@ void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
     dat[1] = ((rand() % 0x10000) << 8) + mptim->date_pad;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
-#else
 /* static */ int TsRanking_Set(void) {
     P3GAMESTATE    *pstate;
     P3MC_RANKSCORE *pScore;
@@ -1965,7 +1959,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsRanking_Set);
 
     return -1;
 }
-#endif
 
 void TsMENU_SetMapScreen(int mapNo) {
     CurMapNo = mapNo;
@@ -5114,9 +5107,6 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     return (pfw->bDim[POPBtn2Sel[(bank != 0) ? (nbtn + 3) : (nbtn + 0)]] == FALSE);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
-#else
 /* static */ int TsPopMenu_Flow(int flg, u_int tpad) {
     POPUP_MENU *pfw = &PopupMenu;
     int state;
@@ -5525,11 +5515,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Flow);
     pfw->state = state;
     return 0;
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
-#else /* The loops also get strength-reduced/hoisted here but not in the original */
 /* static */ void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     POPUP_MENU *pfw = &PopupMenu;
     char        buf[32];
@@ -5699,11 +5685,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenu_Draw);
     PkDefSCISSOR_Add(pk);
     spr->zoom.isOn = 0;
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsPopMenCus_Draw);
-#else /* PopMenuSel_Pat[i] should use madd */
 void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py, u_int hicol, u_int nmcol, int dflg) {
     int   i;
     float bofsy;
@@ -5780,7 +5762,6 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
 
     spr->ofsy = bofsy;
 }
-#endif
 
 /* static */ int TsSaveMenu_Flow(int flg, u_int tpad) {
     SAVE_MENU *pfw = &SaveMenu;
@@ -5901,9 +5882,6 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
     return 0;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsSaveMenu_Draw);
-#else /* Register allocation also differs (ppat/spr/pfw/i/arate) */
 static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     SAVE_MENU *pfw = &SaveMenu;
     PATPOS    *ppat;
@@ -5968,7 +5946,6 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     spr->zoom.isOn = 0;
 }
-#endif
 
 static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     memset(pw, 0, sizeof(*pw));
@@ -6012,9 +5989,6 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     spr->ofsy = boy;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TSJukeCDObj_Draw);
-#else /* Codegen differs (1052 vs 1057 instructions) */
 /* static */ void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
     PATPOS *ppat;
     float   box, boy;
@@ -6395,7 +6369,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TSJukeCDObj_Draw);
     spr->ofsy = boy;
     spr->ofsx = box;
 }
-#endif
 
 static int TsJukeIsObjAnime(int isComp) {
     int        i;
@@ -7007,9 +6980,6 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     obj->flg = 0xffff;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
-#else /* Stack frame is 16 bytes short and the flg branch layout differs */
 /* static */ void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor) {
     TSTEX_INF *ptex;
     int flg;
@@ -7098,11 +7068,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
     PkNSprite_Add(pk, spr, 1);
     PkALPHA_Add(pk, 0x44);
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
-#else
 /* static */ int TsOption_Flow(int flg, u_int tpad) {
     OPTION_MENU  *pfw = &OptionMenu;
     int           state;
@@ -7199,7 +7165,7 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
         if (old != sel) {
             int max;
 
-            *(short *)((char *)pfw->btnlr[osel].tim + ((sel < old) ? 0 : 2)) = 6;
+            pfw->btnlr[osel].tim[(sel < old) ? 0 : 1] = 6;
             max = OptionSelTbl[osel].nObj;
             pfw->sw[pfw->selno] = TSLOOP(sel, max);
             TSSNDPLAY(2);
@@ -7261,7 +7227,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
     pfw->state = state;
     return 0;
 }
-#endif
 
 static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
     int           i;
@@ -7466,9 +7431,6 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return 0;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
-#else
 /* static */ int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
     USERLIST_MENU *pfw = &UserListMenu;
     USER_DATA     *puser;
@@ -7913,7 +7875,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
     pfw->state = state;
     return 0;
 }
-#endif
 
 extern char D_003997E8[];
 
@@ -8480,9 +8441,6 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     return 0;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Draw);
-#else /* The first TsPatPut loop also gets strength-reduced here but not in the original */
 /* static */ void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
     float   ofsx = spr->ofsx;
     float   ofsy = spr->ofsy;
@@ -8610,7 +8568,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsNAMEINBox_Draw);
     spr->ofsx = ofsx;
     spr->ofsy = ofsy;
 }
-#endif
 
 int TsSCFADE_Set(int flg, int num, int prio) {
     SCFADE *pfw = &ScFade;

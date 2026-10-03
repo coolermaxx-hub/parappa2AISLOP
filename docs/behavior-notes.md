@@ -273,7 +273,7 @@ So in every frame: VBlank, pad read, game flow, score/judgement, then drawing. A
 
 **2D path: the common GIF packet.** 2D code opens a packet with `CmnGifOpenCmnPk` (which resets TEXFLUSH, TEX1, TEST (Z always), PRMODECONT, CLAMP, RGBAQ) and closes it with a priority (`CmnGifCloseCmnPk(pk, pri)`). Up to 64 packets per frame. `CmnGifFlush` sorts them by `pri` with an exchange sort that is **not stable**: packets with equal priority can be reordered depending on what sits between them. A port that wants identical layering has to copy that exact sort, not use a stable sort.
 
-**3D path: prlib DMA queue.** prlib collects VIF1 DMA chains per model and per transparent chunk with `AppendTransmitDmaTag(tag, group, depth)`, sorts them with libc `qsort` by group, then depth (`PrRenderStuff::CompareFunction`), and feeds them to a ring of DMA lists (`PrDmaQueue`) that the VIF1 channel walks under stall control (`D_CTRL` STS, `D_STADR` advanced on every `Append`). `qsort` is also not stable, so equal (group, depth) entries keep whatever order the PS2 newlib `qsort` produces. Transform and lighting run in VU1 microcode (`renderee`, counted as done asm). Stage 19 appends one extra GIF register strip at the end.
+**3D path: prlib DMA queue.** prlib collects VIF1 DMA chains per model and per transparent chunk with `AppendTransmitDmaTag(tag, group, depth)`, sorts them with libc `qsort` by group, then depth (`PrRenderStuff::CompareFunction`), and feeds them to a ring of DMA lists (`PrDmaQueue`) that the VIF1 channel walks under stall control (`D_CTRL` STS, `D_STADR` advanced on every `Append`). `qsort` is also not stable, so equal (group, depth) entries keep whatever order the PS2 newlib `qsort` produces. Transform and lighting run in VU1 microcode (with an EE fallback whose vertex kernels remain intentional assembly). Stage 19 appends one extra GIF register strip at the end.
 
 **What a port must keep.** The slot order and one-cycle-per-VBlank rule are what tie input, clock, judgement and drawing together. The two unstable sorts only affect what is drawn on top, never game state. Nothing in the GS/DMA path writes back into game logic, except `T0_COUNT` thresholds that decide when loads yield.
 
@@ -290,3 +290,61 @@ So in every frame: VBlank, pad read, game flow, score/judgement, then drawing. A
 | Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` |
 | RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` |
 | GS / DMA / VU | `src/os/system.c`, `src/os/cmngifpk.c`, `src/prlib/*` (analysed above) |
+
+
+## Readable renderer reconstruction (source/disassembly, 2026-10-03)
+
+The reconstructed renderer preserves the following observed rules; these have
+not been validated through a PS2 game run.
+
+- Scalar animation searches clamp before the first and at/after the last key.
+  Looping uses `fmodf`, including its negative-input sign; it does not turn
+  negative times into positive wrapped times. Spline tangents are scaled by the
+  segment duration. Static sampled results are shared per type as in the draft.
+- Noodle color sampling retains its original LCG update order. Alpha setup makes
+  four floating random calls and one rotation-speed random call plus its sign
+  choice per strip. Modulation is suppressed in stages 6 and 16; phase bounces
+  at plus/minus pi/2, reversing angular velocity and signed weight together.
+- The EE chunk path preserves GIF prefix records, transforms the remaining
+  vertices, sends the resulting DMA chain and advances the three scratchpad
+  buffers. The handwritten kernels share VF1..VF11 and preserve strip state in
+  VF17/VF19. Disturbance uses the VU R register and mixes seed/position components
+  in the original order; a host RNG substitute would change behavior.
+- Contour save destinations include a two-quadword prefix while the render
+  mapping is relative to the packet base. This difference is explicit in the
+  source. Its relationship to real contour history assets still needs testing.
+- Memory-card user scanning retries the asynchronous load immediately after
+  submitting it. Refactoring the nested jump preserves that retry and avoids
+  marking a scan page complete while its load is pending.
+
+DMA/GIF sizes, cache aliases and scalar tests establish only the represented
+layouts and CPU-side rules. They do not prove transfer timing, frame output or
+EE/VU float equivalence. Remaining work is tracked in `remaining-work.md`.
+
+
+**Texture waves (decoded from VU source).** The texture curve is the normalized
+sum of three sine waves. Amplitude, spatial cycles and temporal frequency have
+separate packet vectors. The shader normalizes by the sum of the three amplitudes,
+without an extra constant in the denominator. CPU phase time advances in scaled
+1/60-second steps. See `noodle-texture-model.md` for instruction provenance,
+operation order and the remaining ESIN/rounding validation limits.
+
+### SPM deformation targets
+
+Shape and cluster paths now use `SpmPositionTargets`: a count followed by
+quadword indices relative to the first non-null context-1 geometry packet. Empty
+records consume one word; repeated indices are preserved. This changes source
+structure without changing target order, VU accumulation or the cache alias used
+for writes. See [spm-geometry-layout.md](spm-geometry-layout.md) for provenance,
+packet fields, sorting conventions and unverified asset/runtime details.
+
+### SPA visibility and table binding
+
+The animation node's pointer tail contains scalar shape-weight tracks, matrix
+transforms, then an extra vector-transform group. Bind the tables before the
+optimizer compacts the active transform entries; later groups retain their
+original addresses. Integer visibility tracks use step sampling even with a
+Linear interpolation header. A nonzero integer, including a negative value,
+means visible. Original loop wrapping and parent/default visibility flags remain
+in effect. See [spa-animation-layout.md](spa-animation-layout.md) for evidence
+and unverified fields.

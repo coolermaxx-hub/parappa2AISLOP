@@ -26,48 +26,48 @@ void SpmFileHeader::ChangePointer() {
     m_flags |= 0x1;
 }
 
-void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
-    this->unk158 = model;
-    this->unk164 = arg1;
+void SpmNode::ChangePointer(SpmFileHeader *file, SpmNode *parent) {
+    this->m_owner = file;
+    this->m_parent = parent;
 
-    this->unk15C = model->CalculatePointer<SpmNode>(this->unk15C);
-    this->unk160 = model->CalculatePointer<SpmNode>(this->unk160);
+    this->m_firstChild = file->CalculatePointer<SpmNode>(this->m_firstChild);
+    this->m_nextSibling = file->CalculatePointer<SpmNode>(this->m_nextSibling);
 
-    this->unk16C[0] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk16C[0]);
-    this->unk16C[1] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk16C[1]);
+    this->m_context1Packets[0] = file->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_context1Packets[0]);
+    this->m_context1Packets[1] = file->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_context1Packets[1]);
 
-    this->unk17C = this->unk16C[0];
-    if (this->unk16C[0] == NULL) {
-        this->unk17C = this->unk16C[1];
+    this->m_geometryPacket = this->m_context1Packets[0];
+    if (this->m_context1Packets[0] == NULL) {
+        this->m_geometryPacket = this->m_context1Packets[1];
     }
 
     for (u_int i = 0; i < 2; i++) {
-        if (this->unk16C[i]) {
-            this->unk16C[i]->unk194 = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(this->unk16C[i]->unk60), 0);
+        if (this->m_context1Packets[i]) {
+            this->m_context1Packets[i]->m_microprogramCall = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(this->m_context1Packets[i]->m_microprogram), 0);
         }
     }
 
     if (m_flags & 0xff0) {
-        this->unk198 = model->CalculatePointer<int>(this->unk198);
+        this->m_positionTargets = file->CalculatePointer<SpmPositionTargets>(this->m_positionTargets);
         if (m_flags & 0x10) {
-            this->unk1B4 = model->CalculatePointer<int>(this->unk1B4);
-            this->unk1B8 = model->CalculatePointer<int>(this->unk1B8);
+            m_cluster.influences = file->CalculatePointer<SpmClusterInfluences>(m_cluster.influences);
+            m_cluster.positions = file->CalculatePointer<NaVECTOR<float, 4> >(m_cluster.positions);
         } else if (m_flags & 0x20) {
-            this->unk1B4 = model->CalculatePointer<int>(this->unk1B4);
+            m_shape.basePositions = file->CalculatePointer<NaVECTOR<float, 4> >(m_shape.basePositions);
         }
 
-        this->unk1A0 = model->CalculatePointer<int>(this->unk1A0);
-        this->unk1A4 = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk1A4);
-        PrVuNodeHeaderDmaPacket *s0 = this->unk1A4;
-        if (s0 != NULL) {
-            s0->unk194 = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(PR_MICRO_PROGRAM_CONTOUR), 0);
+        m_contourIndices = file->CalculatePointer<SpmContourIndex>(m_contourIndices);
+        this->m_contourPacket = file->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_contourPacket);
+        PrVuNodeHeaderDmaPacket *contour = m_contourPacket;
+        if (contour != NULL) {
+            contour->m_microprogramCall = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(PR_MICRO_PROGRAM_CONTOUR), 0);
         }
     }
 
-    SpmNode *s0 = this->unk15C;
-    while (s0 != 0) {
-        s0->ChangePointer(model, this);
-        s0 = s0->unk160;
+    SpmNode *child = m_firstChild;
+    while (child != NULL) {
+        child->ChangePointer(file, this);
+        child = child->m_nextSibling;
     }
 }
 
@@ -77,10 +77,10 @@ void SpaFileHeader::ChangePointer() {
     }
 
     unk38 = CalculatePointer<int>(unk38);
-    unk50 = unk54;
+    m_nodes = m_inlineNodes;
 
-    for (u_int i = 0; i < unk4C; i++) {
-        SpaNodeAnimation **p = &unk50[i];
+    for (u_int i = 0; i < m_nodeCount; i++) {
+        SpaNodeAnimation **p = &m_nodes[i];
         if (*p != NULL) {
             *p = CalculatePointer<SpaNodeAnimation>(*p);
             (*p)->ChangePointer(this);
@@ -92,61 +92,60 @@ void SpaFileHeader::ChangePointer() {
 }
 
 void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
-    this->unk4 = animation->CalculatePointer<SpaTrack<int> >(this->unk4);
+    this->m_visibilityTrack = animation->CalculatePointer<SpaTrack<int> >(this->m_visibilityTrack);
     this->unk10 = animation->CalculatePointer<int>(this->unk10);
-    if (this->unk4 != NULL) {
-        this->unk4->ChangePointer();
+    if (this->m_visibilityTrack != NULL) {
+        this->m_visibilityTrack->ChangePointer();
     }
 
-    this->unkC = (SpaTransform**)&this->unk30[this->unk2C];
-    this->unk18 = &this->unkC[this->unk8];
+    BindInlineTables();
 
-    for (u_int i = 0; i < this->unk8; i++) {
+    for (u_int i = 0; i < this->m_transformCount; i++) {
         SpaTransform *transform;
-        this->unkC[i] = animation->CalculatePointer<SpaTransform>(this->unkC[i]);
-        if (this->unkC[i] != NULL) {
-            switch (this->unkC[i]->unk0) {
-            case 0:
-            case 1:
-            case 5:
-            case 7:
-                transform = this->unkC[i];
+        this->m_transforms[i] = animation->CalculatePointer<SpaTransform>(this->m_transforms[i]);
+        if (this->m_transforms[i] != NULL) {
+            switch (this->m_transforms[i]->m_kind) {
+            case SpaTransform::Scale:
+            case SpaTransform::AxisAngle:
+            case SpaTransform::Translate:
+            case SpaTransform::Shear:
+                transform = this->m_transforms[i];
                 transform->GetTrack<NaVECTOR<float, 4> >()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetTrack<NaVECTOR<float, 4> >()->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
-            case 2:
-            case 3:
-            case 4:
-                transform = this->unkC[i];
+            case SpaTransform::RotateX:
+            case SpaTransform::RotateY:
+            case SpaTransform::RotateZ:
+                transform = this->m_transforms[i];
                 transform->GetTrack<float>()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetTrack<float >()->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
-            case 6:
-                transform = this->unkC[i];
+            case SpaTransform::Matrix:
+                transform = this->m_transforms[i];
                 transform->GetTrack<NaMATRIX<float, 4, 4> >()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetTrack<NaMATRIX<float, 4, 4> >()->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
             }
         }
     }
 
-    for (u_int i = 0; i < this->unk14; i++) {
-        this->unk18[i] = animation->CalculatePointer<SpaTransform>(this->unk18[i]);
-        if (this->unk18[i] != NULL) {
-            this->unk18[i]->GetTrack<NaVECTOR<float, 4> >()->ChangePointer();
+    for (u_int i = 0; i < this->m_extraVectorTransformCount; i++) {
+        this->m_extraVectorTransforms[i] = animation->CalculatePointer<SpaTransform>(this->m_extraVectorTransforms[i]);
+        if (this->m_extraVectorTransforms[i] != NULL) {
+            this->m_extraVectorTransforms[i]->GetTrack<NaVECTOR<float, 4> >()->ChangePointer();
         }
     }
 
-    for (u_int i = 0; i < this->unk2C; i++) {
-        this->unk30[i] = animation->CalculatePointer<SpaTrack<float> >(this->unk30[i]);
-        if (this->unk30[i] != NULL) {
-            this->unk30[i]->ChangePointer();
+    for (u_int i = 0; i < this->m_shapeWeightTrackCount; i++) {
+        this->m_shapeWeightTracks[i] = animation->CalculatePointer<SpaTrack<float> >(this->m_shapeWeightTracks[i]);
+        if (this->m_shapeWeightTracks[i] != NULL) {
+            this->m_shapeWeightTracks[i]->ChangePointer();
         }
     }
 }
@@ -158,24 +157,24 @@ void SpcFileHeader::ChangePointer() {
 
     this->unk74 = CalculatePointer<int>(this->unk74);
     
-    this->unk88 = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->unk88);
-    if (this->unk88 != NULL) {
-        this->unk88->ChangePointer();
+    this->m_positionTrack = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->m_positionTrack);
+    if (this->m_positionTrack != NULL) {
+        this->m_positionTrack->ChangePointer();
     }
 
-    this->unk8C = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->unk8C);
-    if (this->unk8C != NULL) {
-        this->unk8C->ChangePointer();
+    this->m_interestTrack = CalculatePointer<SpaTrack<NaVECTOR<float, 4> > >(this->m_interestTrack);
+    if (this->m_interestTrack != NULL) {
+        this->m_interestTrack->ChangePointer();
     }
 
-    this->unk90 = CalculatePointer<SpaTrack<float> >(this->unk90);
-    if (this->unk90 != NULL) {
-        this->unk90->ChangePointer();
+    this->m_rollTrack = CalculatePointer<SpaTrack<float> >(this->m_rollTrack);
+    if (this->m_rollTrack != NULL) {
+        this->m_rollTrack->ChangePointer();
     }
 
-    this->unk94 = CalculatePointer<SpaTrack<float> >(this->unk94);
-    if (this->unk94 != NULL) {
-        this->unk94->ChangePointer();
+    this->m_fieldOfViewTrack = CalculatePointer<SpaTrack<float> >(this->m_fieldOfViewTrack);
+    if (this->m_fieldOfViewTrack != NULL) {
+        this->m_fieldOfViewTrack->ChangePointer();
     }
 
     if (m_flags & 0x8) {

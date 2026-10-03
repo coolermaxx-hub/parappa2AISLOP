@@ -17,9 +17,6 @@
 #include <eeregs.h>
 #include <math.h>
 
-/* render.cpp's own out-of-line copy of the NaVECTOR<float, 4> constructor */
-NaVECTOR<float, 4>* CtorVector_tmp_render(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("__t8NaVECTOR2Zfi4RCfT1T1T1");
-
 /* sdata */
 PrSPRAM_DATA *prSpramData_tmp_render = (PrSPRAM_DATA*)0x70000000;
 
@@ -31,9 +28,6 @@ PR_EXTERN float PrGetMendererRatio();
 void PrDrawAwfulBackground(sceGsFrame frame);
 void PrWaitMendererTexture(sceGsDrawEnv1 *env, const sceGsFrame &frame, const sceGsXyoffset &xyoffset);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", Render__13PrSceneObject);
-#else /* Scheduling: only register allocation of the frame/xyoffset copies (s3/s4 swapped) */
 void PrSceneObject::Render() {
     FlushCache(WRITEBACK_DCACHE);
 
@@ -47,21 +41,15 @@ void PrSceneObject::Render() {
     prRenderStuff.m_statistics.render_time0 = *T3_COUNT;
     prSpramData_tmp_render->Initialize(this);
 
-    PrModelObject *model = m_model_set.m_head;
-    if (!(PrGetMendererRatio() >= 1.5f)) {
-        awful = false;
-    }
-    if (model != NULL) {
+    awful = PrGetMendererRatio() >= 1.5f;
     AwfulStatus = awful;
+    PrModelObject *model = m_model_set.m_head;
     for (; model != NULL; model = model->m_list.next) {
-        if (model->m_flags & 1) {
-            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
-                model->CalculateCurrentMatrix();
-            }
+        if ((model->m_flags & 1) && (!awful || (model->m_spm_image->m_flags & 0x100))) {
+            prSpramData_tmp_render->InitializeModel(model);
+            model->CalculateCurrentMatrix();
         }
     }
-    } else { AwfulStatus = awful; }
 
     prRenderStuff.m_statistics.render_time1 = *T3_COUNT;
     sceGsFrame frame = unk50;
@@ -137,7 +125,6 @@ void PrSceneObject::Render() {
     prRenderStuff.MergeRender();
     prRenderStuff.m_statistics.render_time5 = *T3_COUNT;
 }
-#endif
 
 void PrSceneObject::InitializeVu1() {
     PrVu1InitPacket *packet = (PrVu1InitPacket*)PR_UNCACHED(&initVu1DmaPacket);
@@ -188,10 +175,10 @@ void PrModelObject::CalculateCurrentMatrix() {
 
     SpmFileHeader *spm = m_spm_image;
 
+    NaMATRIX<float, 4, 4> pos;
     if (m_position_animation != NULL) {
         float time = m_position_animation_time;
-        NaMATRIX<float, 4, 4> pos;
-        pos = *m_position_animation->unk50[0]->GetMatrix(time);
+        pos = *m_position_animation->m_nodes[0]->GetMatrix(time);
         mtx = &pos;
     }
 
@@ -200,9 +187,8 @@ void PrModelObject::CalculateCurrentMatrix() {
             spm->CalculateClusterMatrixAnimation(this, *mtx);
 
             NaVECTOR<float, 4> v;
-            NaVECTOR<float, 4> scale;
-            NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->unk40;
-            CtorVector_tmp_render(&scale, 1.0f, 1.0f, 1.0f, 0.0f);
+            const NaVECTOR<float, 4> scale(1.0f, 1.0f, 1.0f, 0.0f);
+            NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->m_worldMatrix;
 
             NaVECTOR<float, 4> tmp;
             v = NaMATRIX<float, 4, 4>::Apply(tmp, root, scale);
@@ -229,148 +215,94 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
 
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
-        node->ComposeGlobalMatrix(model, node->unk164->unk40);
+        node->ComposeGlobalMatrix(model, node->m_parent->m_worldMatrix);
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#else
-// NON_MATCHING: 11 opcode hunks left (gcc hoists the 1.0f blend constant in the loop copy)
-static inline void ComposeNoVis_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    if (model->unk7C[0] != NULL) {
-        PrSPRAM_DATA *spram;
-        if (node->m_flags & 0x1) {
-            spram = prSpramData_tmp_render;
+void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
+    PrSPRAM_DATA *spram = prSpramData_tmp_render;
+    const float time = spram->m_animation_time;
+    SpaFileHeader *animation = spram->m_animation;
+    const bool parentVisible = m_parent == NULL || (m_parent->m_flags & 0x4000);
+    if (!parentVisible || !animation->IsNodeVisible(this, time)) {
+        m_flags &= ~0x4000;
+        return;
+    }
+    m_flags |= 0x4000;
+
+    SpaNodeAnimation *nodeAnimation = animation->m_nodes[m_animationIndex];
+    if (nodeAnimation == NULL) {
+        ComposeGlobalMatrixWithoutVisibility(model, parentMatrix);
+        return;
+    }
+
+    const bool identity = nodeAnimation->m_transformCount == 0;
+    if (model->m_postureMatrices[0] != NULL) {
+        if (identity) {
             spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
         } else {
+            const NaMATRIX<float, 4, 4> *local = nodeAnimation->GetMatrix(time);
             spram = prSpramData_tmp_render;
-            spram->unk0 = node->unk0;
+            spram->unk0 = *local;
         }
-
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
-            node->BlendTransitionMatrix(model, spram->unk0);
+            BlendTransitionMatrix(model, spram->unk0);
             spram = prSpramData_tmp_render;
         }
-
-        node->unk40 = arg1 * spram->unk0;
-        int idx = node->unk150;
-        model->unk7C[model->m_active_transition][idx] = spram->unk0;
-    } else if (node->m_flags & 0x1) {
-        node->unk40 = arg1;
+        m_worldMatrix = parentMatrix * spram->unk0;
+        model->m_postureMatrices[model->m_active_transition][m_animationIndex] = spram->unk0;
+    } else if (identity) {
+        m_worldMatrix = parentMatrix;
     } else {
-        node->unk40 = arg1 * node->unk0;
+        const NaMATRIX<float, 4, 4> local = *nodeAnimation->GetMatrix(time);
+        m_worldMatrix = parentMatrix * local;
     }
-
-    if (node->m_flags & 0x8000) {
-        node->ApplyBillboardMatrix();
-    }
+    if (m_flags & 0x8000) ApplyBillboardMatrix();
 }
 
-static inline void ComposeAnim_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    float time = prSpramData_tmp_render->m_animation_time;
-    SpaFileHeader *animation = prSpramData_tmp_render->m_animation;
-    SpmNode *parent = node->unk164;
-
-    if (parent == NULL || (parent->m_flags & 0x4000)) {
-        if (animation->IsNodeVisible(node, time)) {
-            node->m_flags |= 0x4000;
-            goto done;
-        }
-    }
-    node->m_flags &= ~0x4000;
-    done:
-
-    if (node->m_flags & 0x4000) {
-        SpaNodeAnimation *na = animation->unk50[node->unk150];
-        if (na == NULL) {
-            ComposeNoVis_tmp(node, model, arg1);
-        } else {
-            int e = 0;
-            if (model->unk7C[0] != NULL) {
-                PrSPRAM_DATA *spram;
-                e = 0; if (na->unk8 == 0) e = 1;
-                if (e & 1) {
-                    spram = prSpramData_tmp_render;
-                    spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
-                } else {
-                    const NaMATRIX<float, 4, 4> *m = na->GetMatrix(time);
-                    spram = prSpramData_tmp_render;
-                    spram->unk0 = *m;
-                }
-
-                if (spram->m_model_transaction_blend_ratio != 1.0f) {
-                    node->BlendTransitionMatrix(model, spram->unk0);
-                    spram = prSpramData_tmp_render;
-                }
-
-                node->unk40 = arg1 * spram->unk0;
-                int idx = node->unk150;
-                model->unk7C[model->m_active_transition][idx] = spram->unk0;
-            } else if ((e = 0, (na->unk8 == 0 ? (e = 1) : 0), e & 1)) {
-                node->unk40 = arg1;
-            } else {
-                NaMATRIX<float, 4, 4> tmp = *na->GetMatrix(time);
-                node->unk40 = arg1 * tmp;
-            }
-
-            if (node->m_flags & 0x8000) {
-                node->ApplyBillboardMatrix();
-            }
-        }
-    }
-}
-
-void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    ComposeAnim_tmp(m_nodes[0], model, arg1);
-
+void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
+    m_nodes[0]->ComposeAnimatedMatrix(model, parentMatrix);
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
-        ComposeAnim_tmp(node, model, node->unk164->unk40);
+        node->ComposeAnimatedMatrix(model, node->m_parent->m_worldMatrix);
     }
 }
-#endif
 
 void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
     node->ComposeGlobalMatrix(model, arg1);
     if (node->m_flags & 0x1000) {
-        const NaMATRIX<float, 4, 4>& b = node->unk80;
-        node->unkC0 = node->unk40 * b;
+        const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
+        node->m_skinningMatrix = node->m_worldMatrix * b;
     }
 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
-        node->ComposeGlobalMatrix(model, node->unk164->unk40);
+        node->ComposeGlobalMatrix(model, node->m_parent->m_worldMatrix);
         if (node->m_flags & 0x1000) {
-            const NaMATRIX<float, 4, 4>& b = node->unk80;
-            node->unkC0 = node->unk40 * b;
+            const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
+            node->m_skinningMatrix = node->m_worldMatrix * b;
         }
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateClusterMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#else
-// NON_MATCHING: same per-node composition as CalculateCurrentMatrixAnimation plus the 0x1000 unkC0 step
 void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
-    ComposeAnim_tmp(node, model, arg1);
+    node->ComposeAnimatedMatrix(model, arg1);
     if (node->m_flags & 0x1000) {
-        const NaMATRIX<float, 4, 4>& b = node->unk80;
-        node->unkC0 = node->unk40 * b;
+        const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
+        node->m_skinningMatrix = node->m_worldMatrix * b;
     }
 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
-        ComposeAnim_tmp(node, model, node->unk164->unk40);
+        node->ComposeAnimatedMatrix(model, node->m_parent->m_worldMatrix);
         if (node->m_flags & 0x1000) {
-            const NaMATRIX<float, 4, 4>& b = node->unk80;
-            node->unkC0 = node->unk40 * b;
+            const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
+            node->m_skinningMatrix = node->m_worldMatrix * b;
         }
     }
 }
-#endif
 
 void PrModelObject::RenderContext1Model() {
     m_spm_image->RenderContext1Model(this);
@@ -389,27 +321,27 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
 
 void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-    uc->m_matrix = this->unk40;
-    uc->unk68 = prSpramData_tmp_render->m_disturbance;
+    uc->m_matrix = this->m_worldMatrix;
+    uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
 
-    float du = this->unk180;
-    float dv = this->unk184;
+    float du = this->m_textureScrollU;
+    float dv = this->m_textureScrollV;
 
     if (du != 0.0f) {
-        uc->unk70 += du;
-        if (uc->unk70 > 1.0f) {
-            uc->unk70 -= 1.0f;
-        } else if (uc->unk70 < 0.0f) {
-            uc->unk70 += 1.0f;
+        uc->m_textureOffsetU += du;
+        if (uc->m_textureOffsetU > 1.0f) {
+            uc->m_textureOffsetU -= 1.0f;
+        } else if (uc->m_textureOffsetU < 0.0f) {
+            uc->m_textureOffsetU += 1.0f;
         }
     }
 
     if (dv != 0.0f) {
-        uc->unk74 += dv;
-        if (uc->unk74 > 1.0f) {
-            uc->unk74 -= 1.0f;
-        } else if (uc->unk74 < 0.0f) {
-            uc->unk74 += 1.0f;
+        uc->m_textureOffsetV += dv;
+        if (uc->m_textureOffsetV > 1.0f) {
+            uc->m_textureOffsetV -= 1.0f;
+        } else if (uc->m_textureOffsetV < 0.0f) {
+            uc->m_textureOffsetV += 1.0f;
         }
     }
 }
@@ -422,14 +354,14 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
     }
 
     if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
-        PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+        PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[0];
         if (packet != NULL) {
             prRenderStuff.m_statistics.opaque_context1_node_num++;
             ModifySimpleDmaPacket(packet);
             prRenderStuff.AppendDmaTag(&packet->m_tag);
         }
 
-        packet = this->unk16C[1];
+        packet = this->m_context1Packets[1];
         if (packet != NULL) {
             prRenderStuff.m_statistics.transmit_context1_node_num++;
             ModifySimpleDmaPacket(packet);
@@ -441,7 +373,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "lqc2     vf14,  0x10(%0)       \n\t"
                 "lqc2     vf15,  0x20(%0)       \n\t"
                 "lqc2     vf16,  0x30(%0)       \n\t"
-            : : "r"(&this->unk40));
+            : : "r"(&this->m_worldMatrix));
 
             asm volatile(
                 "lqc2     vf04,  0x0(%0)        \n\t"
@@ -449,7 +381,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmadday  ACC,   vf14,    vf04  \n\t"
                 "vmaddaz  ACC,   vf15,    vf04  \n\t"
                 "vmaddw   vf17,  vf16,    vf04  \n\t"
-            : : "r"(&this->unk140));
+            : : "r"(&this->m_sortPosition));
 
             asm volatile(
                 "lqc2     vf13,     0(%1)       \n\t"
@@ -468,11 +400,11 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 f12 = sp0[2] * 3.40282347e+38f;
             }
 
-            prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->unk188, f12);
+            prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->m_sortGroup, f12);
         }
 
         if (this->m_flags & 0x40) {
-            SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
+            SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
     }
@@ -496,19 +428,19 @@ void SpmNode::RenderScreenModelNode() {
         return;
     }
 
-    PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+    PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[0];
     if (packet != NULL) {
         prRenderStuff.m_statistics.opaque_context1_node_num++;
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-        uc->m_matrix = this->unk40;
+        uc->m_matrix = this->m_worldMatrix;
         prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF));
     }
 
-    PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
+    PrVuNodeHeaderDmaPacket *packet2 = this->m_context1Packets[1];
     if (packet2 != NULL) {
         prRenderStuff.m_statistics.transmit_context1_node_num++;
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
-        uc->m_matrix = this->unk40;
+        uc->m_matrix = this->m_worldMatrix;
 
         NaVECTOR<float, 4> pos;
         NaVECTOR<float, 4> tmp;
@@ -523,11 +455,11 @@ void SpmNode::RenderScreenModelNode() {
             "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
             "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
             "sqc2     $vf9,  0x0(%0)        \n\t"
-        : : "r"(&tmp), "r"(&this->unk40), "r"(&this->unk140) : "memory");
+        : : "r"(&tmp), "r"(&this->m_worldMatrix), "r"(&this->m_sortPosition) : "memory");
 
         pos = tmp;
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, -pos[2]);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->m_sortGroup, -pos[2]);
     }
 }
 
@@ -547,10 +479,10 @@ void SpmNode::RenderBackgroundScreenModel() {
 
     if ((m_flags & 0x4000) && (!AwfulStatus || (m_flags & 0x400000))) {
         for (u_int i = 0; i < 2; i++) {
-            PrVuNodeHeaderDmaPacket *packet = this->unk16C[i];
+            PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[i];
             if (packet != NULL) {
                 packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-                packet->m_matrix = this->unk40;
+                packet->m_matrix = this->m_worldMatrix;
                 prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF));
 
                 if (i == 0) {
@@ -593,33 +525,33 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             SpmClusterGeometryNode *cluster = reinterpret_cast<SpmClusterGeometryNode*>(this);
             cluster->RenderClusterNode(model);
         } else if (this->m_flags & 0x20) {
-            SpmShapeNode *shape = reinterpret_cast<SpmShapeNode*>(this);
+            SpmShapeNode *shape = static_cast<SpmShapeNode*>(this);
             shape->RenderShapeNode(model);
         } else {
-            PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+            PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[0];
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-                uc->m_matrix = this->unk40;
-                uc->unk68 = prSpramData_tmp_render->m_disturbance;
+                uc->m_matrix = this->m_worldMatrix;
+                uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
-            PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
+            PrVuNodeHeaderDmaPacket *uc = this->m_context1Packets[1];
             if (uc != NULL) {
                 uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
-                const NaMATRIX<float, 4, 4>& m = this->unk40;
+                const NaMATRIX<float, 4, 4>& m = this->m_worldMatrix;
                 uc->m_matrix = m;
-                uc->unk68 = prSpramData_tmp_render->m_disturbance;
+                uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {
                     NaMATRIX<float, 4, 4> mtx = prSpramData_tmp_render->m_view_projection_matrix * m;
                     NaVECTOR<float, 4> tmp;
-                    pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->unk140);
+                    pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->m_sortPosition);
                 }
 
                 float z = pos[2] / pos[3];
-                u_int key = this->unk188;
+                u_int key = this->m_sortGroup;
                 if (pos[3] == 0.0f) {
                     z = pos[2] * 3.40282347e+38f;
                 }
@@ -629,18 +561,15 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
         }
 
         if (this->m_flags & 0x40) {
-            SpmComplexNode *complex = reinterpret_cast<SpmComplexNode*>(this);
+            SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
     }
 }
 
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
-
 /* prlib/render.cpp */
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    SpmNode *parent = this->unk164;
+    SpmNode *parent = this->m_parent;
 
     if (parent != NULL && !(parent->m_flags & 0x4000)) {
         m_flags &= ~0x4000;
@@ -658,23 +587,16 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
     }
 }
 
-/* prlib/renderstuff.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145E50);
-
 /* prlib/render.cpp */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", ComposeGlobalMatrixWithoutVisibility__7SpmNodeP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#else
-/* Scheduling: m_flags is loaded before prSpramData is reloaded after BlendTransitionMatrix */
 void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    if (model->unk7C[0] != NULL) {
+    if (model->m_postureMatrices[0] != NULL) {
         PrSPRAM_DATA *spram;
         if (m_flags & 0x1) {
             spram = prSpramData_tmp_render;
             spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
         } else {
             spram = prSpramData_tmp_render;
-            spram->unk0 = this->unk0;
+            spram->unk0 = this->m_localMatrix;
         }
 
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
@@ -682,17 +604,16 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
             spram = prSpramData_tmp_render;
         }
 
-        this->unk40 = arg1 * spram->unk0;
-        int idx = this->unk150;
-        model->unk7C[model->m_active_transition][idx] = spram->unk0;
+        this->m_worldMatrix = arg1 * spram->unk0;
+        int idx = this->m_animationIndex;
+        model->m_postureMatrices[model->m_active_transition][idx] = spram->unk0;
     } else if (m_flags & 0x1) {
-        this->unk40 = arg1;
+        this->m_worldMatrix = arg1;
     } else {
-        this->unk40 = arg1 * this->unk0;
+        this->m_worldMatrix = arg1 * this->m_localMatrix;
     }
 
     if (m_flags & 0x8000) {
         ApplyBillboardMatrix();
     }
 }
-#endif

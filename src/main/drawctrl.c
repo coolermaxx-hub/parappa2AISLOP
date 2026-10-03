@@ -914,9 +914,6 @@ void posAniOtherKill(OBJACTPRG *objactprg_pp, int objactprg_num, int ani_num, in
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/main/drawctrl", DrawObjStrDisp);
-#else /* Regalloc around the PRtime subtraction (movz vs branch) */
 static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
     OBJSTR    *objstr_pp;
     OBJCTRL   *objctrl_pp, *objctrl_end_pp;
@@ -1189,7 +1186,6 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
     objstr_pp->PRtimeOld = tmp_time;
     return ret;
 }
-#endif
 
 static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
     OBJSTR    *objstr_pp;
@@ -1712,9 +1708,6 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
     usrFree(dat_pp);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/main/drawctrl", DrawObjPrReq);
-#else /* Regalloc and stack slot order */
 void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
     OBJACTPRG      *cam_pp[OBJACTPRG_MAX];
     OBJACTPRG      *org_pp;
@@ -1839,7 +1832,6 @@ void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
         }
     }
 }
-#endif
 
 void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
     int        i, max_num;

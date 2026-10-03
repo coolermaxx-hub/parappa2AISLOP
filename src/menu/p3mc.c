@@ -797,9 +797,6 @@ void P3MC_GetUserEnd(void) {
     pUChkWork = NULL;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/p3mc", P3MC_GetUserCheck);
-#else
 int P3MC_GetUserCheck(void) {
     int           re;
     P3MC_WORK    *pw = &P3MC_Work;
@@ -811,6 +808,7 @@ int P3MC_GetUserCheck(void) {
     int           isLoad;
     int           flg;
     int           chksize;
+    int           loadPending;
 
     if (pcw == NULL) {
         return 1;
@@ -904,7 +902,8 @@ int P3MC_GetUserCheck(void) {
             }
         }
 
-        while (1) {
+        loadPending = 0;
+        while (!loadPending) {
             while (pcw->curFno < 80) {
                 isLoad = 0;
                 switch (pcw->curMode) {
@@ -938,10 +937,15 @@ int P3MC_GetUserCheck(void) {
                         _P3MC_dataCheckFunc(pw, _P3MC_CheckUserDataHead);
                         P3MC_Work.prg = (pcw->bFirst) ? 0x1001 : 0x1002;
                         pcw->curFno++;
-                        goto next;
+                        loadPending = 1;
+                        break;
                     }
                 }
                 pcw->curFno++;
+            }
+
+            if (loadPending) {
+                break;
             }
 
             switch (pcw->curMode) {
@@ -979,10 +983,8 @@ int P3MC_GetUserCheck(void) {
                 return flg ? 0 : 4;
             }
         }
-    next:;
     }
 }
-#endif
 
 void P3MC_AddUser(P3MC_USRLST *pUser, int mode, USER_DATA *puser) {
     USER_DATA *newUser = &pUser->getUser[pUser->nGetUser];

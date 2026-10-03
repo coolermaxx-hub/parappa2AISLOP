@@ -20,20 +20,20 @@ public:
     u_short m_version;
     u_short m_flags;
     PR_PADDING(unk8, 0xC);
-    float unk14;
+    float m_duration;
     char m_name[32];
     int *unk38;
     PrLinkedList<SpaFileHeader> m_list;
     PrObjectSet<SpaFileHeader> *m_obj_set;
     void *m_user_data;
-    u_int unk4C;
-    SpaNodeAnimation **unk50;
-    SpaNodeAnimation *unk54[1];
+    u_int m_nodeCount;
+    SpaNodeAnimation **m_nodes;
+    SpaNodeAnimation *m_inlineNodes[1];
 
 public:
     void Initialize();
 
-    bool IsNodeVisible(SpmNode *arg0, float arg1) const;
+    bool IsNodeVisible(SpmNode *node, float time) const;
 
     void ChangePointer();
 

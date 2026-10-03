@@ -16,8 +16,8 @@ struct PrVuNodeHeaderDmaPacket;
 struct PrVuDataChunkPacketHeader;
 
 struct PrTransmitEntry {
-    float unk0;
-    u_int unk4;
+    float depth;
+    u_int sortGroup;
     const sceDmaTag *tag;
 };
 
@@ -36,7 +36,7 @@ public:
     void WaitRender();
 
     void AllocateTransmitDmaArray(u_int size);
-    void AppendTransmitDmaTag(const sceDmaTag *tag, u_int arg1, float arg2);
+    void AppendTransmitDmaTag(const sceDmaTag *tag, u_int sortGroup, float depth);
 
     static int CompareFunction(const void *arg0, const void *arg1);
     void SortTransmitDmaArray();
@@ -45,16 +45,19 @@ public:
 
     void InitializeEECore(PrSceneObject *scene);
 
-    void RenderVertexEECoreBothface();
-    void RenderVertexEECoreNormal();
-    void RenderVertexEECoreRefmap();
-    void RenderVertexEECoreContour();
+    static void RenderVertexEECoreBothface();
+    static void RenderVertexEECoreNormal();
+    static void RenderVertexEECoreRefmap();
+    static void RenderVertexEECoreContour();
 
     void RenderNodeEECore(PrVuNodeHeaderDmaPacket *arg0);
     void RenderChunkEECore(PrVuDataChunkPacketHeader *arg0, float arg1);
 
 public:
-    void AppendDmaTag(const sceDmaTag *tag);
+    void AppendDmaTag(const sceDmaTag *tag) {
+        // The SDK queue takes an untyped DMA tag address; ownership stays here.
+        m_dma_queue.Append(const_cast<sceDmaTag*>(tag));
+    }
 
 public:
     PrDmaQueue m_dma_queue;

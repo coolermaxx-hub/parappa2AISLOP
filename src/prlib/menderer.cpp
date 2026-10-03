@@ -8,6 +8,7 @@
 #include "renderstuff.h"
 #include "spram.h"
 #include "utility.h"
+#include "noodlepacket.h"
 
 #include <eeregs.h>
 #include <math.h>
@@ -90,9 +91,6 @@ extern float noodleBrightnessPhase;
 /* data */
 extern float prMendererNoodleColor[4];
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PushNoodleColor__FPUl);
-#else /* Codegen differs (262 vs 266 instructions) */
 void PushNoodleColor(u_long *rgbaq) {
     if (!prMendererColorModulation || prCurrentStage == 6) {
         *rgbaq = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
@@ -180,25 +178,21 @@ void PushNoodleColor(u_long *rgbaq) {
         b = 1.0f;
     }
 
-    u_int r8 = r * 255.99f;
-    u_int g8 = g * 255.99f;
-    u_int b8 = b * 255.99f;
+    u_int r8 = static_cast<u_int>(r * 255.99f);
+    u_int g8 = static_cast<u_int>(g * 255.99f);
+    u_int b8 = static_cast<u_int>(b * 255.99f);
     *rgbaq = r8 | ((u_long)g8 << 8) | ((u_long)b8 << 16) | (0x80UL << 24);
 }
-#endif
 
 /* data */
-extern u_long noodleStripHeaderPacket[6];
+extern PrNoodleStripHeader noodleStripHeaderPacket;
 
 /* rodata */
-extern const u_long D_003967E0[2]; /* DMAcnt, qwc 6 */
-extern const u_long D_003967F0[2]; /* GIFtag, REGLIST PRIM RGBAQ (UV XYZ2) x4 */
+extern const sceDmaTag noodleQuadDmaTag asm("D_003967E0");
+extern const sceGifTag noodleQuadGifTag asm("D_003967F0");
 
 void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStripChunk__FRCt8NaMATRIX3Zfi4i4);
-#else /* Codegen differs (347 vs 405 instructions) */
 void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     u_int count = 115;
 
@@ -230,7 +224,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     u_int index = 0;
     noodleRandomSeed = 0;
 
-    for (u_int block = 0; block < 5; ) {
+    for (u_int block = 0; block < 5 && index < count; block++) {
         u_int next = block + 1;
 
         u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
@@ -238,27 +232,24 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
         prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
         prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
 
-        u_long *header = (u_long*)buf;
-        for (int i = 0; i < 6; i++) {
-            header[i] = noodleStripHeaderPacket[i];
-        }
-        header[4] = ((u_long)(((block + 2) * 16) - 1) << 34) | 0x3FC00A | ((u_long)(next * 16) << 24);
-        PrSendMfifo((sceDmaTag*)header);
+        PrNoodleStripHeader *header = reinterpret_cast<PrNoodleStripHeader*>(buf);
+        *header = noodleStripHeaderPacket;
+        header->clamp = ((u_long)(((block + 2) * 16) - 1) << 34)
+                        | 0x3FC00A | ((u_long)(next * 16) << 24);
+        PrSendMfifo(&header->dma);
 
         u_long v0 = (u_long)(next * 256) << 16;
         u_long v1 = (u_long)((block + 2) * 256) << 16;
 
-        for (u_int j = 0; j < per_block; j++) {
+        for (u_int j = 0; j < per_block && index < count; j++) {
             buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
             prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
             prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
             prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
 
-            u_long *packet = (u_long*)buf;
-            packet[0] = D_003967E0[0];
-            packet[1] = D_003967E0[1];
-            packet[2] = D_003967F0[0];
-            packet[3] = D_003967F0[1];
+            PrNoodleStripQuadPacket *packet = reinterpret_cast<PrNoodleStripQuadPacket*>(buf);
+            packet->dma = noodleQuadDmaTag;
+            packet->gif = noodleQuadGifTag;
 
             NaVECTOR<float, 4> position[4];
             PrGetNoodlePolygonPosition(position, index);
@@ -269,31 +260,18 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
                 screen[k] = matrix * position[k];
             }
 
-            u_long *ad = &packet[4];
-            *ad++ = 0x35C;
-            PushNoodleColor(ad++);
-            *ad++ = v0;
-            *ad++ = (u_int)screen[0][0] | ((u_long)(u_int)screen[0][1] << 16);
-            *ad++ = v0 | 0x1000;
-            *ad++ = (u_int)screen[1][0] | ((u_long)(u_int)screen[1][1] << 16);
-            *ad++ = v1;
-            *ad++ = (u_int)screen[2][0] | ((u_long)(u_int)screen[2][1] << 16);
-            *ad++ = v1 | 0x1000;
-            *ad = (u_int)screen[3][0] | ((u_long)(u_int)screen[3][1] << 16);
-            PrSendMfifo((sceDmaTag*)packet);
-
-            if (index == count) {
-                goto done;
+            packet->primitive = 0x35C;
+            PushNoodleColor(&packet->color);
+            for (int k = 0; k < 4; k++) {
+                const u_long textureV = k < 2 ? v0 : v1;
+                packet->vertices[k].uv = textureV | (k % 2 ? 0x1000 : 0);
+                packet->vertices[k].xy = static_cast<u_int>(screen[k][0])
+                                        | (static_cast<u_long>(static_cast<u_int>(screen[k][1])) << 16);
             }
+            PrSendMfifo(&packet->dma);
         }
-
-        if (index == count) {
-            break;
-        }
-        block = next;
     }
 
-done:
     float hue = noodleHueOffset + prMendererSpeed * 0.07f;
     if (hue >= 3.0f) {
         hue -= 3.0f;
@@ -307,21 +285,13 @@ done:
     noodleBrightnessPhase = brightness;
     noodleHueOffset = hue;
 }
-#endif
-
-/* Declared as specialized so this TU doesn't instantiate the template; its weak copy is still asm below */
-template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
-
-/* Template instances emitted in spram.cpp */
-NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
 
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;
     matrix = NaMATRIX<float, 4, 4>::RotateMatrix(2, rot);
-    matrix = TransMatrix_tmp_menderer(0.5f, 0.5f, 0.0f) * matrix;
-    matrix = ScaleMatrix_tmp_menderer(10240.0f, 3584.0f, 0.0f) * matrix;
-    matrix = TransMatrix_tmp_menderer(32768.0f, 32768.0f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::TranslateMatrix(0.5f, 0.5f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::ScaleMatrix(10240.0f, 3584.0f, 0.0f) * matrix;
+    matrix = NaMATRIX<float, 4, 4>::TranslateMatrix(32768.0f, 32768.0f, 0.0f) * matrix;
 }
 
 static void PreDrawNoodleStrip() {
@@ -374,9 +344,6 @@ void StartNoodleRotation() {
     noodleRotation = 0.0f;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", UpdateNoodleRotation__Fv);
-#else /* Block order: the stage 6 path gets merged into the final add; timer/status stores swapped */
 void UpdateNoodleRotation() {
     if (prCurrentStage == 6) {
         noodleRotation += prMendererSpeed * 0.001f;
@@ -411,12 +378,8 @@ void UpdateNoodleRotation() {
 
     noodleRotation += prMendererSpeed * delta;
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrUpdateMendererSpeed__Fv);
-#else
-static void PrUpdateMendererSpeed() {
+void PrUpdateMendererSpeed() {
     if (deceleratingMenderer == 0) {
         return;
     }
@@ -437,7 +400,6 @@ static void PrUpdateMendererSpeed() {
         }
     }
 }
-#endif
 
 PR_EXTERN
 void PrDecelerateMenderer(u_int frames) {
@@ -476,9 +438,6 @@ void PrBlendNoodleImage(bool clear);
 
 void DrawMenderer();
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawMenderer__Fv);
-#else /* Codegen differs (359 vs 418 instructions) */
 void DrawMenderer() {
     float ratio = prMendererRatio;
 
@@ -599,7 +558,6 @@ void DrawMenderer() {
     PrBlendNoodleImage(ratio == 0.0f);
     PrStopMfifo();
 }
-#endif
 
 PR_EXTERN
 void PrSetMendererRatio(float ratio) {
@@ -655,26 +613,15 @@ void PrRenderMenderer() {
     DrawMenderer();
     prRenderStuff.m_statistics.render_time8 = *T3_COUNT;
 #if defined(PRD_SYORI)
-    SyoriUpdateStats(&prRenderStuff.mStatistics);
+    SyoriUpdateStats(&prRenderStuff.m_statistics);
 #endif
 }
 
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F3B8);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F410);
-
-/* prlib/menderer.cpp */
+// Retained CRT registration: the original initializer is an empty routine.
+// It is called by the SDK constructor table, not a template-emission helper.
 PR_EXTERN
 void _GLOBAL_$I$prMendererRatio(void) {
 }
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F4C8);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F5D0);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F6D8);
 
 /* prlib/menderer.cpp */
 INCLUDE_RODATA("asm/nonmatchings/prlib/menderer", D_003967E0);

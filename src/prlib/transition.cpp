@@ -19,9 +19,6 @@ void PrModelObject::ResetPosture() {
     m_flags &= ~4;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/transition", BlendTransitionMatrix__7SpmNodeP13PrModelObjectRt8NaMATRIX3Zfi4i4);
-#else
 void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& mtx) {
     float ratio = prSpramData_tmp_transition->m_model_transaction_blend_ratio;
 
@@ -29,10 +26,9 @@ void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>&
         return;
     }
 
-    NaMATRIX<float, 4, 4>& posture = model->unk7C[1 - model->m_active_transition][this->unk150];
+    NaMATRIX<float, 4, 4>& posture = model->m_postureMatrices[1 - model->m_active_transition][this->m_animationIndex];
     mtx = posture * (1.0f - ratio) + mtx * ratio;
 }
-#endif
 
 float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u_int index) {
     float ratio = prSpramData_tmp_transition->m_model_transaction_blend_ratio;
@@ -41,6 +37,6 @@ float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u
         return weight;
     }
 
-    float *posture = model->unk74[1 - model->m_active_transition];
-    return (1.0f - ratio) * posture[this->unk1B8 + index] + ratio * weight;
+    float *posture = model->m_postureWeights[1 - model->m_active_transition];
+    return (1.0f - ratio) * posture[m_shape.postureWeightOffset + index] + ratio * weight;
 }

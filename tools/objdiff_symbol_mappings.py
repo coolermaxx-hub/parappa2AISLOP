@@ -1,78 +1,83 @@
 #!/usr/bin/env python3
-"""
-Add `symbol_mappings` to objdiff.json for functions that sit at the same
-.text offset in the target and base objects but carry different names.
+"""Pair verified original inline/template aliases with their C++ symbols.
 
-The usual case is an out-of-line template or inline helper (e.g. a
-NaGifPacket member) that splat named `func_XXXXXXXX` in the target, while
-the compiled C++ object emits it under its mangled name. Without a mapping
-objdiff can't pair the two and reports the function as unmatched.
-
-objdiff still diffs every mapped pair, so a mapping never turns a
-non-matching function into a matching one.
-
-usage (after `python configure.py --objdiff` and `ninja`):
-    python3 tools/objdiff_symbol_mappings.py
+Equal text offsets are not evidence of equal function identity once source
+sizes or emission order change. Only the aliases decoded from the original
+function bodies below are paired. objdiff still compares every mapped pair.
+Run after configure.py --objdiff and a source build.
 """
 
 import json
 import subprocess
 from pathlib import Path
 
-CROSS = "mips-linux-gnu-"
+CROSS = 'mips-linux-gnu-'
+SET16 = 'Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1'
+ROTATE_AXIS = 'RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf'
+APPEND_DMA = 'AppendDmaTag__13PrRenderStuffPC10_sceDmaTag'
+
+# Provenance: corresponding original asm/nonmatchings/prlib/<unit> bodies.
+# Set16 stores sixteen scalar arguments, XYZ factories build the corresponding
+# matrices, and queue aliases tail-call PrDmaQueue::Append. Unused Set9 copies
+# intentionally have no mapping when no real caller causes their emission.
+VERIFIED_MAPPINGS = {
+    'prlib/camera': {
+        'func_00153B28': SET16,
+        'func_00153BD8': ROTATE_AXIS,
+    },
+    'prlib/menderer': {
+        'func_0014F410': SET16,
+        'func_0014F4C8': 'TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1',
+        'func_0014F5D0': 'ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1',
+        'func_0014F6D8': 'RotateMatrix__t8NaMATRIX3Zfi4i4iRCf',
+    },
+    'prlib/spadata': {'func_001491C0': SET16},
+    'prlib/render': {'func_00145E50': APPEND_DMA},
+    'prlib/renderee': {'func_00146A08': APPEND_DMA},
+    'prlib/spram': {
+        '_GLOBAL_$I$Initialize__12PrSPRAM_DATAP13PrSceneObject': '_GLOBAL_$I$screenClipMatrix',
+    },
+}
 
 
-def text_symbols(path: Path) -> dict[int, list[str]]:
-    out = subprocess.run(
-        [f"{CROSS}nm", "-n", "--defined-only", str(path)],
+def text_symbols(path: Path) -> set[str]:
+    result = subprocess.run(
+        [CROSS + 'nm', '--defined-only', str(path)],
         capture_output=True, text=True, check=True,
-    ).stdout
-    syms: dict[int, list[str]] = {}
-    for line in out.splitlines():
+    )
+    symbols = set()
+    for line in result.stdout.splitlines():
         parts = line.split()
-        if len(parts) != 3 or parts[1] not in "TtWw":
-            continue
-        name = parts[2]
-        if name.endswith(".NON_MATCHING") or name in ("gcc2_compiled.", "__gnu_compiled_cplusplus", "__gnu_compiled_c"):
-            continue
-        syms.setdefault(int(parts[0], 16), []).append(name)
-    return syms
+        if len(parts) == 3 and parts[1] in 'TtWw':
+            symbols.add(parts[2])
+    return symbols
+
+
+def verified_pairs(unit_name, target_symbols, base_symbols):
+    return {
+        target: base
+        for target, base in VERIFIED_MAPPINGS.get(unit_name, {}).items()
+        if target in target_symbols and base in base_symbols
+    }
 
 
 def main():
-    conf_path = Path("objdiff.json")
-    conf = json.loads(conf_path.read_text())
-
+    path = Path('objdiff.json')
+    config = json.loads(path.read_text())
     total = 0
-    for unit in conf["units"]:
-        target = Path(unit.get("target_path", ""))
-        base = Path(unit.get("base_path", ""))
-        if not target.exists() or not base.exists():
+    for unit in config['units']:
+        unit.pop('symbol_mappings', None)
+        target = Path(unit.get('target_path', ''))
+        base = Path(unit.get('base_path', ''))
+        if not target.is_file() or not base.is_file():
             continue
-
-        tsyms = text_symbols(target)
-        bsyms = text_symbols(base)
-        mappings = {}
-        for addr, tnames in tsyms.items():
-            bnames = bsyms.get(addr, [])
-            if not bnames:
-                continue
-            for tname in tnames:
-                if tname in bnames:
-                    continue
-                cands = [b for b in bnames if b not in tsyms.get(addr, [])]
-                if len(cands) == 1:
-                    mappings[tname] = cands[0]
-
+        mappings = verified_pairs(unit['name'], text_symbols(target), text_symbols(base))
         if mappings:
-            unit["symbol_mappings"] = mappings
+            unit['symbol_mappings'] = mappings
             total += len(mappings)
-        else:
-            unit.pop("symbol_mappings", None)
-
-    conf_path.write_text(json.dumps(conf, indent=2))
-    print(f"Wrote {total} symbol mappings to {conf_path}")
+    path.write_text(json.dumps(config, indent=2) + '\n')
+    print('Wrote %d verified symbol mappings to %s' % (total, path))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -1,56 +1,49 @@
-# Fork rules: matching first, port later
+# Fork rules: readable reconstruction, binary validation
 
-This fork has one job: rebuild the PS2 binary byte for byte. A Windows port is the
-long-term goal, but it will live in a separate portable core. Nothing in this
-repository is changed toward portability.
+Reconstruct the original developer's idiomatic C++ as a maintainable foundation
+for mods and a future PC port. Structural accuracy takes priority over matching
+every instruction on the first attempt. Keep a clean, logical type definition
+when it produces a small binary difference and explain that difference.
 
-```
-PS2-MATCH         exact historical reconstruction (this repo)
-    |
-behavior notes + regression tests from the original game
-    |
-PORTABLE CORE     original game logic, hardware independent
-    |
-PLATFORM          Windows input / audio / graphics / files / network
-```
+## What "100%" means
 
-## What "100%" means here
+1. Every function originally generated from C/C++ has an understood, readable
+   source implementation in its natural class or namespace.
+2. Data layouts, ownership and important sections are understood and named.
+3. Intentional PS2 assembly remains explained source, including VU1 microcode
+   and necessary COP2/VU0 operations. Assembly fallbacks for compiler-generated
+   functions are still unfinished reconstruction.
+4. The build is reproducible; behavior has relevant validation; all remaining
+   binary discrepancies are explicitly accounted for.
 
-1. Every EE function that the compiler generated from C/C++ is reconstructed as
-   source that matches byte for byte.
-2. Hand-written PS2 code counts as finished source when it reproduces the
-   original. That includes VU1 microcode (`.vsm`/`.dsm`) and intentional inline
-   COP2/VU0 macro assembly. We do not rewrite it in C to raise a percentage.
-3. Important data and sections are understood and named.
-4. The build is reproducible, and no executable blob is left unexplained.
+Report exact matching separately. objdiff percentages measure binary agreement,
+not readability, behavioral equivalence or completion of the port. A full-ROM
+match means the unchanged expected checksums pass; never alter those checksums
+to make a reconstructed build appear matched.
 
-objdiff's function percentage is a guide, not the definition. It counts the
-hand-written VU routines in `prlib/renderee.cpp` as "unmatched" even though their
-assembly is the real source.
+## Reconstruction workflow
 
-## Rules while matching
+- Analyze variables and establish the struct/class layout before control flow.
+  Investigate unknown layouts rather than replacing them with raw memory offsets,
+  arbitrary byte arrays, `void*` or primitive type punning.
+- Use proper inheritance and shared templates where the evidence supports them.
+  Do not duplicate template bodies into translation units or create temporary,
+  address-named or unused helpers to manipulate code generation.
+- Use ordinary control flow. Pinned registers, empty assembly barriers, one-pass
+  loops and other compiler tricks solely for matching are forbidden.
+- Treat unconventional matching code as a draft requiring immediate refactoring.
+  Document resulting scheduling, register or relocation differences honestly.
+- Preserve original float operation order and game quirks. EE/VU float behavior
+  differs from x86; compilation or generic MIPS tests do not prove PS2 equivalence.
+- Keep intentional hardware assembly scoped to typed operations. SDK integration
+  must have an understood layout; do not disguise unknown memory as SDK data.
+- Record provenance: original disassembly, surviving source, symbols or SDK
+  knowledge. Mark inferred names and unresolved assumptions explicitly.
+- Validate layout and behavior where possible, compile affected source with the
+  historical compiler, compare objects and run full checksum checks. Distinguish
+  readable reconstruction from exact function matches and exact ROM matches.
 
-- Hacks are fine if they match: odd casts, inline COP2, compiler tricks, globals.
-- Never "improve" float behaviour or operation order. EE/VU float rules (no
-  denormals, rounding, NaN handling) differ from x86.
-- Keep original quirks. Fixes belong to a later "enhanced mode", not here.
-- A function is done when objdiff shows an exact match and `ninja` ends with
-  `build/SCPS_150.17.rom: OK`. Plausible-looking C is not done.
-- Every commit says what changed, why it is believed correct, the ROM result,
-  and any struct or type changes.
-- Provenance: say where a function's shape came from (direct reverse
-  engineering, `src/prlib/old/`, SDK knowledge, or decomp-permuter).
-- Functions on a behavioural boundary get a note in
-  [behavior-notes.md](behavior-notes.md), not just a "matched" mark. Boundaries
-  are pad reads, VBlank, timers, song position, scoring and judgement, SPU and
-  audio streaming, RNG, frame advance, CD and file access, memory card, and
-  DMA/GS.
-
-## Later, outside this repo
-
-- Pin the toolchain (compiler, assembler, linker scripts, Python tools) in a
-  container.
-- Add `static_assert` size and offset checks once struct layouts are certain.
-- Record input sequences on the original game and compare state at fixed
-  timestamps (song position, score, rank, judgement, RNG).
-- Load assets from the user's own disc. Never commit game data.
+Functions on timing, input, audio, scoring, RNG, file access or DMA/GS boundaries
+also need notes in [behavior-notes.md](behavior-notes.md). A future portable
+implementation will need original-game input/state comparisons and explicit
+hardware adapters. Never commit game files; assets come from the user's disc.

@@ -14,15 +14,7 @@
 #include <libdma.h>
 #include <libgraph.h>
 
-/*
- * Never called. PrDrawAwfulBackground builds a NaMATRIX<float, 2, 2>,
- * which makes this TU emit weak copies of the 4- and 9-argument 2x2 Set
- * (the first copies in the link). While it is still asm, this keeps them.
- */
-static inline void UnusedSet_tmp_mendererawful(NaMATRIX<float, 2, 2>& m, const float& a) {
-    m.Set(a, a, a, a);
-    m.Set(a, a, a, a, a, a, a, a, a);
-}
+
 
 /* data */
 extern u_long mendererFadeData[7][2];
@@ -51,9 +43,6 @@ void SetNextSwitchRotationTimer() {
     awfulChangeTimer = (u_int)((PrFloatRandom() * 4.0f + 3.0f) * 60.0f);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", GetAwfulRotation__Fv);
-#else /* Codegen differs (73 vs 72 instructions) */
 float GetAwfulRotation() {
     if (awfulStatus == 0 || awfulStatus == 2) {
         u_int timer = awfulChangeTimer - 1;
@@ -82,7 +71,6 @@ float GetAwfulRotation() {
 
     return awfulRotation;
 }
-#endif
 
 void PrStartAwfulRotation() {
     awfulStatus = 0;
@@ -113,9 +101,6 @@ void PrFadeFrameImage(float arg0) {
     sceDmaSendN(chan, &mendererFadeData, 7);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrInitializeAwfulBackground__FPv);
-#else
 /* Scheduling: the clut colour is copied through two registers and stored late */
 void PrInitializeAwfulBackground(void *tim2) {
     if (tim2 != NULL) {
@@ -131,22 +116,6 @@ void PrInitializeAwfulBackground(void *tim2) {
     }
 
     WaveCtrlInit(&awfulWave, 640, 224, WM_WSLICE);
-}
-#endif
-
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrDrawAwfulBackground__FG10sceGsFrame);
-#else /* First draft: TEX0 build order, stack layout and the 2x2 rotate loops still differ */
-static inline NaVECTOR<float, 2> RotateVector_tmp(const NaMATRIX<float, 2, 2>& m, const NaVECTOR<float, 2>& v) {
-    float r[2];
-    for (int i = 0; i < 2; i++) {
-        float sum = 0.0f;
-        for (int j = 0; j < 2; j++) {
-            sum += m[i][j] * v[j];
-        }
-        r[i] = sum;
-    }
-    return NaVECTOR<float, 2>(r[0], r[1]);
 }
 
 void PrDrawAwfulBackground(sceGsFrame frame) {
@@ -178,8 +147,8 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
     float s = sinf(angle);
     NaMATRIX<float, 2, 2> rot(c, s, -s, c);
 
-    NaVECTOR<float, 2> p0 = RotateVector_tmp(rot, NaVECTOR<float, 2>(2730.0f, 2048.0f));
-    NaVECTOR<float, 2> p1 = RotateVector_tmp(rot, NaVECTOR<float, 2>(-2730.0f, 2048.0f));
+    NaVECTOR<float, 2> p0 = rot.ApplyTransposed(NaVECTOR<float, 2>(2730.0f, 2048.0f));
+    NaVECTOR<float, 2> p1 = rot.ApplyTransposed(NaVECTOR<float, 2>(-2730.0f, 2048.0f));
 
     awfulBackgroundPacket[10][0] = SCE_GS_SET_UV((u_int)(p0[0] + 8192.0f), (u_int)(p0[1] + 8192.0f));
     awfulBackgroundPacket[12][0] = SCE_GS_SET_UV((u_int)(p1[0] + 8192.0f), (u_int)(p1[1] + 8192.0f));
@@ -194,11 +163,7 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
 
     WaveCtrlDisp(&awfulWave, &frame);
 }
-#endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrUpdateAwfulMenderer__Fv);
-#else /* Codegen differs (32 vs 35 instructions) */
 void PrUpdateAwfulMenderer() {
     float angle = awfulAngle + prMendererSpeed * GetAwfulRotation();
     if (angle >= 6.2831855f) {
@@ -211,4 +176,3 @@ void PrUpdateAwfulMenderer() {
 
     WaveCtrlUpdate(&awfulWave, prMendererSpeed);
 }
-#endif

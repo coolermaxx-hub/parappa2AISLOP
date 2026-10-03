@@ -4,6 +4,7 @@
 #include "common.h"
 
 #include "prpriv.h"
+#include "eecore.h"
 
 #include "vu1/vumem.h"
 
@@ -15,6 +16,11 @@
 class PrModelObject;
 class SpaFileHeader;
 class PrSceneObject;
+
+struct PrScratchpadPacketBanks {
+    u_long128 prefix[(0x1000 - 0x690) / sizeof(u_long128)];
+    u_long128 noodle[3][0x1000 / sizeof(u_long128)];
+};
 
 class PrSPRAM_DATA {
 public:
@@ -37,7 +43,7 @@ public:
     NaMATRIX<float, 4, 4> unk220;
     char unk260[0x40];
     sceDmaTag m_end_dmatag;
-    char unk2B0[0x100];
+    PrEECoreContext m_eeCore;
     PrDisplayHeader m_display_header;
     float m_animation_time;
     PrModelObject *m_current_model;
@@ -50,6 +56,14 @@ public:
     float m_model_transaction_blend_ratio;
     u_int m_disturbance_param;
     float m_disturbance;
+
+    // GIF packets can use the whole remaining scratchpad. Noodle rendering
+    // uses three 4 KiB banks within that same storage; these are shared views,
+    // not independent buffers. Metadata ends at byte 0x690.
+    union {
+        u_long128 m_packet_workspace[(0x4000 - 0x690) / sizeof(u_long128)];
+        PrScratchpadPacketBanks m_packet_banks;
+    };
 };
 
 #endif /* PRLIB_SPRAM_H */

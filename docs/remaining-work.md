@@ -1,82 +1,67 @@
-# Remaining work (audit of 2026-10-03, updated after RotateMatrix(int))
+# Remaining work
 
-Snake's definition of 100% (see [porting-rules.md](porting-rules.md)) counts matching VU asm as finished source and only asks for C where the original was compiler-generated EE code. Measured against that, this is what is left. Counts come from `INCLUDE_ASM` lines in `src/` (excluding `src/prlib/old`).
+The active build has no compiler-generated `INCLUDE_ASM` fallbacks and no
+`NON_MATCHING` switches. The two remaining includes are handwritten vertex
+kernels. See [source-reconstruction.md](source-reconstruction.md) for the current
+implementation and validation; the earlier [matrix pass](matrix-reconstruction.md)
+is retained as historical context.
 
-| Bucket | Functions | Meaning |
-| --- | --- | --- |
-| Intentional VU / hand asm | 5 | Treated as done. Not converted to C. |
-| NON_MATCHING C bodies | 49 | Reconstructed in C, bytes still differ (scheduling or register allocation). Asm is used in the matching build. |
-| Compiler-generated, no C yet | 29 | All are weak template copies, see below. |
+This does not establish 100% decompilation. Compilation and a fallback count
+cannot prove original behavior or complete understanding of the data formats.
 
-## Intentional VU / hand asm (done by rule)
-| File | Function | Insns |
-| --- | --- | --- |
-| `prlib/renderee.cpp` | `RenderVertexEECoreBothface__13PrRenderStuff` | 42 |
-| `prlib/renderee.cpp` | `RenderVertexEECoreNormal__13PrRenderStuff` | 50 |
-| `prlib/renderee.cpp` | `RenderNodeEECore__13PrRenderStuffP23PrVuNodeHeaderDmaPacket` | 205 |
-| `prlib/renderee.cpp` | `RenderChunkEECore__13PrRenderStuffP25PrVuDataChunkPacketHeaderf` | 197 |
-| `prlib/renderee.cpp` | `func_00146A08` | 2 |
+## Required before claiming completion
 
-## Compiler-generated, no C body yet
-These are all weak template copies (NaMATRIX/NaVECTOR/NaGifPacket helpers instantiated per TU). A TU emits its copies at the end, in the order the templates were first used, so a copy can only come from C once the TU's own code (or an unused inline standing in for it, see `scene.cpp`) marks the same templates in the same order, and every helper body matches.
+1. Validate reconstructed camera/animation/geometry and noodle rendering against
+   original PS2 execution. Generic MIPS scalar tests cannot exercise COP2,
+   pipeline transfer delays, VU R randomness, DMA ordering or GS drawing.
+2. Decode the chunk's three currently uninterpreted transport quadwords and
+   remaining reserved/unknown SPM, animation and render fields. The
+   [SPM hierarchy and deformation lists](spm-geometry-layout.md) now have
+   evidence-backed names and typed variable-length records. The
+   [SPA node tables](spa-animation-layout.md) now have typed boundary binding
+   and named visibility, transform and shape-weight fields. Explain the
+   distinct contour save/render index origins and test real model assets.
+3. Validate the derived [texture wave model](noodle-texture-model.md) on PS2,
+   including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
+   frequency groups are now decoded and named; setup arithmetic has independent
+   instruction-driven checks.
+4. Audit and explain every remaining binary discrepancy. The main-ROM checksum
+   currently fails. Do not restore compiler steering or change expected hashes.
+5. Continue the readability audit of existing source outside the reconstructed
+   functions and old hardware interfaces. Copy/assignment now use proper generic
+   vector/matrix types, with real EE float4 MMI specializations; small-matrix
+   identity checks use their own type. Basic scalar and component-wise arithmetic
+   now also respects template types and dimensions while retaining the float4 VU
+   backend. Matrix products and other hardware interfaces remain to audit.
 
-Done so far: `RotateMatrix(int)` matches and has a generic definition in `nalib/namatrix.h`; `billboard.cpp`, `scene.cpp`, `mendererdata.cpp` and `mendererawful.cpp` emit their copies from C. What blocks the rest:
-- `menderer.cpp`, `spram.cpp`: `ScaleMatrix(const float&, const float&, const float&)` is still 44 lines off. `TranslateMatrix` with the same signature matches as an in-class `return NaMATRIX<float, 4, 4>(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1);`. `spram.cpp` also needs `Initialize`.
-- `camera.cpp`: needs `RotateMatrix(const NaVECTOR<float, 4>&, const float&)` to match.
-- `spadata.cpp`: its template functions are explicit specializations that are emitted in place, while the original emitted every one as a weak copy at the end of the TU.
-- `depthfield.cpp`: needs `ApplyDepthOfField`.
-- `render.cpp`: the NaVECTOR constructor copy sits in the middle of the TU, which is not understood yet.
+The supplied OLM overlays do not contain recognizable SPM records. The retained
+original executable and data templates support layout/disassembly analysis;
+rendering equivalence still needs matching game model assets and PS2 execution.
+No runtime rendering equivalence has been claimed.
 
-The original ELF (`iso/SCPS_150.17`) keeps the symbol of the first copy of each instance, so `mips-linux-gnu-nm -n iso/SCPS_150.17` names them.
+## Current exact-match measurement
 
-| File | Function | Insns |
-| --- | --- | --- |
-| `prlib/camera.cpp` | `func_00153AD0` | 22 |
-| `prlib/camera.cpp` | `func_00153B28` | 44 |
-| `prlib/camera.cpp` | `func_00153BD8` | 170 |
-| `prlib/depthfield.cpp` | `AddGifPackedAD_TEXFLUSH__11NaGifPacket` | 4 |
-| `prlib/depthfield.cpp` | `AddGifPackedAD_TEST_1__11NaGifPacketbiUcibibi` | 22 |
-| `prlib/depthfield.cpp` | `OpenGifTag__11NaGifPacketUI80` | 2 |
-| `prlib/depthfield.cpp` | `AddGsAD__18NaGifPacketWrapperUiUl` | 2 |
-| `prlib/depthfield.cpp` | `CloseGifTag__18NaGifPacketWrapper` | 2 |
-| `prlib/depthfield.cpp` | `OpenGifTag__18NaGifPacketWrapperUI80` | 2 |
-| `prlib/depthfield.cpp` | `End__18NaGifPacketWrapperUiUiUi` | 2 |
-| `prlib/depthfield.cpp` | `Init__18NaGifPacketWrapperPUI80` | 2 |
-| `prlib/menderer.cpp` | `func_0014F3B8` | 22 |
-| `prlib/menderer.cpp` | `func_0014F410` | 44 |
-| `prlib/menderer.cpp` | `func_0014F4C8` | 66 |
-| `prlib/menderer.cpp` | `func_0014F5D0` | 66 |
-| `prlib/menderer.cpp` | `func_0014F6D8` | 190 |
-| `prlib/render.cpp` | `__t8NaVECTOR2Zfi4RCfT1T1T1` | 10 |
-| `prlib/render.cpp` | `func_00145E50` | 2 |
-| `prlib/spadata.cpp` | `func_00149168` | 22 |
-| `prlib/spadata.cpp` | `func_001491C0` | 44 |
-| `prlib/spadata.cpp` | `TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4` | 66 |
-| `prlib/spadata.cpp` | `ScaleMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4` | 52 |
-| `prlib/spram.cpp` | `Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1` | 44 |
-| `prlib/spram.cpp` | `Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1` | 22 |
-| `prlib/spram.cpp` | `_GLOBAL_$I$Initialize__12PrSPRAM_DATAP13PrSceneObject` | 20 |
-| `prlib/spram.cpp` | `Translate__t8NaMATRIX3Zfi4i4RCfT1T1` | 96 |
-| `prlib/spram.cpp` | `Scale__t8NaMATRIX3Zfi4i4RCfT1T1` | 98 |
-| `prlib/spram.cpp` | `ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1` | 66 |
-| `prlib/spram.cpp` | `TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1` | 66 |
+The 2026-10-03 objdiff report measured **1325 / 1429 exact functions (92.72218%)**
+and **264612 / 342284 exact code bytes (77.30773%)** across 70 units. Its fuzzy
+instruction score was 93.18579%. The full report is retained outside the checkout
+at `/workspace/shared/parappa-env/animation-report.json`.
 
-## NON_MATCHING C bodies by file
-- `menu/menusub.c`: 11
-- `prlib/menderer.cpp`: 5
-- `prlib/mendererawful.cpp`: 4
-- `prlib/menderercreate.cpp`: 4
-- `prlib/render.cpp`: 4
-- `prlib/spadata.cpp`: 4
-- `prlib/mendereralpha.cpp`: 3
-- `main/drawctrl.c`: 2
-- `prlib/mendererdata.cpp`: 2
-- `prlib/scene.cpp`: 2
-- `menu/p3mc.c`: 1
-- `prlib/camera.cpp`: 1
-- `prlib/cluster.cpp`: 1
-- `prlib/contour.cpp`: 1
-- `prlib/depthfield.cpp`: 1
-- `prlib/shape.cpp`: 1
-- `prlib/spram.cpp`: 1
-- `prlib/transition.cpp`: 1
+The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
+main-ROM checksum fails. These figures include exact retained handwritten kernels
+and do not imply execution equivalence for the new source.
+
+Function matching, source reconstruction and ROM checksums are separate measures.
+The saved historical badges in README are not this reconstruction's measurement.
+Only verified semantic aliases are used by the mapping tool.
+
+## Handwritten kernels retained
+
+| Class operation | Original instructions | Role |
+| --- | ---: | --- |
+| `PrRenderStuff::RenderVertexEECoreBothface` | 42 | Projection, clipping and packed GS output |
+| `PrRenderStuff::RenderVertexEECoreNormal` | 50 | Projection, clipping and strip face rejection |
+
+`RenderNodeEECore` and `RenderChunkEECore` were incorrectly listed as intentional
+assembly in the earlier audit. Their compiler-generated orchestration is now C++
+with typed hardware operations. The old two-instruction queue aliases are served
+by the actual `AppendDmaTag` class member rather than address-named helpers.

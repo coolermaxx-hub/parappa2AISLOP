@@ -12,66 +12,26 @@
 
 #include <eestruct.h>
 
-extern NaMATRIX<float, 4, 4> screenClipMatrix;
-extern NaMATRIX<float, 4, 4> screenPrimitiveMatrix;
+NaMATRIX<float, 4, 4> screenClipMatrix;
+NaMATRIX<float, 4, 4> screenPrimitiveMatrix;
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", Initialize__12PrSPRAM_DATAP13PrSceneObject);
-#else /* Stack slot and register allocation differ; also drop INCLUDE_RODATA D_00396790 once it matches */
 extern "C" float tanf(float);
-
-/* Out-of-line NaMATRIX helpers emitted at the end of this file */
-NaMATRIX<float, 4, 4> TransMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spram(const float& x, const float& y, const float& z) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1");
-NaMATRIX<float, 4, 4>& Scale_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("Scale__t8NaMATRIX3Zfi4i4RCfT1T1");
-NaMATRIX<float, 4, 4>& Trans_tmp_spram(NaMATRIX<float, 4, 4> *m, const float& x, const float& y, const float& z) asm("Translate__t8NaMATRIX3Zfi4i4RCfT1T1");
-
-void sceVu0CameraMatrix_tmp_spram(sceVu0FMATRIX m, sceVu0FVECTOR p, sceVu0FVECTOR zd, sceVu0FVECTOR yd) asm("func_00161CB0");
-void sceVu0ViewScreenMatrix_tmp_spram(sceVu0FMATRIX m, float scrz, float ax, float ay,
-    float cx, float cy, float zmin, float zmax, float nearz, float farz) asm("func_00161E88");
-
-static inline NaVECTOR<float, 4> Normalize_tmp_spram(const NaVECTOR<float, 4>& v) {
-    NaVECTOR<float, 4> ret;
-    asm volatile("
-        lqc2       $vf4, 0x0(%1)
-        vmul.xyz   $vf5, $vf4, $vf4
-        vaddy.x    $vf5, $vf5, $vf5y
-        vaddz.x    $vf5, $vf5, $vf5z
-        vsqrt      Q, $vf5x
-        vwaitq
-        vaddq.x    $vf5, $vf0, Q
-        vdiv       Q, $vf0w, $vf5x
-        vsub.xyzw  $vf6, $vf0, $vf0
-        vwaitq
-        vmulq.xyz  $vf6, $vf4, Q
-        sqc2       $vf6, 0x0(%0)
-    " : : "r"(&ret), "r"(&v));
-    ((float*)&ret)[3] = 1.0f;
-    return ret;
-}
-
-static inline NaVECTOR<float, 4> Negate_tmp_spram(const NaVECTOR<float, 4>& v) {
-    NaVECTOR<float, 4> ret;
-    for (int i = 0; i < 4; i++) {
-        ((float*)&ret)[i] = 0.0f - v[i];
-    }
-    return ret;
-}
 
 void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     static const sceDmaTag endDmaTag = { 0, 0, 0x70, NULL, { 0, 0 } };
 
-    m_noodle_buffer[0] = (u_long128*)((u_int)this + 0x1000);
-    m_noodle_buffer[1] = (u_long128*)((u_int)this + 0x2000);
-    m_noodle_buffer[2] = (u_long128*)((u_int)this + 0x3000);
+    m_noodle_buffer[0] = m_packet_banks.noodle[0];
+    m_noodle_buffer[1] = m_packet_banks.noodle[1];
+    m_noodle_buffer[2] = m_packet_banks.noodle[2];
     m_end_dmatag = endDmaTag;
 
     m_camera = *scene->GetCurrentCamera();
 
-    m_camera_direction = Normalize_tmp_spram(m_camera.interest - m_camera.position);
+    m_camera_direction = NaVECTOR<float, 4>::Normalize3(m_camera.interest - m_camera.position);
+    m_camera_direction[3] = 1.0f;
 
-    NaVECTOR<float, 4> yd = Negate_tmp_spram(m_camera.up);
-    sceVu0CameraMatrix_tmp_spram((sceVu0FVECTOR*)&m_camera_matrix, (float*)&m_camera.position, (float*)&m_camera_direction, (float*)&yd);
+    NaVECTOR<float, 4> yd = -m_camera.up;
+    sceVu0CameraMatrix((sceVu0FVECTOR*)&m_camera_matrix, m_camera.position.Data(), m_camera_direction.Data(), yd.Data());
 
     u_int width = scene->unk74;
     u_int height = scene->unk78;
@@ -81,34 +41,33 @@ void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     float aspect = (float)width / (float)height * 3.0f / 4.0f;
     float scrz = 1.0f / tanf(m_camera.field_of_view * 0.5f);
 
-    sceVu0ViewScreenMatrix_tmp_spram((sceVu0FVECTOR*)&unk1A0, scrz, height * 0.5f * aspect, height * 0.5f,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk1A0, scrz, height * 0.5f * aspect, height * 0.5f,
         2048.0f, 2048.0f, zmin, zmax, m_camera.near_clip, m_camera.far_clip);
     zmax -= zmin;
     m_view_projection_matrix = unk1A0 * m_camera_matrix;
 
-    sceVu0ViewScreenMatrix_tmp_spram((sceVu0FVECTOR*)&unk1E0, scrz,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk1E0, scrz,
         height * 1.00999999f * 0.5f * aspect / 2048.0f, height * 1.00999999f * 0.5f / 2048.0f,
         0.0f, 0.0f, -1.0f, 1.0f, m_camera.near_clip, m_camera.far_clip);
     unk120 = unk1E0 * m_camera_matrix;
 
-    sceVu0ViewScreenMatrix_tmp_spram((sceVu0FVECTOR*)&unk220, scrz,
+    sceVu0ViewScreenMatrix((sceVu0FVECTOR*)&unk220, scrz,
         4096.0f / (width + 2) * 0.99000001f * height * 0.5f * aspect / 2048.0f,
         4096.0f / (height + 2) * 0.99000001f * height * 0.5f / 2048.0f,
         0.0f, 0.0f, -1.0f, 1.0f, m_camera.near_clip, m_camera.far_clip);
     unk160 = unk220 * m_camera_matrix;
 
-    screenClipMatrix = TransMatrix_tmp_spram(width * 0.5f, -(float)height * 0.5f, 5010.0f);
-    Scale_tmp_spram(&screenClipMatrix, 0.000493164058f, 0.000493164058f, 0.000199600792f);
+    screenClipMatrix = NaMATRIX<float, 4, 4>::TranslateMatrix(width * 0.5f, -(float)height * 0.5f, 5010.0f);
+    screenClipMatrix.Scale(0.000493164058f, 0.000493164058f, 0.000199600792f);
 
-    screenPrimitiveMatrix = ScaleMatrix_tmp_spram(1.0f, -0.5f, zmax / 10020.0f);
-    Trans_tmp_spram(&screenPrimitiveMatrix, 2048.0f - width * 0.5f, 2048.0f - height * 0.5f, zmin - zmax * -10010.0f / 10020.0f);
+    screenPrimitiveMatrix = NaMATRIX<float, 4, 4>::ScaleMatrix(1.0f, -0.5f, zmax / 10020.0f);
+    screenPrimitiveMatrix.Translate(2048.0f - width * 0.5f, 2048.0f - height * 0.5f, zmin - zmax * -10010.0f / 10020.0f);
 
     m_unk66C = 0;
     m_unk670 = 0;
     m_unk674 = 0;
     m_unk678 = 0;
 }
-#endif
 
 void PrSPRAM_DATA::InitializeModel(PrModelObject *model) {
     m_model_contour_blur_alpha[0] = model->m_contour_blur_alpha[0];
@@ -163,22 +122,3 @@ void PrSPRAM_DATA::SendDisplayHeader() {
     chan->chcr.TTE = 1;
     sceDmaSend(chan, tag);
 }
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1);
-
-/* prlib/spram.cpp */
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", _GLOBAL_$I$Initialize__12PrSPRAM_DATAP13PrSceneObject);
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", Translate__t8NaMATRIX3Zfi4i4RCfT1T1);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", Scale__t8NaMATRIX3Zfi4i4RCfT1T1);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", ScaleMatrix__t8NaMATRIX3Zfi4i4RCfT1T1);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/spram", TranslateMatrix__t8NaMATRIX3Zfi4i4RCfT1T1);
-
-INCLUDE_RODATA("asm/nonmatchings/prlib/spram", D_00396790);
