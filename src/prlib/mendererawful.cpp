@@ -60,15 +60,13 @@ extern float prMendererNoodleColor[];
 
 float awfulAngle = 0.0f;
 
-/* sbss */
-extern TIM2_PICTUREHEADER *awfulPicture;
-extern u_int mendererAwfulColor;
-extern int awfulStatus;
-extern u_int awfulChangeTimer;
-extern float awfulRotation;
+static TIM2_PICTUREHEADER *awfulPicture;
+static u_int mendererAwfulColor;
+static int awfulStatus;
+static u_int awfulChangeTimer;
+static float awfulRotation;
 
-/* bss */
-extern WAVE_STR awfulWave;
+static WAVE_STR awfulWave;
 
 float GetAwfulRotation();
 

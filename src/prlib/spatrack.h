@@ -152,32 +152,5 @@ inline int* SpaTrack<int>::GetValue(float time) const {
     return &m_values[segment];
 }
 
-template <>
-inline float* SpaTrack<float>::GetSprineValue(unsigned int segment, float time) const {
-    static float result;
-    const float duration = m_times[segment + 1] - m_times[segment];
-    float& start = KeyValue(segment);
-    if (duration == 0.0f) return &start;
-    const float end = KeyValue(segment + 1);
-    const float outgoing = OutgoingTangent(segment);
-    const float incoming = IncomingTangent(segment + 1);
-    const float t = (time - m_times[segment]) / duration;
-    const float difference = start - end;
-    result = t * (t * (t * ((outgoing + incoming) * duration + (difference + difference))
-             - (outgoing + outgoing + incoming) * duration - difference * 3.0f)
-             + outgoing * duration) + start;
-    return &result;
-}
-
-template <>
-inline float* SpaTrack<float>::GetLinearValue(unsigned int segment, float time) const {
-    static float result;
-    const float afterStart = time - m_times[segment];
-    const float beforeEnd = m_times[segment + 1] - time;
-    result = (beforeEnd * KeyValue(segment) + afterStart * KeyValue(segment + 1))
-             / (beforeEnd + afterStart);
-    return &result;
-}
-
 
 #endif /* PRLIB_SPATRACK_H */

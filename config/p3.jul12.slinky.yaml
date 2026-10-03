@@ -901,18 +901,18 @@ segments:
       - { path: src/iop_mdl/tapctrl_rpc.c.o }
 
       - { path: src/prlib/gifreg.cpp.o }
-      - { path: asm/data/prlib/model.sbss.s.o }
+      - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
       - { path: src/prlib/renderstuff.cpp.o }
-      - { path: asm/data/prlib/prlib.sbss.s.o }
+      - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
-      - { path: asm/data/prlib/render.sbss.s.o }
+      - { path: src/prlib/render.cpp.o }
       - { path: src/prlib/renderee.cpp.o }
       - { path: src/prlib/transition.cpp.o }
       - { path: src/prlib/microprogram.cpp.o }
       - { path: src/prlib/spram.cpp.o }
       - { path: src/prlib/mfifo.cpp.o }
-      - { path: asm/data/prlib/spadata.sbss.s.o }
+      - { path: src/prlib/spadata.cpp.o }
       - { path: src/prlib/scene.cpp.o }
       - { path: src/prlib/cluster.cpp.o }
       - { path: src/prlib/shape.cpp.o }
@@ -920,9 +920,9 @@ segments:
       - { path: src/prlib/depthfield.cpp.o }
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
-      - { path: asm/data/prlib/menderer.sbss.s.o }
+      - { path: src/prlib/menderer.cpp.o }
       - { path: src/prlib/menderercreate.cpp.o }
-      - { path: asm/data/prlib/mendererawful.sbss.s.o }
+      - { path: src/prlib/mendererawful.cpp.o }
       - { path: src/prlib/mendereralpha.cpp.o }
       - { path: src/prlib/mendererdata.cpp.o }
       - { path: src/prlib/wave.cpp.o }
@@ -1036,10 +1036,10 @@ segments:
       - { path: src/prlib/vram.cpp.o }
       - { path: src/prlib/random.cpp.o }
       - { path: src/prlib/menderer.cpp.o }
-      - { path: asm/data/prlib/menderercreate.bss.s.o }
-      - { path: asm/data/prlib/mendererawful.bss.s.o }
-      - { path: asm/data/prlib/mendereralpha.bss.s.o }
-      - { path: asm/data/prlib/mendererdata.bss.s.o }
+      - { path: src/prlib/menderercreate.cpp.o }
+      - { path: src/prlib/mendererawful.cpp.o }
+      - { path: src/prlib/mendereralpha.cpp.o }
+      - { path: src/prlib/mendererdata.cpp.o }
       - { path: src/prlib/wave.cpp.o }
       - { path: src/prlib/dmaqueue.cpp.o }
       - { path: src/prlib/utility.cpp.o }

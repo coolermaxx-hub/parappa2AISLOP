@@ -419,13 +419,13 @@ segments:
         - { type: .sbss,  vram: 0x00399b7c, name: menu/menufont        }
         - { type: .sbss, vram: 0x00399b84, name: menu/pksprite        }
 
-        - { type: sbss,  vram: 0x00399b8c, name: prlib/model          }
-        - { type: sbss,  vram: 0x00399b90, name: prlib/prlib          }
-        - { type: sbss,  vram: 0x00399b94, name: prlib/render         }
+        - { type: .sbss,  vram: 0x00399b8c, name: prlib/model          }
+        - { type: .sbss,  vram: 0x00399b90, name: prlib/prlib          }
+        - { type: .sbss,  vram: 0x00399b94, name: prlib/render         }
         - { type: .sbss, vram: 0x00399b98, name: prlib/microprogram   }
-        - { type: sbss,  vram: 0x00399ba0, name: prlib/spadata        }
-        - { type: sbss,  vram: 0x00399ba8, name: prlib/menderer       }
-        - { type: sbss,  vram: 0x00399bb4, name: prlib/mendererawful  }
+        - { type: .sbss,  vram: 0x00399ba0, name: prlib/spadata        }
+        - { type: .sbss,  vram: 0x00399ba8, name: prlib/menderer       }
+        - { type: .sbss,  vram: 0x00399bb4, name: prlib/mendererawful  }
         - { type: .sbss, vram: 0x00399bc8, name: prlib/wave           }
 
         - { type: sbss,  vram: 0x00399bd0, name: sdk/newlib           }
@@ -475,10 +475,10 @@ segments:
         - { type: .bss,  vram: 0x01c83390, name: prlib/billboard      }
         - { type: bss,   vram: 0x01c833d0, name: prlib/depthfield     }
         - { type: .bss,  vram: 0x01c833e0, name: prlib/random         }
-        - { type: bss,   vram: 0x01c83570, name: prlib/menderercreate }
-        - { type: bss,   vram: 0x01c83ba0, name: prlib/mendererawful  }
-        - { type: bss,   vram: 0x01c83bd0, name: prlib/mendereralpha  }
-        - { type: bss,   vram: 0x01c83c10, name: prlib/mendererdata   }
+        - { type: .bss,   vram: 0x01c83570, name: prlib/menderercreate }
+        - { type: .bss,   vram: 0x01c83ba0, name: prlib/mendererawful  }
+        - { type: .bss,   vram: 0x01c83bd0, name: prlib/mendereralpha  }
+        - { type: .bss,   vram: 0x01c83c10, name: prlib/mendererdata   }
         - { type: .bss,  vram: 0x01c84c40, name: prlib/wave           }
         - { type: bss,   vram: 0x01c884c0, name: prlib/camera         }
 

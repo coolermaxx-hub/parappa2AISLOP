@@ -25,9 +25,8 @@ extern PrNoodleAlphaGsPacket alphaModulationGsPacket;
 extern PrNoodleAlphaFramePacket alphaModulationFramePacket;
 extern PrNoodleAlphaDmaPacket alphaModulationDmaPacket;
 
-/* bss */
-extern float mendererDeltaRotation[8];
-extern float alphaWeight[8];
+static float mendererDeltaRotation[8];
+static float alphaWeight[8];
 
 void PrInitializeAlphaModulation() {
     PrNoodleAlphaParameters &parameters = alphaModulationPacket;

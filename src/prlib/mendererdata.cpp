@@ -16,8 +16,8 @@ struct PrNoodlePositionData {
 };
 
 
-extern PrNoodlePositionData noodlePositionData[115];
-extern u_int noodlePolygonIndex[116];
+static PrNoodlePositionData noodlePositionData[115];
+static u_int noodlePolygonIndex[116];
 
 void SetNextTarget(PrNoodlePositionData *data);
 void UpdateNoodlePositionData(PrNoodlePositionData *data);

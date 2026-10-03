@@ -1618,7 +1618,6 @@ UnionBoundaryBox__13PrModelObjectPt8NaVECTOR2Zfi4T1                             
 GetPrimitivePosition__13PrModelObjectPt8NaVECTOR2Zfi4                               = 0x00140cb8; // type:func
 GetScreenPosition__13PrModelObjectPt8NaVECTOR2Zfi4                                  = 0x00140dc0; // type:func
 
-workAreaSize                                                                        = 0x00399b8c; // size:0x4
 
 // prlib/database.cpp
 __16PrObjectDatabase                                                                = 0x00140e60; // type:func
@@ -1748,7 +1747,6 @@ tmp_0                                                                           
 tmp_1                                                                               = 0x003998d8;
 prCurrentStage                                                                      = 0x003998dc; // type:s32
 
-debugParam                                                                          = 0x00399b90;
 
 vector_0                                                                            = 0x01c83190;
 vector_1                                                                            = 0x01c831a0;
@@ -1861,7 +1859,6 @@ GetValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4f                                       
 GetSprineValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4Uif                                     = 0x0014b0b0; // type:func
 
 
-return_buffer                                                                       = 0x01c83260; // size:0x10
 
 // prlib/scene.cpp
 __13PrSceneObjectP13sceGsDrawEnv1PCcUi                                              = 0x0014b188; // type:func
@@ -1947,9 +1944,6 @@ PrRenderMenderer                                                                
 _GLOBAL_$I$prMendererRatio                                                          = 0x0014f4c0; // type:func
 
 
-noodleStatus                                                                        = 0x00399ba8;
-noodleChangeTimer                                                                   = 0x00399bac;
-noodleDeltaRotation                                                                 = 0x00399bb0; // type:f32
 
 // prlib/menderercreate.cpp
 PrSynchronizeMendererParameter__Ff                                                  = 0x0014f9d0; // type:func
@@ -1968,16 +1962,12 @@ PrDrawAwfulBackground__FG10sceGsFrame                                           
 PrUpdateAwfulMenderer__Fv                                                           = 0x00150c80; // type:func
 
 
-mendererAwfulColor                                                                  = 0x00399bb8;
-awfulChangeTimer                                                                    = 0x00399bc0;
 
 // prlib/mendereralpha.cpp
 PrInitializeAlphaModulation__Fv                                                     = 0x00150d68; // type:func
 PrCreateAlphaModulation__Ff                                                         = 0x00150f88; // type:func
 PrBlendNoodleImage__Fb                                                              = 0x001510d8; // type:func
 
-mendererDeltaRotation                                                               = 0x01c83bd0; // type:f32 size:0x20
-alphaWeight                                                                         = 0x01c83bf0; // type:f32 size:0x20
 
 // prlib/mendererdata.cpp
 SetNextTarget__FP20PrNoodlePositionData                                             = 0x00151270; // type:func
@@ -2358,30 +2348,14 @@ D_20000140                          = 0x20000140; // ignore:true
 D_30000010                          = 0x30000010; // ignore:true
 D_70000004                          = 0x70000004; // ignore:true
 
-AwfulStatus                                                                         = 0x00399b94; // size:0x4
 noodleStripDmaPacket                                                                = 0x0038c740; // size:0x100
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func
-value_tmp_spadata_linear_float                                                      = 0x00399ba4; // size:0x4
 __t8NaVECTOR2Zfi4RCfT1T1T1                                                          = 0x00145db0; // type:func
 sceVu0InversMatrix                                                                  = 0x001617c0; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4iRCf                                                 = 0x0014ace8; // type:func
 prMendererNoodleColor = 0x0038c730; // size:0x10
-awfulPicture = 0x00399bb4; // size:0x4
-awfulStatus = 0x00399bbc; // size:0x4
-awfulRotation = 0x00399bc4; // size:0x4
-awfulWave = 0x01c83ba0; // size:0x30
-noodlePositionData = 0x01C83C10; // size:0xE60
-noodlePolygonIndex = 0x01C84A70; // size:0x1D0
-value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
-value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
-mendererTexturePacket = 0x01C83AC0; // size:0xE0
-noodlePhase = 0x01C83570; // size:0x40
-noodleParameter = 0x01C835B0; // size:0x4B0
-matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
-vector_tmp_spadata_transform = 0x01C83270; // size:0x10
-matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
 noodleSaturationRange = 0x0038C870; // size:0x50
 noodleBaseColor = 0x0038C8C0; // size:0x78
 noodleStripHeaderPacket = 0x0038C840; // size:0x30
@@ -2389,7 +2363,6 @@ alphaModulationPacket = 0x0038CB30; // size:0x100
 alphaModulationGsPacket = 0x0038CC30; // size:0x40
 alphaModulationFramePacket = 0x0038CC70; // size:0xD0
 alphaModulationDmaPacket = 0x0038CD40; // size:0x40
-mendererCreatePacket = 0x01C83A60; // size:0x60
 
 // nalib/navector.cpp
 Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1                             = 0x00147ce0; // type:func
@@ -2996,3 +2969,8 @@ _vfiprintf_r                                                                    
 _calloc_r                                                                           = 0x00177f10; // type:func
 _fstat_r                                                                            = 0x00177fd0; // type:func
 eeCoreScratchpad                    = 0x003998ec; // size:0x4
+return_buffer                                                                       = 0x01c83260; // size:0x10
+value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
+matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
+vector_tmp_spadata_transform = 0x01C83270; // size:0x10
+matrix_tmp_spadata_transform = 0x01C83280; // size:0x40

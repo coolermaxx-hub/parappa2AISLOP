@@ -87,6 +87,9 @@ register struct as one 64-bit GIF A+D value.
   do-while. The original needed a backward `goto` to match. Behaviour is
   identical (reroll while `value / RAND_MAX >= 1.0f`); only the block layout
   differs.
+- `PrSetDebugParamFloat` (src/prlib/prlib.cpp) stores through the `float`
+  member of the `PrDebugParam` union instead of reinterpreting the value
+  through an `int*`. Same bits; the original code generation is not kept.
 - `DrawMozaikuDisp` (src/main/drawctrl.c) builds its unused masked frame copy
   as a typed struct instead of a volatile `u_long` store.
 - `_P3MC_ASC2SJIS` (src/menu/p3mc.c) uses typed `u_short` lookup tables

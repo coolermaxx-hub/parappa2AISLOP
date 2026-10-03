@@ -19,8 +19,7 @@
 static float prFrameRate = 1.0f;
 static float prInverseFrameRate = 1.0f;
 
-/* sbss */
-extern PrDebugParam debugParam[2];
+static PrDebugParam debugParam[PR_DEBUG_PARAM_NUM];
 
 static void InitializeDebugParam();
 
@@ -538,7 +537,7 @@ void PrSetDebugParam(PrDEBUG_PARAM param, int value) {
 
 PR_EXTERN
 void PrSetDebugParamFloat(PrDEBUG_PARAM param, float value) {
-    debugParam[param].d = *(int*)&value;
+    debugParam[param].f = value;
 }
 
 PR_EXTERN

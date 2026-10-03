@@ -52,10 +52,9 @@ struct PrNoodleStripPacket {
 /* data */
 extern PrNoodleStripPacket noodleStripDmaPacket;
 
-/* sbss */
-extern int noodleStatus;
-extern int noodleChangeTimer;
-extern float noodleDeltaRotation;
+static int noodleStatus;
+static int noodleChangeTimer;
+static float noodleDeltaRotation;
 
 void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th);
 void PrInitializeAlphaModulation();

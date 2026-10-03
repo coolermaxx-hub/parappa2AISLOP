@@ -20,7 +20,7 @@
 /* sdata */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
-extern bool AwfulStatus;
+static bool AwfulStatus;
 
 // Zero-initialised A+D packet: the frame, zbuf, xyoffset and scissor values are
 // filled in by InitializeVu1. The DMA tag is a "refe" transfer of the five

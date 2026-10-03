@@ -8,7 +8,7 @@
 
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 u_char *workAreaTopAddress;
-extern u_int workAreaSize;
+static u_int workAreaSize;
 
 PR_EXTERN
 void PrSetPostureWorkArea(void *addr, u_int size) {

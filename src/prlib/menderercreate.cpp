@@ -17,16 +17,16 @@ extern int prCurrentStage;
 int mendererTextureCreationInitialized = 0;
 int mendererTextureRequested = 0;
 float mendererSyncPhase = 0.0f;
-extern float noodlePhase[5][3];
-extern PrNoodleTextureParameters noodleParameter[5];
+static float noodlePhase[5][3];
+static PrNoodleTextureParameters noodleParameter[5];
+static PrNoodleTextureCreationPacket mendererCreatePacket;
+static PrNoodleTextureCopyPacket mendererTexturePacket;
 
 void PrUpdateMendererSpeed();
 void PrUpdateAwfulMenderer();
 void CreateMendererTexture(float ratio);
 void PrSynchronizeMendererParameter(float ratio);
 
-/* data */
-extern PrNoodleTextureCopyPacket mendererTexturePacket;
 
 /* Per-preset wave parameters: amplitude, spatial cycles, temporal frequency (x0.15), phase offset.
    Only the first five presets are read by PrSynchronizeMendererParameter. */
@@ -108,7 +108,6 @@ void PrSynchronizeMendererParameter(float ratio) {
     }
 }
 
-extern PrNoodleTextureCreationPacket mendererCreatePacket;
 
 void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
