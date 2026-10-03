@@ -334,9 +334,6 @@ static void PreDrawNoodleStrip() {
     PrSendMfifo(&packet->dmatag);
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", DrawNoodleStrip__Fff);
-#else /* Regalloc and scheduling */
 void DrawNoodleStrip(float ratio, float rot) {
     PreDrawNoodleStrip();
 
@@ -351,13 +348,13 @@ void DrawNoodleStrip(float ratio, float rot) {
     } else if (ratio <= 2.0f) {
         float t = ratio - 1.0f;
         length = t * (1.6016f - 0.9375f) + 0.9375f;
-        width = t * (1.0f - 0.7f) + 0.7f;
         distance = t * (-0.0586f - 0.32f) + 0.32f;
+        width = t * (1.0f - 0.7f) + 0.7f;
     } else {
         float t = ratio - 2.0f;
         length = t * (0.9376f - 1.6016f) + 1.6016f;
-        width = t * (0.7f - 1.0f) + 1.0f;
         distance = t * (0.45f - -0.0586f) + -0.0586f;
+        width = t * (0.7f - 1.0f) + 1.0f;
     }
 
     prMendererWidth = width;
@@ -366,7 +363,6 @@ void DrawNoodleStrip(float ratio, float rot) {
 
     DrawNoodleStripChunk(matrix);
 }
-#endif
 
 void StartNoodleRotation() {
     noodleChangeTimer = 900;
