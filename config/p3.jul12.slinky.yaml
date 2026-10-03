@@ -355,7 +355,8 @@ segments:
       - { path: src/prlib/contour.cpp.o }
       - { path: src/prlib/dma.cpp.o }
 
-      - { path: asm/data/nalib/napacket.data.s.o }
+      # 16 zero bytes of unknown origin (nothing references them); kept as padding.
+      - { kind: pad, pad_amount: 0x10, section: .data }
       - { path: src/nalib/navector.cpp.o }
 
       - { path: asm/data/sdk/graphdev.data.s.o }
