@@ -29,18 +29,18 @@ public:
     void SendDisplayHeader();
 
 public:
-    NaMATRIX<float, 4, 4> unk0;
+    NaMATRIX<float, 4, 4> m_nodeMatrix;
     u_long128 *m_noodle_buffer[3];
     char unk4C[0x4];
     PrPERSPECTIVE_CAMERA m_camera;
     NaVECTOR<float, 4> m_camera_direction;
     NaMATRIX<float, 4, 4> m_camera_matrix;
     NaMATRIX<float, 4, 4> m_view_projection_matrix;
-    NaMATRIX<float, 4, 4> unk120;
-    NaMATRIX<float, 4, 4> unk160;
-    NaMATRIX<float, 4, 4> unk1A0;
-    NaMATRIX<float, 4, 4> unk1E0;
-    NaMATRIX<float, 4, 4> unk220;
+    NaMATRIX<float, 4, 4> m_worldClipMatrix;
+    NaMATRIX<float, 4, 4> m_worldGuardMatrix;
+    NaMATRIX<float, 4, 4> m_viewScreenMatrix;
+    NaMATRIX<float, 4, 4> m_viewClipMatrix;
+    NaMATRIX<float, 4, 4> m_viewGuardMatrix;
     char unk260[0x40];
     sceDmaTag m_end_dmatag;
     PrEECoreContext m_eeCore;

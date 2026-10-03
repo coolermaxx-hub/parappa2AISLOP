@@ -82,7 +82,7 @@ void PrRenderStuff::RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet) {
     context.WaitForVuTransfers();
     NaMATRIX<float, 4, 4>::Multiply(context.screenMatrix, eeCoreScratchpad->m_view_projection_matrix, packet->m_matrix);
     context.WaitForVuTransfers();
-    NaMATRIX<float, 4, 4>::Multiply(context.clipMatrix, eeCoreScratchpad->unk120, packet->m_matrix);
+    NaMATRIX<float, 4, 4>::Multiply(context.clipMatrix, eeCoreScratchpad->m_worldClipMatrix, packet->m_matrix);
     context.WaitForVuTransfers();
     context.vertexKernel = eeCoreVertexKernels[packet->m_microprogram];
 

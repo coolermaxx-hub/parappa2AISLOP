@@ -239,18 +239,18 @@ void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 
     const bool identity = nodeAnimation->m_transformCount == 0;
     if (model->m_postureMatrices[0] != NULL) {
         if (identity) {
-            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+            spram->m_nodeMatrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
             const NaMATRIX<float, 4, 4> *local = nodeAnimation->GetMatrix(time);
             spram = prSpramData_tmp_render;
-            spram->unk0 = *local;
+            spram->m_nodeMatrix = *local;
         }
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
-            BlendTransitionMatrix(model, spram->unk0);
+            BlendTransitionMatrix(model, spram->m_nodeMatrix);
             spram = prSpramData_tmp_render;
         }
-        m_worldMatrix = parentMatrix * spram->unk0;
-        model->m_postureMatrices[model->m_active_transition][m_animationIndex] = spram->unk0;
+        m_worldMatrix = parentMatrix * spram->m_nodeMatrix;
+        model->m_postureMatrices[model->m_active_transition][m_animationIndex] = spram->m_nodeMatrix;
     } else if (identity) {
         m_worldMatrix = parentMatrix;
     } else {
@@ -593,20 +593,20 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
         PrSPRAM_DATA *spram;
         if (m_flags & 0x1) {
             spram = prSpramData_tmp_render;
-            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+            spram->m_nodeMatrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
             spram = prSpramData_tmp_render;
-            spram->unk0 = this->m_localMatrix;
+            spram->m_nodeMatrix = this->m_localMatrix;
         }
 
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
-            BlendTransitionMatrix(model, spram->unk0);
+            BlendTransitionMatrix(model, spram->m_nodeMatrix);
             spram = prSpramData_tmp_render;
         }
 
-        this->m_worldMatrix = arg1 * spram->unk0;
+        this->m_worldMatrix = arg1 * spram->m_nodeMatrix;
         int idx = this->m_animationIndex;
-        model->m_postureMatrices[model->m_active_transition][idx] = spram->unk0;
+        model->m_postureMatrices[model->m_active_transition][idx] = spram->m_nodeMatrix;
     } else if (m_flags & 0x1) {
         this->m_worldMatrix = arg1;
     } else {
