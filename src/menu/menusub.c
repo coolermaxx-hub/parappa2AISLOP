@@ -9152,18 +9152,22 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     return 1;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
-#else /* Regalloc; drop INCLUDE_RODATA D_00396168/D_00396170 once it matches */
 /* static */ void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl) {
+    int        i;
+    int        l;
     HOSI_OBJ  *obj;
     HOSI_TYPE *type;
     TSTEX_INF *ptex;
-    u_int      col;
-    int        l, i;
-    int        x, y, w, h;
-    int        ton, t, q;
-    float      zrate, rot;
+    u_int      abgr;
+    int        ton;
+    int        t;
+    int        t0;
+    float      zf;
+    float      rt;
+    int        x;
+    int        y;
+    int        w;
+    int        h;
 
     obj  = HOSIObj;
     type = hTypeTable;
@@ -9172,9 +9176,10 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
         ptex = &tblTex[type->patNo + 76];
         PkTEX0_Add(pk, ptex->tex0);
 
-        col = colTbl[type->colIdx];
-        spr->zy = type->rate * 0.01f;
-        spr->zx = spr->zy * 2.0f;
+        abgr = colTbl[type->colIdx];
+        zf = type->rate * 0.01f;
+        spr->zy = zf;
+        spr->zx = zf * 2.0f;
 
         for (i = 0; i < type->num; i++, obj++) {
             if (obj->wtim > 0) {
@@ -9184,21 +9189,21 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
 
                     switch (rand() % 4) {
                     case 0:
-                        x = 0;
-                        y = 0;
                         w = sw;
                         h = sh >> 2;
-                        break;
-                    case 1:
                         x = 0;
                         y = 0;
+                        break;
+                    case 1:
                         w = sw >> 3;
                         h = sh;
+                        x = 0;
+                        y = 0;
                         break;
                     case 2:
-                        y = 0;
                         w = sw >> 3;
                         h = sh;
+                        y = 0;
                         x = sw - w;
                         break;
                     default:
@@ -9209,8 +9214,8 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
                         break;
                     }
 
-                    x = x - 20 + (rand() % (w / (type->patW >> 1))) * (type->patW >> 1);
-                    y = y - 10 + (rand() % (h / (type->patW >> 2))) * (type->patW >> 2);
+                    x += (rand() % (w / (type->patW >> 1))) * (type->patW >> 1) - 20;
+                    y += (rand() % (h / (type->patW >> 2))) * (type->patW >> 2) - 10;
 
                     obj->px = x;
                     obj->vx = ((sw >> 1) - x) * 0.001f;
@@ -9222,34 +9227,34 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
                     obj->wtim = (rand() % (type->dispTime >> 3)) * 3;
                 } else {
                     t   = (type->dispTime * 3) >> 2;
-                    q   = type->dispTime >> 2;
+                    t0  = type->dispTime >> 2;
                     ton = 0x100;
 
                     if (t < obj->tim) {
-                        ton = 0x100 - (((obj->tim - t) << 8) / q);
-                    } else if (obj->tim < q) {
-                        ton = (obj->tim << 8) / q;
+                        ton = 0x100 - (((obj->tim - t) << 8) / t0);
+                    } else if (obj->tim < t0) {
+                        ton = (obj->tim << 8) / t0;
                     }
 
-                    spr->rgba0 = GetDToneColor(col, col | 0x80000000, ton);
+                    spr->rgba0 = GetDToneColor(abgr, abgr | 0x80000000, ton);
 
-                    zrate = cosf(((float)(obj->tim % t) / t) * 6.2831855f) * 0.1 + 0.9;
+                    zf = (float)(obj->tim % t) / t;
+                    zf = cosf(zf * 6.2831855f) * 0.1 + 0.9;
 
                     t   = type->dispTime >> 1;
-                    rot = (float)(obj->tim % t) / t;
+                    rt  = (float)(obj->tim % t) / t;
                     if (obj->dir) {
-                        rot = -rot;
+                        rt = -rt;
                     }
 
                     obj->px -= obj->vx;
                     obj->py -= obj->vy;
-                    TsHosiPut(pk, spr, ptex, obj->px, obj->py, zrate, rot * 6.2831855f);
+                    TsHosiPut(pk, spr, ptex, obj->px, obj->py, zf, rt * 6.2831855f);
                 }
             }
         }
     }
 }
-#endif
 
 /* static */ void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot) {
     float zx  = spr->zx;
@@ -9291,7 +9296,3 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", _TsCELBackObjDraw);
     spr->ofsy = ofy;
 }
 
-__asm__(".section .rodata\n.align 3\n.section .text");
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396168);
-
-INCLUDE_RODATA("asm/nonmatchings/menu/menusub", D_00396170);
