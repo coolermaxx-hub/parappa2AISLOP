@@ -673,15 +673,6 @@ ddbg_tctrl_sub                      = 0x001167f0; // type:func
 DrawCtrlMainDebug                   = 0x001168b8; // type:func
 DrawCtrlInitDebug                   = 0x00116ad0; // type:func
 
-bra_tap                             = 0x00185478; // size:0x50
-bra_title                           = 0x001854c8; // size:0x80
-bra_ret                             = 0x00185548; // size:0xC8
-mozaiku_str_poll_00                 = 0x00185610; // size:0x110
-mozaiku_str_poll_01                 = 0x00185720; // size:0x360
-mozaiku_str_poll_02                 = 0x00185a80; // size:0x220
-mozaiku_poll_str                    = 0x00185ca0; // size:0x24
-mentitle_dat                        = 0x00185cc8; // size:0x40
-mentitle_dat_dera                   = 0x00185d08; // size:0x540
 draw_dbg_str                        = 0x00186248; // size:0x3C
 
 D_00393128                          = 0x00393128; // type:u16 size:0x18

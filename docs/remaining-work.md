@@ -93,3 +93,10 @@ register struct as one 64-bit GIF A+D value.
   (the `menu/p3mc` data section is now C) and writes the two output bytes
   separately instead of one `u_short` store through a `char*`. Same bytes on
   little-endian; the code is a few instructions longer than the original.
+
+## Data sections still in asm
+
+`main/drawctrl_dbg` (`draw_dbg_str`, the debug-menu table) is the only part of
+`drawctrl`'s data left as asm: it points at debug-menu strings that are still
+`INCLUDE_RODATA` blobs (`D_003933B0`..`D_003933E0`, `D_00399548`). Replace those
+with string literals first, then move the table into `drawctrl.c`.

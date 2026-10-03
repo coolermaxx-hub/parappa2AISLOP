@@ -290,7 +290,8 @@ segments:
       - { path: src/main/sprite.c.o }
       - { path: src/main/fadectrl.c.o }
       - { path: src/main/subt.c.o }
-      - { path: asm/data/main/drawctrl.data.s.o }
+      - { path: src/main/drawctrl.c.o }
+      - { path: asm/data/main/drawctrl_dbg.data.s.o }
       - { path: src/main/effect.c.o }
       - { path: src/main/mbar.c.o }
       - { path: src/main/pack.c.o }
