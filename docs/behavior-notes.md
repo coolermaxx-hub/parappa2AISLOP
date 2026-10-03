@@ -248,16 +248,45 @@ A port has to demultiplex the same way: pick two channels for audio and apply th
 
 **XTR streamed cutscenes.** `CdctrlXTRset` reads the XTR header (`read_size`, `channel`, `seek`, `trbox_tr[]`), decodes each `trbox_tr` preload (LZSS) to `usebuf + trpos`, calls `p3StrInit`, and points `WP2_SETTRPOINT` at `usebuf`, so the rest of the scene data arrives inside the audio stream. A missing `channel` field defaults to 6 channels. Playback (`main.c` around line 650) polls `WP2_GETTIME` each frame, converts it to frames (`units * 24 / 75`) relative to the header's seek position, and calls `p3StrPoll(frame)`. `p3StrPoll` refuses to go backwards (`back time`), starts or stops each object (`OD_SCENE` models, animations, cameras, fades, sprites) by its start and end frame, and draws them sorted. The movie ends on Start, at the end of the stream, or after 6540 frames.
 
+## Frame loop, task scheduler and GS/DMA submission (2026-10-03)
+
+Provenance: direct reading of `src/os/system.c`, `src/os/mtc.c`, `include/os/mtc.h`, `src/os/cmngifpk.c`, `src/prlib/dmaqueue.cpp`, `src/prlib/renderstuff.cpp` (matching C). Nothing here was changed.
+
+**One scheduler cycle is one frame.** `MtcChangeThCtrl` (`mtc.c`) is a round-robin over 16 task slots. Each slot holds one thread, started by `MtcExec(fn, slot)`. A task gives up the CPU with `MtcWait(n)` (resume after n cycles) or `MtcExit()`. Slot 0 (`MTC_TASK_CTRL`) is `systemCtrlMain`, which calls `osFunc()` and then `MtcWait(1)`; `osFunc` blocks in `sceGsSyncV`, so the cycle is locked to VBlank. Within a frame, tasks always run in slot order:
+
+| Slot | Task |
+| --- | --- |
+| 0 | system: `osFunc` (VBlank wait, pads, buffer swap) |
+| 1 | `mainStart` (game flow) |
+| 3 | `uramenFileSearchTask` |
+| 5 | `ScrCtrlMainLoop` (score, timing, judgement) |
+| 7 | `DrawCtrlMain` / `menuDraw` |
+| 10 | CD loads and the sound fade-out |
+| 13 | `FadeCtrlMain` |
+| 15 | wipe effects |
+
+So in every frame: VBlank, pad read, game flow, score/judgement, then drawing. A port that replaces threads with plain function calls must keep this order, and must keep `MtcWait(n)` semantics: a task started with `MtcExec` in a higher slot than the caller runs later in the same frame, while one in a lower slot first runs next frame. `MtcExec` on a busy slot kills the old task first. The scheduler checks a stack canary (`0x572a8b4c`) on every wait and hangs on overflow.
+
+**`osFunc` order (`system.c:225`).** `rand()`; `CmnGifFlush()` (send last frame's 2D packets on PATH3); `sceGsSyncPath`; `sceGsSyncV` (wait for VBlank, returns the field: odd/even); `T0_COUNT = 0` (the hblank counter used for load throttling and debug meters); `GPadSysRead` + `GPadRead`; flip `outbuf_idx`; `CmnGifClear()`; set the half-pixel offset for the next field; wait for GIF DMA; `sceGsSwapDBuffDc`.
+
+**Video mode.** `sceGsResetGraph(0, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME)` with 640x224 draw buffers (`SCREEN_HEIGHT / 2`), 32-bit colour and 32-bit Z (`ZGEQUAL`). Each frame is rendered at half height and offset by half a line according to the field (`sceGsSetHalfOffset(..., oddeven_idx ^ 1)`), so the output is 60 fields per second. A port can render at full height and ignore the field offset; it does not feed back into game logic. Extra GS buffers (`drawEnvSp`, `drawEnvZbuff`, `drawEnvEnd`) share the draw env and differ only in FBP.
+
+**2D path: the common GIF packet.** 2D code opens a packet with `CmnGifOpenCmnPk` (which resets TEXFLUSH, TEX1, TEST (Z always), PRMODECONT, CLAMP, RGBAQ) and closes it with a priority (`CmnGifCloseCmnPk(pk, pri)`). Up to 64 packets per frame. `CmnGifFlush` sorts them by `pri` with an exchange sort that is **not stable**: packets with equal priority can be reordered depending on what sits between them. A port that wants identical layering has to copy that exact sort, not use a stable sort.
+
+**3D path: prlib DMA queue.** prlib collects VIF1 DMA chains per model and per transparent chunk with `AppendTransmitDmaTag(tag, group, depth)`, sorts them with libc `qsort` by group, then depth (`PrRenderStuff::CompareFunction`), and feeds them to a ring of DMA lists (`PrDmaQueue`) that the VIF1 channel walks under stall control (`D_CTRL` STS, `D_STADR` advanced on every `Append`). `qsort` is also not stable, so equal (group, depth) entries keep whatever order the PS2 newlib `qsort` produces. Transform and lighting run in VU1 microcode (`renderee`, counted as done asm). Stage 19 appends one extra GIF register strip at the end.
+
+**What a port must keep.** The slot order and one-cycle-per-VBlank rule are what tie input, clock, judgement and drawing together. The two unstable sorts only affect what is drawn on top, never game state. Nothing in the GS/DMA path writes back into game logic, except `T0_COUNT` thresholds that decide when loads yield.
+
 ## Boundary inventory (keyword search, not yet analysed)
 
 | Boundary | Files |
 | --- | --- |
 | Pad reads | `src/os/syssub.c` (`scePadRead`), `src/os/system.c` |
-| VBlank / frame | `src/os/system.c`, `src/os/mtc.c`, `src/main/etc.c` |
+| VBlank / frame | `src/os/system.c`, `src/os/mtc.c`, `src/main/etc.c` (analysed above) |
 | Hardware timers (`T0..T3_COUNT`) | `src/os/system.c`, `src/main/cdctrl.c`, `src/prlib/render.cpp`, `src/prlib/renderstuff.cpp`, `src/prlib/menderer.cpp` |
 | Audio stream (WP2) and SE (TapCt) | `src/main/cdctrl.c`, `src/iop_mdl/wp2cd_rpc.c`, `src/iop_mdl/tapctrl_rpc.c`, `src/iop_mdl/wp2cd/iop/*`, `src/main/scrctrl.c` |
 | Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` |
 | CD / files | `src/main/cdctrl.c`, `src/main/p3str.c`, `src/os/system.c` (analysed above) |
 | Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` |
 | RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` |
-| GS / DMA / VU | `src/os/system.c`, `src/prlib/*` |
+| GS / DMA / VU | `src/os/system.c`, `src/os/cmngifpk.c`, `src/prlib/*` (analysed above) |
