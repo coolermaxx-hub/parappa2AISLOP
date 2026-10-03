@@ -45,5 +45,5 @@ Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against ups
 
 Please see our [build](docs/build.md) and [decompilation](docs/decompilation.md) guides.
 
-Fork rules and what "100%" means here: [porting-rules](docs/porting-rules.md). Notes on timing, input, audio and RNG for a future port: [behavior-notes](docs/behavior-notes.md).
+Fork rules and what "100%" means here: [porting-rules](docs/porting-rules.md). Notes on timing, input, audio and RNG for a future port: [behavior-notes](docs/behavior-notes.md). What is left against that definition: [remaining-work](docs/remaining-work.md).
 
