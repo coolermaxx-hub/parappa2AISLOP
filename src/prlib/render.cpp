@@ -200,7 +200,7 @@ void PrModelObject::CalculateCurrentMatrix() {
             spm->CalculateClusterMatrixAnimation(this, *mtx);
 
             NaVECTOR<float, 4> v;
-            NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->unk40;
+            NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->m_global_matrix;
             NaVECTOR<float, 4> scale(1.0f, 1.0f, 1.0f, 0.0f);
 
             NaVECTOR<float, 4> tmp;
@@ -228,7 +228,7 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
 
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
-        node->ComposeGlobalMatrix(model, node->unk164->unk40);
+        node->ComposeGlobalMatrix(model, node->m_parent->m_global_matrix);
     }
 }
 
@@ -249,19 +249,19 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
         if (m_flags & 0x1) {
             prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            prSpramData->unk0 = this->unk0;
+            prSpramData->unk0 = this->m_local_matrix;
         }
 
         if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
             BlendTransitionMatrix(model, prSpramData->unk0);
         }
 
-        this->unk40 = arg1 * prSpramData->unk0;
-        model->unk7C[model->m_active_transition][this->unk150] = prSpramData->unk0;
+        this->m_global_matrix = arg1 * prSpramData->unk0;
+        model->unk7C[model->m_active_transition][this->m_index] = prSpramData->unk0;
     } else if (m_flags & 0x1) {
-        this->unk40 = arg1;
+        this->m_global_matrix = arg1;
     } else {
-        this->unk40 = arg1 * this->unk0;
+        this->m_global_matrix = arg1 * this->m_local_matrix;
     }
 
     if (m_flags & 0x8000) {
@@ -277,7 +277,7 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
 inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     float time = prSpramData->m_animation_time;
     SpaFileHeader *animation = prSpramData->m_animation;
-    SpmNode *parent = this->unk164;
+    SpmNode *parent = this->m_parent;
 
     if ((parent == NULL || (parent->m_flags & 0x4000)) && animation->IsNodeVisible(this, time)) {
         m_flags |= 0x4000;
@@ -289,7 +289,7 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
         return;
     }
 
-    SpaNodeAnimation *node_animation = animation->unk50[this->unk150];
+    SpaNodeAnimation *node_animation = animation->unk50[this->m_index];
     if (node_animation == NULL) {
         ComposeGlobalMatrixWithoutVisibility(model, arg1);
         return;
@@ -308,12 +308,12 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
             BlendTransitionMatrix(model, prSpramData->unk0);
         }
 
-        this->unk40 = arg1 * prSpramData->unk0;
-        model->unk7C[model->m_active_transition][this->unk150] = prSpramData->unk0;
+        this->m_global_matrix = arg1 * prSpramData->unk0;
+        model->unk7C[model->m_active_transition][this->m_index] = prSpramData->unk0;
     } else if (identity) {
-        this->unk40 = arg1;
+        this->m_global_matrix = arg1;
     } else {
-        this->unk40 = arg1 * *node_animation->GetMatrix(time);
+        this->m_global_matrix = arg1 * *node_animation->GetMatrix(time);
     }
 
     if (m_flags & 0x8000) {
@@ -327,7 +327,7 @@ void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const 
 
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
-        node->ComposeGlobalMatrixAnimation(model, node->unk164->unk40);
+        node->ComposeGlobalMatrixAnimation(model, node->m_parent->m_global_matrix);
     }
 }
 #endif
@@ -336,16 +336,16 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
     SpmNode *node = m_nodes[0];
     node->ComposeGlobalMatrix(model, arg1);
     if (node->m_flags & 0x1000) {
-        const NaMATRIX<float, 4, 4>& b = node->unk80;
-        node->unkC0 = node->unk40 * b;
+        const NaMATRIX<float, 4, 4>& b = node->m_bind_matrix;
+        node->m_cluster_matrix = node->m_global_matrix * b;
     }
 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
-        node->ComposeGlobalMatrix(model, node->unk164->unk40);
+        node->ComposeGlobalMatrix(model, node->m_parent->m_global_matrix);
         if (node->m_flags & 0x1000) {
-            const NaMATRIX<float, 4, 4>& b = node->unk80;
-            node->unkC0 = node->unk40 * b;
+            const NaMATRIX<float, 4, 4>& b = node->m_bind_matrix;
+            node->m_cluster_matrix = node->m_global_matrix * b;
         }
     }
 }
@@ -358,16 +358,16 @@ void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const 
     SpmNode *node = m_nodes[0];
     node->ComposeGlobalMatrixAnimation(model, arg1);
     if (node->m_flags & 0x1000) {
-        const NaMATRIX<float, 4, 4>& b = node->unk80;
-        node->unkC0 = node->unk40 * b;
+        const NaMATRIX<float, 4, 4>& b = node->m_bind_matrix;
+        node->m_cluster_matrix = node->m_global_matrix * b;
     }
 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
-        node->ComposeGlobalMatrixAnimation(model, node->unk164->unk40);
+        node->ComposeGlobalMatrixAnimation(model, node->m_parent->m_global_matrix);
         if (node->m_flags & 0x1000) {
-            const NaMATRIX<float, 4, 4>& b = node->unk80;
-            node->unkC0 = node->unk40 * b;
+            const NaMATRIX<float, 4, 4>& b = node->m_bind_matrix;
+            node->m_cluster_matrix = node->m_global_matrix * b;
         }
     }
 }
@@ -390,27 +390,27 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
 
 void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-    uc->m_matrix = this->unk40;
+    uc->m_matrix = this->m_global_matrix;
     uc->unk68 = prSpramData->m_disturbance;
 
-    float du = this->unk180;
-    float dv = this->unk184;
+    float du = this->m_u_scroll;
+    float dv = this->m_v_scroll;
 
     if (du != 0.0f) {
-        uc->unk70 += du;
-        if (uc->unk70 > 1.0f) {
-            uc->unk70 -= 1.0f;
-        } else if (uc->unk70 < 0.0f) {
-            uc->unk70 += 1.0f;
+        uc->m_u_offset += du;
+        if (uc->m_u_offset > 1.0f) {
+            uc->m_u_offset -= 1.0f;
+        } else if (uc->m_u_offset < 0.0f) {
+            uc->m_u_offset += 1.0f;
         }
     }
 
     if (dv != 0.0f) {
-        uc->unk74 += dv;
-        if (uc->unk74 > 1.0f) {
-            uc->unk74 -= 1.0f;
-        } else if (uc->unk74 < 0.0f) {
-            uc->unk74 += 1.0f;
+        uc->m_v_offset += dv;
+        if (uc->m_v_offset > 1.0f) {
+            uc->m_v_offset -= 1.0f;
+        } else if (uc->m_v_offset < 0.0f) {
+            uc->m_v_offset += 1.0f;
         }
     }
 }
@@ -423,14 +423,14 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
     }
 
     if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
-        PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+        PrVuNodeHeaderDmaPacket *packet = this->m_packets[0];
         if (packet != NULL) {
             prRenderStuff.m_statistics.opaque_context1_node_num++;
             ModifySimpleDmaPacket(packet);
             prRenderStuff.AppendDmaTag(&packet->m_tag);
         }
 
-        packet = this->unk16C[1];
+        packet = this->m_packets[1];
         if (packet != NULL) {
             prRenderStuff.m_statistics.transmit_context1_node_num++;
             ModifySimpleDmaPacket(packet);
@@ -442,7 +442,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "lqc2     vf14,  0x10(%0)       \n\t"
                 "lqc2     vf15,  0x20(%0)       \n\t"
                 "lqc2     vf16,  0x30(%0)       \n\t"
-            : : "r"(&this->unk40));
+            : : "r"(&this->m_global_matrix));
 
             asm volatile(
                 "lqc2     vf04,  0x0(%0)        \n\t"
@@ -450,7 +450,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmadday  ACC,   vf14,    vf04  \n\t"
                 "vmaddaz  ACC,   vf15,    vf04  \n\t"
                 "vmaddw   vf17,  vf16,    vf04  \n\t"
-            : : "r"(&this->unk140));
+            : : "r"(&this->m_center));
 
             asm volatile(
                 "lqc2     vf13,     0(%1)       \n\t"
@@ -469,7 +469,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 f12 = sp0[2] * 3.40282347e+38f;
             }
 
-            prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->unk188, f12);
+            prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->m_draw_group, f12);
         }
 
         if (this->m_flags & SPM_NODE_CONTOUR) {
@@ -497,19 +497,19 @@ void SpmNode::RenderScreenModelNode() {
         return;
     }
 
-    PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+    PrVuNodeHeaderDmaPacket *packet = this->m_packets[0];
     if (packet != NULL) {
         prRenderStuff.m_statistics.opaque_context1_node_num++;
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-        uc->m_matrix = this->unk40;
+        uc->m_matrix = this->m_global_matrix;
         prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF));
     }
 
-    PrVuNodeHeaderDmaPacket *packet2 = this->unk16C[1];
+    PrVuNodeHeaderDmaPacket *packet2 = this->m_packets[1];
     if (packet2 != NULL) {
         prRenderStuff.m_statistics.transmit_context1_node_num++;
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet2);
-        uc->m_matrix = this->unk40;
+        uc->m_matrix = this->m_global_matrix;
 
         NaVECTOR<float, 4> pos;
         NaVECTOR<float, 4> tmp;
@@ -524,11 +524,11 @@ void SpmNode::RenderScreenModelNode() {
             "vmaddaz  ACC,   $vf6,   $vf8   \n\t"
             "vmaddw   $vf9,  $vf7,   $vf8   \n\t"
             "sqc2     $vf9,  0x0(%0)        \n\t"
-        : : "r"(&tmp), "r"(&this->unk40), "r"(&this->unk140) : "memory");
+        : : "r"(&tmp), "r"(&this->m_global_matrix), "r"(&this->m_center) : "memory");
 
         pos = tmp;
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, -pos[2]);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->m_draw_group, -pos[2]);
     }
 }
 
@@ -548,10 +548,10 @@ void SpmNode::RenderBackgroundScreenModel() {
 
     if ((m_flags & 0x4000) && (!AwfulStatus || (m_flags & 0x400000))) {
         for (u_int i = 0; i < 2; i++) {
-            PrVuNodeHeaderDmaPacket *packet = this->unk16C[i];
+            PrVuNodeHeaderDmaPacket *packet = this->m_packets[i];
             if (packet != NULL) {
                 packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-                packet->m_matrix = this->unk40;
+                packet->m_matrix = this->m_global_matrix;
                 prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF));
 
                 if (i == 0) {
@@ -597,18 +597,18 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             SpmShapeNode *shape = static_cast<SpmShapeNode*>(this);
             shape->RenderShapeNode(model);
         } else {
-            PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+            PrVuNodeHeaderDmaPacket *packet = this->m_packets[0];
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
-                uc->m_matrix = this->unk40;
+                uc->m_matrix = this->m_global_matrix;
                 uc->unk68 = prSpramData->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
-            PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
+            PrVuNodeHeaderDmaPacket *uc = this->m_packets[1];
             if (uc != NULL) {
                 uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
-                const NaMATRIX<float, 4, 4>& m = this->unk40;
+                const NaMATRIX<float, 4, 4>& m = this->m_global_matrix;
                 uc->m_matrix = m;
                 uc->unk68 = prSpramData->m_disturbance;
 
@@ -616,11 +616,11 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 {
                     NaMATRIX<float, 4, 4> mtx = prSpramData->m_view_projection_matrix * m;
                     NaVECTOR<float, 4> tmp;
-                    pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->unk140);
+                    pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->m_center);
                 }
 
                 float z = pos[2] / pos[3];
-                u_int key = this->unk188;
+                u_int key = this->m_draw_group;
                 if (pos[3] == 0.0f) {
                     z = pos[2] * 3.40282347e+38f;
                 }
@@ -643,7 +643,7 @@ INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
 
 /* prlib/render.cpp */
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    SpmNode *parent = this->unk164;
+    SpmNode *parent = this->m_parent;
 
     if (parent != NULL && !(parent->m_flags & 0x4000)) {
         m_flags &= ~0x4000;

@@ -29,7 +29,7 @@ void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>&
         return;
     }
 
-    NaMATRIX<float, 4, 4>& posture = model->unk7C[1 - model->m_active_transition][this->unk150];
+    NaMATRIX<float, 4, 4>& posture = model->unk7C[1 - model->m_active_transition][this->m_index];
     mtx = posture * (1.0f - ratio) + mtx * ratio;
 }
 #endif

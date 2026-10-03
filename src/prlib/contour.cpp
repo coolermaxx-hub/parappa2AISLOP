@@ -33,7 +33,7 @@ INCLUDE_ASM("asm/nonmatchings/prlib/contour", SaveContour__14SpmComplexNodeP13Pr
  * vector array puts the base first.
  */
 void SpmComplexNode::SaveContour(PrModelObject *model) {
-    PrVuNodeHeaderDmaPacket *packet = this->unk17C;
+    PrVuNodeHeaderDmaPacket *packet = this->m_main_packet;
     NaMATRIX<float, 4, 4> *matrix = &packet->m_matrix;
     NaVECTOR<float, 4> *src = reinterpret_cast<NaVECTOR<float, 4>*>(packet);
 
@@ -92,7 +92,7 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
         return;
     }
 
-    PrVuNodeHeaderDmaPacket *packet = this->unk17C;
+    PrVuNodeHeaderDmaPacket *packet = this->m_main_packet;
     NaMATRIX<float, 4, 4> *matrix = &packet->m_matrix;
     NaVECTOR<float, 4> *src = reinterpret_cast<NaVECTOR<float, 4>*>(packet);
 
@@ -131,7 +131,7 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
     m_contour_packet->m_contour_blur_alpha[1] = model->m_contour_blur_alpha[1];
 
     NaMATRIX<float, 4, 4> m = prSpramData_tmp_contour->m_view_projection_matrix * *matrix;
-    result = NaMATRIX<float, 4, 4>::Apply(tmp, m, this->unk140);
+    result = NaMATRIX<float, 4, 4>::Apply(tmp, m, this->m_center);
 
     float depth = result[2] / result[3];
     if (result[3] == 0.0f) {

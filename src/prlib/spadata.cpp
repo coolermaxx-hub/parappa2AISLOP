@@ -227,12 +227,12 @@ bool SpaNodeAnimation::IsVisible(float time) const {
 
 /*
  * A node with a visibility track takes its visibility from it; 0x40000 in
- * m_flags records that. Without one it inherits from the node at unk164,
+ * m_flags records that. Without one it inherits from its parent node,
  * if that node is animated, or else uses its own static flags.
  */
 bool SpaFileHeader::IsNodeVisible(SpmNode *node, float time) const {
-    SpaNodeAnimation *animation = this->unk50[node->unk150];
-    SpmNode *other = node->unk164;
+    SpaNodeAnimation *animation = this->unk50[node->m_index];
+    SpmNode *other = node->m_parent;
 
     if (animation != NULL && animation->m_visibility == NULL) {
         animation = NULL;

@@ -11,9 +11,9 @@ INCLUDE_ASM("asm/nonmatchings/prlib/cluster", RenderClusterNode__22SpmClusterGeo
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
-    u_int vertex = (u_int)this->unk17C;
+    u_int vertex = (u_int)this->m_main_packet;
     vertex |= 0x30000000;
-    SpmNode **nodes = this->unk158->m_nodes;
+    SpmNode **nodes = this->m_file->m_nodes;
     u_int num = m_vertex_num;
     const SpmClusterWeight *weight = m_weights;
     u_int *index = m_vertex_index;
@@ -35,7 +35,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
                 "lqc2         $vf14,  0x10(%0)           \n\t"
                 "lqc2         $vf15,  0x20(%0)           \n\t"
                 "lqc2         $vf16,  0x30(%0)           \n\t"
-            : : "r"(&nodes[node]->unkC0));
+            : : "r"(&nodes[node]->m_cluster_matrix));
             asm volatile(
                 "qmtc2.ni     %0,     $vf4               \n\t"
                 "vmulx.xyzw   $vf4,   $vf18,  $vf4x      \n\t"
@@ -54,7 +54,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         }
     }
 
-    PrVuNodeHeaderDmaPacket *packet = this->unk16C[0];
+    PrVuNodeHeaderDmaPacket *packet = this->m_packets[0];
     if (packet != NULL) {
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
         uc->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
@@ -62,14 +62,14 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
     }
 
-    PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
+    PrVuNodeHeaderDmaPacket *uc = this->m_packets[1];
     if (uc != NULL) {
         uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
         weight = m_weights;
         u_int weight_num = (weight++)->count;
 
         asm volatile("vsub.xyzw $vf17, $vf0, $vf0");
-        asm volatile("lqc2 $vf18, 0x0(%0)" : : "r"(&this->unk140));
+        asm volatile("lqc2 $vf18, 0x0(%0)" : : "r"(&this->m_center));
 
         for (u_int j = 0; j < weight_num; j++) {
             u_int node = (weight++)->node;
@@ -79,7 +79,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
                 "lqc2         $vf14,  0x10(%0)           \n\t"
                 "lqc2         $vf15,  0x20(%0)           \n\t"
                 "lqc2         $vf16,  0x30(%0)           \n\t"
-            : : "r"(&nodes[node]->unkC0));
+            : : "r"(&nodes[node]->m_cluster_matrix));
             asm volatile(
                 "qmtc2.ni     %0,     $vf4               \n\t"
                 "vmulx.xyzw   $vf4,   $vf18,  $vf4x      \n\t"
@@ -114,7 +114,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
             z = pos[2] / pos[3];
         }
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->unk188, z);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->m_draw_group, z);
     }
 }
 #endif

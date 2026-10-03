@@ -15,9 +15,10 @@ class PrSceneObject;
 struct PrVuNodeHeaderDmaPacket;
 struct PrVuDataChunkPacketHeader;
 
+/* A DMA chain queued for this frame; sorted by group, then by depth */
 struct PrTransmitEntry {
-    float unk0;
-    u_int unk4;
+    float depth;
+    u_int group;
     const sceDmaTag *tag;
 };
 
@@ -36,7 +37,7 @@ public:
     void WaitRender();
 
     void AllocateTransmitDmaArray(u_int size);
-    void AppendTransmitDmaTag(const sceDmaTag *tag, u_int arg1, float arg2);
+    void AppendTransmitDmaTag(const sceDmaTag *tag, u_int group, float depth);
 
     static int CompareFunction(const void *arg0, const void *arg1);
     void SortTransmitDmaArray();

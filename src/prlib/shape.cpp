@@ -11,7 +11,7 @@ extern PrSPRAM_DATA *prSpramData_tmp_shape;
 extern float shape_max_depth[];
 
 void SpmShapeNode::AddShapePosition(u_int target, float weight) {
-    u_int vertex = (u_int)this->unk17C;
+    u_int vertex = (u_int)this->m_main_packet;
     vertex |= 0x30000000;
     u_int num = m_vertex_num;
     u_long128 *src = &m_target_offsets[target];
@@ -46,10 +46,10 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     NaVECTOR<float, 4> result;
 
     SpaFileHeader *animation = prSpramData_tmp_shape->m_animation;
-    SpaNodeAnimation *node_anim = (animation != NULL) ? animation->unk50[this->unk150] : NULL;
+    SpaNodeAnimation *node_anim = (animation != NULL) ? animation->unk50[this->m_index] : NULL;
     u_int track_num = (node_anim != NULL) ? node_anim->unk2C : 0;
 
-    u_int vertex = (u_int)this->unk17C;
+    u_int vertex = (u_int)this->m_main_packet;
     vertex |= 0x30000000;
     u_int num = m_vertex_num;
     u_long128 *src = m_base_vertices;
@@ -86,21 +86,21 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
         }
     }
 
-    if (this->unk16C[0] != NULL) {
-        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->unk16C[0] | 0x30000000);
-        packet->m_matrix = this->unk40;
+    if (this->m_packets[0] != NULL) {
+        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_packets[0] | 0x30000000);
+        packet->m_matrix = this->m_global_matrix;
         packet->unk68 = prSpramData_tmp_shape->m_disturbance;
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)packet & 0x0FFFFFFF));
     }
 
-    if (this->unk16C[1] != NULL) {
-        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->unk16C[1] | 0x30000000);
-        packet->m_matrix = this->unk40;
+    if (this->m_packets[1] != NULL) {
+        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_packets[1] | 0x30000000);
+        packet->m_matrix = this->m_global_matrix;
         packet->unk68 = prSpramData_tmp_shape->m_disturbance;
-        u_int arg = this->unk188;
+        u_int arg = this->m_draw_group;
 
-        NaMATRIX<float, 4, 4> m = prSpramData_tmp_shape->m_view_projection_matrix * this->unk40;
-        result = m * this->unk140;
+        NaMATRIX<float, 4, 4> m = prSpramData_tmp_shape->m_view_projection_matrix * this->m_global_matrix;
+        result = m * this->m_center;
 
         float depth = result[2] / result[3];
         if (result[3] == 0.0f) {

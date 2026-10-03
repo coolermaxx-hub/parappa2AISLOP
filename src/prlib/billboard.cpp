@@ -44,7 +44,7 @@ static NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>&
 }
 
 void SpmNode::ApplyBillboardMatrix() {
-    NaMATRIX<float, 4, 4>& m = this->unk40;
+    NaMATRIX<float, 4, 4>& m = this->m_global_matrix;
     m = m * CreateBillboardMatrix(m);
 }
 

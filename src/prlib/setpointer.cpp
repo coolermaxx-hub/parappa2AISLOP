@@ -27,23 +27,23 @@ void SpmFileHeader::ChangePointer() {
 }
 
 void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
-    this->unk158 = model;
-    this->unk164 = arg1;
+    this->m_file = model;
+    this->m_parent = arg1;
 
-    this->unk15C = model->CalculatePointer<SpmNode>(this->unk15C);
-    this->unk160 = model->CalculatePointer<SpmNode>(this->unk160);
+    this->m_child = model->CalculatePointer<SpmNode>(this->m_child);
+    this->m_sibling = model->CalculatePointer<SpmNode>(this->m_sibling);
 
-    this->unk16C[0] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk16C[0]);
-    this->unk16C[1] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->unk16C[1]);
+    this->m_packets[0] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_packets[0]);
+    this->m_packets[1] = model->CalculatePointer<PrVuNodeHeaderDmaPacket>(this->m_packets[1]);
 
-    this->unk17C = this->unk16C[0];
-    if (this->unk16C[0] == NULL) {
-        this->unk17C = this->unk16C[1];
+    this->m_main_packet = this->m_packets[0];
+    if (this->m_packets[0] == NULL) {
+        this->m_main_packet = this->m_packets[1];
     }
 
     for (u_int i = 0; i < 2; i++) {
-        if (this->unk16C[i]) {
-            this->unk16C[i]->unk194 = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(this->unk16C[i]->unk60), 0);
+        if (this->m_packets[i]) {
+            this->m_packets[i]->unk194 = SCE_VIF1_SET_MSCAL(PrGetMicroProgramAddress(this->m_packets[i]->unk60), 0);
         }
     }
 
@@ -66,10 +66,10 @@ void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
         }
     }
 
-    SpmNode *s0 = this->unk15C;
+    SpmNode *s0 = this->m_child;
     while (s0 != 0) {
         s0->ChangePointer(model, this);
-        s0 = s0->unk160;
+        s0 = s0->m_sibling;
     }
 }
 

@@ -31,8 +31,9 @@ struct PrVuNodeHeaderDmaPacket {
     PR_PADDING(unk64, 0x4);
     float unk68;
     PR_PADDING(unk6C, 0x4);
-    float unk70;
-    float unk74;
+    /* Texture offset, advanced by SpmNode::m_u_scroll/m_v_scroll */
+    float m_u_offset;
+    float m_v_offset;
     PR_PADDING(unk78, 0x11C);
     int unk194;
 };
@@ -73,25 +74,30 @@ public:
     void ApplyBillboardMatrix();
 
 public:
-    NaMATRIX<float, 4, 4> unk0;
-    NaMATRIX<float, 4, 4> unk40;
-    NaMATRIX<float, 4, 4> unk80;
-    NaMATRIX<float, 4, 4> unkC0;
+    NaMATRIX<float, 4, 4> m_local_matrix;
+    NaMATRIX<float, 4, 4> m_global_matrix;
+    /* Cluster bones: m_cluster_matrix = m_global_matrix * m_bind_matrix */
+    NaMATRIX<float, 4, 4> m_bind_matrix;
+    NaMATRIX<float, 4, 4> m_cluster_matrix;
     PR_PADDING(unk100, 0x40);
-    NaVECTOR<float, 4> unk140;
-    int unk150;
+    /* Local point used for depth sorting */
+    NaVECTOR<float, 4> m_center;
+    int m_index;
     u_int m_flags;
-    SpmFileHeader *unk158;
-    SpmNode *unk15C;
-    SpmNode *unk160;
-    SpmNode *unk164;
+    SpmFileHeader *m_file;
+    SpmNode *m_child;
+    SpmNode *m_sibling;
+    SpmNode *m_parent;
     PR_PADDING(unk168, 0x4);
-    PrVuNodeHeaderDmaPacket *unk16C[2];
+    /* VU packets: [0] is drawn right away, [1] is queued for depth sorting */
+    PrVuNodeHeaderDmaPacket *m_packets[2];
     PR_PADDING(unk174, 0x8);
-    PrVuNodeHeaderDmaPacket *unk17C;
-    float unk180;
-    float unk184;
-    u_int unk188;
+    /* Whichever of m_packets exists, preferring the first */
+    PrVuNodeHeaderDmaPacket *m_main_packet;
+    /* Texture scroll per frame */
+    float m_u_scroll;
+    float m_v_scroll;
+    u_int m_draw_group;
     PR_PADDING(unk18C, 0x8);
     /* Cluster and shape nodes: vertex count, and for each vertex the number of
        VU vertex slots it feeds followed by those slot indices */

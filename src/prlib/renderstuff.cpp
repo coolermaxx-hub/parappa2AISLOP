@@ -152,7 +152,7 @@ void PrRenderStuff::AllocateTransmitDmaArray(u_int size) {
     m_transmit_array_max = elems;
 }
 
-void PrRenderStuff::AppendTransmitDmaTag(const sceDmaTag *tag, u_int arg1, float arg2) {
+void PrRenderStuff::AppendTransmitDmaTag(const sceDmaTag *tag, u_int group, float depth) {
     extern bool warned_tmp_renderstuff;
 
     if (m_transmit_array_size >= m_transmit_array_max) {
@@ -161,8 +161,8 @@ void PrRenderStuff::AppendTransmitDmaTag(const sceDmaTag *tag, u_int arg1, float
             return;
         }
     } else {
-        m_transmit_array[m_transmit_array_size].unk0 = arg2;
-        m_transmit_array[m_transmit_array_size].unk4 = arg1;
+        m_transmit_array[m_transmit_array_size].depth = depth;
+        m_transmit_array[m_transmit_array_size].group = group;
         m_transmit_array[m_transmit_array_size].tag = tag;
         m_transmit_array_size++;
     }
@@ -172,13 +172,13 @@ int PrRenderStuff::CompareFunction(const void *arg0, const void *arg1) {
     PrTransmitEntry *a0 = (PrTransmitEntry*)arg0;
     PrTransmitEntry *a1 = (PrTransmitEntry*)arg1;
 
-    if (a0->unk4 != a1->unk4) {
-        return (a0->unk4 >= a1->unk4) ? 1 : -1;
+    if (a0->group != a1->group) {
+        return (a0->group >= a1->group) ? 1 : -1;
     }
 
-    if (a0->unk0 == a1->unk0) {
+    if (a0->depth == a1->depth) {
         return 0;
-    } else if (a1->unk0 < a0->unk0) {
+    } else if (a1->depth < a0->depth) {
         return 1;
     }
 
@@ -195,7 +195,7 @@ void PrRenderStuff::MergeRender() {
     bool first = false;
 
     for (int i = 0; i < m_transmit_array_size; i++) {
-        if (!first && m_transmit_array[i].unk4 == -1) {
+        if (!first && m_transmit_array[i].group == -1) {
             PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk1);
             AppendDmaTag(&strip->m_tag);
             first = true;
