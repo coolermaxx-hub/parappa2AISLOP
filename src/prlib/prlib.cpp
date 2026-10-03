@@ -221,7 +221,7 @@ float PrGetCameraStartFrame(SpcFileHeader *camera) {
 
 PR_EXTERN
 float PrGetCameraEndFrame(SpcFileHeader *camera) {
-    return camera->unk14 * prFrameRate;
+    return camera->m_length * prFrameRate;
 }
 
 PR_EXTERN

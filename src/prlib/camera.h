@@ -34,7 +34,8 @@ public:
     u_short m_flags;
 
     PR_PADDING(unk8, 0xC);
-    float unk14;
+    /* Length in seconds; PrGetCameraEndFrame converts it to frames */
+    float m_length;
     char m_name[32];
     PR_PADDING(unk38, 0x8);
     NaVECTOR<float, 4> m_position;
