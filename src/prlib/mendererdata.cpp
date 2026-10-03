@@ -2,6 +2,7 @@
 
 #include "random.h"
 
+#include "nalib/namath.h"
 #include "nalib/namatrix.h"
 
 #include <math.h>
@@ -29,26 +30,6 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data);
 float GetSynchronizeRatio(const PrNoodlePositionData *data);
 void InitializeNoodlePositionData();
 
-/*
- * Never called. PrGetNoodlePolygonPosition builds a NaMATRIX<float, 2, 2>
- * and fills its output with NaVECTOR::Set, which makes this TU emit weak
- * copies of the 4- and 9-argument 2x2 Set and of NaVECTOR::Set, in that
- * order. While that function is still asm, this keeps the copies.
- */
-static inline void UnusedSet_tmp_mendererdata(NaMATRIX<float, 2, 2>& m, NaVECTOR<float, 4>& v, const float& a) {
-    m.Set(a, a, a, a);
-    m.Set(a, a, a, a, a, a, a, a, a);
-    v.Set(a, a, a, a);
-}
-
-static inline float ABS_tmp(float x) {
-    return (x >= 0.0f) ? x : -x;
-}
-
-static inline float MAX_tmp(float a, float b) {
-    return (a <= b) ? b : a;
-}
-
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", SetNextTarget__FP20PrNoodlePositionData);
 #else /* Regalloc: the first abs copies dx before comparing */
@@ -59,12 +40,12 @@ void SetNextTarget(PrNoodlePositionData *data) {
 
     float dx = x - data->position[0];
 
-    float tx = ABS_tmp(dx) / 0.2f * 180.0f;
-    float ty = ABS_tmp(y - data->position[1]) / 0.08f * 180.0f;
-    float tz = ABS_tmp(z - data->position[2]) / 0.2f * 180.0f;
+    float tx = NaAbs(dx) / 0.2f * 180.0f;
+    float ty = NaAbs(y - data->position[1]) / 0.08f * 180.0f;
+    float tz = NaAbs(z - data->position[2]) / 0.2f * 180.0f;
 
-    float txy = MAX_tmp(ty, tx);
-    float t = MAX_tmp(MAX_tmp(1.0f, tz), txy);
+    float txy = NaMax(ty, tx);
+    float t = NaMax(NaMax(1.0f, tz), txy);
 
     data->timer = t;
     data->velocity[0] = dx / data->timer;
@@ -95,13 +76,9 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data) {
     data->position[2] += prMendererSpeed * data->velocity[2];
 }
 
-static inline float MIN_tmp(float a, float b) {
-    return (a <= b) ? a : b;
-}
-
 float GetSynchronizeRatio(const PrNoodlePositionData *data) {
-    float diff = ABS_tmp(data->index - prSchoolLeaderIndex);
-    float dist = MIN_tmp(diff, 1.0f - diff);
+    float diff = NaAbs(data->index - prSchoolLeaderIndex);
+    float dist = NaMin(diff, 1.0f - diff);
 
     diff = 1.0f - dist;
     float ratio = diff * 3.0f - 1.8f;
@@ -113,7 +90,7 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data) {
     }
 
     if (prMendererRatio >= 1.2f && prMendererRatio <= 1.8f) {
-        float blend = ABS_tmp(1.5f - prMendererRatio) / 0.3f;
+        float blend = NaAbs(1.5f - prMendererRatio) / 0.3f;
         ratio = ratio * blend + (1.0f - blend);
     }
 
@@ -140,18 +117,6 @@ void PrInitializeNoodlePolygonPosition() {
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", PrGetNoodlePolygonPosition__FPt8NaVECTOR2Zfi4Ui);
 #else /* First draft: the 2x2 rotate loops and Set argument setup still differ */
-static inline NaVECTOR<float, 2> RotateVector_tmp(const NaMATRIX<float, 2, 2>& m, const NaVECTOR<float, 2>& v) {
-    float r[2];
-    for (int i = 0; i < 2; i++) {
-        float sum = 0.0f;
-        for (int j = 0; j < 2; j++) {
-            sum += m[i][j] * v[j];
-        }
-        r[i] = sum;
-    }
-    return NaVECTOR<float, 2>(r[0], r[1]);
-}
-
 void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     u_int n = noodlePolygonIndex[index];
     PrNoodlePositionData *data = &noodlePositionData[n];
@@ -161,7 +126,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
 
     float ratio = prMendererRatio - 0.4f;
     float y = data->position[1] * sync;
-    float x = data->position[0] * sync * MAX_tmp(ratio, 1.0f);
+    float x = data->position[0] * sync * NaMax(ratio, 1.0f);
     float z = data->position[2] * sync;
 
     float angle = (float)n * 6.2831855f / 115.0f + z;
@@ -173,14 +138,23 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     float width = prMendererWidth;
     float length = prMendererLength;
 
-    NaVECTOR<float, 2> p0 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance, y + width * 0.5f * 0.093756f));
-    NaVECTOR<float, 2> p1 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance + length * 0.5f, y + width * 0.5f * 0.093756f));
-    NaVECTOR<float, 2> p2 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance, y + -width * 0.5f * 0.093756f));
-    NaVECTOR<float, 2> p3 = RotateVector_tmp(rot, NaVECTOR<float, 2>(distance + length * 0.5f, y + -width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p0 = rot.Transform(NaVECTOR<float, 2>(distance, y + width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p1 = rot.Transform(NaVECTOR<float, 2>(distance + length * 0.5f, y + width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p2 = rot.Transform(NaVECTOR<float, 2>(distance, y + -width * 0.5f * 0.093756f));
+    NaVECTOR<float, 2> p3 = rot.Transform(NaVECTOR<float, 2>(distance + length * 0.5f, y + -width * 0.5f * 0.093756f));
 
     pos[0].Set(p0[0], p0[1], 0.0f, 1.0f);
     pos[1].Set(p1[0], p1[1], 0.0f, 1.0f);
     pos[2].Set(p2[0], p2[1], 0.0f, 1.0f);
     pos[3].Set(p3[0], p3[1], 0.0f, 1.0f);
 }
+#endif
+
+/* nalib/namatrix.h, nalib/navector.h: weak copies of the 4- and 9-argument 2x2 Set and of NaVECTOR::Set */
+#ifndef NON_MATCHING
+INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151D78);
+
+INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DA0);
+
+INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DF8);
 #endif

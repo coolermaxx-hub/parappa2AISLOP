@@ -18,6 +18,15 @@ class PrSceneObject;
 
 class PrSPRAM_DATA {
 public:
+    /* The three scratchpad packet buffers are used in turn; returns the next one */
+    u_long128* GetNextNoodleBuffer() {
+        u_long128 *buf = m_noodle_buffer[0];
+        m_noodle_buffer[0] = m_noodle_buffer[1];
+        m_noodle_buffer[1] = m_noodle_buffer[2];
+        m_noodle_buffer[2] = buf;
+        return buf;
+    }
+
     void Initialize(PrSceneObject *scene);
     void InitializeModel(PrModelObject *model);
     void SendDisplayHeader();

@@ -277,7 +277,8 @@ void CreateMendererTexture(float ratio) {
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/menderercreate", PrCreateMendererTexture);
 #else /* Float register allocation */
-static inline float ratio_tmp(float phase) {
+/* Sync ratio over the 5-unit sync cycle: off, ramp up, hold, ramp down */
+static inline float GetSyncRatio(float phase) {
     if (phase < 1.0f) {
         return 0.0f;
     } else if (phase < 2.0f) {
@@ -305,7 +306,7 @@ void PrCreateMendererTexture() {
     }
 
     mendererSyncPhase = phase;
-    float ratio = ratio_tmp(phase);
+    float ratio = GetSyncRatio(phase);
 
     prMendererSyncRatio = ratio;
     CreateMendererTexture(ratio);

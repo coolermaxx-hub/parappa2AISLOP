@@ -233,10 +233,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     for (u_int block = 0; block < 5; ) {
         u_int next = block + 1;
 
-        u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-        prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-        prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-        prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+        u_long128 *buf = prSpramData_tmp_menderer->GetNextNoodleBuffer();
 
         u_long *header = (u_long*)buf;
         for (int i = 0; i < 6; i++) {
@@ -249,10 +246,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
         u_long v1 = (u_long)((block + 2) * 256) << 16;
 
         for (u_int j = 0; j < per_block; j++) {
-            buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-            prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-            prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-            prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+            buf = prSpramData_tmp_menderer->GetNextNoodleBuffer();
 
             u_long *packet = (u_long*)buf;
             packet[0] = D_003967E0[0];
@@ -283,7 +277,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
             PrSendMfifo((sceDmaTag*)packet);
 
             if (index == count) {
-                goto done;
+                break;
             }
         }
 
@@ -293,7 +287,6 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
         block = next;
     }
 
-done:
     float hue = noodleHueOffset + prMendererSpeed * 0.07f;
     if (hue >= 3.0f) {
         hue -= 3.0f;
@@ -325,10 +318,7 @@ void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
 }
 
 static void PreDrawNoodleStrip() {
-    u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-    prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-    prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-    prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+    u_long128 *buf = prSpramData_tmp_menderer->GetNextNoodleBuffer();
 
     PrNoodleStripPacket *packet = (PrNoodleStripPacket*)buf;
     *packet = noodleStripDmaPacket;

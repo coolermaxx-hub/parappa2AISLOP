@@ -79,6 +79,19 @@ public:
     NaMATRIX<float, 4, 4>& Translate(const float& x, const float& y, const float& z);
     NaMATRIX<float, 4, 4>& Scale(const float& x, const float& y, const float& z);
 
+    /* Each stored vector dotted with v; the plain C product for small matrices */
+    NaVECTOR<T, t1> Transform(const NaVECTOR<T, t0>& v) const {
+        NaVECTOR<T, t1> ret;
+        for (int i = 0; i < t1; i++) {
+            T sum = 0;
+            for (int j = 0; j < t0; j++) {
+                sum += m[i][j] * v[j];
+            }
+            ret[i] = sum;
+        }
+        return ret;
+    }
+
     NaMATRIX<float, 4, 4> Inverse() const {
         NaMATRIX<float, 4, 4> ret;
         sceVu0InversMatrix((sceVu0FVECTOR*)&ret, (sceVu0FVECTOR*)this);
