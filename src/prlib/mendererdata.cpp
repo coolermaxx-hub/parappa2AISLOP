@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "menderer.h"
+
 #include "random.h"
 
 #include "nalib/namatrix.h"
@@ -13,13 +15,6 @@ struct PrNoodlePositionData {
     u_int timer;
 };
 
-extern float prMendererSpeed;
-extern float prMendererRatio;
-extern float prMendererSyncRatio;
-extern float prSchoolLeaderIndex;
-extern float prMendererDistance;
-extern float prMendererWidth;
-extern float prMendererLength;
 
 extern PrNoodlePositionData noodlePositionData[115];
 extern u_int noodlePolygonIndex[116];

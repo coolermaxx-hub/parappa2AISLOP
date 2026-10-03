@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "menderer.h"
+
 #include "dma.h"
 #include "microprogram.h"
 #include "random.h"
@@ -13,14 +15,9 @@
 #include <libdma.h>
 #include <libgraph.h>
 
-/* sdata */
-extern float prMendererSpeed;
-extern float prMendererFade;
-extern u_int prMendererDrawFbp;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 extern int prCurrentStage;
 
-extern u_int prMendererWorkFbp;
-extern PrSPRAM_DATA *prSpramData_tmp_mendereralpha;
 
 /* data */
 extern PrNoodleAlphaParameters alphaModulationPacket;
@@ -107,10 +104,10 @@ static const sceGifTag alphaBlendGifTag = {
 };
 
 void PrBlendNoodleImage(bool clear) {
-    u_long128 *buf = prSpramData_tmp_mendereralpha->m_noodle_buffer[0];
-    prSpramData_tmp_mendereralpha->m_noodle_buffer[0] = prSpramData_tmp_mendereralpha->m_noodle_buffer[1];
-    prSpramData_tmp_mendereralpha->m_noodle_buffer[1] = prSpramData_tmp_mendereralpha->m_noodle_buffer[2];
-    prSpramData_tmp_mendereralpha->m_noodle_buffer[2] = buf;
+    u_long128 *buf = prSpramData->m_noodle_buffer[0];
+    prSpramData->m_noodle_buffer[0] = prSpramData->m_noodle_buffer[1];
+    prSpramData->m_noodle_buffer[1] = prSpramData->m_noodle_buffer[2];
+    prSpramData->m_noodle_buffer[2] = buf;
 
     // This scratchpad bank owns a DMA/GIF wire packet during the blend pass.
     PrNoodleBlendPacket &packet = *reinterpret_cast<PrNoodleBlendPacket*>(buf);

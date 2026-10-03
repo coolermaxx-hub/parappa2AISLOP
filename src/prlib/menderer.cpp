@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "menderer.h"
+
 #if defined(PRD_SYORI)
 #include "dbug/syori.h"
 #endif
@@ -14,16 +16,32 @@
 #include <math.h>
 #include <eestruct.h>
 
-/* sdata */
-extern float prMendererRatio;
-extern int prMendererGettingWorse;
-extern int prMendererColorModulation;
-extern float prMendererSpeed;
-extern float prMendererFade;
-extern int deceleratingMenderer;
-extern float decelerateRatio;
-
 extern int prCurrentStage;
+
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+
+float prMendererRatio = 0.0f;
+float prMendererSyncRatio = 0.0f;
+int prMendererGettingWorse = 1;
+int prMendererColorModulation = 1;
+float prMendererSpeed = 1.0f;
+float prMendererFade = 1.0f;
+float prMendererDistance = 0.0f;
+float prMendererWidth = 1.0f;
+float prMendererLength = 1.0f;
+float prSchoolLeaderIndex = 0.0f;
+int mendererInitialized = 0;
+u_int noodleRandomSeed = 0;
+float noodleHueOffset = 0.0f;
+float noodleBrightnessPhase = 0.0f;
+float noodleRotation = 0.0f;
+int deceleratingMenderer = 0;
+float decelerateRatio = 1.0f;
+float mendererLastRatio = 0.0f;
+u_int prMendererTbp = 0;
+u_int prMendererWorkFbp = 0;
+u_int prMendererDrawFbp = 0;
+
 
 struct PrNoodleStripPacket {
     sceDmaTag dmatag;
@@ -33,19 +51,6 @@ struct PrNoodleStripPacket {
 
 /* data */
 extern PrNoodleStripPacket noodleStripDmaPacket;
-
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_menderer;
-extern u_int noodleRandomSeed;
-
-extern u_int prMendererDrawFbp;
-extern u_int prMendererWorkFbp;
-extern u_int prMendererTbp;
-extern float prMendererDistance;
-extern float prMendererWidth;
-extern float prMendererLength;
-extern float noodleRotation;
-extern int mendererInitialized;
 
 /* sbss */
 extern int noodleStatus;
@@ -83,10 +88,6 @@ static int StageIndexForColor() {
 /* data */
 extern float noodleSaturationRange[][2];
 extern float noodleBaseColor[][3];
-
-/* sdata */
-extern float noodleHueOffset;
-extern float noodleBrightnessPhase;
 
 /* data */
 extern float prMendererNoodleColor[4];
@@ -232,10 +233,10 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     for (u_int block = 0; block < 5 && index < count; block++) {
         u_int next = block + 1;
 
-        u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-        prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-        prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-        prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+        u_long128 *buf = prSpramData->m_noodle_buffer[0];
+        prSpramData->m_noodle_buffer[0] = prSpramData->m_noodle_buffer[1];
+        prSpramData->m_noodle_buffer[1] = prSpramData->m_noodle_buffer[2];
+        prSpramData->m_noodle_buffer[2] = buf;
 
         PrNoodleStripHeader *header = reinterpret_cast<PrNoodleStripHeader*>(buf);
         *header = noodleStripHeaderPacket;
@@ -247,10 +248,10 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
         u_long v1 = (u_long)((block + 2) * 256) << 16;
 
         for (u_int j = 0; j < per_block && index < count; j++) {
-            buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-            prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-            prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-            prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+            buf = prSpramData->m_noodle_buffer[0];
+            prSpramData->m_noodle_buffer[0] = prSpramData->m_noodle_buffer[1];
+            prSpramData->m_noodle_buffer[1] = prSpramData->m_noodle_buffer[2];
+            prSpramData->m_noodle_buffer[2] = buf;
 
             PrNoodleStripQuadPacket *packet = reinterpret_cast<PrNoodleStripQuadPacket*>(buf);
             packet->dma = noodleQuadDmaTag;
@@ -300,10 +301,10 @@ void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
 }
 
 static void PreDrawNoodleStrip() {
-    u_long128 *buf = prSpramData_tmp_menderer->m_noodle_buffer[0];
-    prSpramData_tmp_menderer->m_noodle_buffer[0] = prSpramData_tmp_menderer->m_noodle_buffer[1];
-    prSpramData_tmp_menderer->m_noodle_buffer[1] = prSpramData_tmp_menderer->m_noodle_buffer[2];
-    prSpramData_tmp_menderer->m_noodle_buffer[2] = buf;
+    u_long128 *buf = prSpramData->m_noodle_buffer[0];
+    prSpramData->m_noodle_buffer[0] = prSpramData->m_noodle_buffer[1];
+    prSpramData->m_noodle_buffer[1] = prSpramData->m_noodle_buffer[2];
+    prSpramData->m_noodle_buffer[2] = buf;
 
     PrNoodleStripPacket *packet = (PrNoodleStripPacket*)buf;
     *packet = noodleStripDmaPacket;
@@ -428,10 +429,6 @@ void PrRestartMenderer() {
     prMendererSpeed = 1.0f;
     prMendererFade = 1.0f;
 }
-
-/* sdata */
-extern float prSchoolLeaderIndex;
-extern float mendererLastRatio;
 
 void UpdateNoodleRotation();
 void DrawNoodleStrip(float ratio, float rot);

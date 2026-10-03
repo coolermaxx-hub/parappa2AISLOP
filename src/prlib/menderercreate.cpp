@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "menderer.h"
+
 #include <eekernel.h>
 #include <libdma.h>
 #include <libgraph.h>
@@ -10,13 +12,11 @@
 #include "noodlepacket.h"
 #include "nalib/napacket.h"
 
-extern u_int prMendererDrawFbp;
-extern float prMendererSpeed;
-extern float prMendererSyncRatio;
-extern float prMendererRatio;
 extern int prCurrentStage;
 
-extern float mendererSyncPhase;
+int mendererTextureCreationInitialized = 0;
+int mendererTextureRequested = 0;
+float mendererSyncPhase = 0.0f;
 extern float noodlePhase[5][3];
 extern PrNoodleTextureParameters noodleParameter[5];
 
@@ -26,7 +26,6 @@ void CreateMendererTexture(float ratio);
 void PrSynchronizeMendererParameter(float ratio);
 
 /* data */
-extern int mendererTextureRequested;
 extern PrNoodleTextureCopyPacket mendererTexturePacket;
 
 /* Per-preset wave parameters: amplitude, spatial cycles, temporal frequency (x0.15), phase offset.
@@ -110,7 +109,6 @@ void PrSynchronizeMendererParameter(float ratio) {
 }
 
 extern PrNoodleTextureCreationPacket mendererCreatePacket;
-extern int mendererTextureCreationInitialized; /* D_003999A0 */
 
 void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;

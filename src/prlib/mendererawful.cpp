@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "menderer.h"
+
 #include "dma.h"
 #include "random.h"
 #include "renderstuff.h"
@@ -56,10 +58,7 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
 
 extern float prMendererNoodleColor[];
 
-/* sdata */
-extern float awfulAngle;
-extern float prMendererSpeed;
-extern float prMendererFade;
+float awfulAngle = 0.0f;
 
 /* sbss */
 extern TIM2_PICTUREHEADER *awfulPicture;

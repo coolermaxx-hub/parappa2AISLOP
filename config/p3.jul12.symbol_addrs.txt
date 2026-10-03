@@ -1947,22 +1947,6 @@ PrInitializeMenderer                                                            
 PrRenderMenderer                                                                    = 0x0014f388; // type:func
 _GLOBAL_$I$prMendererRatio                                                          = 0x0014f4c0; // type:func
 
-prMendererRatio                                                                     = 0x0039994c; // type:f32
-prMendererSyncRatio                                                                 = 0x00399950; // type:f32
-prMendererGettingWorse                                                              = 0x00399954;
-prMendererColorModulation                                                           = 0x00399958;
-prMendererSpeed                                                                     = 0x0039995c; // type:f32
-prMendererFade                                                                      = 0x00399960; // type:f32
-prMendererDistance                                                                  = 0x00399964; // type:f32
-prMendererWidth                                                                     = 0x00399968; // type:f32
-prMendererLength                                                                    = 0x0039996c; // type:f32
-prSchoolLeaderIndex                                                                 = 0x00399970;
-noodleRotation                                                                      = 0x00399984;
-deceleratingMenderer                                                                = 0x00399988;
-decelerateRatio                                                                     = 0x0039998c; // type:f32
-prMendererTbp                                                                       = 0x00399994;
-prMendererWorkFbp                                                                   = 0x00399998;
-prMendererDrawFbp                                                                   = 0x0039999c;
 
 noodleStatus                                                                        = 0x00399ba8;
 noodleChangeTimer                                                                   = 0x00399bac;
@@ -2377,8 +2361,6 @@ D_70000004                          = 0x70000004; // ignore:true
 
 AwfulStatus                                                                         = 0x00399b94; // size:0x4
 noodleStripDmaPacket                                                                = 0x0038c740; // size:0x100
-prSpramData_tmp_menderer                                                            = 0x00399948; // size:0x4
-noodleRandomSeed                                                                    = 0x00399978; // size:0x4
 prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
@@ -2391,17 +2373,12 @@ prMendererNoodleColor = 0x0038c730; // size:0x10
 awfulPicture = 0x00399bb4; // size:0x4
 awfulStatus = 0x00399bbc; // size:0x4
 awfulRotation = 0x00399bc4; // size:0x4
-awfulAngle = 0x003999ac; // size:0x4
 awfulWave = 0x01c83ba0; // size:0x30
-mendererInitialized = 0x00399974; // size:0x4
 noodlePositionData = 0x01C83C10; // size:0xE60
 noodlePolygonIndex = 0x01C84A70; // size:0x1D0
 value_tmp_spadata_sprine_float = 0x00399BA0; // size:0x4
 value_tmp_spadata_linear_vector = 0x01C83300; // size:0x10
-mendererTextureCreationInitialized = 0x003999A0; // size:0x4
-mendererTextureRequested = 0x003999A4; // size:0x4
 mendererTexturePacket = 0x01C83AC0; // size:0xE0
-mendererSyncPhase = 0x003999A8; // size:0x4
 noodlePhase = 0x01C83570; // size:0x40
 noodleParameter = 0x01C835B0; // size:0x4B0
 matrix_tmp_spadata_node = 0x01C832C0; // size:0x40
@@ -2409,15 +2386,11 @@ vector_tmp_spadata_transform = 0x01C83270; // size:0x10
 matrix_tmp_spadata_transform = 0x01C83280; // size:0x40
 noodleSaturationRange = 0x0038C870; // size:0x50
 noodleBaseColor = 0x0038C8C0; // size:0x78
-noodleHueOffset = 0x0039997C; // size:0x4
-noodleBrightnessPhase = 0x00399980; // size:0x4
 noodleStripHeaderPacket = 0x0038C840; // size:0x30
-mendererLastRatio = 0x00399990; // size:0x4
 alphaModulationPacket = 0x0038CB30; // size:0x100
 alphaModulationGsPacket = 0x0038CC30; // size:0x40
 alphaModulationFramePacket = 0x0038CC70; // size:0xD0
 alphaModulationDmaPacket = 0x0038CD40; // size:0x40
-prSpramData_tmp_mendereralpha = 0x003999B0; // size:0x4
 mendererCreatePacket = 0x01C83A60; // size:0x60
 
 // nalib/navector.cpp
