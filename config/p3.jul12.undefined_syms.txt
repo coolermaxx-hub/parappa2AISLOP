@@ -1,0 +1,6 @@
+/*
+ * File-static variables in C files that still have asm functions.
+ * The asm refers to them by their splat names; these point those names
+ * at the C definitions' addresses.
+ */
+prSpramData_tmp_render = 0x003998e0; /* render.cpp: static PrSPRAM_DATA *prSpramData */

@@ -17,11 +17,13 @@
 #include <eeregs.h>
 #include <math.h>
 
-/* render.cpp's own out-of-line copy of the NaVECTOR<float, 4> constructor */
-NaVECTOR<float, 4>* CtorVector_tmp_render(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("__t8NaVECTOR2Zfi4RCfT1T1T1");
+#ifndef NON_MATCHING
+/* This file's weak copy of the constructor is asm near the end of the file */
+extern template NaVECTOR<float, 4>::NaVECTOR(const float& x, const float& y, const float& z, const float& w);
+#endif
 
 /* sdata */
-PrSPRAM_DATA *prSpramData_tmp_render = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 extern bool AwfulStatus;
 
@@ -39,39 +41,37 @@ void PrSceneObject::Render() {
 
     if (PrGetMendererRatio() >= 1.5f && m_model_set.m_head != NULL) {
         prRenderStuff.InitializeEECore(this);
-        PrDrawAwfulBackground(unk50);
+        PrDrawAwfulBackground(m_frame);
     }
 
     bool awful = true;
     prRenderStuff.ResetStatistics();
     prRenderStuff.m_statistics.render_time0 = *T3_COUNT;
-    prSpramData_tmp_render->Initialize(this);
+    prSpramData->Initialize(this);
 
     PrModelObject *model = m_model_set.m_head;
     if (!(PrGetMendererRatio() >= 1.5f)) {
         awful = false;
     }
-    if (model != NULL) {
     AwfulStatus = awful;
     for (; model != NULL; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
+                prSpramData->InitializeModel(model);
                 model->CalculateCurrentMatrix();
             }
         }
     }
-    } else { AwfulStatus = awful; }
 
     prRenderStuff.m_statistics.render_time1 = *T3_COUNT;
-    sceGsFrame frame = unk50;
-    sceGsXyoffset xyoffset = unk58;
-    PrWaitMendererTexture(unk70, frame, xyoffset);
+    sceGsFrame frame = m_frame;
+    sceGsXyoffset xyoffset = m_xyoffset;
+    PrWaitMendererTexture(m_draw_env, frame, xyoffset);
     prRenderStuff.m_statistics.render_time2 = *T3_COUNT;
 
     prRenderStuff.InitializeEECore(this);
     InitializeVu1();
-    prSpramData_tmp_render->SendDisplayHeader();
+    prSpramData->SendDisplayHeader();
     prRenderStuff.StartRender(this);
     prRenderStuff.m_transmit_array_size = 0;
     PrStartMfifo();
@@ -83,7 +83,7 @@ void PrSceneObject::Render() {
             do {
                 if (model->m_flags & 1) {
                     if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                        prSpramData_tmp_render->InitializeModel(model);
+                        prSpramData->InitializeModel(model);
                         model->RenderBackgroundScreenModel();
                     }
                 }
@@ -96,7 +96,7 @@ void PrSceneObject::Render() {
             do {
                 if (model->m_flags & 1) {
                     if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                        prSpramData_tmp_render->InitializeModel(model);
+                        prSpramData->InitializeModel(model);
                         model->RenderContext1Model();
                     }
                 }
@@ -109,7 +109,7 @@ void PrSceneObject::Render() {
     for (; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
+                prSpramData->InitializeModel(model);
                 model->RenderContext1Model();
             }
         }
@@ -118,7 +118,7 @@ void PrSceneObject::Render() {
     for (model = unk9C; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
+                prSpramData->InitializeModel(model);
                 model->RenderContext2Model();
             }
         }
@@ -164,7 +164,7 @@ void PrSceneObject::PrepareScreenModelRender() {
 
     for (PrModelObject *model = m_screen_model_list; model != NULL; model = model->m_list.next) {
         if (model->m_flags & 1) {
-            prSpramData_tmp_render->InitializeModel(model);
+            prSpramData->InitializeModel(model);
             model->RenderScreenModelNode();
         }
     }
@@ -177,7 +177,7 @@ void PrSceneObject::PrepareScreenModelRender() {
 }
 
 void PrModelObject::CalculateCurrentMatrix() {
-    PrSPRAM_DATA *spram = prSpramData_tmp_render;
+    PrSPRAM_DATA *spram = prSpramData;
     const NaMATRIX<float, 4, 4> *mtx = &this->unk10;
 
     spram->m_animation_time = m_animation_time;
@@ -200,9 +200,8 @@ void PrModelObject::CalculateCurrentMatrix() {
             spm->CalculateClusterMatrixAnimation(this, *mtx);
 
             NaVECTOR<float, 4> v;
-            NaVECTOR<float, 4> scale;
             NaMATRIX<float, 4, 4>& root = spm->m_nodes[0]->unk40;
-            CtorVector_tmp_render(&scale, 1.0f, 1.0f, 1.0f, 0.0f);
+            NaVECTOR<float, 4> scale(1.0f, 1.0f, 1.0f, 0.0f);
 
             NaVECTOR<float, 4> tmp;
             v = NaMATRIX<float, 4, 4>::Apply(tmp, root, scale);
@@ -236,97 +235,99 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
 #else
-// NON_MATCHING: 11 opcode hunks left (gcc hoists the 1.0f blend constant in the loop copy)
-static inline void ComposeNoVis_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+/*
+ * The world matrix is the parent's times this node's local matrix. With
+ * transitions active, the local matrix is also stored (blended) per model.
+ * Inline in the original: inlined into CalculateCurrentMatrixAnimation,
+ * with a weak copy (called by ComposeGlobalMatrix) at the end of this file.
+ * Built here, gcc also inlines it into ComposeGlobalMatrix, and the copy
+ * schedules the m_flags load differently.
+ */
+inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     if (model->unk7C[0] != NULL) {
-        PrSPRAM_DATA *spram;
-        if (node->m_flags & 0x1) {
-            spram = prSpramData_tmp_render;
-            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
+        /* Keep the local matrix for transitions, blended toward the previous one */
+        if (m_flags & 0x1) {
+            prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            spram = prSpramData_tmp_render;
-            spram->unk0 = node->unk0;
+            prSpramData->unk0 = this->unk0;
         }
 
-        if (spram->m_model_transaction_blend_ratio != 1.0f) {
-            node->BlendTransitionMatrix(model, spram->unk0);
-            spram = prSpramData_tmp_render;
+        if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
+            BlendTransitionMatrix(model, prSpramData->unk0);
         }
 
-        node->unk40 = arg1 * spram->unk0;
-        int idx = node->unk150;
-        model->unk7C[model->m_active_transition][idx] = spram->unk0;
-    } else if (node->m_flags & 0x1) {
-        node->unk40 = arg1;
+        this->unk40 = arg1 * prSpramData->unk0;
+        model->unk7C[model->m_active_transition][this->unk150] = prSpramData->unk0;
+    } else if (m_flags & 0x1) {
+        this->unk40 = arg1;
     } else {
-        node->unk40 = arg1 * node->unk0;
+        this->unk40 = arg1 * this->unk0;
     }
 
-    if (node->m_flags & 0x8000) {
-        node->ApplyBillboardMatrix();
+    if (m_flags & 0x8000) {
+        ApplyBillboardMatrix();
     }
 }
 
-static inline void ComposeAnim_tmp(SpmNode *node, PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    float time = prSpramData_tmp_render->m_animation_time;
-    SpaFileHeader *animation = prSpramData_tmp_render->m_animation;
-    SpmNode *parent = node->unk164;
+/*
+ * Like ComposeGlobalMatrix, but visibility and the local matrix come from
+ * the scene's current animation when the node has one. Always inlined in
+ * the original, so it has no symbol.
+ */
+inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    float time = prSpramData->m_animation_time;
+    SpaFileHeader *animation = prSpramData->m_animation;
+    SpmNode *parent = this->unk164;
 
-    if (parent == NULL || (parent->m_flags & 0x4000)) {
-        if (animation->IsNodeVisible(node, time)) {
-            node->m_flags |= 0x4000;
-            goto done;
-        }
+    if ((parent == NULL || (parent->m_flags & 0x4000)) && animation->IsNodeVisible(this, time)) {
+        m_flags |= 0x4000;
+    } else {
+        m_flags &= ~0x4000;
     }
-    node->m_flags &= ~0x4000;
-    done:
 
-    if (node->m_flags & 0x4000) {
-        SpaNodeAnimation *na = animation->unk50[node->unk150];
-        if (na == NULL) {
-            ComposeNoVis_tmp(node, model, arg1);
+    if (!(m_flags & 0x4000)) {
+        return;
+    }
+
+    SpaNodeAnimation *node_animation = animation->unk50[this->unk150];
+    if (node_animation == NULL) {
+        ComposeGlobalMatrixWithoutVisibility(model, arg1);
+        return;
+    }
+
+    bool identity = node_animation->m_transform_count == 0;
+    if (model->unk7C[0] != NULL) {
+        /* Keep the local matrix for transitions, blended toward the previous one */
+        if (identity) {
+            prSpramData->unk0 = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            int e = 0;
-            if (model->unk7C[0] != NULL) {
-                PrSPRAM_DATA *spram;
-                e = 0; if (na->unk8 == 0) e = 1;
-                if (e & 1) {
-                    spram = prSpramData_tmp_render;
-                    spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
-                } else {
-                    const NaMATRIX<float, 4, 4> *m = na->GetMatrix(time);
-                    spram = prSpramData_tmp_render;
-                    spram->unk0 = *m;
-                }
-
-                if (spram->m_model_transaction_blend_ratio != 1.0f) {
-                    node->BlendTransitionMatrix(model, spram->unk0);
-                    spram = prSpramData_tmp_render;
-                }
-
-                node->unk40 = arg1 * spram->unk0;
-                int idx = node->unk150;
-                model->unk7C[model->m_active_transition][idx] = spram->unk0;
-            } else if ((e = 0, (na->unk8 == 0 ? (e = 1) : 0), e & 1)) {
-                node->unk40 = arg1;
-            } else {
-                NaMATRIX<float, 4, 4> tmp = *na->GetMatrix(time);
-                node->unk40 = arg1 * tmp;
-            }
-
-            if (node->m_flags & 0x8000) {
-                node->ApplyBillboardMatrix();
-            }
+            prSpramData->unk0 = *node_animation->GetMatrix(time);
         }
+
+        if (prSpramData->m_model_transaction_blend_ratio != 1.0f) {
+            BlendTransitionMatrix(model, prSpramData->unk0);
+        }
+
+        this->unk40 = arg1 * prSpramData->unk0;
+        model->unk7C[model->m_active_transition][this->unk150] = prSpramData->unk0;
+    } else if (identity) {
+        this->unk40 = arg1;
+    } else {
+        this->unk40 = arg1 * *node_animation->GetMatrix(time);
+    }
+
+    if (m_flags & 0x8000) {
+        ApplyBillboardMatrix();
     }
 }
 
+/* NON_MATCHING: register allocation and scheduling of the inlined node code */
 void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    ComposeAnim_tmp(m_nodes[0], model, arg1);
+    m_nodes[0]->ComposeGlobalMatrixAnimation(model, arg1);
 
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
-        ComposeAnim_tmp(node, model, node->unk164->unk40);
+        node->ComposeGlobalMatrixAnimation(model, node->unk164->unk40);
     }
 }
 #endif
@@ -352,10 +353,10 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateClusterMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
 #else
-// NON_MATCHING: same per-node composition as CalculateCurrentMatrixAnimation plus the 0x1000 unkC0 step
+/* NON_MATCHING: as CalculateCurrentMatrixAnimation */
 void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
-    ComposeAnim_tmp(node, model, arg1);
+    node->ComposeGlobalMatrixAnimation(model, arg1);
     if (node->m_flags & 0x1000) {
         const NaMATRIX<float, 4, 4>& b = node->unk80;
         node->unkC0 = node->unk40 * b;
@@ -363,7 +364,7 @@ void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const 
 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
-        ComposeAnim_tmp(node, model, node->unk164->unk40);
+        node->ComposeGlobalMatrixAnimation(model, node->unk164->unk40);
         if (node->m_flags & 0x1000) {
             const NaMATRIX<float, 4, 4>& b = node->unk80;
             node->unkC0 = node->unk40 * b;
@@ -390,7 +391,7 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
 void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
     uc->m_matrix = this->unk40;
-    uc->unk68 = prSpramData_tmp_render->m_disturbance;
+    uc->unk68 = prSpramData->m_disturbance;
 
     float du = this->unk180;
     float dv = this->unk184;
@@ -461,7 +462,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmaddaz  ACC,   vf15,    vf17  \n\t"
                 "vmaddw   vf17,  vf16,    vf17  \n\t"
                 "sqc2     vf17,   0x0(%0)       \n\t"
-            : : "r"(sp0), "r"(&prSpramData_tmp_render->m_view_projection_matrix));
+            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix));
 
             float f12 = sp0[2] / sp0[3];
             if (sp0[3] == 0.0f) {
@@ -565,8 +566,8 @@ void SpmNode::RenderBackgroundScreenModel() {
 
 void PrModelObject::RenderContext2Model() {
     SpmFileHeader *spm = m_spm_image;
-    prSpramData_tmp_render->m_animation = m_animation;
-    prSpramData_tmp_render->m_animation_time = m_animation_time;
+    prSpramData->m_animation = m_animation;
+    prSpramData->m_animation_time = m_animation_time;
     spm->RenderContext2Model(this);
     m_rendered_once = 1;
 }
@@ -600,7 +601,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 uc->m_matrix = this->unk40;
-                uc->unk68 = prSpramData_tmp_render->m_disturbance;
+                uc->unk68 = prSpramData->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
@@ -609,11 +610,11 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
                 const NaMATRIX<float, 4, 4>& m = this->unk40;
                 uc->m_matrix = m;
-                uc->unk68 = prSpramData_tmp_render->m_disturbance;
+                uc->unk68 = prSpramData->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {
-                    NaMATRIX<float, 4, 4> mtx = prSpramData_tmp_render->m_view_projection_matrix * m;
+                    NaMATRIX<float, 4, 4> mtx = prSpramData->m_view_projection_matrix * m;
                     NaVECTOR<float, 4> tmp;
                     pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->unk140);
                 }
@@ -635,8 +636,10 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
     }
 }
 
-/* nalib/navector.h */
+/* nalib/navector.h: weak copy of the 4-argument NaVECTOR constructor */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
+#endif
 
 /* prlib/render.cpp */
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
@@ -662,37 +665,7 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
 INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145E50);
 
 /* prlib/render.cpp */
+/* Weak copy of the inline ComposeGlobalMatrixWithoutVisibility; its source is above CalculateCurrentMatrixAnimation */
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/render", ComposeGlobalMatrixWithoutVisibility__7SpmNodeP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#else
-/* Scheduling: m_flags is loaded before prSpramData is reloaded after BlendTransitionMatrix */
-void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    if (model->unk7C[0] != NULL) {
-        PrSPRAM_DATA *spram;
-        if (m_flags & 0x1) {
-            spram = prSpramData_tmp_render;
-            spram->unk0 = NaMATRIX<float, 4, 4>::IDENT;
-        } else {
-            spram = prSpramData_tmp_render;
-            spram->unk0 = this->unk0;
-        }
-
-        if (spram->m_model_transaction_blend_ratio != 1.0f) {
-            BlendTransitionMatrix(model, spram->unk0);
-            spram = prSpramData_tmp_render;
-        }
-
-        this->unk40 = arg1 * spram->unk0;
-        int idx = this->unk150;
-        model->unk7C[model->m_active_transition][idx] = spram->unk0;
-    } else if (m_flags & 0x1) {
-        this->unk40 = arg1;
-    } else {
-        this->unk40 = arg1 * this->unk0;
-    }
-
-    if (m_flags & 0x8000) {
-        ApplyBillboardMatrix();
-    }
-}
 #endif

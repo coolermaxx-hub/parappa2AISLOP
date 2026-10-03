@@ -50,6 +50,7 @@ public:
 
     void ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
     void ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void ComposeGlobalMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
 
     void BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& arg1);
 
