@@ -92,44 +92,44 @@ void SpaFileHeader::ChangePointer() {
 }
 
 void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
-    this->unk4 = animation->CalculatePointer<SpaTrack<int> >(this->unk4);
+    this->m_visibility = animation->CalculatePointer<SpaTrack<int> >(this->m_visibility);
     this->unk10 = animation->CalculatePointer<int>(this->unk10);
-    if (this->unk4 != NULL) {
-        this->unk4->ChangePointer();
+    if (this->m_visibility != NULL) {
+        this->m_visibility->ChangePointer();
     }
 
-    this->unkC = (SpaTransform**)&this->unk30[this->unk2C];
-    this->unk18 = &this->unkC[this->unk8];
+    this->m_transforms = (SpaTransform**)&this->unk30[this->unk2C];
+    this->unk18 = &this->m_transforms[this->m_transform_count];
 
-    for (u_int i = 0; i < this->unk8; i++) {
+    for (u_int i = 0; i < this->m_transform_count; i++) {
         SpaTransform *transform;
-        this->unkC[i] = animation->CalculatePointer<SpaTransform>(this->unkC[i]);
-        if (this->unkC[i] != NULL) {
-            switch (this->unkC[i]->unk0) {
-            case 0:
-            case 1:
-            case 5:
-            case 7:
-                transform = this->unkC[i];
+        this->m_transforms[i] = animation->CalculatePointer<SpaTransform>(this->m_transforms[i]);
+        if (this->m_transforms[i] != NULL) {
+            switch (this->m_transforms[i]->m_type) {
+            case SpaTransform::SCALE:
+            case SpaTransform::ROTATE_AXIS:
+            case SpaTransform::TRANSLATE:
+            case SpaTransform::SHEAR:
+                transform = this->m_transforms[i];
                 transform->GetTrack<NaVECTOR<float, 4> >()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
-            case 2:
-            case 3:
-            case 4:
-                transform = this->unkC[i];
+            case SpaTransform::ROTATE_X:
+            case SpaTransform::ROTATE_Y:
+            case SpaTransform::ROTATE_Z:
+                transform = this->m_transforms[i];
                 transform->GetTrack<float>()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
-            case 6:
-                transform = this->unkC[i];
+            case SpaTransform::MATRIX:
+                transform = this->m_transforms[i];
                 transform->GetTrack<NaMATRIX<float, 4, 4> >()->ChangePointer();
-                if (transform->unk14 == 0) {
-                    this->unkC[i] = NULL;
+                if (transform->GetKeyCount() == 0) {
+                    this->m_transforms[i] = NULL;
                 }
                 break;
             }

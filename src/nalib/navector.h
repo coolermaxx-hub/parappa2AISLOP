@@ -162,6 +162,11 @@ public:
     static NaVECTOR<T, t0> ZEROH;
 };
 
+template <typename T, int t0>
+inline NaVECTOR<float, 4> operator*(const float& s, const NaVECTOR<T, t0>& v) {
+    return v * s;
+}
+
 /* Out of line: the original emitted weak copies of this constructor */
 template <typename T, int t0>
 NaVECTOR<T, t0>::NaVECTOR(const T& x, const T& y, const T& z, const T& w) {

@@ -10,96 +10,109 @@ inline void* operator new(size_t, void *p) {
     return p;
 }
 
+/* The vector spline is hand-written VU code; see the end of the file */
 template <>
-NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float arg1) const;
+const NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float time) const;
 
-u_int SpaTrackBase::SearchSegment(float arg0) const {
-    if (this->unk4 == 1) {
+#ifndef NON_MATCHING
+/*
+ * The original emits these template instances at the end of this file,
+ * interleaved with copies that don't match yet. C can't place a template
+ * instance after top-level asm, so the matching build keeps all of them as
+ * asm at the end of the file. Built with NON_MATCHING, the generic
+ * definitions below produce them.
+ */
+extern template const NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float time) const;
+extern template const NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetLinearValue(u_int seg, float time) const;
+extern template const float* SpaTrack<float>::GetValue(float time) const;
+extern template const float* SpaTrack<float>::GetSprineValue(u_int seg, float time) const;
+extern template const float* SpaTrack<float>::GetLinearValue(u_int seg, float time) const;
+extern template const NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float time) const;
+extern template const NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(u_int seg, float time) const;
+extern template const NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetLinearValue(u_int seg, float time) const;
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::TranslateMatrix(const NaVECTOR<float, 4>& v);
+extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::ScaleMatrix(const NaVECTOR<float, 4>& v);
+extern template NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Set(
+    const float& m00, const float& m01, const float& m02, const float& m03,
+    const float& m10, const float& m11, const float& m12, const float& m13,
+    const float& m20, const float& m21, const float& m22, const float& m23,
+    const float& m30, const float& m31, const float& m32, const float& m33);
+#endif
+
+u_int SpaTrackBase::SearchSegment(float time) const {
+    if (m_key_count == 1) {
         return (u_int)-1;
     }
 
-    if (arg0 <= this->unkC[0]) {
+    if (time <= m_times[0]) {
         return (u_int)-1;
     }
 
-    if (arg0 >= this->unkC[this->unk4 - 1]) {
-        return this->unk4;
+    if (time >= m_times[m_key_count - 1]) {
+        return m_key_count;
     }
 
-    if (arg0 >= this->unkC[this->unk8]) {
-        if (arg0 < this->unkC[this->unk8 + 1]) {
-            return this->unk8;
+    /* Try the last segment and its neighbours before searching */
+    if (time >= m_times[m_last_segment]) {
+        if (time < m_times[m_last_segment + 1]) {
+            return m_last_segment;
         }
 
-        if ((this->unk8 + 2) < this->unk4) {
-            if (arg0 < this->unkC[this->unk8 + 2]) {
-                return ++this->unk8;
+        if ((m_last_segment + 2) < m_key_count) {
+            if (time < m_times[m_last_segment + 2]) {
+                return ++m_last_segment;
             }
         }
-    } else if (this->unk8 != 0) {
-        if (arg0 >= this->unkC[this->unk8 - 1]) {
-            return --this->unk8;
+    } else if (m_last_segment != 0) {
+        if (time >= m_times[m_last_segment - 1]) {
+            return --m_last_segment;
         }
     }
 
-    int right = this->unk4 - 2;
+    int right = m_key_count - 2;
     int left = 0;
     int mid = 0;
 
     while (left <= right) {
         mid = (left + right) / 2;
-        if (arg0 < this->unkC[mid]) {
+        if (time < m_times[mid]) {
             right = mid - 1;
-        } else if (arg0 >= this->unkC[mid + 1]) {
+        } else if (time >= m_times[mid + 1]) {
             left = mid + 1;
         } else {
             break;
         }
     }
 
-    this->unk8 = mid;
-    return this->unk8;
+    m_last_segment = mid;
+    return m_last_segment;
 }
 
+/* Visibility tracks only step between keys */
 template <>
-int* SpaTrack<int>::GetValue(float arg0) const {
-    if (this->unk2 & 0x1) {
-        float f13 = this->unkC[this->unk4 - 1];
-        if (arg0 < 0.0f || arg0 >= f13) {
-            arg0 = fmodf(arg0, f13);
+const int* SpaTrack<int>::GetValue(float time) const {
+    if (m_flags & LOOP) {
+        float length = m_times[m_key_count - 1];
+        if (time < 0.0f || time >= length) {
+            time = fmodf(time, length);
         }
     }
 
-    u_int seg = this->SearchSegment(arg0);
+    u_int seg = SearchSegment(time);
     if (seg == (u_int)-1) {
-        return (int*)&this->unk10;
+        return &m_values[0];
     }
 
-    if (seg == this->unk4) {
-        return (int*)&this->unkC + seg;
+    if (seg == m_key_count) {
+        return &m_values[seg - 1];
     } else {
-        return (int*)&this->unk10 + seg;
+        return &m_values[seg];
     }
 }
 
-template <> NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const;
-template <> float* SpaTrack<float>::GetValue(float arg0) const;
-template <> NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) const;
-template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle);
-template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
-
-/* Template instances emitted later in this TU */
-NaMATRIX<float, 4, 4> ScaleMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("ScaleMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4");
-NaMATRIX<float, 4, 4> TransMatrix_tmp_spadata(const NaVECTOR<float, 4>& v) asm("TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4");
-NaMATRIX<float, 4, 4>& SetMatrix_tmp_spadata(NaMATRIX<float, 4, 4> *m,
-    const float& m00, const float& m01, const float& m02, const float& m03,
-    const float& m10, const float& m11, const float& m12, const float& m13,
-    const float& m20, const float& m21, const float& m22, const float& m23,
-    const float& m30, const float& m31, const float& m32, const float& m33) asm("Set__t8NaMATRIX3Zfi4i4RCfT1T1T1T1T1T1T1T1T1T1T1T1T1T1T1");
-
-/* Element reference; the original likely used a non-const NaVECTOR::operator[] */
-static inline float& At_tmp(NaVECTOR<float, 4>& v, int i) { return ((float*)&v)[i]; }
-NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
+const NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float time) const {
     /* FIXME: static locals; see the note in GetSprineValue */
     extern NaVECTOR<float, 4> vector_tmp_spadata_transform;
     extern int tmp_0_transform_vector;
@@ -114,48 +127,45 @@ NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float arg0) const {
         tmp_0_transform_matrix = 1;
     }
 
-    switch (this->unk0) {
-    case 0:
-        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
-        ((float*)&vector_tmp_spadata_transform)[3] = 1.0f;
-        matrix_tmp_spadata_transform = ScaleMatrix_tmp_spadata(vector_tmp_spadata_transform);
+    switch (m_type) {
+    case SCALE:
+        vector_tmp_spadata_transform = *GetTrack<NaVECTOR<float, 4> >()->GetValue(time);
+        vector_tmp_spadata_transform[3] = 1.0f;
+        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::ScaleMatrix(vector_tmp_spadata_transform);
         return &matrix_tmp_spadata_transform;
-    case 1: {
-        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
+    case ROTATE_AXIS: {
+        vector_tmp_spadata_transform = *GetTrack<NaVECTOR<float, 4> >()->GetValue(time);
         float angle = vector_tmp_spadata_transform[3];
-        ((float*)&vector_tmp_spadata_transform)[3] = 1.0f;
+        vector_tmp_spadata_transform[3] = 1.0f;
         matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::RotateMatrix(vector_tmp_spadata_transform, angle);
         return &matrix_tmp_spadata_transform;
     }
-    case 2:
-    case 3:
-    case 4: {
-        float angle = *((SpaTrack<float>*)&this->unk10)->GetValue(arg0);
-        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::RotateMatrix(this->unk0 - 2, angle);
+    case ROTATE_X:
+    case ROTATE_Y:
+    case ROTATE_Z: {
+        float angle = *GetTrack<float>()->GetValue(time);
+        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::RotateMatrix(m_type - ROTATE_X, angle);
         return &matrix_tmp_spadata_transform;
     }
-    case 5:
-        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
-        matrix_tmp_spadata_transform = TransMatrix_tmp_spadata(vector_tmp_spadata_transform);
+    case TRANSLATE:
+        vector_tmp_spadata_transform = *GetTrack<NaVECTOR<float, 4> >()->GetValue(time);
+        matrix_tmp_spadata_transform = NaMATRIX<float, 4, 4>::TranslateMatrix(vector_tmp_spadata_transform);
         return &matrix_tmp_spadata_transform;
-    case 6:
-        return ((SpaTrack<NaMATRIX<float, 4, 4> >*)&this->unk10)->GetValue(arg0);
-    case 7: {
-        vector_tmp_spadata_transform = *((SpaTrack<NaVECTOR<float, 4> >*)&this->unk10)->GetValue(arg0);
-        NaMATRIX<float, 4, 4> *ret = &matrix_tmp_spadata_transform;
-        SetMatrix_tmp_spadata(ret,
-            1.0f, 0.0f, 0.0f, 0.0f,
-            At_tmp(vector_tmp_spadata_transform, 0), 1.0f, 0.0f, 0.0f,
-            At_tmp(vector_tmp_spadata_transform, 1), At_tmp(vector_tmp_spadata_transform, 2), 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f);
-        return ret;
-    }
+    case MATRIX:
+        return GetTrack<NaMATRIX<float, 4, 4> >()->GetValue(time);
+    case SHEAR:
+        vector_tmp_spadata_transform = *GetTrack<NaVECTOR<float, 4> >()->GetValue(time);
+        matrix_tmp_spadata_transform.Set(1.0f, 0.0f, 0.0f, 0.0f,
+                                         vector_tmp_spadata_transform[0], 1.0f, 0.0f, 0.0f,
+                                         vector_tmp_spadata_transform[1], vector_tmp_spadata_transform[2], 1.0f, 0.0f,
+                                         0.0f, 0.0f, 0.0f, 1.0f);
+        return &matrix_tmp_spadata_transform;
     default:
         return &NaMATRIX<float, 4, 4>::IDENT;
     }
 }
 
-NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
+NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float time) const {
     /* FIXME: static local; see the note in GetSprineValue */
     extern NaMATRIX<float, 4, 4> matrix_tmp_spadata_node;
     extern int tmp_0_node_matrix;
@@ -171,8 +181,8 @@ NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
         vmr32.xyzw $vf13, $vf14
     ");
 
-    for (u_int i = 0; i < this->unk8; i++) {
-        NaMATRIX<float, 4, 4> *m = this->unkC[i]->GetMatrix(arg0);
+    for (u_int i = 0; i < this->m_transform_count; i++) {
+        const NaMATRIX<float, 4, 4> *m = this->m_transforms[i]->GetMatrix(time);
         asm volatile("
             lqc2         $vf4, 0x0(%0)
             lqc2         $vf5, 0x10(%0)
@@ -207,30 +217,35 @@ NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float arg0) const {
     return &matrix_tmp_spadata_node;
 }
 
-bool SpaNodeAnimation::IsVisible(float arg0) const {
-    if (this->unk4 == NULL) {
+bool SpaNodeAnimation::IsVisible(float time) const {
+    if (m_visibility == NULL) {
         return true;
     }
 
-    return *this->unk4->GetValue(arg0);
+    return *m_visibility->GetValue(time);
 }
 
-bool SpaFileHeader::IsNodeVisible(SpmNode *arg0, float arg1) const {
-    SpaNodeAnimation *a0 = this->unk50[arg0->unk150];
-    SpmNode *a2 = arg0->unk164;
+/*
+ * A node with a visibility track takes its visibility from it; 0x40000 in
+ * m_flags records that. Without one it inherits from the node at unk164,
+ * if that node is animated, or else uses its own static flags.
+ */
+bool SpaFileHeader::IsNodeVisible(SpmNode *node, float time) const {
+    SpaNodeAnimation *animation = this->unk50[node->unk150];
+    SpmNode *other = node->unk164;
 
-    if (a0 != NULL && a0->unk4 == NULL) {
-        a0 = NULL;
+    if (animation != NULL && animation->m_visibility == NULL) {
+        animation = NULL;
     }
 
-    if (a2 != NULL) {
-        if (!(a2->m_flags & 0x4000)) {
+    if (other != NULL) {
+        if (!(other->m_flags & 0x4000)) {
             return false;
         }
-        if (a2->m_flags & 0x40000) {
-            if (a0 == NULL) {
-                arg0->m_flags |= 0x40000;
-                if (a2->m_flags & 0x4000) {
+        if (other->m_flags & 0x40000) {
+            if (animation == NULL) {
+                node->m_flags |= 0x40000;
+                if (other->m_flags & 0x4000) {
                     return true;
                 } else {
                     return false;
@@ -239,166 +254,150 @@ bool SpaFileHeader::IsNodeVisible(SpmNode *arg0, float arg1) const {
         }
     }
 
-    if (a0 != NULL) {
-        arg0->m_flags |= 0x40000;
-        return a0->IsVisible(arg1);
+    if (animation != NULL) {
+        node->m_flags |= 0x40000;
+        return animation->IsVisible(time);
     }
 
-    arg0->m_flags &= ~0x40000;
-    return (arg0->m_flags & 0x20000) ? false : true;
+    node->m_flags &= ~0x40000;
+    return (node->m_flags & 0x20000) ? false : true;
 }
 
+/* True if the transform has one key and that key is the identity */
 bool SpaTransform::IsEverIdentical() {
-    switch (this->unk0) {
-    case 0:
-        if (this->unk14 == 1) {
-            bool v0 = false;
-            if (this->unk20[0][0] == 1.0f) {
-                if (this->unk20[0][1] != 1.0f) {
+    switch (m_type) {
+    case SCALE:
+        if (GetKeyCount() == 1) {
+            const NaVECTOR<float, 4>& scale = GetTrack<NaVECTOR<float, 4> >()->GetKeyValue(0);
+            bool identical = false;
+            if (scale[0] == 1.0f) {
+                if (scale[1] != 1.0f) {
                     return false;
                 }
-                if (this->unk20[0][2] == 1.0f) {
-                    v0 = true;
+                if (scale[2] == 1.0f) {
+                    identical = true;
                 }
             }
-            return v0;
+            return identical;
         }
 
         return false;
 
-    case 1:
-        if (this->unk14 == 1) {
-            if (this->unk20[0][3] == 0.0f) {
+    case ROTATE_AXIS:
+        if (GetKeyCount() == 1) {
+            if (GetTrack<NaVECTOR<float, 4> >()->GetKeyValue(0)[3] == 0.0f) {
                 return true;
             }
         }
 
         return false;
 
-    case 2:
-    case 3:
-    case 4:
-        if (this->unk14 == 1) {
-            if (this->unk20[0][0] == 0.0f) {
+    case ROTATE_X:
+    case ROTATE_Y:
+    case ROTATE_Z:
+        if (GetKeyCount() == 1) {
+            if (GetTrack<float>()->GetKeyValue(0) == 0.0f) {
                 return true;
             }
         }
 
         return false;
 
-    case 5:
-        if (this->unk14 == 1) {
-            bool v0 = false;
-            if (this->unk20[0][0] == 0.0f) {
-                if (this->unk20[0][1] != 0.0f) {
+    case TRANSLATE:
+        if (GetKeyCount() == 1) {
+            const NaVECTOR<float, 4>& offset = GetTrack<NaVECTOR<float, 4> >()->GetKeyValue(0);
+            bool identical = false;
+            if (offset[0] == 0.0f) {
+                if (offset[1] != 0.0f) {
                     return false;
                 }
-                if (this->unk20[0][2] == 0.0f) {
-                    v0 = true;
+                if (offset[2] == 0.0f) {
+                    identical = true;
                 }
             }
-            return v0;
+            return identical;
         }
 
         return false;
 
-    case 6:
-        if (this->unk14 == 1) {
-            return this->unk20.inl0();
+    case MATRIX:
+        if (GetKeyCount() == 1) {
+            return GetTrack<NaMATRIX<float, 4, 4> >()->GetKeyValue(0).inl0();
         }
 
         return false;
         
-    case 7:
-        if (this->unk14 == 1) {
-            bool v0 = false;
-            if (this->unk20[0][0] == 0.0f) {
-                if (this->unk20[0][1] != 0.0f) {
+    case SHEAR:
+        if (GetKeyCount() == 1) {
+            const NaVECTOR<float, 4>& shear = GetTrack<NaVECTOR<float, 4> >()->GetKeyValue(0);
+            bool identical = false;
+            if (shear[0] == 0.0f) {
+                if (shear[1] != 0.0f) {
                     return false;
                 }
-                if (this->unk20[0][2] == 0.0f) {
-                    v0 = true;
+                if (shear[2] == 0.0f) {
+                    identical = true;
                 }
             }
-            return v0;
+            return identical;
         }
 
         return false;
 
     default:
-        NaMATRIX<float, 4, 4>& a2 = NaMATRIX<float, 4, 4>::IDENT;
-        return a2.inl1();
+        NaMATRIX<float, 4, 4>& ident = NaMATRIX<float, 4, 4>::IDENT;
+        return ident.inl1();
     }
 }
 
+/* Drops transforms that never change anything; returns how many */
 int SpaNodeAnimation::Optimize() {
     int remove_count = 0;
 
-    for (int i = 0; i < this->unk8; i++) {
-        SpaTransform *transform = this->unkC[i];
+    for (int i = 0; i < m_transform_count; i++) {
+        SpaTransform *transform = m_transforms[i];
         if (transform == NULL || transform->IsEverIdentical()) {
             remove_count++;
             continue;
         }
-        this->unkC[i - remove_count] = this->unkC[i];
+        m_transforms[i - remove_count] = m_transforms[i];
     }
 
-    this->unk8 -= remove_count;
+    m_transform_count -= remove_count;
     return remove_count;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4Uif);
-#else /* Regalloc */
-template <>
-NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetLinearValue(u_int seg, float arg1) const {
-    /* FIXME: static local; see the note in GetSprineValue below */
-    extern NaVECTOR<float, 4> value_tmp_spadata_linear_vector;
-    extern int tmp_0_linear_vector;
-    if (tmp_0_linear_vector == 0) {
-        tmp_0_linear_vector = 1;
-    }
-
-    float *keys = this->unkC;
-    float d0 = arg1 - keys[seg];
-    float d1 = keys[seg + 1] - arg1;
-    NaVECTOR<float, 4> *values = (NaVECTOR<float, 4>*)this;
-
-    value_tmp_spadata_linear_vector = (values[seg + 1] * d1 + values[seg + 2] * d0) / (d1 + d0);
-    return &value_tmp_spadata_linear_vector;
-}
-#endif
-
-template <>
-NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const {
-    if (this->unk2 & 0x1) {
-        float f13 = this->unkC[this->unk4 - 1];
-        if (arg0 < 0.0f || arg0 >= f13) {
-            arg0 = fmodf(arg0, f13);
+template <typename T>
+const T* SpaTrack<T>::GetValue(float time) const {
+    if (m_flags & LOOP) {
+        float length = m_times[m_key_count - 1];
+        if (time < 0.0f || time >= length) {
+            time = fmodf(time, length);
         }
     }
 
-    u_int seg = this->SearchSegment(arg0);
+    u_int seg = SearchSegment(time);
 
+    /* Before the first key or past the last one, hold the end value */
     if (seg == (u_int)-1) {
-        return (NaVECTOR<float, 4>*)&this->unk10;
+        return &m_values[0];
     }
 
-    if (seg == this->unk4) {
-        if (this->unk0 == 0) {
-            return (NaVECTOR<float, 4>*)&this->unk10 + ((seg - 1) * 3);
+    if (seg == m_key_count) {
+        if (m_interpolation == SPLINE) {
+            return &m_values[(seg - 1) * 3];
         } else {
-            return (NaVECTOR<float, 4>*)this + seg;
+            return &m_values[seg - 1];
         }
     }
 
-    switch (this->unk0) {
-    case 0:
-        return this->GetSprineValue(seg, arg0);
-    case 1:
-        return this->GetLinearValue(seg, arg0);
-    case 2:
-        return (NaVECTOR<float, 4>*)&this->unk10 + seg;
+    switch (m_interpolation) {
+    case SPLINE:
+        return GetSprineValue(seg, time);
+    case LINEAR:
+        return GetLinearValue(seg, time);
+    case STEP:
+        return &m_values[seg];
     default:
         break;
     }
@@ -406,283 +405,83 @@ NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetValue(float arg0) const {
     return NULL;
 }
 
-/* nalib/navector.h */
+template <typename T>
+const T* SpaTrack<T>::GetLinearValue(u_int seg, float time) const {
+    static T value;
+
+    float d0 = time - m_times[seg];
+    float d1 = m_times[seg + 1] - time;
+
+    value = (d1 * m_values[seg] + d0 * m_values[seg + 1]) / (d1 + d0);
+    return &value;
+}
+
+/*
+ * Cubic Hermite spline. Each key stores its value and two tangents, so
+ * the segment runs from p0 with out-tangent m0 to p1 with in-tangent m1.
+ */
+template <typename T>
+const T* SpaTrack<T>::GetSprineValue(u_int seg, float time) const {
+    static T value;
+
+    float dt = m_times[seg + 1] - m_times[seg];
+    const T& p0 = m_values[seg * 3];
+    const T& m0 = m_values[seg * 3 + 2];
+    const T& m1 = m_values[seg * 3 + 4];
+    const T& p1 = m_values[seg * 3 + 3];
+    if (dt == 0.0f) {
+        return &p0;
+    }
+
+    float t = (time - m_times[seg]) / dt;
+    T d = p0 - p1;
+
+    value = t * (t * (t * ((m0 + m1) * dt + d * 2.0f) - (m0 * 2.0f + m1) * dt - d * 3.0f) + m0 * dt) + p0;
+    return &value;
+}
+
+#ifndef NON_MATCHING
+/* nalib/namatrix.h and the SpaTrack templates above, in the original's order */
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4Uif);
+
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zt8NaVECTOR2Zfi4f);
+
+/* Weak copies of the 9- and 16-argument NaMATRIX<float, 4, 4>::Set */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_00149168);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", func_001491C0);
 
-static inline NaMATRIX<float, 4, 4> MakeMatrix_tmp_spadata(
-    const float& m00, const float& m01, const float& m02, const float& m03,
-    const float& m10, const float& m11, const float& m12, const float& m13,
-    const float& m20, const float& m21, const float& m22, const float& m23,
-    const float& m30, const float& m31, const float& m32, const float& m33) return ret {
-    SetMatrix_tmp_spadata(&ret, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
-}
-
-/* Same as above with a one-pass loop around Set; see RotateMatrix(int) */
-static inline NaMATRIX<float, 4, 4> MakeMatrixLoop_tmp_spadata(
-    const float& m00, const float& m01, const float& m02, const float& m03,
-    const float& m10, const float& m11, const float& m12, const float& m13,
-    const float& m20, const float& m21, const float& m22, const float& m23,
-    const float& m30, const float& m31, const float& m32, const float& m33) return ret {
-    do {
-        SetMatrix_tmp_spadata(&ret, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
-    } while (0);
-}
-
-#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf);
-#else
-template <>
-NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle) {
-    float yz = axis[1] * axis[1] + axis[2] * axis[2];
-    float len = sqrtf(axis[0] * axis[0] + yz);
-    float r = sqrtf(yz);
-    float p, q;
 
-    if (r < 1.1920929e-07f) {
-        p = 0.0f;
-        q = 1.0f;
-    } else {
-        p = axis[1] / r;
-        q = axis[2] / r;
-    }
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1ZfUif);
 
-    float a = r / len;
-    float b = -axis[0] / len;
-    float s = sinf(angle);
-    float c = cosf(angle);
-    float k = a * (c - 1.0f);
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1ZfUif);
 
-    return MakeMatrix_tmp_spadata(a * k + 1.0f, p * b * k + q * a * s, q * b * k - p * a * s, 0.0f,
-                                  p * b * k - q * a * s, -p * p * a * k + c, -p * q * a * k - b * s, 0.0f,
-                                  q * b * k + p * a * s, -p * q * a * k + b * s, -q * q * a * k + c, 0.0f,
-                                  0.0f, 0.0f, 0.0f, 1.0f);
-}
-#endif
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zff);
 
-/* prlib/spadata.cpp */
-template <>
-float* SpaTrack<float>::GetSprineValue(u_int seg, float arg1) const {
-    extern float value_tmp_spadata_sprine_float;
-
-    float *keys = this->unkC;
-    float dt = keys[seg + 1] - keys[seg];
-    float *p0 = &((float*)this)[seg * 3 + 4];
-    float *m0 = &((float*)this)[seg * 3 + 6];
-    float *m1 = &((float*)this)[seg * 3 + 8];
-    float *p1 = &((float*)this)[seg * 3 + 7];
-    if (dt == 0.0f) {
-        return p0;
-    }
-
-    float t = (arg1 - keys[seg]) / dt;
-    float d = *p0 - *p1;
-
-    value_tmp_spadata_sprine_float = t * (t * (t * ((*m0 + *m1) * dt + (d + d)) - (*m0 + *m0 + *m1) * dt - d * 3.0f) + *m0 * dt) + *p0;
-    return &value_tmp_spadata_sprine_float;
-}
-
-template <>
-float* SpaTrack<float>::GetLinearValue(u_int seg, float arg1) const {
-    extern float value_tmp_spadata_linear_float;
-
-    float *keys = this->unkC;
-    u_int next = seg + 1;
-    float *values = (float*)&this->unk10;
-    float *v0 = &values[seg];
-    float *v1 = &values[next];
-    float d0 = arg1 - keys[seg];
-    float d1 = keys[seg + 1] - arg1;
-
-    value_tmp_spadata_linear_float = (d1 * *v0 + d0 * *v1) / (d1 + d0);
-    return &value_tmp_spadata_linear_float;
-}
-
-template <>
-float* SpaTrack<float>::GetValue(float arg0) const {
-    if (this->unk2 & 0x1) {
-        float f13 = this->unkC[this->unk4 - 1];
-        if (arg0 < 0.0f || arg0 >= f13) {
-            arg0 = fmodf(arg0, f13);
-        }
-    }
-
-    u_int seg = this->SearchSegment(arg0);
-
-    if (seg == (u_int)-1) {
-        return (float*)&this->unk10;
-    }
-
-    if (seg == this->unk4) {
-        if (this->unk0 == 0) {
-            return (float*)&this->unk10 + ((seg - 1) * 3);
-        } else {
-            return (float*)&this->unkC + seg;
-        }
-    }
-
-    switch (this->unk0) {
-    case 0:
-        return this->GetSprineValue(seg, arg0);
-    case 1:
-        return this->GetLinearValue(seg, arg0);
-    case 2:
-        return (float*)&this->unk10 + seg;
-    default:
-        break;
-    }
-
-    return NULL;
-}
-
-#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetSprineValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
-#else /* Regalloc: spill slots for the temporaries' addresses differ */
-extern NaMATRIX<float, 4, 4> value_tmp_spadata_sprine_matrix asm("D_01C83310");
-extern int tmp_0_sprine_matrix asm("D_00399910");
 
-template <>
-NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetSprineValue(u_int seg, float arg1) const {
-    /* FIXME: static local; see the note in GetSprineValue */
-    if (tmp_0_sprine_matrix == 0) {
-        new (&value_tmp_spadata_sprine_matrix) NaMATRIX<float, 4, 4>;
-        tmp_0_sprine_matrix = 1;
-    }
-
-    float *keys = this->unkC;
-    float dt = keys[seg + 1] - keys[seg];
-    NaMATRIX<float, 4, 4> *p0 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 4];
-    NaMATRIX<float, 4, 4> *m0 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 36];
-    NaMATRIX<float, 4, 4> *m1 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 68];
-    NaMATRIX<float, 4, 4> *p1 = (NaMATRIX<float, 4, 4>*)&((float*)this)[seg * 48 + 52];
-    if (dt == 0.0f) {
-        return p0;
-    }
-
-    float t = (arg1 - keys[seg]) / dt;
-    NaMATRIX<float, 4, 4> d = *p0 - *p1;
-
-    value_tmp_spadata_sprine_matrix = ((((*m0 + *m1) * dt + d * 2.0f) * t - (*m0 * 2.0f + *m1) * dt - d * 3.0f) * t + *m0 * dt) * t + *p0;
-    return &value_tmp_spadata_sprine_matrix;
-}
-#endif
-
-#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetLinearValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4Uif);
-#else /* Regalloc: the stack slot addresses are loaded in a different order */
-extern NaMATRIX<float, 4, 4> value_tmp_spadata_linear_matrix asm("D_01C83350");
-extern int tmp_0_linear_matrix asm("D_00399914");
 
-template <>
-NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetLinearValue(u_int seg, float arg1) const {
-    /* FIXME: static local; see the note in GetSprineValue */
-    if (tmp_0_linear_matrix == 0) {
-        new (&value_tmp_spadata_linear_matrix) NaMATRIX<float, 4, 4>;
-        tmp_0_linear_matrix = 1;
-    }
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", GetValue__Ct8SpaTrack1Zt8NaMATRIX3Zfi4i4f);
 
-    float *keys = this->unkC;
-    float d0 = arg1 - keys[seg];
-    float d1 = keys[seg + 1] - arg1;
-
-    value_tmp_spadata_linear_matrix = (((NaMATRIX<float, 4, 4>*)&this->unk10)[seg] * d1
-                                       + ((NaMATRIX<float, 4, 4>*)&this->unk10)[seg + 1] * d0)
-                                      / (d1 + d0);
-    return &value_tmp_spadata_linear_matrix;
-}
-#endif
-
-template <>
-NaMATRIX<float, 4, 4>* SpaTrack<NaMATRIX<float, 4, 4> >::GetValue(float arg0) const {
-    if (this->unk2 & 0x1) {
-        float f13 = this->unkC[this->unk4 - 1];
-        if (arg0 < 0.0f || arg0 >= f13) {
-            arg0 = fmodf(arg0, f13);
-        }
-    }
-
-    u_int seg = this->SearchSegment(arg0);
-
-    if (seg == (u_int)-1) {
-        return (NaMATRIX<float, 4, 4>*)&this->unk10;
-    }
-
-    if (seg == this->unk4) {
-        if (this->unk0 == 0) {
-            return (NaMATRIX<float, 4, 4>*)&this->unk10 + ((seg - 1) * 3);
-        } else {
-            return (NaMATRIX<float, 4, 4>*)&this->unk10 + (seg - 1);
-        }
-    }
-
-    switch (this->unk0) {
-    case 0:
-        return this->GetSprineValue(seg, arg0);
-    case 1:
-        return this->GetLinearValue(seg, arg0);
-    case 2:
-        return (NaMATRIX<float, 4, 4>*)&this->unk10 + seg;
-    default:
-        break;
-    }
-
-    return NULL;
-}
-
-/* nalib/navector.h */
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", TranslateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4);
 
-template <>
-NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle) {
-    float c = cosf(angle);
-    float s = sinf(angle);
-
-    /*
-     * None of these loops repeat. They recreate loop notes that the
-     * original code had, which steer three ee-gcc passes:
-     * - the outer loop keeps the axis == 1 test from being a loop exit,
-     *   so reorg predicts it taken (bnel with the reload of s in the slot);
-     * - the loop around the axis == 1 return ends right before the last
-     *   arm, so CSE stops there and that arm reloads s from the stack;
-     * - the loop in MakeMatrixLoop_tmp_spadata leaves a NOTE_INSN_LOOP_BEG
-     *   before the last arm's label, so final aligns it to 8 bytes.
-     */
-    do {
-        if (axis == 0) {
-            return MakeMatrix_tmp_spadata(1.0f, 0.0f, 0.0f, 0.0f,
-                                          0.0f, c, s, 0.0f,
-                                          0.0f, -s, c, 0.0f,
-                                          0.0f, 0.0f, 0.0f, 1.0f);
-        }
-
-        if (axis == 1) {
-            do {
-                return MakeMatrixLoop_tmp_spadata(c, 0.0f, -s, 0.0f,
-                                                  0.0f, 1.0f, 0.0f, 0.0f,
-                                                  s, 0.0f, c, 0.0f,
-                                                  0.0f, 0.0f, 0.0f, 1.0f);
-            } while (0);
-        }
-
-        return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
-                                      -s, c, 0.0f, 0.0f,
-                                      0.0f, 0.0f, 1.0f, 0.0f,
-                                      0.0f, 0.0f, 0.0f, 1.0f);
-    } while (0);
-}
+INCLUDE_ASM("asm/nonmatchings/prlib/spadata", RotateMatrix__t8NaMATRIX3Zfi4i4iRCf);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/spadata", ScaleMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4);
+#endif
 
+/* Same Hermite spline as the generic version, written as one VU0 block */
 template <>
-NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float arg1) const {
-    float f2 = this->unkC[seg + 1] - this->unkC[seg];
-    NaVECTOR<float, 4> *a0 = (NaVECTOR<float, 4>*)&this->unk10 + (seg * 3);
-    if (f2 == 0.0f) {
-        return a0;
+const NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, float time) const {
+    float dt = m_times[seg + 1] - m_times[seg];
+    const NaVECTOR<float, 4> *key = &m_values[seg * 3];
+    if (dt == 0.0f) {
+        return key;
     }
 
-    float f0 = (arg1 - this->unkC[seg]) / f2;
+    float t = (time - m_times[seg]) / dt;
 
     /*
      * FIXME(poly): These `tmp_X` symbols aren't real
@@ -703,19 +502,19 @@ NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, flo
     }
 
     #if 0
-        vf04.xyzw = a0[0];
-        vf05.xyzw = a0[3];
+        vf04.xyzw = key[0];
+        vf05.xyzw = key[3];
         vf01.xyzw = vf04.xyzw - vf05.xyzw;
         
-        vf06.xyzw = a0[2];
-        vf07.xyzw = a0[4];
+        vf06.xyzw = key[2];
+        vf07.xyzw = key[4];
         vf02.xyzw = vf06.xyzw + vf07.xyzw;
         
-        vf08.x    = f2;
+        vf08.x    = dt;
         ACC.xyzw  = vf01.xyzw + vf01.xyzw;
         vf03.xyzw = ACC.xyzw + (vf02.xyzw * vf08.x);
         
-        vf09.x    = f0;
+        vf09.x    = t;
         ACC.xyzw  = vf06.xyzw + vf06.xyzw;
         vf02.xyzw = ACC.xyzw + (vf07.xyzw * vf00.w);
         ACC.w     = vf00.w + vf00.w;
@@ -757,7 +556,7 @@ NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int seg, flo
         "vmaddax  ACC,    $vf06,  $vf10  \n\t"
         "vmaddx   $vf01,  $vf03,  $vf02  \n\t"
         "sqc2     $vf01,  0(%0)          \n\t"
-    : : "r"(&return_buffer), "r"(a0), "r"(f2), "r"(f0));
+    : : "r"(&return_buffer), "r"(key), "r"(dt), "r"(t));
     #endif
 
     return &return_buffer;

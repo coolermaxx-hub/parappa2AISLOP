@@ -61,8 +61,10 @@ PrPERSPECTIVE_CAMERA* SpcFileHeader::GetCamera(float time) const {
 #endif
 
 /* nalib/namatrix.h: weak copies of the 9- and 16-argument Set and RotateMatrix(axis, angle) */
+#ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/camera", func_00153AD0);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/camera", func_00153B28);
 
 INCLUDE_ASM("asm/nonmatchings/prlib/camera", func_00153BD8);
+#endif

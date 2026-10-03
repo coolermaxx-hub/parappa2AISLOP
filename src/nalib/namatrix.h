@@ -189,6 +189,11 @@ public:
 };
 
 template <typename T, int t0, int t1>
+inline NaMATRIX<float, 4, 4> operator*(const float& s, const NaMATRIX<T, t0, t1>& m) {
+    return m * s;
+}
+
+template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m10, const T& m11) {
     ((T*)m)[0] = m00;
     ((T*)m)[1] = m01;
@@ -289,6 +294,34 @@ template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4>& NaMATRIX<T, t0, t1>::Scale(const float& x, const float& y, const float& z) {
     *this = ScaleMatrix(x, y, z) * *this;
     return *this;
+}
+
+/* Rotation by angle around axis (which needn't be unit length) */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle) {
+    float yz = axis[1] * axis[1] + axis[2] * axis[2];
+    float len = sqrtf(axis[0] * axis[0] + yz);
+    float r = sqrtf(yz);
+    float p, q;
+
+    if (r < 1.1920929e-07f) {
+        p = 0.0f;
+        q = 1.0f;
+    } else {
+        p = axis[1] / r;
+        q = axis[2] / r;
+    }
+
+    float a = r / len;
+    float b = -axis[0] / len;
+    float s = sinf(angle);
+    float c = cosf(angle);
+    float k = a * (c - 1.0f);
+
+    return NaMATRIX<float, 4, 4>(a * k + 1.0f,          p * b * k + q * a * s,  q * b * k - p * a * s,  0.0f,
+                                 p * b * k - q * a * s, -p * p * a * k + c,      -p * q * a * k - b * s, 0.0f,
+                                 q * b * k + p * a * s, -p * q * a * k + b * s,  -q * q * a * k + c,     0.0f,
+                                 0.0f,                  0.0f,                    0.0f,                   1.0f);
 }
 
 /*
