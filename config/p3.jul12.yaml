@@ -211,7 +211,7 @@ segments:
         - [0x8DD90, .data, menu/p3mc]
         - [0x8DDF8, .data, menu/memc]
         - [0x8E1D0,  data, menu/mntm2hed]
-        - [0x8F580,  data, menu/menufont]
+        - [0x8F580,  .data, menu/menufont]
         - [0x90430, .data, menu/pksprite]
 
         - [0x90440,  databin, common_ipk] # common_ipk_start/common_ipk_end

@@ -1662,13 +1662,6 @@ codeKanjiCheck                      = 0x0013db18; // type:func allow_duplicated:
 codeKanjiACheck                     = 0x0013db58; // type:func
 euc2sjis                            = 0x0013db98; // type:func allow_duplicated:true
 
-SubtGsTex0_TmpMenuFont              = 0x0018f580; // size:0x18
-mcode_ascii_TmpMenuFont             = 0x0018f598; // size:0x8C0 can_reference:false
-mcode_HalfSpace                     = 0x0018fe58; // size:0xA
-PadSymbolFontA                      = 0x0018fe68; // size:0x108 can_reference:false
-ArowPat                             = 0x0018ff70; // size:0x32
-TsFont                              = 0x0018ffa8; // size:0x3B6 can_reference:false
-Tbl_ASC2EUC                         = 0x00190360; // size:0xC1
 
 _PadFont_SW                         = 0x00399890;
 _PadArrowState                      = 0x00399894; // size:0x4
