@@ -818,7 +818,7 @@ segments:
       - { path: src/prlib/tim2.cpp.o }
       - { path: src/prlib/animation.cpp.o }
       - { path: asm/data/prlib/camera.sdata.s.o }
-      - { path: asm/data/prlib/contour.sdata.s.o }
+      - { path: src/prlib/contour.cpp.o }
       - { path: src/prlib/dma.cpp.o }
 
       - { path: src/nalib/navector.cpp.o }

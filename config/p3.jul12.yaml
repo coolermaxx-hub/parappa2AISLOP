@@ -391,7 +391,7 @@ segments:
         - [0x2999B4, .sdata, prlib/dmaqueue]
         - [0x2999B8, .sdata, prlib/tim2]
         - [0x2999C0, sdata, prlib/camera]
-        - [0x2999C4, sdata, prlib/contour]
+        - [0x2999C4, .sdata, prlib/contour]
 
         - [0x2999D0, .sdata, nalib/navector]
 

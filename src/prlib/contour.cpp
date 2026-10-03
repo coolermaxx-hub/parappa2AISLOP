@@ -2,9 +2,8 @@
 #include "renderstuff.h"
 #include "spram.h"
 
-/* sdata */
-extern PrSPRAM_DATA *prSpramData_tmp_contour;
-extern float contour_max_depth[];
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static float contourMaxDepth = 3.4028235e38f;
 
 void PrModelObject::SaveContour() {
     SpmFileHeader *spm = m_spm_image;
@@ -72,9 +71,9 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
     m_contourPacket->m_contour_blur_alpha[0] = model->m_contour_blur_alpha[0];
     m_contourPacket->m_contour_blur_alpha[1] = model->m_contour_blur_alpha[1];
 
-    const NaMATRIX<float, 4, 4> projected = prSpramData_tmp_contour->m_view_projection_matrix * matrix;
+    const NaMATRIX<float, 4, 4> projected = prSpramData->m_view_projection_matrix * matrix;
     NaVECTOR<float, 4> position;
     NaMATRIX<float, 4, 4>::Apply(position, projected, m_sortPosition);
-    const float depth = position[3] == 0.0f ? position[2] * contour_max_depth[0] : position[2] / position[3];
+    const float depth = position[3] == 0.0f ? position[2] * contourMaxDepth : position[2] / position[3];
     prRenderStuff.AppendTransmitDmaTag(&m_contourPacket->m_tag, -1, depth);
 }
