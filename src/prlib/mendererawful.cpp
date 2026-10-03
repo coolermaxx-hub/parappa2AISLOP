@@ -14,6 +14,16 @@
 #include <libdma.h>
 #include <libgraph.h>
 
+/*
+ * Never called. PrDrawAwfulBackground builds a NaMATRIX<float, 2, 2>,
+ * which makes this TU emit weak copies of the 4- and 9-argument 2x2 Set
+ * (the first copies in the link). While it is still asm, this keeps them.
+ */
+static inline void UnusedSet_tmp_mendererawful(NaMATRIX<float, 2, 2>& m, const float& a) {
+    m.Set(a, a, a, a);
+    m.Set(a, a, a, a, a, a, a, a, a);
+}
+
 /* data */
 extern u_long mendererFadeData[7][2];
 extern u_long awfulBackgroundPacket[24][2] asm("D_0038C9B0");
@@ -201,11 +211,4 @@ void PrUpdateAwfulMenderer() {
 
     WaveCtrlUpdate(&awfulWave, prMendererSpeed);
 }
-#endif
-
-/* nalib/navector.h */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", Set__t8NaMATRIX3Zfi2i2RCfT1T1T1T1T1T1T1T1);
 #endif

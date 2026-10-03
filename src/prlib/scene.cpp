@@ -8,6 +8,18 @@
 /* data */
 extern char D_0038C720[]; /* "(noname)" */
 
+/*
+ * Never called. The constructor and SetAppropriateDefaultCamera use
+ * NaVECTOR::Set and then the 4-argument constructor, which makes this TU
+ * emit weak copies of both, in that order. While those two functions are
+ * still asm (and call the copies through asm labels), this keeps the copies
+ * and their order.
+ */
+static inline void UnusedVector_tmp_scene(NaVECTOR<float, 4>& v, const float& a) {
+    v.Set(a, a, a, a);
+    NaVECTOR<float, 4> u(a, a, a, a);
+}
+
 NaVECTOR<float, 4>& SetVector_tmp_scene(NaVECTOR<float, 4> *v, const float& x, const float& y, const float& z, const float& w) asm("Set__t8NaVECTOR2Zfi4RCfT1T1T1");
 
 #ifndef NON_MATCHING
@@ -269,8 +281,3 @@ void PrSceneObject::PreprocessModel() {
     m_model_set.m_head = head;
     m_model_set.m_tail = tail;
 }
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B988);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/scene", func_0014B9B0);

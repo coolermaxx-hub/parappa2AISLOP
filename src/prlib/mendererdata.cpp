@@ -29,6 +29,18 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data);
 float GetSynchronizeRatio(const PrNoodlePositionData *data);
 void InitializeNoodlePositionData();
 
+/*
+ * Never called. PrGetNoodlePolygonPosition builds a NaMATRIX<float, 2, 2>
+ * and fills its output with NaVECTOR::Set, which makes this TU emit weak
+ * copies of the 4- and 9-argument 2x2 Set and of NaVECTOR::Set, in that
+ * order. While that function is still asm, this keeps the copies.
+ */
+static inline void UnusedSet_tmp_mendererdata(NaMATRIX<float, 2, 2>& m, NaVECTOR<float, 4>& v, const float& a) {
+    m.Set(a, a, a, a);
+    m.Set(a, a, a, a, a, a, a, a, a);
+    v.Set(a, a, a, a);
+}
+
 static inline float ABS_tmp(float x) {
     return (x >= 0.0f) ? x : -x;
 }
@@ -171,13 +183,4 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     pos[2].Set(p2[0], p2[1], 0.0f, 1.0f);
     pos[3].Set(p3[0], p3[1], 0.0f, 1.0f);
 }
-#endif
-
-/* nalib/navector.h */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151D78);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DA0);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/mendererdata", func_00151DF8);
 #endif
