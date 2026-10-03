@@ -1,9 +1,19 @@
 #include "common.h"
 
+#include <nalib/namatrix.h>
+
+/*
+ * Never called. The original TU emitted a weak copy of the 9-argument
+ * 4x4 Set ahead of the 16-argument one (which RotateMatrix(int) uses);
+ * this reproduces that copy and its place in the emission order.
+ */
+static inline void UnusedSet9_tmp_billboard(NaMATRIX<float, 4, 4>& m, const float& a) {
+    m.Set(a, a, a, a, a, a, a, a, a);
+}
+
 #include "model.h"
 #include "spram.h"
 
-#include <nalib/namatrix.h>
 #include <math.h>
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx);
@@ -36,10 +46,3 @@ void SpmNode::ApplyBillboardMatrix() {
     NaMATRIX<float, 4, 4>& m = this->unk40;
     m = m * CreateBillboardMatrix(m);
 }
-
-/* nalib/navector.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/billboard", func_0014C4E8);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/billboard", func_0014C540);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/billboard", func_0014C5F0);

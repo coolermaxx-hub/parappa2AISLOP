@@ -4,6 +4,7 @@
 #include "navector.h"
 
 #include <libvu0.h>
+#include <math.h>
 
 template <typename T, int t0, int t1>
 class NaMATRIX {
@@ -222,6 +223,72 @@ NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const 
     ((T*)m)[14] = m32;
     ((T*)m)[15] = m33;
     return *this;
+}
+
+/*
+ * Helpers for RotateMatrix(int): build a matrix through the 4x4 Set.
+ * Templates so they only instantiate Set where used.
+ * The Loop variant wraps Set in a one-pass loop; see RotateMatrix(int).
+ */
+template <typename T>
+static inline NaMATRIX<T, 4, 4> NaMakeMatrix_tmp(
+    const T& m00, const T& m01, const T& m02, const T& m03,
+    const T& m10, const T& m11, const T& m12, const T& m13,
+    const T& m20, const T& m21, const T& m22, const T& m23,
+    const T& m30, const T& m31, const T& m32, const T& m33) return ret {
+    ret.Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+}
+
+template <typename T>
+static inline NaMATRIX<T, 4, 4> NaMakeMatrixLoop_tmp(
+    const T& m00, const T& m01, const T& m02, const T& m03,
+    const T& m10, const T& m11, const T& m12, const T& m13,
+    const T& m20, const T& m21, const T& m22, const T& m23,
+    const T& m30, const T& m31, const T& m32, const T& m33) return ret {
+    do {
+        ret.Set(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33);
+    } while (0);
+}
+
+/*
+ * Weak copies of this are emitted by billboard.cpp and menderer.cpp;
+ * spadata.cpp has the first copy as an explicit specialization.
+ * None of the loops repeat. They recreate loop notes that the original
+ * code had, which steer three ee-gcc passes:
+ * - the outer loop keeps the axis == 1 test from being a loop exit,
+ *   so reorg predicts it taken (bnel with the reload of s in the slot);
+ * - the loop around the axis == 1 return ends right before the last
+ *   arm, so CSE stops there and that arm reloads s from the stack;
+ * - the loop in NaMakeMatrixLoop_tmp leaves a NOTE_INSN_LOOP_BEG
+ *   before the last arm's label, so final aligns it to 8 bytes.
+ */
+template <typename T, int t0, int t1>
+NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const float& angle) {
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    do {
+        if (axis == 0) {
+            return NaMakeMatrix_tmp(1.0f, 0.0f, 0.0f, 0.0f,
+                                    0.0f, c, s, 0.0f,
+                                    0.0f, -s, c, 0.0f,
+                                    0.0f, 0.0f, 0.0f, 1.0f);
+        }
+
+        if (axis == 1) {
+            do {
+                return NaMakeMatrixLoop_tmp(c, 0.0f, -s, 0.0f,
+                                            0.0f, 1.0f, 0.0f, 0.0f,
+                                            s, 0.0f, c, 0.0f,
+                                            0.0f, 0.0f, 0.0f, 1.0f);
+            } while (0);
+        }
+
+        return NaMakeMatrix_tmp(c, s, 0.0f, 0.0f,
+                                -s, c, 0.0f, 0.0f,
+                                0.0f, 0.0f, 1.0f, 0.0f,
+                                0.0f, 0.0f, 0.0f, 1.0f);
+    } while (0);
 }
 
 #endif /* NALIB_NAMATRIX_H */

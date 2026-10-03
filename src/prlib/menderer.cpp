@@ -309,6 +309,9 @@ done:
 }
 #endif
 
+/* Declared as specialized so this TU doesn't instantiate the template; its weak copy is still asm below */
+template <> NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
+
 /* Template instances emitted in spram.cpp */
 NaMATRIX<float, 4, 4> TransMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148248");
 NaMATRIX<float, 4, 4> ScaleMatrix_tmp_menderer(const float& x, const float& y, const float& z) asm("func_00148140");
