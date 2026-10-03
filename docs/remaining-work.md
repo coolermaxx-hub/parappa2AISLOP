@@ -77,3 +77,12 @@ in `TsOption_Flow`. Still open: the `*_tmp_NNN` externs in `menusub.c` and
 `mbar.c`, which stand for file-static variables that still live in splat data
 sections, and the `*(u_long *)&sceGs...` register-struct reads used to feed GIF
 packets.
+
+## Known byte differences from readability changes
+
+- `PrFloatRandom` (src/prlib/random.cpp) is a plain rejection-sampling
+  do-while. The original needed a backward `goto` to match. Behaviour is
+  identical (reroll while `value / RAND_MAX >= 1.0f`); only the block layout
+  differs.
+- `DrawMozaikuDisp` (src/main/drawctrl.c) builds its unused masked frame copy
+  as a typed struct instead of a volatile `u_long` store.
