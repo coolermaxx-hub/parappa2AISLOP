@@ -888,7 +888,7 @@ segments:
       - { path: src/menu/menu.c.o }
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
-      - { path: asm/data/menu/menusub.sbss.s.o }
+      - { path: src/menu/menusub.c.o }
       - { path: asm/data/menu/p3mc.sbss.s.o }
       - { path: src/menu/memc.c.o }
       - { path: src/menu/mntm2hed.c.o }
@@ -1001,7 +1001,7 @@ segments:
       - { path: asm/data/menu/menu.bss.s.o }
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
-      - { path: asm/data/menu/menusub.bss.s.o }
+      - { path: src/menu/menusub.c.o }
       - { path: asm/data/menu/p3mc.bss.s.o }
       - { path: asm/data/menu/memc.bss.s.o }
       - { path: src/menu/mntm2hed.c.o }

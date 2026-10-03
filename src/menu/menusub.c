@@ -22,8 +22,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* bss 1c7b0b8 */ extern MN_SCENE MNS_RepCounter; /* static */
-/* bss 1c7c210 */ extern MN_SCENE MNS_StgCounter[2]; /* static */
+static TSREPPAD menuPadState[2][4];
+static TSSND_CHAN TsSndChan[15];
+static BGMSTATE TsBGMState;
+static MN_SCENE MNS_StageMap2;
+static MN_SCENE MNS_CityHall;
+static MN_SCENE MNS_OptCounter;
+static MN_SCENE MNS_RepCounter;
+static MN_SCENE MNS_StgCounter[2];
+static MN_SCENE MNS_JimakuBak;
+static P3MC_RANKSCORE CurRankScore;
+static CURFILEINFO CurFileInfo;
+static TsUSERPKT MnPkt;
+static TsUSERPKT MnLPkt;
+static sceGifPacket FPacket;
+static MCMES_WORK MCMesWork;
+static CMPMES_WORK CmpMesWork;
+static RANKLIST RankLst[20];
+static POPUP_MENU PopupMenu;
+static SAVE_MENU SaveMenu;
+static JUKE_MENU JukeMenu;
+static OPTION_MENU OptionMenu;
+static USERLIST_MENU UserListMenu;
+static SCFADE ScFade;
+static P3GAMESTATE *pP3GameState;
+static int _bMapCaptureReq;
+static int _MNwaitTime;
+static int CurMapOldFlg;
+static int CurMapNo;
+static int CurMapBakFlg;
+static int CurMapState;
+static USER_DATA *UserWork;
+static P3MC_STAGERANK *pCStageRank;
+static P3MC_USRLST *UserLst;
+static MN_USERLST_WORK *UserDispWork;
+static int UCheckLoadError;
+static int UCheckSaveError;
+static int subStatus;
+static int ret;
+static int errorNo;
+static int waitTime;
+static MCRWDATA_HDL *pGameData;
 static MNMAPPOS mnmapMap1[] = {
     {
         0,
@@ -1003,12 +1042,6 @@ static USERLIST_TYPE UserListTbl[] = {
 };
 /* sdata 399820 */ extern int _TexFunc; /* static */
 /* sdata 399824 */ extern HOSI_OBJ *HOSIObj; /* static */
-/* bss 1c77ac0 */ extern TSREPPAD menuPadState[2][4]; /* static */
-/* bss 1c77ae0 */ extern TSSND_CHAN TsSndChan[15]; /* static */
-/* bss 1c77c10 */ extern BGMSTATE TsBGMState; /* static */
-/* sbss 399b18 */ extern P3GAMESTATE *pP3GameState; /* static */
-/* sbss 399b1c */ extern int _bMapCaptureReq; /* static */
-/* sbss 399b20 */ extern int _MNwaitTime; /* static */
 MN_SCENE MNS_StageMap = {
     0,
     0,
@@ -1565,40 +1598,7 @@ MN_SCENE MNS_StageMap = {
     0,
     0,
 };
-/* bss 1c77cb0 */ extern MN_SCENE MNS_StageMap2; /* static */
-/* bss 1c78e08 */ extern MN_SCENE MNS_CityHall; /* static */
-/* bss 1c79f60 */ extern MN_SCENE MNS_OptCounter; /* static */
-/* bss 1c7e4b8 */ extern MN_SCENE MNS_JimakuBak; /* static */
-/* sbss 399b24 */ extern int CurMapOldFlg; /* static */
-/* sbss 399b28 */ extern int CurMapNo; /* static */
-/* sbss 399b2c */ extern int CurMapBakFlg; /* static */
-/* sbss 399b30 */ extern int CurMapState; /* static */
-/* sbss 399b34 */ extern USER_DATA *UserWork; /* static */
-/* sbss 399b38 */ extern P3MC_STAGERANK *pCStageRank; /* static */
-/* bss 1c7f610 */ extern P3MC_RANKSCORE CurRankScore; /* static */
-/* sbss 399b3c */ extern P3MC_USRLST *UserLst; /* static */
-/* sbss 399b40 */ extern MN_USERLST_WORK *UserDispWork; /* static */
-/* bss 1c7f628 */ extern CURFILEINFO CurFileInfo; /* static */
-/* bss 1c7f640 */ extern TsUSERPKT MnPkt; /* static */
-/* bss 1c7f6e0 */ extern TsUSERPKT MnLPkt; /* static */
-/* bss 1c7f780 */ extern sceGifPacket FPacket; /* static */
 /* sdata 399828 */ extern MAP_TIME MapTime;
-/* sbss 399b44 */ extern int UCheckLoadError; /* static */
-/* sbss 399b48 */ extern int UCheckSaveError; /* static */
-/* sbss 399b4c */ extern int subStatus; /* static */
-/* sbss 399b50 */ extern int ret; /* static */
-/* sbss 399b54 */ extern int errorNo; /* static */
-/* sbss 399b58 */ extern int waitTime; /* static */
-/* sbss 399b5c */ extern MCRWDATA_HDL *pGameData; /* static */
-/* bss 1c7f790 */ extern MCMES_WORK MCMesWork; /* static */
-/* bss 1c7f7c8 */ extern CMPMES_WORK CmpMesWork; /* static */
-/* bss 1c7f7e0 */ extern RANKLIST RankLst[]; /* static */
-/* bss 1c7f970 */ extern POPUP_MENU PopupMenu; /* static */
-/* bss 1c7fa88 */ extern SAVE_MENU SaveMenu; /* static */
-/* bss 1c7fb48 */ extern JUKE_MENU JukeMenu; /* static */
-/* bss 1c80f60 */ extern OPTION_MENU OptionMenu; /* static */
-/* bss 1c80fb0 */ extern USERLIST_MENU UserListMenu; /* static */
-/* bss 1c810c8 */ extern SCFADE ScFade; /* static */
 
 static int   TsGetMenuPadIsRepeat(int no, int npad);
 static void  TSSNDPLAY(int n);
@@ -3418,8 +3418,8 @@ int TsAnimeWait_withKeySkip(u_int tpad, MN_SCENE *scene, int ltim, u_int bnk) {
 }
 
 static int TsMemCardCheck_Flow(int flg, u_int tpad) {
-    extern int state;
-    extern int mesNo;
+    static int state;
+    static int mesNo;
     int ret;
 
     if (flg == 1) {
@@ -3481,8 +3481,8 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
 static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     /* TODO: Fix names once made static. */
-    /* sbss 399ad0 */ extern int state_tmp_253;
-    /* bss 1c77a50 */ extern MAPPOS MapCity_tmp_254;
+    static int state;
+    static MAPPOS MapCity;
     int ret;
     int mn;
 
@@ -3491,20 +3491,20 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         case 0:
             pP3GameState->nStage = 0;
             MenuVoiceBankSet(0);
-            state_tmp_253 = 0;
+            state = 0;
             break;
         case 1:
             MenuVoiceBankSet(0);
-            state_tmp_253 = 0x6500;
+            state = 0x6500;
             break;
         case 2:
             MenuVoiceBankSet(0);
             TsBGMPlay(1, 0x14);
-            state_tmp_253 = 0x2000;
+            state = 0x2000;
             break;
         case 3:
             MenuVoiceBankSet(0);
-            state_tmp_253 = 0;
+            state = 0;
             break;
         }
 
@@ -3512,24 +3512,24 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         return 0;
     }
 
-    switch (state_tmp_253) {
+    switch (state) {
     case 0:
         CurMapOldFlg = -1;
         mn = TsMENU_GetMapNo(NULL);
         TsMENU_SetMapScreen(mn);
-        MapCity_tmp_254.pscene = &MNS_StageMap;
-        MapCity_tmp_254.panime = StageMapAnimePA;
-        MapCity_tmp_254.lmtPos = mn + 1;
+        MapCity.pscene = &MNS_StageMap;
+        MapCity.panime = StageMapAnimePA;
+        MapCity.lmtPos = mn + 1;
 
         if (mn < 2) {
-            MapCity_tmp_254.mnmap = mnmapMap1;
+            MapCity.mnmap = mnmapMap1;
         } else if (pP3GameState->pLog->nRound >= 4) {
-            MapCity_tmp_254.mnmap = mnmapMap2;
+            MapCity.mnmap = mnmapMap2;
         } else {
-            MapCity_tmp_254.mnmap = mnmapMap;
+            MapCity.mnmap = mnmapMap;
         }
 
-        MpMapMenu_Flow(1, &MapCity_tmp_254, 0);
+        MpMapMenu_Flow(1, &MapCity, 0);
 
         switch (pP3GameState->nStage) {
         case 1:
@@ -3565,18 +3565,18 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        MpMapMenu_Flow(3, &MapCity_tmp_254, mn);
+        MpMapMenu_Flow(3, &MapCity, mn);
         TsCMPMes_SetMes(-1);
         TsSet_ParappaCapColor();
         if (pP3GameState->pAutoMove == NULL) {
-            TsBGMPlay(MapCity_tmp_254.curPos + 1, 0xa);
+            TsBGMPlay(MapCity.curPos + 1, 0xa);
         }
-        state_tmp_253 = 0x1000;
+        state = 0x1000;
         /* fallthrough */
     case 0x1000:
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap, 1);
-        state_tmp_253 = 0x1010;
+        state = 0x1010;
         break;
     case 0x1010:
         if (!pP3GameState->isWipeEnd || TsBGMLoadCheck()) {
@@ -3633,10 +3633,10 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             }
 
             if (pP3GameState->pAutoMove != NULL) {
-                MpMapMenu_Flow(4, &MapCity_tmp_254, mn);
+                MpMapMenu_Flow(4, &MapCity, mn);
 
-                if (MapCity_tmp_254.sndtrg == 1) {
-                    TsBGMChangePos(MapCity_tmp_254.curPos + 1);
+                if (MapCity.sndtrg == 1) {
+                    TsBGMChangePos(MapCity.curPos + 1);
                 }
 
                 pP3GameState->pAutoMove++;
@@ -3647,30 +3647,30 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         } 
 
         if (mn == -2) {
-            state_tmp_253 = 0x5010;
+            state = 0x5010;
             break;
         }
 
-        state_tmp_253 = 0x1020;
+        state = 0x1020;
         /* fallthrough */
     case 0x1020:
-        if (!MapCity_tmp_254.bMove) {
+        if (!MapCity.bMove) {
             if (TsCheckTimeMapChange()) {
                 break;
             }
         }
 
-        ret = MpMapMenu_Flow(0, &MapCity_tmp_254, tpad);
-        if (MapCity_tmp_254.anmStop != 0) {
+        ret = MpMapMenu_Flow(0, &MapCity, tpad);
+        if (MapCity.anmStop != 0) {
             if (pP3GameState->pAutoMove != NULL) {
-                state_tmp_253 = 0x1018;
+                state = 0x1018;
                 break;
             }
         }
 
-        switch (MapCity_tmp_254.sndtrg) {
+        switch (MapCity.sndtrg) {
         case 1:
-            TsBGMChangePos(MapCity_tmp_254.curPos + 1);
+            TsBGMChangePos(MapCity.curPos + 1);
             break;
         case 3:
             TSSNDPLAY(VSND_CANCEL);
@@ -3682,9 +3682,9 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         if (ret == 0) {
             break;
         } else if (ret == 1) {
-            state_tmp_253 = 0x1100;
+            state = 0x1100;
         } else if (ret == -1) {
-            state_tmp_253 = 0x1200;
+            state = 0x1200;
             break;
         } else {
             break;
@@ -3692,28 +3692,28 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
         /* fallthrough */
     case 0x1100:
-        if (MapCity_tmp_254.curPos == 0) {
+        if (MapCity.curPos == 0) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
-            state_tmp_253 = 0x6000;
+            state = 0x6000;
             break;
-        } else if (MapCity_tmp_254.curPos == 9) {
+        } else if (MapCity.curPos == 9) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
-            state_tmp_253 = 0x5000;
+            state = 0x5000;
             break;
         }
 
         TSSNDPLAY(VSND_SELMODE);
-        pP3GameState->nStage = MapCity_tmp_254.curPos;
-        state_tmp_253 = 0x3000;
+        pP3GameState->nStage = MapCity.curPos;
+        state = 0x3000;
         break;
     case 0x1200:
         TsBGMStop(0x26);
         _MNwaitTime = 40;
         TsCMPMes_SetMes(-1);
-        pP3GameState->nStage = MapCity_tmp_254.curPos;
-        state_tmp_253 = 0x1210;
+        pP3GameState->nStage = MapCity.curPos;
+        state = 0x1210;
         /* fallthrough */
     case 0x1210:
         if (--_MNwaitTime <= 0) {
@@ -3722,23 +3722,23 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case 0x2000:
         if (pP3GameState->nStage < 1 || pP3GameState->nStage > 8) {
-            state_tmp_253 = 0;
+            state = 0;
             return 0;
         }
         TsRanking_Set();
         MpSave_Flow(1, 0, 0);
-        state_tmp_253 = 0x2010;
+        state = 0x2010;
         /* fallthrough */
     case 0x2010:
         if (!pP3GameState->isWipeEnd) {
             break;
         }
         _MNwaitTime = 30;
-        state_tmp_253 = 0x2020;
+        state = 0x2020;
         /* fallthrough */
     case 0x2020:
         if (--_MNwaitTime <= 0) {
-            state_tmp_253 = 0x2100;
+            state = 0x2100;
         } else {
             break;
         }        
@@ -3747,23 +3747,23 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         if (!MpSave_Flow(0, tpad, tpad2)) {
             return 0;
         }
-        state_tmp_253 = 0x2200;
+        state = 0x2200;
         /* fallthrough */
     case 0x2200:
         if (TsSCFADE_Set(2, 0x1e, 0)) {
             return 0;
         }
         TsSet_ParappaCapColor();
-        state_tmp_253 = 0x2400;
+        state = 0x2400;
         /* fallthrough */
     case 0x2400:
         TsSCFADE_Set(1, 0x1e, 0);
-        state_tmp_253 = 0;
+        state = 0;
         break;
     case 0x3000:
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
         MpPopMenu_Flow(1, 0);
-        state_tmp_253 = 0x3010;
+        state = 0x3010;
         /* fallthrough */
     case 0x3010:
         ret = MpPopMenu_Flow(0, tpad);
@@ -3772,7 +3772,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         } else if (ret == -1) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-            state_tmp_253 = 0x1000;
+            state = 0x1000;
             break;
         }
 
@@ -3791,14 +3791,14 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        state_tmp_253 = 0x4000;
+        state = 0x4000;
         break;
     case 0x4000:
         TsCheckEnding(pP3GameState);
         TsBGMStop(0x20);
         _MNwaitTime = 32;
         TsCMPMes_SetMes(-1);
-        state_tmp_253 = 0x4010;
+        state = 0x4010;
         /* fallthrough */
     case 0x4010:
         if (--_MNwaitTime <= 0) {
@@ -3807,24 +3807,24 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case 0x5000:
         pP3GameState->curRecJacket = 0;
-        state_tmp_253 = 0x5100;
+        state = 0x5100;
         break;
     case 0x5010:
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-        state_tmp_253 = 0x5018;
+        state = 0x5018;
         _MNwaitTime = 40;
         /* fallthrough */
     case 0x5018:
         if (--_MNwaitTime <= 0) {
             TSSNDPLAY(VSND_SELMODE);
-            state_tmp_253 = 0x5100;
+            state = 0x5100;
         }
         break;
     case 0x5100:
-        pP3GameState->nStage = MapCity_tmp_254.curPos;
+        pP3GameState->nStage = MapCity.curPos;
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
         TsJukeMenu_Flow(1, pP3GameState->curRecJacket);
-        state_tmp_253 = 0x5200;
+        state = 0x5200;
         /* fallthrough */
     case 0x5200:
         if (!TsJukeMenu_Flow(0, tpad)) {
@@ -3832,56 +3832,56 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         TsJukeMenu_Flow(2, 0);
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-        state_tmp_253 = 0x1000;
+        state = 0x1000;
         break;
     case 0x6000:
         MenuVoiceBankSet(0);
-        state_tmp_253 = 0x6001;
+        state = 0x6001;
         /* fallthrough */
     case 0x6001:
         if (TsSCFADE_Set(2, 0x14, 0)) {
             return 0;
         }
-        state_tmp_253 = 0x6010;
+        state = 0x6010;
         /* fallthrough */
     case 0x6010:
         TsBGMPlay(1, 0x14);
         TsSCFADE_Set(1, 0x14, 0);
         MpCityHall_Flow(1, 0, 0);
-        state_tmp_253 = 0x7000;
+        state = 0x7000;
         break;
     case 0x6500:
         TsBGMPlay(1, 0x14);
         MpCityHall_Flow(1, 1, 0);
-        state_tmp_253 = 0x6510;
+        state = 0x6510;
         /* fallthrough */
     case 0x6510:
         if (!pP3GameState->isWipeEnd) {
             break;
         }
-        state_tmp_253 = 0x7000;
+        state = 0x7000;
         /* fallthrough */
     case 0x7000:
         ret = MpCityHall_Flow(0, tpad, tpad2);
         if (ret == 0) {
             break;
         } else if (ret == 2) {
-            state_tmp_253 = 0xff00;
+            state = 0xff00;
         } else if (ret == 3) {
-            state_tmp_253 = 0x7020;
+            state = 0x7020;
         } else {
-            state_tmp_253 = 0x7010;
+            state = 0x7010;
         }
         break;
     case 0x7010:
         MenuVoiceBankSet(0);
-        state_tmp_253 = 0x7011;
+        state = 0x7011;
         /* fallthrough */
     case 0x7011:
         if (TsSCFADE_Set(2, 0x1e, 0)) {
             return 0;
         }
-        state_tmp_253 = 0x7020;
+        state = 0x7020;
         /* fallthrough */
     case 0x7020:
         if (TsBGMLoadCheck()) {
@@ -4028,93 +4028,93 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 }
 
 static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
-    /* sbss 399ad4 */ extern int state_tmp_255;    /* static int state; */
-    /* sbss 399ad8 */ extern int saveSel_tmp_256;  /* static int saveSel; */
-    /* sbss 399adc */ extern int waitTime_tmp_257; /* static int waitTime; */
+    static int state;
+    static int saveSel;
+    static int waitTime;
     int chkMode;
     int ret;
 
     if (flg == 1) {
         if (tpad == 0) {
-            saveSel_tmp_256 = 1;
+            saveSel = 1;
         } else {
-            saveSel_tmp_256 = tpad;
+            saveSel = tpad;
         }
         CurMapOldFlg = -1;
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap, 1);
         TsMENU_SetMapScreen(0);
         TsCMPMes_SetMes(-1);
-        state_tmp_255 = 0;
+        state = 0;
         return 0;
     }
 
-    switch (state_tmp_255) {
+    switch (state) {
     case 0:
-        state_tmp_255 = 0x1000;
+        state = 0x1000;
     case 0x1000:
-        TsSaveMenu_Flow(1, saveSel_tmp_256 - 1);
+        TsSaveMenu_Flow(1, saveSel - 1);
         TsUserList_Flow(1, 0, 0);
-        state_tmp_255 = 0x1010;
+        state = 0x1010;
     case 0x1010:
         ret = TsSaveMenu_Flow(0, tpad);
         if (ret != 0) {
-            saveSel_tmp_256 = ret;
+            saveSel = ret;
             if (ret >= 3) {
-                state_tmp_255 = 0xf000;
+                state = 0xf000;
             } else if (ret <= 0) {
-                state_tmp_255 = 0xf000;
+                state = 0xf000;
             } else {
-                state_tmp_255 = 0x2000;
+                state = 0x2000;
             }
         }
         break;
     case 0x2000:
         TsCMPMes_SetMes(-1);
         McInitFlow();
-        state_tmp_255 = 0x2010;
+        state = 0x2010;
     case 0x2010:
-        chkMode = (saveSel_tmp_256 != 1) ? 2 : 1;
+        chkMode = (saveSel != 1) ? 2 : 1;
         ret = McUserCheckFlow(2, chkMode, NULL);
         if (ret < 0) {
             break;
         }
         if (ret == 1 || ret == 2) {
             TsMENU_GetMapTimeState(1);
-            MpSave_Flow(1, saveSel_tmp_256, 0);
+            MpSave_Flow(1, saveSel, 0);
             if (UserList_Sw != 0) {
-                state_tmp_255 = 0x5000;
+                state = 0x5000;
             } else {
-                state_tmp_255 = 0;
+                state = 0;
             }
         } else {
-            state_tmp_255 = 0x2020;
+            state = 0x2020;
         }
         break;
     case 0x2020:
-        chkMode = (saveSel_tmp_256 != 1) ? 2 : 1;
+        chkMode = (saveSel != 1) ? 2 : 1;
         TsMakeUserWork(chkMode);
-        state_tmp_255 = 0x2030;
+        state = 0x2030;
     case 0x2030:
         if (TsSCFADE_Set(2, 20, 0) != 0) {
             break;
         }
-        state_tmp_255 = 0x2040;
+        state = 0x2040;
     case 0x2040:
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap, 0);
-        if (saveSel_tmp_256 == 1) {
+        if (saveSel == 1) {
             TsUserList_SetType(&ULTypeT_SAVE_LOG, pP3GameState->nMode, 0);
         } else {
             TsUserList_SetType(&ULTypeT_SAVE_REPLAY, pP3GameState->nMode, 0);
         }
         UserList_Sw = 1;
-        state_tmp_255 = 0x2050;
+        state = 0x2050;
     case 0x2050:
         if (TsSCFADE_Set(1, 20, 0) >= 9) {
             break;
         }
-        state_tmp_255 = 0x2060;
+        state = 0x2060;
     case 0x2060:
         ret = TsUserList_Flow(0, tpad, tpad2);
         if (ret != 0) {
@@ -4124,23 +4124,23 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
                     if (ret != -3) {
                         return 0;
                     }
-                    state_tmp_255 = 0x2200;
+                    state = 0x2200;
                 } else if (ret == 1) {
-                    state_tmp_255 = 0x3100;
+                    state = 0x3100;
                 }
             } else {
-                state_tmp_255 = 0x5000;
+                state = 0x5000;
             }
         }
         break;
     case 0x2200:
-        state_tmp_255 = 0x2210;
+        state = 0x2210;
     case 0x2210:
-        state_tmp_255 = 0x2000;
+        state = 0x2000;
         break;
     case 0x3100:
         UserWork->fileNo = TsUserList_GetCurFileNo(NULL);
-        state_tmp_255 = 0x3110;
+        state = 0x3110;
     case 0x3110:
         ret = McUserSaveFlow(UserWork);
         if (ret < 0) {
@@ -4149,33 +4149,33 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         if (ret != 0) {
             if (ret == 1) {
-                state_tmp_255 = 0x2020;
+                state = 0x2020;
             }
             if (ret == 2) {
-                state_tmp_255 = 0x5000;
+                state = 0x5000;
             }
             if (ret == 4) {
-                state_tmp_255 = 0x2200;
+                state = 0x2200;
             }
             break;
         }
     case 0x4000:
     case 0x4010:
-        if (saveSel_tmp_256 == 1) {
-            saveSel_tmp_256 = 2;
+        if (saveSel == 1) {
+            saveSel = 2;
         } else {
-            saveSel_tmp_256 = 1;
+            saveSel = 1;
         }
         TsSaveSuccessProc();
-        waitTime_tmp_257 = 0;
-        state_tmp_255 = 0x4020;
+        waitTime = 0;
+        state = 0x4020;
     case 0x4020:
         TsCMPMes_SetMes(-1);
-        if (++waitTime_tmp_257 < 35) {
+        if (++waitTime < 35) {
             break;
         }
-        waitTime_tmp_257 = 0;
-        state_tmp_255 = 0x5000;
+        waitTime = 0;
+        state = 0x5000;
     case 0x5000:
         if (TsSCFADE_Set(2, 20, 0) != 0) {
             break;
@@ -4183,23 +4183,23 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         TsUserList_Flow(2, 0, 0);
         UserList_Sw = 0;
         TsMENU_GetMapTimeState(1);
-        MpSave_Flow(1, saveSel_tmp_256, 0);
-        state_tmp_255 = 0x5020;
+        MpSave_Flow(1, saveSel, 0);
+        state = 0x5020;
     case 0x5020:
         if (TsSCFADE_Set(1, 20, 0) < 9) {
-            state_tmp_255 = 0;
+            state = 0;
         }
         break;
     case 0xf000:
         if (pP3GameState->pAutoMove == NULL) {
             TsBGMMute(20);
         }
-        state_tmp_255 = 0xf005;
+        state = 0xf005;
     case 0xf005:
         if (TsSCFADE_Set(2, 30, 0) >= 2) {
             break;
         }
-        state_tmp_255 = 0xf010;
+        state = 0xf010;
     case 0xf010:
         if (pP3GameState->pLog->name[0] != '\0') {
             TsSetRankingName(pCStageRank, pP3GameState->pLog->name);
@@ -4217,14 +4217,14 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
 
 static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     /* TODO: Fix names once made static. */
-    /* sbss 399ae0 */ extern int state_tmp_270;
-    /* sbss 399ae4 */ extern int waitTime_tmp_271;
-    /* bss 1c77a88 */ extern MAPPOS MapCHall_tmp_272;
-    /* sbss 399ae8 */ extern int scstate_tmp_273;
-    /* sbss 399aec */ extern int scstPos_tmp_274;
-    /* sbss 399af0 */ extern int curTag_tmp_275;
-    /* sbss 399af4 */ extern int fphs_pos_tmp_276;
-    /* sbss 399af8 */ extern u_int AnmBit_tmp_277;
+    static int state;
+    static int waitTime;
+    static MAPPOS MapCHall;
+    static int scstate;
+    static int scstPos;
+    static int curTag;
+    static int fphs_pos;
+    static u_int AnmBit;
     int chkType, chkMode;
     int bBroken;
     int ret;
@@ -4238,44 +4238,44 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         case 0:
             MNScene_DispSw(&MNS_StageMap, 0);
             MNScene_DispSw(&MNS_CityHall, 1);
-            AnmBit_tmp_277 = MNScene_StartAnime(&MNS_CityHall, -1, CityHallAnime);
+            AnmBit = MNScene_StartAnime(&MNS_CityHall, -1, CityHallAnime);
             TsCMPMes_SetMes(-1);
-            MapCHall_tmp_272.pscene = &MNS_CityHall;
-            MapCHall_tmp_272.panime = CityHallAnime;
-            MapCHall_tmp_272.mnmap = mnmapCityHall;
-            MpMapMenu_Flow(1, &MapCHall_tmp_272, 0);
-            MapCHall_tmp_272.curPos = 0;
-            waitTime_tmp_271 = 0;
-            state_tmp_270 = 0;
-            scstate_tmp_273 = 0;
-            scstPos_tmp_274 = 0;
+            MapCHall.pscene = &MNS_CityHall;
+            MapCHall.panime = CityHallAnime;
+            MapCHall.mnmap = mnmapCityHall;
+            MpMapMenu_Flow(1, &MapCHall, 0);
+            MapCHall.curPos = 0;
+            waitTime = 0;
+            state = 0;
+            scstate = 0;
+            scstPos = 0;
             MpCityHallCharPosSet(0);
-            fphs_pos_tmp_276 = 0;
+            fphs_pos = 0;
             MpCityHallFPHSSoundMask(0);
             TSSNDPLAY(0x8001);
             return 0;
         case 1:
             MNScene_DispSw(&MNS_StageMap, 0);
             MNScene_DispSw(&MNS_CityHall, 1);
-            MapCHall_tmp_272.pscene = &MNS_CityHall;
-            MapCHall_tmp_272.panime = CityHallAnime;
-            MapCHall_tmp_272.mnmap = mnmapCityHall;
-            MpMapMenu_Flow(1, &MapCHall_tmp_272, 0);
-            MpMapMenu_Flow(3, &MapCHall_tmp_272, 2);
+            MapCHall.pscene = &MNS_CityHall;
+            MapCHall.panime = CityHallAnime;
+            MapCHall.mnmap = mnmapCityHall;
+            MpMapMenu_Flow(1, &MapCHall, 0);
+            MpMapMenu_Flow(3, &MapCHall, 2);
             TsCMPMes_SetMes(-1);
-            scstate_tmp_273 = 0;
-            state_tmp_270 = 0x100;
-            scstPos_tmp_274 = 0;
+            scstate = 0;
+            state = 0x100;
+            scstPos = 0;
             MpCityHallCharPosSet(2);
-            fphs_pos_tmp_276 = 2;
+            fphs_pos = 2;
             return 0;
         }
     }
 
-    switch (scstate_tmp_273) {
+    switch (scstate) {
     case 0:
-        if (scstPos_tmp_274 != 0) {
-            scstate_tmp_273 = 0x2100;
+        if (scstPos != 0) {
+            scstate = 0x2100;
         }
         break;
     case 0x100:
@@ -4286,31 +4286,31 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         UserList_Sw = 0;
         MNScene_DispSw(&MNS_OptCounter, 0);
         OptionList_Sw = 0;
-        scstate_tmp_273 = 0x110;
+        scstate = 0x110;
         /* fallthrough */
     case 0x110:
         MNScene_DispSw(&MNS_CityHall, 1);
-        MpMapMenu_Flow(3, &MapCHall_tmp_272, MapCHall_tmp_272.curPos);
-        MpCityHallCharPosSet(MapCHall_tmp_272.curPos);
-        fphs_pos_tmp_276 = MapCHall_tmp_272.curPos;
+        MpMapMenu_Flow(3, &MapCHall, MapCHall.curPos);
+        MpCityHallCharPosSet(MapCHall.curPos);
+        fphs_pos = MapCHall.curPos;
         MpCityHallFPHSSoundMask(0);
-        scstate_tmp_273 = 0x120;
+        scstate = 0x120;
         /* fallthrough */
     case 0x120:
         if (!TsSCFADE_Set(1, 0x14, 1)) {
-            scstate_tmp_273 = 0;
+            scstate = 0;
         }
         break;
     case 0x2000:
-        if (scstPos_tmp_274 == 0) {
-            scstate_tmp_273 = 0x100;
+        if (scstPos == 0) {
+            scstate = 0x100;
         }
         break;
     case 0x2100:
         anmno = -1;
         cmpmesNo = -1;
 
-        switch (MapCHall_tmp_272.curPos) {
+        switch (MapCHall.curPos) {
         case 0:
             anmno = 3;
             cmpmesNo = MENU_LOGLOAD_CAM;
@@ -4328,30 +4328,30 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        AnmBit_tmp_277 = 0x80000000;
+        AnmBit = 0x80000000;
         if (anmno >= 0) {
-            AnmBit_tmp_277 |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[anmno]);
+            AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[anmno]);
         }
 
         MpCityHallFPHSSoundMask(1);
         TsCMPMes_SetMes(cmpmesNo);
-        scstate_tmp_273 = 0x2200;
+        scstate = 0x2200;
         /* fallthrough */
     case 0x2200:
-        if (scstPos_tmp_274 == 0) {
-            scstate_tmp_273 = 0x100;
+        if (scstPos == 0) {
+            scstate = 0x100;
         }
-        if (!TsAnimeWait_withKeySkip(tpad, &MNS_CityHall, 0xa, AnmBit_tmp_277)) {
-            scstate_tmp_273 = 0x2000;
+        if (!TsAnimeWait_withKeySkip(tpad, &MNS_CityHall, 0xa, AnmBit)) {
+            scstate = 0x2000;
         }
         break;
     }
 
-    fphs_pos_tmp_276 = MpCityHallFPHSMove(MapCHall_tmp_272.curPos, fphs_pos_tmp_276);
+    fphs_pos = MpCityHallFPHSMove(MapCHall.curPos, fphs_pos);
 
-    switch (state_tmp_270) {
+    switch (state) {
     case 0:
-        if (++waitTime_tmp_271 == 70) {
+        if (++waitTime == 70) {
             TsCMPMes_SetMes(MENU_HALL_INSIDE);
             TSSNDPLAY(VSND_MENU1);
         }
@@ -4360,19 +4360,19 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         TSSND_SKIPPLAY(VSND_MENU1);
         TsCMPMes_SetMes(MENU_HALL_INSIDE);
-        MpMapMenu_Flow(3, &MapCHall_tmp_272, 0);
-        state_tmp_270 = 0x100;
+        MpMapMenu_Flow(3, &MapCHall, 0);
+        state = 0x100;
         /* fallthrough */
     case 0x100:
-        ret = MpMapMenu_Flow(0, &MapCHall_tmp_272, tpad);
-        if (MapCHall_tmp_272.anmStop != 0) {
+        ret = MpMapMenu_Flow(0, &MapCHall, tpad);
+        if (MapCHall.anmStop != 0) {
             TSSND_SKIPSTOP(2);
         }
-        if (MapCHall_tmp_272.anmtrg != 0) {
-            MpCityHallParaStart(MapCHall_tmp_272.anmtrg);
+        if (MapCHall.anmtrg != 0) {
+            MpCityHallParaStart(MapCHall.anmtrg);
         }
 
-        switch (MapCHall_tmp_272.sndtrg) {
+        switch (MapCHall.sndtrg) {
         case 1:
             TSSNDPLAY(VSND_MVCUS_LR);
             break;
@@ -4386,7 +4386,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
         if (ret != 0) {
             if (ret == 1) {
-                switch (MapCHall_tmp_272.curPos) {
+                switch (MapCHall.curPos) {
                 case 0:
                     TSSNDSTOP(3);
                     TSSNDPLAY(VSND_MENU2);
@@ -4401,11 +4401,11 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
                     break;
                 }
 
-                state_tmp_270 = 0x1000;
+                state = 0x1000;
             }
 
             if (ret == -1) {
-                state_tmp_270 = 0xf000;
+                state = 0xf000;
             }
 
             return 0;
@@ -4413,20 +4413,20 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
         break;
     case 0x1000:
-        if (MapCHall_tmp_272.curPos == 1) {
-            state_tmp_270 = 0x1500;
+        if (MapCHall.curPos == 1) {
+            state = 0x1500;
             break;
         }
         McInitFlow();
-        state_tmp_270 = 0x1010;
+        state = 0x1010;
         /* fallthrough */
     case 0x1010:
-        if (MapCHall_tmp_272.curPos == 0) {
-            curTag_tmp_275 = 0;
+        if (MapCHall.curPos == 0) {
+            curTag = 0;
             chkMode = 1;
             chkType = 3;
         } else {
-            curTag_tmp_275 = 0;
+            curTag = 0;
             chkType = 1;
             chkMode = 2;
         }
@@ -4436,27 +4436,27 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
         if (ret > 0 && ret < 3) {
-            state_tmp_270 = 0x5000;
+            state = 0x5000;
             break;
         }
-        state_tmp_270 = 0x1500;
+        state = 0x1500;
         /* fallthrough */
     case 0x1500:
-        scstPos_tmp_274 = 1;
+        scstPos = 1;
     
-        switch (MapCHall_tmp_272.curPos) {
+        switch (MapCHall.curPos) {
         case 0:
         case 2:
-            state_tmp_270 = 0x2000;
+            state = 0x2000;
             break;
         case 1:
-            state_tmp_270 = 0x3000;
+            state = 0x3000;
             break;
         }
     
         break;
     case 0x2000:
-        if (MapCHall_tmp_272.curPos == 0) {
+        if (MapCHall.curPos == 0) {
             chkMode = 1;
             chkType = 3;
         } else {
@@ -4468,26 +4468,26 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         ret = McUserCheckFlow(chkType, chkMode, &isError);
         if (ret < 0) {
             if (isError == 1) {
-                scstPos_tmp_274 = 0;
+                scstPos = 0;
             }
             if (isError == 2) {
-                scstPos_tmp_274 = 1;
+                scstPos = 1;
                 break;
             }
             return 0;
         }
         if (ret > 0 && ret < 3) {
-            state_tmp_270 = 0x5000;
+            state = 0x5000;
             break;
         }
         TsMCAMes_SetMes(-1);
-        state_tmp_270 = 0x2020;
+        state = 0x2020;
         break;
     case 0x2020:
-        if (scstate_tmp_273 & 0xfff) {
+        if (scstate & 0xfff) {
             return 0;
         }
-        state_tmp_270 = 0x2021;
+        state = 0x2021;
         /* fallthrough */
     case 0x2021:
         if (UserList_Sw) {
@@ -4496,15 +4496,15 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             }
         }
         TsMakeUserWork(1);
-        state_tmp_270 = 0x2022;
+        state = 0x2022;
         /* fallthrough */
     case 0x2022:
-        if (MapCHall_tmp_272.curPos == 0) {
+        if (MapCHall.curPos == 0) {
             if (UCheckLoadError != 0) {
                 ntag = 1;
-                curTag_tmp_275 = 1;
+                curTag = 1;
             } else {
-                ntag = curTag_tmp_275;
+                ntag = curTag;
             }
             TsUserList_SetType(&ULTypeT_CITY_STGCLR, pP3GameState->nMode, ntag);
         } else {
@@ -4516,7 +4516,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_CopyState(&MNS_StageMap2, &MNS_CityHall);
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 2);
-        state_tmp_270 = 0x2024;
+        state = 0x2024;
         /* fallthrough */
     case 0x2024:
         if (!UserList_Sw) {
@@ -4527,7 +4527,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             TsSCFADE_Set(chkType, 0x14, 0);
         }
         UserList_Sw = 1;
-        state_tmp_270 = 0x2026;
+        state = 0x2026;
         /* fallthrough */
     case 0x2026:
         if (TsSCFADE_Set(0, 0, 0) >= 9) {
@@ -4536,7 +4536,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 0);
         MNScene_End(&MNS_StageMap2);
-        state_tmp_270 = 0x2028;
+        state = 0x2028;
         /* fallthrough */
     case 0x2028:
         ret = TsUserList_Flow(0, tpad, tpad2);
@@ -4544,24 +4544,24 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         if (ret != 0) {
             switch (ret) {
             case -1:
-                state_tmp_270 = 0x5000;
+                state = 0x5000;
                 break;
             case 1:
                 if (TsUserList_IsGetFileSave()) {
-                    state_tmp_270 = 0x2830;
+                    state = 0x2830;
                 } else {
-                    state_tmp_270 = 0x2030;
+                    state = 0x2030;
                 }
                 break;
             case -3:
                 if (TsUserList_IsGetFileSave()) {
-                    curTag_tmp_275 = 1;
+                    curTag = 1;
                 } else {
-                    curTag_tmp_275 = 0;
+                    curTag = 0;
                 }
 
                 McInitFlow();
-                state_tmp_270 = 0x2000;
+                state = 0x2000;
                 break;
             }
 
@@ -4571,7 +4571,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
         break;
     case 0x2030:
-        if (MapCHall_tmp_272.curPos == 0) {
+        if (MapCHall.curPos == 0) {
             chkMode = 1;
         } else {
             chkMode = 2;
@@ -4582,39 +4582,39 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             return 0;
         }
 
-        waitTime_tmp_271 = 0;
+        waitTime = 0;
         if (ret != 0) {
             if (ret == 1) {
-                state_tmp_270 = 0x2028;
+                state = 0x2028;
             }
             if (ret == 2) {
-                state_tmp_270 = 0x2050;
+                state = 0x2050;
             }
             if (ret != 4) {
                 return 0;
             }
             McInitFlow();
-            state_tmp_270 = 0x2000;
+            state = 0x2000;
             break;
         }
 
         TsCMPMes_SetMes(-1);
-        state_tmp_270 = 0x2040;
+        state = 0x2040;
         /* fallthrough */
     case 0x2040:
-        if (++waitTime_tmp_271 >= 35) {
-            waitTime_tmp_271 = 0;
+        if (++waitTime >= 35) {
+            waitTime = 0;
             TsSet_ParappaCapColor();
-            if (MapCHall_tmp_272.curPos == 2) {
-                state_tmp_270 = 0xf010;
+            if (MapCHall.curPos == 2) {
+                state = 0xf010;
             } else {
-                state_tmp_270 = 0xef00;
+                state = 0xef00;
             }
         }
         break;
     case 0x2830:
         UserWork->fileNo = TsUserList_GetCurFileNo(NULL);
-        state_tmp_270 = 0x2840;
+        state = 0x2840;
         /* fallthrough */
     case 0x2840:
         ret = McUserSaveFlow(UserWork);
@@ -4624,14 +4624,14 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         if (ret != 0) {
             if (ret == 1) {
-                state_tmp_270 = 0x2020;
+                state = 0x2020;
             }
             if (ret == 2) {
-                state_tmp_270 = 0x2900;
+                state = 0x2900;
             }
             if (ret == 4) {
                 McInitFlow();
-                state_tmp_270 = 0x2000;
+                state = 0x2000;
                 break;
             }
             return 0;
@@ -4639,24 +4639,24 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         /* fallthrough */
     case 0x2850:
         TsSaveSuccessProc();
-        waitTime_tmp_271 = 0;
-        state_tmp_270 = 0x2860;
+        waitTime = 0;
+        state = 0x2860;
         /* fallthrough */
     case 0x2860:
         TsCMPMes_SetMes(-1);
-        if (++waitTime_tmp_271 >= 35) {
-            waitTime_tmp_271 = 0;
-            state_tmp_270 = 0x2900;
+        if (++waitTime >= 35) {
+            waitTime = 0;
+            state = 0x2900;
         } else {
             break;
         }
         /* fallthrough */
     case 0x2050:
     case 0x2900:
-        state_tmp_270 = 0x5000;
+        state = 0x5000;
         break;
     case 0x3000:
-        if (scstate_tmp_273 & 0xfff) {
+        if (scstate & 0xfff) {
             return 0;
         }
         OptionList_Sw = 1;
@@ -4667,7 +4667,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 2);
         MNScene_DispSw(&MNS_OptCounter, 1);
-        state_tmp_270 = 0x3005;
+        state = 0x3005;
         /* fallthrough */
     case 0x3005:
         if (TsSCFADE_Set(5, 0x14, 2)) {
@@ -4676,37 +4676,37 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 0);
         MNScene_End(&MNS_StageMap2);
-        state_tmp_270 = 0x3010;
+        state = 0x3010;
         /* fallthrough */
     case 0x3010:
         ret = TsOption_Flow(0, tpad);
         if (ret != 0) {
             if (ret == -1) {
-                state_tmp_270 = 0x3f00;
+                state = 0x3f00;
             }
             if (ret == 1) {
-                state_tmp_270 = 0x3f00;
+                state = 0x3f00;
             }
             return 0;
         }
         break;
     case 0x3f00:
-        state_tmp_270 = 0x5000;
+        state = 0x5000;
         /* fallthrough */
     case 0x5000:
-        scstPos_tmp_274 = 0;
-        state_tmp_270 = 0x5008;
+        scstPos = 0;
+        state = 0x5008;
         break;
     case 0x5008:
-        if (scstate_tmp_273 & 0xfff) {
+        if (scstate & 0xfff) {
             return 0;
         }
-        state_tmp_270 = 0x100;
+        state = 0x100;
         break;
     case 0xef00:
         TSSNDSTOP(3);
         MenuVoiceBankSet(0);
-        state_tmp_270 = 0xef10;
+        state = 0xef10;
         /* fallthrough */
     case 0xef10:
         if (TsSCFADE_Set(2, 0x14, 1)) {
@@ -4723,17 +4723,17 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         return 1;
     case 0xf010:
         TSSNDSTOP(3);
-        scstPos_tmp_274 = 0;
-        state_tmp_270 = 0xf014;
+        scstPos = 0;
+        state = 0xf014;
         break;
     case 0xf014:
         TsCMPMes_SetMes(-1);
-        if (scstate_tmp_273 & 0xfff) {
+        if (scstate & 0xfff) {
             return 0;
         }
         TsBGMStop(12);
         _MNwaitTime = 10;
-        state_tmp_270 = 0xf018;
+        state = 0xf018;
         /* fallthrough */
     case 0xf018:
         if (--_MNwaitTime <= 0) {
@@ -4898,23 +4898,23 @@ static void MpCityHallFPHOK(int flg) {
 }
 
 static int MpPopMenu_Flow(int flg, u_int tpad) {
-    /* sbss 399afc */ extern int state_tmp_296;
+    static int state;
     int ret;
     int mpsize;
 
     if (flg == 1) {
-        state_tmp_296 = 0;
+        state = 0;
         return 0;
     }
 
-    switch (state_tmp_296) {
+    switch (state) {
     case 0:
-        state_tmp_296 = 0x1000;
+        state = 0x1000;
         break;
     case 0x1000:
         TsMENU_GetMapNo(&mpsize);
         TsPopMenu_Flow(1, mpsize);
-        state_tmp_296 = 0x1010;
+        state = 0x1010;
     /* fallthrough */
     case 0x1010:
         ret = TsPopMenu_Flow(0, tpad);
@@ -4925,12 +4925,12 @@ static int MpPopMenu_Flow(int flg, u_int tpad) {
         TsPopMenu_Flow(2, 0);
 
         if (ret == -1) {
-            state_tmp_296 = 0xf000;
+            state = 0xf000;
             break;
         }
 
         if (ret < 0) {
-            state_tmp_296 = 0xf000;
+            state = 0xf000;
             break;
         }
 
@@ -7980,10 +7980,8 @@ static int TsJukeObjAnime2(int isOut) {
     int sel;
     int osel;
     int selx, sely;
-    extern int scstate_tmp_268; /* static */
-    extern int scstPos_tmp_269; /* static */
-#define scstate scstate_tmp_268
-#define scstPos scstPos_tmp_269
+    static int scstate;
+    static int scstPos;
 
     if (flg == 1) {
         memset(pfw, 0, sizeof(*pfw));
@@ -8478,18 +8476,18 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     int           l;
     int          *psw;
     MNOPT_SELINF *pselw;
-    /* sbss 399b08 */ extern int opt_lang_tmp_270; /* static int opt_lang; */
-    /* sbss 399b0c */ extern int opt_subt_tmp_271; /* static int opt_subt; */
-    /* sbss 399b10 */ extern int opt_vibr_tmp_272; /* static int opt_vibr; */
-    /* sbss 399b14 */ extern int opt_oneb_tmp_273; /* static int opt_oneb; */
+    static int opt_lang;
+    static int opt_subt;
+    static int opt_vibr;
+    static int opt_oneb;
 
     if (flg == 1) {
         pfw->state = 0;
         pfw->selno = 0;
-        opt_lang_tmp_270 = pP3GameState->pGameStatus->language_type;
-        opt_subt_tmp_271 = pP3GameState->pGameStatus->subtitle;
-        opt_vibr_tmp_272 = pP3GameState->pGameStatus->vibration;
-        opt_oneb_tmp_273 = pP3GameState->pGameStatus->play_table_modeG;
+        opt_lang = pP3GameState->pGameStatus->language_type;
+        opt_subt = pP3GameState->pGameStatus->subtitle;
+        opt_vibr = pP3GameState->pGameStatus->vibration;
+        opt_oneb = pP3GameState->pGameStatus->play_table_modeG;
         memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
         memset(pfw->btnlr, 0, sizeof(pfw->btnlr));
         TsCmnCell_CusorSET(&pfw->cellcs[pfw->selno]);
@@ -8498,16 +8496,16 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
         for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
             switch (i) {
             case 0:
-                psw = &opt_lang_tmp_270;
+                psw = &opt_lang;
                 break;
             case 1:
-                psw = &opt_subt_tmp_271;
+                psw = &opt_subt;
                 break;
             case 2:
-                psw = &opt_vibr_tmp_272;
+                psw = &opt_vibr;
                 break;
             default:
-                psw = &opt_oneb_tmp_273;
+                psw = &opt_oneb;
                 break;
             }
 
@@ -8592,25 +8590,25 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
             for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
                 switch (i) {
                 case 0:
-                    psw = &opt_lang_tmp_270;
+                    psw = &opt_lang;
                     break;
                 case 1:
-                    psw = &opt_subt_tmp_271;
+                    psw = &opt_subt;
                     break;
                 case 2:
-                    psw = &opt_vibr_tmp_272;
+                    psw = &opt_vibr;
                     break;
                 default:
-                    psw = &opt_oneb_tmp_273;
+                    psw = &opt_oneb;
                     break;
                 }
                 *psw = pselw->pObjTbl[pfw->sw[i]].workVol;
             }
 
-            pP3GameState->pGameStatus->language_type = opt_lang_tmp_270;
-            pP3GameState->pGameStatus->subtitle = opt_subt_tmp_271;
-            pP3GameState->pGameStatus->vibration = opt_vibr_tmp_272;
-            pP3GameState->pGameStatus->play_table_modeG = opt_oneb_tmp_273;
+            pP3GameState->pGameStatus->language_type = opt_lang;
+            pP3GameState->pGameStatus->subtitle = opt_subt;
+            pP3GameState->pGameStatus->vibration = opt_vibr;
+            pP3GameState->pGameStatus->play_table_modeG = opt_oneb;
             TsCMPMes_SetMes(-1);
         }
     case 0xf100:

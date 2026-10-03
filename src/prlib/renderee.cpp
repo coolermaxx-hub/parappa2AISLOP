@@ -93,7 +93,7 @@ struct PrEECoreDisturbance {
     u_int reservedTail;
 };
 /* sdata */
-static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
+PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
 /* bss */
 static PrEECoreDisturbance eeCoreDisturbance;
 

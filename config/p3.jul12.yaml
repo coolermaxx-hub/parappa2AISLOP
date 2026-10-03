@@ -414,7 +414,7 @@ segments:
 
         - { type: .sbss, vram: 0x00399abc, name: menu/menu            }
         - { type: .sbss, vram: 0x00399ac4, name: menu/menu_mdl        }
-        - { type: sbss,  vram: 0x00399ac8, name: menu/menusub         }
+        - { type: .sbss,  vram: 0x00399ac8, name: menu/menusub         }
         - { type: sbss,  vram: 0x00399b60, name: menu/p3mc            }
         - { type: sbss,  vram: 0x00399b7c, name: menu/menufont        }
         - { type: .sbss, vram: 0x00399b84, name: menu/pksprite        }
@@ -458,7 +458,7 @@ segments:
         - { type: bss,   vram: 0x01c77700, name: main/commake         }
 
         - { type: bss,   vram: 0x01c778c8, name: menu/menu            }
-        - { type: bss,   vram: 0x01c77a50, name: menu/menusub         }
+        - { type: .bss,   vram: 0x01c77a50, name: menu/menusub         }
         - { type: bss,   vram: 0x01c81100, name: menu/p3mc            }
         - { type: bss,   vram: 0x01c81540, name: menu/memc            }
         - { type: .bss,  vram: 0x01c81880, name: menu/menufont        }
