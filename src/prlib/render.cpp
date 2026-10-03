@@ -18,7 +18,7 @@
 #include <math.h>
 
 /* sdata */
-PrSPRAM_DATA *prSpramData_tmp_render = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
 extern bool AwfulStatus;
 
@@ -49,14 +49,14 @@ void PrSceneObject::Render() {
     bool awful = true;
     prRenderStuff.ResetStatistics();
     prRenderStuff.m_statistics.render_time0 = *T3_COUNT;
-    prSpramData_tmp_render->Initialize(this);
+    prSpramData->Initialize(this);
 
     awful = PrGetMendererRatio() >= 1.5f;
     AwfulStatus = awful;
     PrModelObject *model = m_model_set.m_head;
     for (; model != NULL; model = model->m_list.next) {
         if ((model->m_flags & 1) && (!awful || (model->m_spm_image->m_flags & 0x100))) {
-            prSpramData_tmp_render->InitializeModel(model);
+            prSpramData->InitializeModel(model);
             model->CalculateCurrentMatrix();
         }
     }
@@ -69,7 +69,7 @@ void PrSceneObject::Render() {
 
     prRenderStuff.InitializeEECore(this);
     InitializeVu1();
-    prSpramData_tmp_render->SendDisplayHeader();
+    prSpramData->SendDisplayHeader();
     prRenderStuff.StartRender(this);
     prRenderStuff.m_transmit_array_size = 0;
     PrStartMfifo();
@@ -81,7 +81,7 @@ void PrSceneObject::Render() {
             do {
                 if (model->m_flags & 1) {
                     if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                        prSpramData_tmp_render->InitializeModel(model);
+                        prSpramData->InitializeModel(model);
                         model->RenderBackgroundScreenModel();
                     }
                 }
@@ -94,7 +94,7 @@ void PrSceneObject::Render() {
             do {
                 if (model->m_flags & 1) {
                     if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                        prSpramData_tmp_render->InitializeModel(model);
+                        prSpramData->InitializeModel(model);
                         model->RenderContext1Model();
                     }
                 }
@@ -107,7 +107,7 @@ void PrSceneObject::Render() {
     for (; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
+                prSpramData->InitializeModel(model);
                 model->RenderContext1Model();
             }
         }
@@ -116,7 +116,7 @@ void PrSceneObject::Render() {
     for (model = m_normalModelList; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
-                prSpramData_tmp_render->InitializeModel(model);
+                prSpramData->InitializeModel(model);
                 model->RenderContext2Model();
             }
         }
@@ -161,7 +161,7 @@ void PrSceneObject::PrepareScreenModelRender() {
 
     for (PrModelObject *model = m_screen_model_list; model != NULL; model = model->m_list.next) {
         if (model->m_flags & 1) {
-            prSpramData_tmp_render->InitializeModel(model);
+            prSpramData->InitializeModel(model);
             model->RenderScreenModelNode();
         }
     }
@@ -174,7 +174,7 @@ void PrSceneObject::PrepareScreenModelRender() {
 }
 
 void PrModelObject::CalculateCurrentMatrix() {
-    PrSPRAM_DATA *spram = prSpramData_tmp_render;
+    PrSPRAM_DATA *spram = prSpramData;
     const NaMATRIX<float, 4, 4> *mtx = &this->m_matrix;
 
     spram->m_animation_time = m_animation_time;
@@ -230,7 +230,7 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
 }
 
 void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
-    PrSPRAM_DATA *spram = prSpramData_tmp_render;
+    PrSPRAM_DATA *spram = prSpramData;
     const float time = spram->m_animation_time;
     SpaFileHeader *animation = spram->m_animation;
     const bool parentVisible = m_parent == NULL || (m_parent->m_flags & 0x4000);
@@ -252,12 +252,12 @@ void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 
             spram->m_nodeMatrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
             const NaMATRIX<float, 4, 4> *local = nodeAnimation->GetMatrix(time);
-            spram = prSpramData_tmp_render;
+            spram = prSpramData;
             spram->m_nodeMatrix = *local;
         }
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
             BlendTransitionMatrix(model, spram->m_nodeMatrix);
-            spram = prSpramData_tmp_render;
+            spram = prSpramData;
         }
         m_worldMatrix = parentMatrix * spram->m_nodeMatrix;
         model->m_postureMatrices[model->m_active_transition][m_animationIndex] = spram->m_nodeMatrix;
@@ -332,7 +332,7 @@ void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
 void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
     PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
     uc->m_matrix = this->m_worldMatrix;
-    uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
+    uc->m_disturbance = prSpramData->m_disturbance;
 
     float du = this->m_textureScrollU;
     float dv = this->m_textureScrollV;
@@ -403,7 +403,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmaddaz  ACC,   vf15,    vf17  \n\t"
                 "vmaddw   vf17,  vf16,    vf17  \n\t"
                 "sqc2     vf17,   0x0(%0)       \n\t"
-            : : "r"(sp0), "r"(&prSpramData_tmp_render->m_view_projection_matrix));
+            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix));
 
             float f12 = sp0[2] / sp0[3];
             if (sp0[3] == 0.0f) {
@@ -507,8 +507,8 @@ void SpmNode::RenderBackgroundScreenModel() {
 
 void PrModelObject::RenderContext2Model() {
     SpmFileHeader *spm = m_spm_image;
-    prSpramData_tmp_render->m_animation = m_animation;
-    prSpramData_tmp_render->m_animation_time = m_animation_time;
+    prSpramData->m_animation = m_animation;
+    prSpramData->m_animation_time = m_animation_time;
     spm->RenderContext2Model(this);
     m_rendered_once = 1;
 }
@@ -542,7 +542,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             if (packet != NULL) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 uc->m_matrix = this->m_worldMatrix;
-                uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
+                uc->m_disturbance = prSpramData->m_disturbance;
                 prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
             }
 
@@ -551,11 +551,11 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
                 const NaMATRIX<float, 4, 4>& m = this->m_worldMatrix;
                 uc->m_matrix = m;
-                uc->m_disturbance = prSpramData_tmp_render->m_disturbance;
+                uc->m_disturbance = prSpramData->m_disturbance;
 
                 NaVECTOR<float, 4> pos;
                 {
-                    NaMATRIX<float, 4, 4> mtx = prSpramData_tmp_render->m_view_projection_matrix * m;
+                    NaMATRIX<float, 4, 4> mtx = prSpramData->m_view_projection_matrix * m;
                     NaVECTOR<float, 4> tmp;
                     pos = NaMATRIX<float, 4, 4>::Apply(tmp, mtx, this->m_sortPosition);
                 }
@@ -602,16 +602,16 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
     if (model->m_postureMatrices[0] != NULL) {
         PrSPRAM_DATA *spram;
         if (m_flags & 0x1) {
-            spram = prSpramData_tmp_render;
+            spram = prSpramData;
             spram->m_nodeMatrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
-            spram = prSpramData_tmp_render;
+            spram = prSpramData;
             spram->m_nodeMatrix = this->m_localMatrix;
         }
 
         if (spram->m_model_transaction_blend_ratio != 1.0f) {
             BlendTransitionMatrix(model, spram->m_nodeMatrix);
-            spram = prSpramData_tmp_render;
+            spram = prSpramData;
         }
 
         this->m_worldMatrix = arg1 * spram->m_nodeMatrix;

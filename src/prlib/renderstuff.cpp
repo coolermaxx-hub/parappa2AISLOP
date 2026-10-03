@@ -153,11 +153,11 @@ void PrRenderStuff::AllocateTransmitDmaArray(u_int size) {
 }
 
 void PrRenderStuff::AppendTransmitDmaTag(const sceDmaTag *tag, u_int sortGroup, float depth) {
-    extern bool warned_tmp_renderstuff;
+    static bool warned = false;
 
     if (m_transmit_array_size >= m_transmit_array_max) {
-        if (!warned_tmp_renderstuff) {
-            warned_tmp_renderstuff = true;
+        if (!warned) {
+            warned = true;
             return;
         }
     } else {

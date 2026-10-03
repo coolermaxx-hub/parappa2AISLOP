@@ -1659,7 +1659,6 @@ AppendDmaTag__13PrRenderStuffPC10_sceDmaTag                                     
 
 prRenderStuff                                                                       = 0x0038c480; // size:0x58
 
-warned_tmp_renderstuff                                                              = 0x003998c8;
 
 // prlib/prlib.cpp
 PrSetFrameRate                                                                      = 0x00141658; // type:func
@@ -2361,7 +2360,6 @@ D_70000004                          = 0x70000004; // ignore:true
 
 AwfulStatus                                                                         = 0x00399b94; // size:0x4
 noodleStripDmaPacket                                                                = 0x0038c740; // size:0x100
-prSpramData_tmp_render                                                              = 0x003998e0; // size:0x4
 prSpriteDefinitionZ                                                                 = 0x0039993c; // size:0x4
 __builtin_vec_delete                = 0x0016df88; // type:func
 RotateMatrix__t8NaMATRIX3Zfi4i4RCt8NaVECTOR2Zfi4RCf                = 0x00149270; // type:func

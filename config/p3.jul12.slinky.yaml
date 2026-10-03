@@ -790,7 +790,7 @@ segments:
       - { path: src/prlib/gifreg.cpp.o }
       - { path: src/prlib/model.cpp.o }
       - { path: src/prlib/database.cpp.o }
-      - { path: asm/data/prlib/renderstuff.sdata.s.o }
+      - { path: src/prlib/renderstuff.cpp.o }
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: src/prlib/render.cpp.o }
