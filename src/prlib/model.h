@@ -37,6 +37,16 @@ struct PrVuNodeHeaderDmaPacket {
     int unk194;
 };
 
+/*
+ * Skinning weights of a cluster node: for each vertex, a count followed by
+ * that many (node index, weight) pairs.
+ */
+union SpmClusterWeight {
+    u_int count;
+    u_int node;
+    float weight;
+};
+
 struct SpmNode {
 public:
     void ChangePointer(SpmFileHeader *arg0, SpmNode *arg1);
@@ -83,7 +93,7 @@ public:
     int *unk1A0;
     PrVuNodeHeaderDmaPacket *unk1A4;
     PR_PADDING(unk1A8, 0xc);
-    int *unk1B4;
+    SpmClusterWeight *m_cluster_weights;
     int *unk1B8;
 };
 

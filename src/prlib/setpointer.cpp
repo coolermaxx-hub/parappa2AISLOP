@@ -50,10 +50,10 @@ void SpmNode::ChangePointer(SpmFileHeader *model, SpmNode *arg1) {
     if (m_flags & 0xff0) {
         this->unk198 = model->CalculatePointer<int>(this->unk198);
         if (m_flags & 0x10) {
-            this->unk1B4 = model->CalculatePointer<int>(this->unk1B4);
+            this->m_cluster_weights = model->CalculatePointer<SpmClusterWeight>(this->m_cluster_weights);
             this->unk1B8 = model->CalculatePointer<int>(this->unk1B8);
         } else if (m_flags & 0x20) {
-            this->unk1B4 = model->CalculatePointer<int>(this->unk1B4);
+            this->m_cluster_weights = model->CalculatePointer<SpmClusterWeight>(this->m_cluster_weights);
         }
 
         this->unk1A0 = model->CalculatePointer<int>(this->unk1A0);

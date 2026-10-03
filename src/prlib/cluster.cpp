@@ -15,12 +15,12 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     vertex |= 0x30000000;
     SpmNode **nodes = this->unk158->m_nodes;
     u_int num = this->unk194;
-    int *weight = this->unk1B4;
+    const SpmClusterWeight *weight = this->m_cluster_weights;
     u_int *index = (u_int*)this->unk198;
     NaVECTOR<float, 4> *position = (NaVECTOR<float, 4>*)this->unk1B8;
 
     for (u_int i = 0; i < num; i++) {
-        u_int weight_num = *weight++;
+        u_int weight_num = (weight++)->count;
 
         asm volatile("vsub.xyzw $vf17, $vf0, $vf0");
         NaVECTOR<float, 4> *p = position;
@@ -28,8 +28,8 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         asm volatile("lqc2 $vf18, 0x0(%0)" : : "r"(p));
 
         for (u_int j = 0; j < weight_num; j++) {
-            u_int node = *weight++;
-            float w = *(float*)weight++;
+            u_int node = (weight++)->node;
+            float w = (weight++)->weight;
             asm volatile(
                 "lqc2         $vf13,  0x0(%0)            \n\t"
                 "lqc2         $vf14,  0x10(%0)           \n\t"
@@ -65,15 +65,15 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
     PrVuNodeHeaderDmaPacket *uc = this->unk16C[1];
     if (uc != NULL) {
         uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(uc);
-        weight = this->unk1B4;
-        u_int weight_num = *weight++;
+        weight = this->m_cluster_weights;
+        u_int weight_num = (weight++)->count;
 
         asm volatile("vsub.xyzw $vf17, $vf0, $vf0");
         asm volatile("lqc2 $vf18, 0x0(%0)" : : "r"(&this->unk140));
 
         for (u_int j = 0; j < weight_num; j++) {
-            u_int node = *weight++;
-            float w = *(float*)weight++;
+            u_int node = (weight++)->node;
+            float w = (weight++)->weight;
             asm volatile(
                 "lqc2         $vf13,  0x0(%0)            \n\t"
                 "lqc2         $vf14,  0x10(%0)           \n\t"

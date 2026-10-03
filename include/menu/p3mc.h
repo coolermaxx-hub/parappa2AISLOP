@@ -19,6 +19,25 @@ typedef struct { // 0x4c4
     /* 0x1a4 */ P3MC_RANKSCORE vplay[4][10];
 } P3MC_STAGERANK;
 
+/*
+ * Save timestamp: BCD fields from sceCdReadClock, plus a random tiebreak in
+ * pad. Read as two little-endian words the fields give year:month:day and
+ * hour:minute:second:pad, so the game orders and matches saves by comparing
+ * those words (see P3MC_SortUser, TsUserList_SetCurFileNoCusor).
+ */
+typedef struct { // 0x8
+    /* 0x0 */ u_char day;
+    /* 0x1 */ u_char month;
+    /* 0x2 */ u_short year;
+    /* 0x4 */ u_char pad;
+    /* 0x5 */ u_char second;
+    /* 0x6 */ u_char minute;
+    /* 0x7 */ u_char hour;
+} P3MC_DATE;
+
+/* Word 0 (year:month:day) or 1 (hour:minute:second:pad) of a timestamp */
+#define P3MC_DATE_WORD(date, i) (((const u_int *)(date))[i])
+
 typedef struct { // 0x2664
     /* 0x0000 */ char name[12];
     /* 0x000c */ char name1[12];
@@ -35,13 +54,7 @@ typedef struct { // 0x2664
     /* 0x0036 */ u_char winner;
     /* 0x0037 */ u_char pads;
     /* 0x0038 */ u_int pad[1];
-    /* 0x003c */ u_char date_day;
-    /* 0x003d */ u_char date_month;
-    /* 0x003e */ u_short date_year;
-    /* 0x0040 */ u_char date_pad;
-    /* 0x0041 */ u_char date_second;
-    /* 0x0042 */ u_char date_minute;
-    /* 0x0043 */ u_char date_hour;
+    /* 0x003c */ P3MC_DATE date;
     /* 0x0044 */ P3MC_STAGERANK stageRank[8];
 } USER_DATA;
 
