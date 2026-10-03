@@ -231,7 +231,7 @@ bool SpaNodeAnimation::IsVisible(float time) const {
  * if that node is animated, or else uses its own static flags.
  */
 bool SpaFileHeader::IsNodeVisible(SpmNode *node, float time) const {
-    SpaNodeAnimation *animation = this->unk50[node->m_index];
+    SpaNodeAnimation *animation = this->m_nodes[node->m_index];
     SpmNode *other = node->m_parent;
 
     if (animation != NULL && animation->m_visibility == NULL) {

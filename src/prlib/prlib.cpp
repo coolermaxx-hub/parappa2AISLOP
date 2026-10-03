@@ -211,7 +211,7 @@ float PrGetAnimationStartFrame(SpaFileHeader *animation) {
 
 PR_EXTERN
 float PrGetAnimationEndFrame(SpaFileHeader *animation) {
-    return animation->unk14 * prFrameRate;
+    return animation->m_length * prFrameRate;
 }
 
 PR_EXTERN

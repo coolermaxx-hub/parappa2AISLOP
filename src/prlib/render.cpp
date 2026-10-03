@@ -191,7 +191,7 @@ void PrModelObject::CalculateCurrentMatrix() {
     if (m_position_animation != NULL) {
         float time = m_position_animation_time;
         NaMATRIX<float, 4, 4> pos;
-        pos = *m_position_animation->unk50[0]->GetMatrix(time);
+        pos = *m_position_animation->m_nodes[0]->GetMatrix(time);
         mtx = &pos;
     }
 
@@ -289,7 +289,7 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
         return;
     }
 
-    SpaNodeAnimation *node_animation = animation->unk50[this->m_index];
+    SpaNodeAnimation *node_animation = animation->m_nodes[this->m_index];
     if (node_animation == NULL) {
         ComposeGlobalMatrixWithoutVisibility(model, arg1);
         return;

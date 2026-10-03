@@ -46,8 +46,8 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     NaVECTOR<float, 4> result;
 
     SpaFileHeader *animation = prSpramData_tmp_shape->m_animation;
-    SpaNodeAnimation *node_anim = (animation != NULL) ? animation->unk50[this->m_index] : NULL;
-    u_int track_num = (node_anim != NULL) ? node_anim->unk2C : 0;
+    SpaNodeAnimation *node_anim = (animation != NULL) ? animation->m_nodes[this->m_index] : NULL;
+    u_int track_num = (node_anim != NULL) ? node_anim->m_weight_track_num : 0;
 
     u_int vertex = (u_int)this->m_main_packet;
     vertex |= 0x30000000;
@@ -68,7 +68,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
 
     if (model->m_posture_matrices[0] != NULL) {
         for (u_int i = 0; i < track_num; i++) {
-            float weight = *node_anim->unk30[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
+            float weight = *node_anim->m_weight_tracks[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
             if (prSpramData_tmp_shape->m_model_transaction_blend_ratio != 1.0f) {
                 weight = BlendTransactionWeight(model, weight, i);
             }
@@ -79,7 +79,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
         }
     } else {
         for (u_int i = 0; i < track_num; i++) {
-            float weight = *node_anim->unk30[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
+            float weight = *node_anim->m_weight_tracks[i]->GetValue(prSpramData_tmp_shape->m_animation_time);
             if (weight != 0.0f) {
                 AddShapePosition(i, weight);
             }

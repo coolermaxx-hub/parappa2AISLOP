@@ -140,8 +140,9 @@ public:
     u_int unk14;
     SpaTransform **unk18;
     PR_PADDING(unk1C, 0x10);
-    u_int unk2C;
-    SpaTrack<float> *unk30[1];
+    /* Shape node morph target weights, one track per target */
+    u_int m_weight_track_num;
+    SpaTrack<float> *m_weight_tracks[1];
 };
 
 #endif /* PRLIB_SPADATA_H */

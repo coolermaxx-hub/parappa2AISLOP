@@ -79,10 +79,10 @@ void SpaFileHeader::ChangePointer() {
     }
 
     unk38 = CalculatePointer<int>(unk38);
-    unk50 = unk54;
+    m_nodes = m_node_table;
 
-    for (u_int i = 0; i < unk4C; i++) {
-        SpaNodeAnimation **p = &unk50[i];
+    for (u_int i = 0; i < m_node_num; i++) {
+        SpaNodeAnimation **p = &m_nodes[i];
         if (*p != NULL) {
             *p = CalculatePointer<SpaNodeAnimation>(*p);
             (*p)->ChangePointer(this);
@@ -100,7 +100,8 @@ void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
         this->m_visibility->ChangePointer();
     }
 
-    this->m_transforms = (SpaTransform**)&this->unk30[this->unk2C];
+    /* The pointer tables follow each other: weight tracks, transforms, then unk18 */
+    this->m_transforms = (SpaTransform**)&this->m_weight_tracks[this->m_weight_track_num];
     this->unk18 = &this->m_transforms[this->m_transform_count];
 
     for (u_int i = 0; i < this->m_transform_count; i++) {
@@ -145,10 +146,10 @@ void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
         }
     }
 
-    for (u_int i = 0; i < this->unk2C; i++) {
-        this->unk30[i] = animation->CalculatePointer<SpaTrack<float> >(this->unk30[i]);
-        if (this->unk30[i] != NULL) {
-            this->unk30[i]->ChangePointer();
+    for (u_int i = 0; i < this->m_weight_track_num; i++) {
+        this->m_weight_tracks[i] = animation->CalculatePointer<SpaTrack<float> >(this->m_weight_tracks[i]);
+        if (this->m_weight_tracks[i] != NULL) {
+            this->m_weight_tracks[i]->ChangePointer();
         }
     }
 }

@@ -199,7 +199,7 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
     position->Set(0.0f, 0.0f, 0.0f, 1.0f);
 
     if (m_position_animation != NULL) {
-        NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->unk50[0]->GetMatrix(m_position_animation_time), *position);
+        NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->m_nodes[0]->GetMatrix(m_position_animation_time), *position);
     } else {
         NaMATRIX<float, 4, 4>::Apply(*position, m_matrix, *position);
     }
