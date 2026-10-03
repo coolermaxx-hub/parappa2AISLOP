@@ -792,7 +792,7 @@ segments:
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: src/prlib/render.cpp.o }
-      - { path: asm/data/prlib/renderee.sdata.s.o }
+      - { path: src/prlib/renderee.cpp.o }
       - { path: asm/data/prlib/transition.sdata.s.o }
       - { path: src/prlib/microprogram.cpp.o }
       - { path: src/prlib/spram.cpp.o }
@@ -1018,7 +1018,7 @@ segments:
       - { path: src/prlib/prlib.cpp.o }
       - { path: src/prlib/setpointer.cpp.o }
       - { path: src/prlib/render.cpp.o }
-      - { path: asm/data/prlib/renderee.bss.s.o }
+      - { path: src/prlib/renderee.cpp.o }
       - { path: src/prlib/transition.cpp.o }
       - { path: src/prlib/microprogram.cpp.o }
       - { path: src/prlib/spram.cpp.o }

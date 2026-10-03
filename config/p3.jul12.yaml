@@ -373,7 +373,7 @@ segments:
         - [0x2998C8, sdata, prlib/renderstuff]
         - [0x2998CC, .sdata, prlib/prlib]
         - [0x2998E0, .sdata, prlib/render]
-        - [0x2998EC, sdata, prlib/renderee]
+        - [0x2998EC, .sdata, prlib/renderee]
         - [0x2998F0, sdata, prlib/transition]
         - [0x2998F4, .sdata, prlib/mfifo]
         - [0x2998FC, sdata, prlib/spadata]
@@ -468,7 +468,7 @@ segments:
 
         - { type: .bss,  vram: 0x01c82a70, name: prlib/gifreg         }
         - { type: .bss,  vram: 0x01c83190, name: prlib/prlib          }
-        - { type: bss,   vram: 0x01c831b0, name: prlib/renderee       }
+        - { type: .bss,   vram: 0x01c831b0, name: prlib/renderee       }
         - { type: .bss,  vram: 0x01c831c0, name: prlib/microprogram   }
         - { type: .bss,  vram: 0x01c831e0, name: prlib/spram          }
         - { type: bss,   vram: 0x01c83260, name: prlib/spadata        }

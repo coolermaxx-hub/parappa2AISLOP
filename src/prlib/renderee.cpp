@@ -92,8 +92,11 @@ struct PrEECoreDisturbance {
     float amplitude;
     u_int reservedTail;
 };
-extern PrEECoreDisturbance eeCoreDisturbance asm("D_01C831B0");
-extern PrSPRAM_DATA *eeCoreScratchpad asm("D_003998EC");
+/* sdata */
+static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
+/* bss */
+static PrEECoreDisturbance eeCoreDisturbance;
+
 
 void PrRenderStuff::RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet) {
     PrVuDataChunkPacketHeader *first = reinterpret_cast<PrVuDataChunkPacketHeader*>(packet + 1);
