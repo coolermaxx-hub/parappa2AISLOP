@@ -630,22 +630,31 @@ NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float&
     float c = cosf(angle);
     float s = sinf(angle);
 
-    if (axis == 0) {
-        return MakeMatrix_tmp_spadata(1.0f, 0.0f, 0.0f, 0.0f,
-                                      0.0f, c, s, 0.0f,
-                                      0.0f, -s, c, 0.0f,
-                                      0.0f, 0.0f, 0.0f, 1.0f);
-    } else if (axis == 1) {
-        return MakeMatrix_tmp_spadata(c, 0.0f, -s, 0.0f,
-                                      0.0f, 1.0f, 0.0f, 0.0f,
-                                      s, 0.0f, c, 0.0f,
-                                      0.0f, 0.0f, 0.0f, 1.0f);
-    } else {
-        return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
-                                      -s, c, 0.0f, 0.0f,
-                                      0.0f, 0.0f, 1.0f, 0.0f,
-                                      0.0f, 0.0f, 0.0f, 1.0f);
-    }
+    /*
+     * The do-while(0) stops CSE from carrying sinf()'s register into the
+     * last arm, so it reloads s like the original. Still off: reorg fills
+     * the axis == 1 branch delay slot from the fall-through instead of
+     * using bnel + the reload.
+     */
+    do {
+        if (axis == 0) {
+            return MakeMatrix_tmp_spadata(1.0f, 0.0f, 0.0f, 0.0f,
+                                          0.0f, c, s, 0.0f,
+                                          0.0f, -s, c, 0.0f,
+                                          0.0f, 0.0f, 0.0f, 1.0f);
+        }
+        if (axis == 1) {
+            return MakeMatrix_tmp_spadata(c, 0.0f, -s, 0.0f,
+                                          0.0f, 1.0f, 0.0f, 0.0f,
+                                          s, 0.0f, c, 0.0f,
+                                          0.0f, 0.0f, 0.0f, 1.0f);
+        }
+    } while (0);
+
+    return MakeMatrix_tmp_spadata(c, s, 0.0f, 0.0f,
+                                  -s, c, 0.0f, 0.0f,
+                                  0.0f, 0.0f, 1.0f, 0.0f,
+                                  0.0f, 0.0f, 0.0f, 1.0f);
 }
 #endif
 
