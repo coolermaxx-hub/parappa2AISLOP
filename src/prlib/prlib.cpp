@@ -64,7 +64,7 @@ PrSceneObject* PrInitializeScene(sceGsDrawEnv1 *draw_env, const char *name, u_in
 PR_EXTERN
 PrSceneObject* PrInitializeSceneDBuff(sceGsDBuffDc *dbuff, const char *name, u_int fbp) {
     PrSceneObject *scene = prObjectDatabase.CreateScene(&dbuff->draw01, name, fbp);
-    scene->unk90 = dbuff;
+    scene->m_dbuff = dbuff;
 }
 
 PR_EXTERN

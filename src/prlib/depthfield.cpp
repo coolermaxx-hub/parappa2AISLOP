@@ -32,7 +32,7 @@ void PrSceneObject::ApplyDepthOfField() {
         return;
     }
 
-    if (this->unk94 == 0xffffffff) {
+    if (this->m_work_fbp == 0xffffffff) {
         return;
     }
 
@@ -49,7 +49,7 @@ void PrSceneObject::ApplyDepthOfField() {
     PrVRAM_RECT work;
     work.buffer_width = width;
     work.x = 0;
-    work.y = (this->unk94 << 11) / width;
+    work.y = (this->m_work_fbp << 11) / width;
     work.w = width >> 1;
     work.h = height;
 

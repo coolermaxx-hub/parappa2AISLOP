@@ -15,7 +15,7 @@ class SpcFileHeader;
 
 class PrSceneObject {
 public:
-    PrSceneObject(sceGsDrawEnv1 *arg0, const char *name, u_int arg2);
+    PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int work_fbp);
     ~PrSceneObject();
 
     void SelectCamera(SpcFileHeader *camera);
@@ -50,10 +50,16 @@ public:
     float m_default_focal_len;
     float m_default_defocus_len;
     u_int m_default_depth_level;
-    sceGsDBuffDc *unk90;
-    u_int unk94;
-    PrModelObject *unk98;
-    PrModelObject *unk9C;
+    sceGsDBuffDc *m_dbuff;
+    /* Frame buffer page for the depth of field pass; 0xFFFFFFFF disables it */
+    u_int m_work_fbp;
+    /*
+     * The sorted model list runs: background models (by m_sort_order), then
+     * models with SpmFileHeader flag 0x400, then the rest, then screen
+     * models. These point at the start of each later group.
+     */
+    PrModelObject *m_flag400_model_list;
+    PrModelObject *m_normal_model_list;
     PrModelObject *m_screen_model_list;
     PR_PADDING(unkA4, 0x8);
 };

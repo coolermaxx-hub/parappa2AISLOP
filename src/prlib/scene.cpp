@@ -11,7 +11,7 @@ extern char D_0038C720[]; /* "(noname)" */
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/scene", __13PrSceneObjectP13sceGsDrawEnv1PCcUi);
 #else /* Codegen differs (102 vs 106 instructions) */
-PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int arg2) {
+PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int work_fbp) {
     m_list.next = NULL;
     m_list.prev = NULL;
     m_obj_set = NULL;
@@ -23,8 +23,8 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_default_focal_len = 0.0f;
     m_default_defocus_len = 0.0f;
     m_default_depth_level = 3;
-    unk90 = NULL;
-    unk94 = arg2;
+    m_dbuff = NULL;
+    m_work_fbp = work_fbp;
 
     m_draw_env = draw_env;
     m_frame = draw_env->frame1;
@@ -40,9 +40,9 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_default_camera.near_clip = 100.0f;
     m_default_camera.far_clip = 1000000.0f;
 
-    unk9C = NULL;
+    m_normal_model_list = NULL;
     m_screen_model_list = NULL;
-    unk98 = NULL;
+    m_flag400_model_list = NULL;
 }
 #endif
 
@@ -195,15 +195,15 @@ void PrSceneObject::PreprocessModel() {
 
     m_screen_model_list = screen_list;
     if (model_list != NULL) {
-        this->unk9C = model_list;
+        this->m_normal_model_list = model_list;
     } else {
-        this->unk9C = screen_list;
+        this->m_normal_model_list = screen_list;
     }
 
     if (t1 != NULL) {
-        this->unk98 = t1;
+        this->m_flag400_model_list = t1;
     } else {
-        this->unk98 = this->unk9C;
+        this->m_flag400_model_list = this->m_normal_model_list;
     }
 
     PrModelObject *v1 = sp;

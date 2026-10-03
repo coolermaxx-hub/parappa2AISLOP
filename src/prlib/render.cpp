@@ -88,7 +88,7 @@ void PrSceneObject::Render() {
                     }
                 }
                 model = model->m_list.next;
-            } while (model != unk98);
+            } while (model != m_flag400_model_list);
         }
 
         if (model != NULL && (model->m_spm_image->m_flags & 0x400)) {
@@ -101,7 +101,7 @@ void PrSceneObject::Render() {
                     }
                 }
                 model = model->m_list.next;
-            } while (model != unk9C);
+            } while (model != m_normal_model_list);
         }
     }
 
@@ -115,7 +115,7 @@ void PrSceneObject::Render() {
         }
     }
 
-    for (model = unk9C; model != m_screen_model_list; model = model->m_list.next) {
+    for (model = m_normal_model_list; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
                 prSpramData->InitializeModel(model);
