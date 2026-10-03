@@ -6,8 +6,7 @@
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
 
-static unsigned char RBuff_tmp_pack[N + F - 1]; /* TODO: Needs alignment? */
-#define RBuff RBuff_tmp_pack
+static unsigned char RBuff[N + F - 1];
 
 u_int PackGetDecodeSize(u_char *fp_r) {
     return *(u_int*)fp_r;

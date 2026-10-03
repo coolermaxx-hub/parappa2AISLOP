@@ -18,8 +18,7 @@ static P3STR *p3str_pp;
 static ADRD  *adrd_common;
 static int    adrd_common_cnt;
 
-/* bss - static */
-P3STR_SORT p3str_sort[16];
+static P3STR_SORT p3str_sort[16];
 
 static int p3str_sort_cnt;
 

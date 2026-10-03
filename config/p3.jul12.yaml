@@ -442,7 +442,7 @@ segments:
         - { type: .bss,  vram: 0x003db380, name: os/usrmem            }
         - { type: .bss,  vram: 0x01c5d380, name: os/tim2              }
 
-        - { type: bss,   vram: 0x01c5e000, name: main/cdctrl          }
+        - { type: .bss,   vram: 0x01c5e000, name: main/cdctrl          }
         - { type: .bss,  vram: 0x01c5f030, name: main/scrctrl         }
         - { type: .bss,  vram: 0x01c65b80, name: main/sprite          }
         - { type: .bss,  vram: 0x01c6db90, name: main/fadectrl        }
@@ -454,10 +454,10 @@ segments:
         - { type: .bss,  vram: 0x01c73018, name: main/etc             }
         - { type: .bss,  vram: 0x01c730e8, name: main/mcctrl          }
         - { type: .bss,  vram: 0x01c77630, name: main/main            }
-        - { type: bss,   vram: 0x01c77640, name: main/p3str           }
-        - { type: bss,   vram: 0x01c77700, name: main/commake         }
+        - { type: .bss,   vram: 0x01c77640, name: main/p3str           }
+        - { type: .bss,   vram: 0x01c77700, name: main/commake         }
 
-        - { type: bss,   vram: 0x01c778c8, name: menu/menu            }
+        - { type: .bss,   vram: 0x01c778c8, name: menu/menu            }
         - { type: .bss,   vram: 0x01c77a50, name: menu/menusub         }
         - { type: .bss,   vram: 0x01c81100, name: menu/p3mc            }
         - { type: .bss,   vram: 0x01c81540, name: menu/memc            }

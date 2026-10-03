@@ -12,8 +12,7 @@
 
 #include <string.h>
 
-/* .bss */
-extern P3LOG_VAL P3Log_Val;
+static P3LOG_VAL P3Log_Val;
 
 static int bFirst;
 static int VsLev;

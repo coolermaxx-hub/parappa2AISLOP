@@ -981,8 +981,10 @@ segments:
       - { path: src/os/cmngifpk.c.o }
       - { path: src/os/usrmem.c.o }
       - { path: src/os/tim2.c.o }
+      # The original tim2 bss is 2720 bytes larger than its five statics; contents unknown.
+      - { kind: pad, pad_amount: 0xAA0, section: .bss }
 
-      - { path: asm/data/main/cdctrl.bss.s.o }
+      - { path: src/main/cdctrl.c.o }
       - { path: src/main/stdat.c.o }
       - { path: src/main/scrctrl.c.o }
       - { path: src/main/sprite.c.o }
@@ -997,10 +999,10 @@ segments:
       - { path: src/main/mcctrl.c.o }
       - { path: src/main/main.c.o }
       - { path: src/main/cmnfile.c.o }
-      - { path: asm/data/main/p3str.bss.s.o }
-      - { path: asm/data/main/commake.bss.s.o }
+      - { path: src/main/p3str.c.o }
+      - { path: src/main/commake.c.o }
 
-      - { path: asm/data/menu/menu.bss.s.o }
+      - { path: src/menu/menu.c.o }
       - { path: src/menu/menudata.c.o }
       - { path: src/menu/menu_mdl.c.o }
       - { path: src/menu/menusub.c.o }

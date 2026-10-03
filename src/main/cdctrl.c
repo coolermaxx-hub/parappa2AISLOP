@@ -21,8 +21,7 @@ void *current_intg_adrs = NULL;
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
 
-/* bss - static */
-extern unsigned char RBuff[N + F - 1]; /* Ring buffer for INT decompression */
+static unsigned char RBuff[N + F - 1]; /* Ring buffer for INT decompression */
 
 static int cdctrlReadSub(FILE_STR *fstr_pp, int ofs, int size, int buf);
 static void cdctrlReadDataOne(void *x);
@@ -154,7 +153,7 @@ int PackIntDecodeWait(u_char *fp_r, u_char *fp_w, int wait_hline) {
 }
 
 static int cdSampleTmp;
-extern CDCTRL_STR cdctrl_str; /* bss - static */
+static CDCTRL_STR cdctrl_str;
 
 void CdctrlInit(void) {
     WorkClear(&cdctrl_str, sizeof(cdctrl_str));

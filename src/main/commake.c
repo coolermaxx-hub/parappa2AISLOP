@@ -486,8 +486,7 @@ static void comSelection(LEVEL_VS_ENUM lvl, CM_STR_CTRL *cmstr_pp) {
     (comMakeingTbl_tmp[randMakeMax(tblcnt)])(cmstr_pp);
 }
 
-/* .bss */
-extern CM_STR_CTRL cm_str_ctrl;
+static CM_STR_CTRL cm_str_ctrl;
 
 int computerMaking(COMMAKE_STR *com_pp, int com_cnt, TAPDAT *moto_pp, int moto_cnt, TAPSET *tapset_pp, LEVEL_VS_ENUM clvl) {
     WorkClear(&cm_str_ctrl, sizeof(cm_str_ctrl));

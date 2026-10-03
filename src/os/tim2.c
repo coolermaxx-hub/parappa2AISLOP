@@ -479,4 +479,3 @@ void Tim2TransColor_TBP(void *adrs, int tbp) {
     sceGsSyncPath(0, 0);
 }
 
-static char _bss_tim2_pad_[2720]; /* bss pad - TODO: remove once RBuff (cdctrl.c) is added */

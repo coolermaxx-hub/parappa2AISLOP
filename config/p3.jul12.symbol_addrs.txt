@@ -302,9 +302,7 @@ CdctrlSndFadeOutWait                = 0x00106d30; // type:func
 current_intg_adrs                   = 0x00399360; // size:0x4
 time_tmp_max                        = 0x0039936c; // size:0x4
 sndFadeTime                         = 0x00399370; // size:0x4
-RBuff                               = 0x01c5e000; // size:0x1011
 cdSampleTmp                         = 0x00399a34; // size:0x4
-cdctrl_str                          = 0x01c5f018; // size:0x18
 
 // main/stdat.c
 stDatFileSearch                     = 0x00106d70; // type:func
@@ -1038,7 +1036,6 @@ adrd_common                         = 0x00399ab0;
 adrd_common_cnt                     = 0x00399ab4;
 p3str_sort_cnt                      = 0x00399ab8;
 
-p3str_sort                          = 0x01c77640; // size:0xC0
 
 // main/commake.c
 setMakinDataMoto                    = 0x00122c50; // type:func
@@ -1077,7 +1074,6 @@ comMakeingTblLevel1                 = 0x00187510;
 comMakeingTblLevel2                 = 0x00187530;
 comMakeingTblLevel3                 = 0x00187548;
 
-cm_str_ctrl                         = 0x01c77700; // size:0x1c4
 
 // menu/menu.c
 menuDraw                            = 0x00123a10; // type:func
@@ -1090,7 +1086,6 @@ P3LogInit                           = 0x00123d88; // type:func
 bFirst                              = 0x00399abc;
 VsLev                               = 0x00399ac0;
 
-P3Log_Val                           = 0x01c778c8; // size:0x188
 
 // menu/menudata.c
 MenuDataGetIconSysHed               = 0x00123d98; // type:func
