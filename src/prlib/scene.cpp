@@ -20,14 +20,14 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_default_focal_len = 0.0f;
     m_default_defocus_len = 0.0f;
     m_default_depth_level = 3;
-    unk90 = NULL;
-    unk94 = arg2;
+    m_dbuff = NULL;
+    m_workFbp = arg2;
 
-    unk70 = draw_env;
-    unk50 = draw_env->frame1;
-    unk74 = draw_env->frame1.FBW * 64;
-    unk58 = draw_env->xyoffset1;
-    unk78 = (2048 - (draw_env->xyoffset1.OFY >> 4)) * 2;
+    m_drawEnv = draw_env;
+    m_frame = draw_env->frame1;
+    m_width = draw_env->frame1.FBW * 64;
+    m_xyoffset = draw_env->xyoffset1;
+    m_height = (2048 - (draw_env->xyoffset1.OFY >> 4)) * 2;
 
     m_default_camera.position.Set(m_camera_time, m_camera_time, 1000.0f, 1.0f);
     m_default_camera.interest.Set(m_camera_time, m_camera_time, m_camera_time, 1.0f);
@@ -37,9 +37,9 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_default_camera.near_clip = 100.0f;
     m_default_camera.far_clip = 1000000.0f;
 
-    unk9C = NULL;
+    m_normalModelList = NULL;
     m_screen_model_list = NULL;
-    unk98 = NULL;
+    m_flag400ModelList = NULL;
 }
 
 PrSceneObject::~PrSceneObject() {
@@ -165,8 +165,8 @@ void PrSceneObject::PreprocessModel() {
         } else if (spm->m_flags & 0x200) {
             PrModelObject *a1 = sp;
             PrModelObject **a3 = &sp;
-            u_int t0_1 = spm->unk78;
-            while (a1 != NULL && a1->m_spm_image->unk78 < t0_1) {
+            u_int t0_1 = spm->m_sortOrder;
+            while (a1 != NULL && a1->m_spm_image->m_sortOrder < t0_1) {
                 a3 = (PrModelObject**)a1;
                 a1 = *a3;
             }
@@ -187,15 +187,15 @@ void PrSceneObject::PreprocessModel() {
 
     m_screen_model_list = screen_list;
     if (model_list != NULL) {
-        this->unk9C = model_list;
+        this->m_normalModelList = model_list;
     } else {
-        this->unk9C = screen_list;
+        this->m_normalModelList = screen_list;
     }
 
     if (t1 != NULL) {
-        this->unk98 = t1;
+        this->m_flag400ModelList = t1;
     } else {
-        this->unk98 = this->unk9C;
+        this->m_flag400ModelList = this->m_normalModelList;
     }
 
     PrModelObject *v1 = sp;

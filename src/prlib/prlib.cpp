@@ -64,7 +64,7 @@ PrSceneObject* PrInitializeScene(sceGsDrawEnv1 *draw_env, const char *name, u_in
 PR_EXTERN
 PrSceneObject* PrInitializeSceneDBuff(sceGsDBuffDc *dbuff, const char *name, u_int fbp) {
     PrSceneObject *scene = prObjectDatabase.CreateScene(&dbuff->draw01, name, fbp);
-    scene->unk90 = dbuff;
+    scene->m_dbuff = dbuff;
 }
 
 PR_EXTERN
@@ -87,8 +87,8 @@ void PrSetSceneFrame() {
 
 PR_EXTERN
 void PrSetSceneEnv(PrSceneObject *scene, sceGsDrawEnv1 *draw_env) {
-    scene->unk50 = draw_env->frame1;
-    scene->unk58 = draw_env->xyoffset1;
+    scene->m_frame = draw_env->frame1;
+    scene->m_xyoffset = draw_env->xyoffset1;
 }
 
 PR_EXTERN
@@ -221,7 +221,7 @@ float PrGetCameraStartFrame(SpcFileHeader *camera) {
 
 PR_EXTERN
 float PrGetCameraEndFrame(SpcFileHeader *camera) {
-    return camera->unk14 * prFrameRate;
+    return camera->m_duration * prFrameRate;
 }
 
 PR_EXTERN
@@ -313,9 +313,9 @@ PR_EXTERN
 void PrShowModel(PrModelObject *model, NaMATRIX<float, 4, 4> *position) {
     model->m_flags |= 1;
     if (position != NULL) {
-        model->unk10 = *position;
+        model->m_matrix = *position;
     } else {
-        model->unk10 = NaMATRIX<float, 4, 4>::IDENT;
+        model->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
     }
 }
 
@@ -324,7 +324,7 @@ NaMATRIX<float, 4, 4>* PrGetModelMatrix(PrModelObject *model) {
     if ((model->m_flags & 1) == 0) {
         return NULL;
     }
-    return &model->unk10;
+    return &model->m_matrix;
 }
 
 PR_EXTERN

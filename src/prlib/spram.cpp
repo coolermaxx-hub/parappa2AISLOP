@@ -33,8 +33,8 @@ void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     NaVECTOR<float, 4> yd = -m_camera.up;
     sceVu0CameraMatrix((sceVu0FVECTOR*)&m_camera_matrix, m_camera.position.Data(), m_camera_direction.Data(), yd.Data());
 
-    u_int width = scene->unk74;
-    u_int height = scene->unk78;
+    u_int width = scene->m_width;
+    u_int height = scene->m_height;
     float zmax = (float)(0xFFFFFFFF >> (37 - prRenderStuff.GetZbufBits()));
     float zmin = zmax * 1.99999999e-06f;
     zmax *= 0.999997973f;

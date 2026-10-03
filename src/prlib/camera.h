@@ -34,7 +34,7 @@ public:
     u_short m_flags;
 
     PR_PADDING(unk8, 0xC);
-    float unk14;
+    float m_duration;
     char m_name[32];
     PR_PADDING(unk38, 0x8);
     NaVECTOR<float, 4> m_position;

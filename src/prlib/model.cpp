@@ -46,9 +46,9 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_obj_set = NULL;
     m_linked_scene = NULL;
 
-    unk10 = NaMATRIX<float, 4, 4>::IDENT;
+    m_matrix = NaMATRIX<float, 4, 4>::IDENT;
 
-    unk50 = 0x55668899;
+    m_magic = 0x55668899;
     m_user_data = NULL;
     m_spm_image = spm;
     m_flags = 0;
@@ -72,9 +72,9 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
     m_contour_blur_alpha[1] = 0.0f;
     m_transaction_blend_ratio = 1.0f;
     m_disturbance = 0.0f;
-    unkA4 = 1.0f;
+    m_scaledDisturbance = 1.0f;
 
-    spm->unk50 = this;
+    spm->m_model = this;
 }
 
 PrModelObject::~PrModelObject() {
@@ -84,7 +84,7 @@ PrModelObject::~PrModelObject() {
     CleanupAnimation();
     CleanupPositionAnimation();
 
-    m_spm_image->unk50 = NULL;
+    m_spm_image->m_model = NULL;
 
     delete unk88;
     delete unk8C;
@@ -114,7 +114,7 @@ void PrModelObject::Initialize() {
             }
             m_postureMatrices[1] = m_postureMatrices[0] + node_num;
 
-            u_int weight_num = spm->unk6C;
+            u_int weight_num = spm->m_shapeWeightCount;
             if (weight_num != 0) {
                 float *weight = (float*)AllocateFromWorkArea(weight_num * sizeof(float) * 2);
                 if (weight == NULL) {
@@ -163,7 +163,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "lqc2       $vf14,  0x10(%0)       \n\t"
         "lqc2       $vf15,  0x20(%0)       \n\t"
         "lqc2       $vf16,  0x30(%0)       \n\t"
-    : : "r"(&this->unk10));
+    : : "r"(&this->m_matrix));
 
     asm volatile(
         "lqc2       $vf17,  0x0(%0)        \n\t"
@@ -171,7 +171,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "vmadday    ACC,    $vf14,  $vf17  \n\t"
         "vmaddaz    ACC,    $vf15,  $vf17  \n\t"
         "vmaddw     $vf17,  $vf16,  $vf17  \n\t"
-    : : "r"(&m_spm_image->unk30));
+    : : "r"(&m_spm_image->m_boundMin));
 
     asm volatile(
         "lqc2       $vf04,  0x0(%0)        \n\t"
@@ -185,7 +185,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "vmadday    ACC,    $vf14,  $vf17  \n\t"
         "vmaddaz    ACC,    $vf15,  $vf17  \n\t"
         "vmaddw     $vf17,  $vf16,  $vf17  \n\t"
-    : : "r"(&m_spm_image->unk40));
+    : : "r"(&m_spm_image->m_boundMax));
 
     asm volatile(
         "lqc2       $vf04,  0x0(%0)        \n\t"
@@ -200,7 +200,7 @@ void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {
     if (m_position_animation != NULL) {
         NaMATRIX<float, 4, 4>::Apply(*position, *m_position_animation->m_nodes[0]->GetMatrix(m_position_animation_time), *position);
     } else {
-        NaMATRIX<float, 4, 4>::Apply(*position, unk10, *position);
+        NaMATRIX<float, 4, 4>::Apply(*position, m_matrix, *position);
     }
 
     NaMATRIX<float, 4, 4>::Apply(*position, prSpramData_tmp_model->m_view_projection_matrix, *position);

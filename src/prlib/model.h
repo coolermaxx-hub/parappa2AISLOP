@@ -181,18 +181,18 @@ public:
     u_short m_flags;
     PR_PADDING(unk8, 0x8);
     char m_name[32];
-    NaVECTOR<float, 4> unk30;
-    NaVECTOR<float, 4> unk40;
-    PrModelObject *unk50;
+    NaVECTOR<float, 4> m_boundMin;
+    NaVECTOR<float, 4> m_boundMax;
+    PrModelObject *m_model;
     PR_PADDING(unk54, 0x8);
     int m_vertex_num;
     PR_PADDING(unk60, 0x4);
     int *unk64;
     u_int m_node_num;
-    u_int unk6C;
+    u_int m_shapeWeightCount;
     int unk70;
     SpmNode **m_nodes;
-    int unk78;
+    int m_sortOrder;
 };
 
 class SpmClusterGeometryNode : public SpmNode {
@@ -251,8 +251,8 @@ public:
     PrLinkedList<PrModelObject> m_list;
     PrObjectSet<PrModelObject> *m_obj_set;
     PrSceneObject *m_linked_scene;
-    NaMATRIX<float, 4, 4> unk10;
-    u_int unk50;
+    NaMATRIX<float, 4, 4> m_matrix;
+    u_int m_magic;
     void *m_user_data;
     SpmFileHeader *m_spm_image;
     u_int m_flags;
@@ -270,7 +270,7 @@ public:
     float m_contour_blur_alpha[2];
     float m_transaction_blend_ratio;
     float m_disturbance;
-    float unkA4;
+    float m_scaledDisturbance;
     PR_PADDING(unkA8, 0x8);
 };
 

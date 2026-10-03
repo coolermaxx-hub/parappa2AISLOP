@@ -33,10 +33,10 @@ extern PrEECoreInitializationPacket initEECoreDmaPacket;
 void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     PrEECoreInitializationPacket *packet = reinterpret_cast<PrEECoreInitializationPacket*>(PR_UNCACHED(&initEECoreDmaPacket));
     packet->zbuf.value = NaGifPacket::EncodeRegister(m_zbuf);
-    packet->frame.value = NaGifPacket::EncodeRegister(scene->unk50);
-    packet->offset.value = NaGifPacket::EncodeRegister(scene->unk58);
-    packet->scissor.value = NaGifPacket::EncodeRegister(scene->unk70->scissor1);
-    packet->dithering.value = NaGifPacket::EncodeRegister(scene->unk70->dthe);
+    packet->frame.value = NaGifPacket::EncodeRegister(scene->m_frame);
+    packet->offset.value = NaGifPacket::EncodeRegister(scene->m_xyoffset);
+    packet->scissor.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->scissor1);
+    packet->dithering.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->dthe);
 
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);

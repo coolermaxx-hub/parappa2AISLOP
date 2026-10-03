@@ -33,7 +33,7 @@ void PrSceneObject::Render() {
 
     if (PrGetMendererRatio() >= 1.5f && m_model_set.m_head != NULL) {
         prRenderStuff.InitializeEECore(this);
-        PrDrawAwfulBackground(unk50);
+        PrDrawAwfulBackground(m_frame);
     }
 
     bool awful = true;
@@ -52,9 +52,9 @@ void PrSceneObject::Render() {
     }
 
     prRenderStuff.m_statistics.render_time1 = *T3_COUNT;
-    sceGsFrame frame = unk50;
-    sceGsXyoffset xyoffset = unk58;
-    PrWaitMendererTexture(unk70, frame, xyoffset);
+    sceGsFrame frame = m_frame;
+    sceGsXyoffset xyoffset = m_xyoffset;
+    PrWaitMendererTexture(m_drawEnv, frame, xyoffset);
     prRenderStuff.m_statistics.render_time2 = *T3_COUNT;
 
     prRenderStuff.InitializeEECore(this);
@@ -76,7 +76,7 @@ void PrSceneObject::Render() {
                     }
                 }
                 model = model->m_list.next;
-            } while (model != unk98);
+            } while (model != m_flag400ModelList);
         }
 
         if (model != NULL && (model->m_spm_image->m_flags & 0x400)) {
@@ -89,7 +89,7 @@ void PrSceneObject::Render() {
                     }
                 }
                 model = model->m_list.next;
-            } while (model != unk9C);
+            } while (model != m_normalModelList);
         }
     }
 
@@ -103,7 +103,7 @@ void PrSceneObject::Render() {
         }
     }
 
-    for (model = unk9C; model != m_screen_model_list; model = model->m_list.next) {
+    for (model = m_normalModelList; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & 1) {
             if (!awful || (model->m_spm_image->m_flags & 0x100)) {
                 prSpramData_tmp_render->InitializeModel(model);
@@ -130,9 +130,9 @@ void PrSceneObject::InitializeVu1() {
     PrVu1InitPacket *packet = (PrVu1InitPacket*)PR_UNCACHED(&initVu1DmaPacket);
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     packet->zbuf     = zbuf;
-    packet->frame    = this->unk50;
-    packet->xyoffset = this->unk58;
-    packet->scissor  = this->unk70->scissor1;
+    packet->frame    = this->m_frame;
+    packet->xyoffset = this->m_xyoffset;
+    packet->scissor  = this->m_drawEnv->scissor1;
 
     PrWaitDmaFinish(SCE_DMA_GIF);
 
@@ -165,13 +165,13 @@ void PrSceneObject::PrepareScreenModelRender() {
 
 void PrModelObject::CalculateCurrentMatrix() {
     PrSPRAM_DATA *spram = prSpramData_tmp_render;
-    const NaMATRIX<float, 4, 4> *mtx = &this->unk10;
+    const NaMATRIX<float, 4, 4> *mtx = &this->m_matrix;
 
     spram->m_animation_time = m_animation_time;
     spram->m_current_model = this;
     SpaFileHeader *animation = m_animation;
     spram->m_animation = animation;
-    this->unkA4 = 1.0f;
+    this->m_scaledDisturbance = 1.0f;
 
     SpmFileHeader *spm = m_spm_image;
 
@@ -199,7 +199,7 @@ void PrModelObject::CalculateCurrentMatrix() {
                 len += v[i] * v[i];
             }
 
-            this->unkA4 = disturbance * sqrtf(len);
+            this->m_scaledDisturbance = disturbance * sqrtf(len);
         } else {
             spm->CalculateCurrentMatrixAnimation(this, *mtx);
         }
