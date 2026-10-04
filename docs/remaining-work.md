@@ -86,6 +86,31 @@ byte-identical contents. The remaining
 `*(u_long *)&sceGs...` reads in `wipe.c` follow the SDK idiom of submitting a
 register struct as one 64-bit GIF A+D value.
 
+## Naming pass over magic numbers (2026-10-04)
+
+Raw constants were replaced by names with no change to the build (the function
+diff list stayed at 92 differing / 33 missing after every step, and edits inside
+already-differing functions were checked for identical assembly). Covered:
+
+- GS/GIF/VIF register values through the SDK `SCE_GS_SET_*`, `SCE_GIF_*` and
+  `SCE_VIF1_*` macros; the draw field size (`SCREEN_WIDTH`, `SCREEN_FIELD_HEIGHT`)
+  and the primitive origin (`GS_X_COORD`, `GS_Y_COORD`).
+- prlib flag words (`SpmFlags`, `SpmFileFlags`, `PrModelFlags`, SPA/SPC file
+  flags), GIF register pass modes (`PrSetGifRegisterMode`), the title stage check
+  (`PR_STAGE_TITLE`) and object magic values.
+- Pad setup phases and terminal types (`syssub`), button masks (`SCE_PAD*`).
+- The memory card layer: `P3MC_SAVE_*` / `P3MC_LOAD_*` sequencer states,
+  `P3MC_RES_*` results, `P3MC_FLAG_*`, save kinds (`P3MC_MODE_LOG/REPLAY`),
+  file check results, `MEMC_ERR_*` codes at every call site, and the menu-side
+  flow states and results (`MCUSER_*`, `MCUCHK_*`, `MCFLOW_*`, `MCCHECK_*`).
+- Menu message numbers (`MCMES`, kinds), subtitle alignment, scene animation
+  commands (`MNANM_*`), user-name character packing, stage indices
+  (`STDAT_STAGE_*`) and ending/bonus flags (`ENDING_*`).
+
+Still numeric on purpose: the per-function `state`/`subStatus` values of the
+large menu flows in `menusub.c` (each function reuses the same numbers with its
+own meaning), the `errorNo` message selectors and table data.
+
 ## Known byte differences from readability changes
 
 The full per-unit table is in [binary-differences.md](binary-differences.md).
