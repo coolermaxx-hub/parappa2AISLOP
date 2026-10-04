@@ -126,7 +126,7 @@ void PrSceneObject::Render() {
     prRenderStuff.SortTransmitDmaArray();
     prRenderStuff.m_statistics.render_time4 = *T3_COUNT;
 
-    if (prCurrentStage != 19) {
+    if (prCurrentStage != PR_STAGE_TITLE) {
         prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite)->m_tag);
     }
 

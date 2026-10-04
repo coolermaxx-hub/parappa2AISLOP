@@ -744,7 +744,7 @@ static STDAT_DAT stdat_dat_vs08[] = {
         (TAPLVL_STR *)0x1DD6158,
     },
 };
-STDAT_REC stdat_rec[20] = {
+STDAT_REC stdat_rec[STDAT_STAGE_MAX] = {
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG00.OLM;1", {} },
         1,
@@ -867,7 +867,7 @@ STDAT_REC stdat_rec[20] = {
     },
 };
 
-int stdat_rec_num = 20;
+int stdat_rec_num = STDAT_STAGE_MAX;
 
 static void stDatFileSearch(FILE_STR *fs_pp) {
     if (fs_pp == NULL || fs_pp->fname == NULL) {

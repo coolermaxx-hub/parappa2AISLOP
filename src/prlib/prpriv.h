@@ -107,6 +107,9 @@ void PrAnimateModelPosition(PrModelObject *model, float time);
 void PrAnimateSceneCamera(PrSceneObject *scene, float time);
 void PrRender(PrSceneObject *scene);
 void PrWaitRender();
+/* PrSetStage index of the title screen (same numbering as stdat_rec). */
+#define PR_STAGE_TITLE 19
+
 void PrSetStage(int stage);
 void PrSetDepthOfField(PrSceneObject *scene, float focal_lng, float defocus_lng);
 void PrSetDepthOfFieldLevel(PrSceneObject *scene, u_int level);

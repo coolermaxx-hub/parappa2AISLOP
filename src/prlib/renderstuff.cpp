@@ -204,7 +204,7 @@ void PrRenderStuff::MergeRender() {
         AppendDmaTag(m_transmit_array[i].tag);
     }
 
-    if (prCurrentStage == 19) {
+    if (prCurrentStage == PR_STAGE_TITLE) {
         PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite);
         AppendDmaTag(&strip->m_tag);
     }

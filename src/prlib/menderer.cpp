@@ -129,10 +129,10 @@ static float GetRandom() {
 }
 
 static int StageIndexForColor() {
-    if (prCurrentStage == 19) {
+    if (prCurrentStage == PR_STAGE_TITLE) {
         return 0;
     }
-    return (u_int)prCurrentStage % 10;
+    return (u_int)prCurrentStage % 10; /* VS stages 11-18 use the colours of stages 1-8 */
 }
 
 void PushNoodleColor(u_long *rgbaq) {
@@ -184,7 +184,7 @@ void PushNoodleColor(u_long *rgbaq) {
     b = base[2] + b * saturation;
 
     float blend;
-    if (prCurrentStage == 19 || prMendererRatio <= 1.0f) {
+    if (prCurrentStage == PR_STAGE_TITLE || prMendererRatio <= 1.0f) {
         blend = 0.0f;
     } else if (prMendererRatio <= 1.4f) {
         blend = (prMendererRatio - 1.0f) * 0.3f / 0.4f;
@@ -548,7 +548,7 @@ void DrawMenderer() {
     }
 
     float strip;
-    if (prCurrentStage == 19 || prCurrentStage == 6) {
+    if (prCurrentStage == PR_STAGE_TITLE || prCurrentStage == 6) {
         if (ratio <= 1.0f) {
             strip = ratio;
         } else if (ratio <= 1.4f) {
