@@ -116,9 +116,18 @@ already-differing functions were checked for identical assembly). Covered:
   commands (`MNANM_*`), user-name character packing, stage indices
   (`STDAT_STAGE_*`) and ending/bonus flags (`ENDING_*`).
 
-Still numeric on purpose: the per-function `state`/`subStatus` values of the
-large menu flows in `menusub.c` (each function reuses the same numbers with its
-own meaning), the `errorNo` message selectors and table data.
+- Menu flows in `menusub.c`: the shared `MNFLOW_RUN/INIT/END` argument, and
+  named states, entrances and results for the stage map (`TSMAP_*`), city hall
+  (`CHALL_*`, camera `CHCAM_*`), map cursor (`MAPMENU_*`, `MAPSND_*`,
+  `MNMAP_DIR_*`), save (`MPSAVE_*`), pop-up menu (`POPMENU_*`, `POPSEL_*`), boot
+  card check (`MCSTART_*`, `MCCARD_*`) and user list results (`ULIST_*`). Play
+  modes use `PLAY_MODE_*`, the menu entry reason `SEL_MENU_*`, map positions and
+  scripted cursor paths `MAP_POS_*` / `AUTO_MOVE_*`.
+
+Still numeric: the internal states of the other menu flows (pop-up, juke box,
+options, save menu, user list, name entry; each function reuses the same numbers
+with its own meaning, so they are named one function at a time), the `errorNo`
+message selectors and table data.
 
 ## Known byte differences from readability changes
 
