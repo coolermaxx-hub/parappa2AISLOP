@@ -274,7 +274,7 @@ void examCharSet(EX_CHAR_DISP *ecd_pp, sceGifPacket *gifpk_pp) {
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PABE, SCE_GS_SET_PABE(PR_REGS(ecd_pp).pabe));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_FBA_1, SCE_GS_SET_FBA(PR_REGS(ecd_pp).fba));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_COLCLAMP, 1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(ecd_pp->kido[0], ecd_pp->kido[1], ecd_pp->kido[2], 128, 0x3f800000));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(ecd_pp->kido[0], ecd_pp->kido[1], ecd_pp->kido[2], 128, GS_Q_ONE));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, ecd_pp->alpha, 0, 1, 0, 0));
@@ -1056,7 +1056,7 @@ void MbarCharSet(MBARR_CHR *mb_pp) {
         return;
     }
 
-    sceGifPkAddGsAD(&mbar_gif, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(mb_pp->r, mb_pp->g, mb_pp->b, mb_pp->a, 0x3f800000));
+    sceGifPkAddGsAD(&mbar_gif, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(mb_pp->r, mb_pp->g, mb_pp->b, mb_pp->a, GS_Q_ONE));
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEX0_1, mbcd_pp->tim2_dat_pp->GsTex0);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEX1_1, mbcd_pp->tim2_dat_pp->GsTex1);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));
@@ -1087,7 +1087,7 @@ void MbarCharSet2(MBARR_CHR2 *mb_pp) {
         return;
     }
 
-    sceGifPkAddGsAD(&mbar_gif, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(mb_pp->r, mb_pp->g, mb_pp->b, mb_pp->a, 0x3f800000));
+    sceGifPkAddGsAD(&mbar_gif, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(mb_pp->r, mb_pp->g, mb_pp->b, mb_pp->a, GS_Q_ONE));
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEX0_1, mbcd_pp->tim2_dat_pp->GsTex0);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEX1_1, mbcd_pp->tim2_dat_pp->GsTex1);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));

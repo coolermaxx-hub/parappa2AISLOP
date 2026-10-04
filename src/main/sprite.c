@@ -1,5 +1,7 @@
 #include "main/sprite.h"
 
+#include "os/cmngifpk.h"
+
 #include <libdma.h>
 #include <libgifpk.h>
 #include <libgraph.h>
@@ -63,7 +65,7 @@ void SprFlash(void) {
 }
 
 void SprSetColor(u_char r, u_char g, u_char b, u_char a) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, a, 0x3f800000));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, a, GS_Q_ONE));
 }
 
 void SprDatPrint(SPR_DAT *spr_pp) {

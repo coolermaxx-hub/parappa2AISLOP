@@ -6,6 +6,9 @@
 #include <eetypes.h>
 #include <libgifpk.h>
 
+/* RGBAQ's Q field takes a float; 1.0f for untextured primitives. */
+#define GS_Q_ONE 0x3f800000
+
 typedef struct { // 0x8
     /* 0x0 */ u_long128 *pBase;
     /* 0x4 */ int pri;

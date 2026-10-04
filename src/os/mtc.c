@@ -51,8 +51,11 @@ int mtcSemaEnd = 0;
 
 static short th_id_Ctrl;
 
+/* Written at the lowest word of each thread stack; overwritten if the stack overflows. */
+#define MTC_STACK_GUARD 0x572a8b4c
+
 static void mtcStackErrorCheck(int level) {
-    if (*(int*)mtcStack[level] != 0x572a8b4c) {
+    if (*(int*)mtcStack[level] != MTC_STACK_GUARD) {
         printf("stack over level[%d]\n", level);
         while (1) {
             sceGsSyncV(0);
@@ -151,7 +154,7 @@ void MtcExec(void (*prg_pp)(void* x), long level) {
     mc_pp->wtime = 0;
     mc_pp->status = MTC_COND_EXEC;
 
-    *(int*)mtcStack[level] = 0x572a8b4c;
+    *(int*)mtcStack[level] = MTC_STACK_GUARD;
 }
 
 void MtcWait(long wt) {

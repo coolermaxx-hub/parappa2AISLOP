@@ -141,7 +141,7 @@ void UG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, sceGifPacket *alpPkSpr) {
     /* note: TEXA set is useless as all framebuffers are RGBA32. */
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_TEXA, SCE_GS_SET_TEXA(/*TA0*/128, /*AEM*/0, /*TA1*/128));
 
-    sceGifPkAddGsAD(alpPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(plh_pp->r, plh_pp->g, plh_pp->b, 0, 0x3f800000));
+    sceGifPkAddGsAD(alpPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(plh_pp->r, plh_pp->g, plh_pp->b, 0, GS_Q_ONE));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/1, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/TRUE,
                                                            /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
@@ -184,7 +184,7 @@ void UG_MozaikuDisp(MOZAIKU_STR *moz_pp, sceGsFrame *frame_pp, sceGifPacket *moz
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRMODECONT, 1);
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, 1));
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0x3f800000));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, GS_Q_ONE));
 
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(15, 0, moz_pp->umsk & 0x3ff, moz_pp->ufix & 0x3ff, moz_pp->vmsk & 0x3ff, moz_pp->vfix & 0x3ff));
 
