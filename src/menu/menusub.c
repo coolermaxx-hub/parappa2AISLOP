@@ -321,9 +321,6 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
 };
-// /* data 18b620 */ static short RShopRute0[0];
-// /* data 18b630 */ static short RShopRute1[0];
-// /* data 18b638 */ static short RShopRute2[0];
 static short RecordShopRute_Route0[20] = { 5, 4, 3, 9, -1, 0, 0, 0, 0, 3, 9, -1, 1, 2, 3, 9, -1, 0, 0, 0 };
 static short *RecordShopRute[] = {
     &RecordShopRute_Route0[9], &RecordShopRute_Route0[13], &RecordShopRute_Route0[14],
@@ -475,9 +472,6 @@ static TSVOICE_TBL TsVoiceTbl[] = {
     { 1, 53, 0, 150 },
     { 1, 22, 0, 120 },
 };
-// /* data 18bac8 */ static u_short FussenWAIT0[0];
-// /* data 18bad8 */ static u_short FussenWAIT1[0];
-// /* data 18bae8 */ static u_short LoadConfLst[0];
 static u_short VSNDSEQ_Tbl_Seq0[] = { 65535, 360, 52, 65535, 65534 };
 static u_short VSNDSEQ_Tbl_Seq1[] = { 65535, 240, 52, 65535, 65534 };
 static u_short VSNDSEQ_Tbl_Seq2[] = { 36, 100, 37, 100, 65533 };
@@ -695,10 +689,6 @@ static PATPOS VS2PNameBox[] = {
     { 12, 278, 6, 0, 0 },
 };
 static PATPOS VS2PNameBoxOK = { 13, 468, 6, 0, 0 };
-// /* data 18bfb8 */ static MNOPT_OBJ MNOptObj_Lang[0];
-// /* data 18bfd8 */ static MNOPT_OBJ MNOptObj_Subt[0];
-// /* data 18bff8 */ static MNOPT_OBJ MNOptObj_Vibr[0];
-// /* data 18c018 */ static MNOPT_OBJ MNOptObj_Oneb[0];
 static MNOPT_OBJ OptionSelTbl_Sel0[] = {
     { 0, { 3, 406, 49, 0, 0 } },
     { 1, { 2, 397, 49, 0, 0 } },
@@ -769,10 +759,6 @@ static PATPOS RankSISTNo_PAT[] = {
     { 46, 167, 6, 0, 0 },
     { 47, 167, 6, 0, 0 },
 };
-// /* data 18c208 */ static PATPOS VSL1Ranking_Pat[0];
-// /* data 18c248 */ static PATPOS VSL2Ranking_Pat[0];
-// /* data 18c288 */ static PATPOS VSL3Ranking_Pat[0];
-// /* data 18c2c8 */ static PATPOS VSL4Ranking_Pat[0];
 static PATPOS VSRanking_PatTbl_Pat0[] = {
     { 49, 0, 0, 0, 0 },
     { 61, 8, 17, 0, 0 },
@@ -823,8 +809,6 @@ static STRPOS VRanking_Str[] = {
     { 204, 46, 0x8056063d },
     { 49, 46, 0x8056063d },
 };
-// /* data 18c3b8 */ static PTPOS PopMenu_Pos[0];
-// /* data 18c3c0 */ static PTPOS Ranking_Pos[0];
 static PTPOS PopRnk_pPos_Pos0[4] = {
     { 0, 0 },
     { 0, 0 },

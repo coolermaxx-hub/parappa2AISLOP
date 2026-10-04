@@ -382,7 +382,6 @@ static SCENECTRL *check_scenectrl[20];
 static int dr_tap_req_num;
 static int scenectrl_outside_cnt;
 static int scenectrl_outside_read_cnt;
-// /* sdata 399550 */ enum ANI_BLUMOVE_ENUM {
 //  BLMV_NONE = 0,
 //  BLMV_BLUR = 1,
 //  BLMV_MOVE = 2,

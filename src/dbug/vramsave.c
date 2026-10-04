@@ -55,16 +55,16 @@ static u_int BekiDat(u_int size) {
 
 void VramSave(u_char *fname, int wsize, int hsize, int id) {
     int         fd;
-    u_char      fname_tmp[64];
+    u_char      hostPath[64];
     u_long128  *dst1_pp;
     int         i;
     
-    sprintf(fname_tmp, "host:%s", fname);
-    printf("vram save [%s]\n", fname_tmp);
+    sprintf(hostPath, "host:%s", fname);
+    printf("vram save [%s]\n", hostPath);
 
-    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", fname_tmp);
+        printf("file open error!![%s]\n", hostPath);
         return;
     }
 
@@ -104,7 +104,7 @@ void VramSave(u_char *fname, int wsize, int hsize, int id) {
 
 void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
     int fd;
-    u_char fname_tmp[64];
+    u_char hostPath[64];
     
     u_char *dst1_pp;
     u_char *tr_pp;
@@ -114,12 +114,12 @@ void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
 
     int i, j;
     
-    sprintf(fname_tmp, "host:%s", fname);
-    printf("vram save BMP [%s]\n", fname_tmp);
+    sprintf(hostPath, "host:%s", fname);
+    printf("vram save BMP [%s]\n", hostPath);
 
-    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", fname_tmp);
+        printf("file open error!![%s]\n", hostPath);
         return;
     }
 
@@ -181,7 +181,7 @@ void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
 
 void VramSaveBMPDouble(u_char *fname, int wsize, int hsize, int id) {
     int    fd;
-    u_char fname_tmp[64];
+    u_char hostPath[64];
 
     u_char *tr_pp;
 
@@ -193,12 +193,12 @@ void VramSaveBMPDouble(u_char *fname, int wsize, int hsize, int id) {
     int i;
     int j;
 
-    sprintf(fname_tmp, "host:%s", fname);
-    printf("vram save BMP Double[%s]\n", fname_tmp);
+    sprintf(hostPath, "host:%s", fname);
+    printf("vram save BMP Double[%s]\n", hostPath);
 
-    fd = sceOpen(fname_tmp, SCE_CREAT | SCE_TRUNC | SCE_WRONLY);
+    fd = sceOpen(hostPath, SCE_CREAT | SCE_TRUNC | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", fname_tmp);
+        printf("file open error!![%s]\n", hostPath);
         return;
     }
 
@@ -298,7 +298,7 @@ void VramTmpSave(u_char *save_pp, int wsize, int hsize, int id) {
 
 void VramTmpSaveOutBMP(u_char *fname, int wsize, int hsize, int id, u_char *dst1_pp, u_char *dst2_pp) {
     int    fd;
-    u_char fname_tmp[64];
+    u_char hostPath[64];
 
     u_char *tr_pp;
 
@@ -308,12 +308,12 @@ void VramTmpSaveOutBMP(u_char *fname, int wsize, int hsize, int id, u_char *dst1
 
     int i, j;
 
-    sprintf(fname_tmp, "host:%s", fname);
-    printf("vram save BMP Double[%s]\n", fname_tmp);
+    sprintf(hostPath, "host:%s", fname);
+    printf("vram save BMP Double[%s]\n", hostPath);
 
-    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", fname_tmp);
+        printf("file open error!![%s]\n", hostPath);
         return;
     }
 
