@@ -25,11 +25,11 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data);
 void InitializeNoodlePositionData();
 
 namespace {
-float Absolute(float x) {
+inline float Absolute(float x) {
     return (x >= 0.0f) ? x : -x;
 }
 
-float Maximum(float a, float b) {
+inline float Maximum(float a, float b) {
     return (a <= b) ? b : a;
 }
 }
@@ -77,7 +77,7 @@ void UpdateNoodlePositionData(PrNoodlePositionData *data) {
 }
 
 namespace {
-float Minimum(float a, float b) {
+inline float Minimum(float a, float b) {
     return (a <= b) ? a : b;
 }
 }

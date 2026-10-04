@@ -43,12 +43,12 @@ public:
 };
 
 template <typename T>
-SpaTrack<T>* SpaTransform::GetTrack() {
+inline SpaTrack<T>* SpaTransform::GetTrack() {
     return &static_cast<SpaTypedTransform<T>*>(this)->track;
 }
 
 template <typename T>
-const SpaTrack<T>* SpaTransform::GetTrack() const {
+inline const SpaTrack<T>* SpaTransform::GetTrack() const {
     return &static_cast<const SpaTypedTransform<T>*>(this)->track;
 }
 

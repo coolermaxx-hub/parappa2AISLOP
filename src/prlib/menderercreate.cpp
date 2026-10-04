@@ -292,7 +292,7 @@ void CreateMendererTexture(float ratio) {
 }
 
 namespace {
-float SynchronizationRatio(float phase) {
+inline float SynchronizationRatio(float phase) {
     if (phase < 1.0f) {
         return 0.0f;
     } else if (phase < 2.0f) {
