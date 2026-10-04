@@ -210,19 +210,19 @@ inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Copy(NaMATRIX<T, t0, t1>& lhs, 
 // Keep the original four-quadword MMI transfer for the actual EE 4x4 type.
 template <>
 inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
-        asm volatile("
-            lq $6, 0(%1)
-            lq $7, 0x10(%1)
-            lq $8, 0x20(%1)
-            lq $9, 0x30(%1)
-            sq $6, 0(%0)
-            sq $7, 0x10(%0)
-            sq $8, 0x20(%0)
-            sq $9, 0x30(%0)
-        " : : "r"(&lhs), "r"(&rhs)
-        : "$6", "$7", "$8", "$9", "memory");
-        return lhs;
-    }
+    asm volatile("
+        lq $6, 0(%1)
+        lq $7, 0x10(%1)
+        lq $8, 0x20(%1)
+        lq $9, 0x30(%1)
+        sq $6, 0(%0)
+        sq $7, 0x10(%0)
+        sq $8, 0x20(%0)
+        sq $9, 0x30(%0)
+    " : : "r"(&lhs), "r"(&rhs)
+    : "$6", "$7", "$8", "$9", "memory");
+    return lhs;
+}
 
 template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m10, const T& m11) {

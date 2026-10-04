@@ -3727,16 +3727,15 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
         case SCRSUBJ_REVERS: {
             int drline = sindv_pp->retStartLine;
             int time_tmp;
-            int temp2 = (sindv_pp->sjob_data[j][0] / 2) < ctime_next;
 
-            if (temp2) {
+            if ((sindv_pp->sjob_data[j][0] / 2) < ctime_next) {
                 drline = sindv_pp->refTartegLine;
             }
 
-            temp2 = sindv_pp->refTargetTime - sindv_pp->refStartTime;
-            time_tmp = temp2 * ctime_next;
-            time_tmp /= sindv_pp->sjob_data[j][0];
-            time_tmp = time_tmp != 0 ? time_tmp : 1;
+            time_tmp = ((sindv_pp->refTargetTime - sindv_pp->refStartTime) * ctime_next) / sindv_pp->sjob_data[j][0];
+            if (time_tmp == 0) {
+                time_tmp = 1;
+            }
             ScrLincChangTblRef(drline, time_tmp + sindv_pp->refStartTime);
 
             cont_job = TRUE;

@@ -1141,18 +1141,15 @@ static int MbarGetDispPosX(int tick) {
 }
 
 static int MbarGetDispPosY(int tick) {
-    int v0, pos;
-
-    pos = 0x1df - 1;
+    int pos;
 
     if (tick < 0) {
-        return mbar_pos_y_ofs + 0x17;
+        return mbar_pos_y_ofs + 23;
     }
-    
-    pos = (pos + 1) < tick;
-    pos *= 0x19;
-    v0 = mbar_pos_y_ofs + 0x17;
-    return pos + v0;
+
+    /* Ticks from 480 on are drawn on the second row, 25 lines lower (see MbarGetDispPosX). */
+    pos = (tick < 480) ? 0 : 25;
+    return pos + (mbar_pos_y_ofs + 23);
 }
 
 static int MbarGetTimeArea(MBAR_REQ_STR *mr_pp) {

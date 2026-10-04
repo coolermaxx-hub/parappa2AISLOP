@@ -166,6 +166,13 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   register word separately. Same bits for valid (non-negative) inputs; the
   compiler now does the work in 64-bit registers. The rest of the sprite
   packet builder is typed (`PKGIFTAG`, `PK_AD_PACKET`) with unchanged code.
+- Three small functions lost temporaries that existed only to steer register
+  allocation, none of which the original debug info lists:
+  `MbarGetDispPosY` (src/main/mbar.c; a `v0` local and a `0x1df - 1` that was
+  incremented again before use), `drawDispCheckSub` (src/main/drawctrl.c; a
+  `v0` local) and the reverse-playback job in `subjobEvent`
+  (src/main/scrctrl.c; a reused `temp2`). Same results; registers and one
+  conditional move differ.
 - `ScrExamSetCheck` (src/main/scrctrl.c) declares the replay score buffer
   `mcr_scr` inside the block that fills it, where the original debug info
   places it. The old function-scope declaration only reproduced the original

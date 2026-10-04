@@ -2845,13 +2845,17 @@ static void drawUseDrDispCheckInit(void) {
     drDispFlag = DNUM_NON;
 }
 
+/*
+ * drD is a DNUM_* flag in its low byte with an optional fallback flag in the
+ * high byte, used when the first buffer is already marked in *dat_pp this
+ * frame. The flag returned is marked as used.
+ */
 static int drawDispCheckSub(u_int drD, u_int *dat_pp) {
     int ret = drD & 0xff;
 
-    if (((drD >> 0x8) & 0xff) != 0) {
-        int v0 = *dat_pp & 0xff;
-        if (v0 & drD) {
-            ret = (drD >> 0x8) & 0xff;
+    if (((drD >> 8) & 0xff) != 0) {
+        if (*dat_pp & drD & 0xff) {
+            ret = (drD >> 8) & 0xff;
         }
     }
 
