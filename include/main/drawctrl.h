@@ -140,6 +140,20 @@ typedef enum {
     OCTRL_MAX = 19
 } OBJCTRL_TYPE;
 
+/* OBJCTRL::status, copied into OBJACTPRG::status when the control entry becomes active. */
+enum {
+    OCTRL_STAT_DISABLED = 0x1,       /* entry is skipped */
+    OCTRL_STAT_LOOP = 0x2,           /* animation time wraps at the end */
+    OCTRL_STAT_START_OVERRIDE = 0x4, /* start time comes from dat[2] */
+    OCTRL_STAT_END_OVERRIDE = 0x8,   /* end time comes from dat[3] */
+    OCTRL_STAT_BLUR = 0x10,          /* BLMV_BLUR link option */
+    OCTRL_STAT_MOVE = 0x20,          /* BLMV_MOVE link option */
+    OCTRL_STAT_CONTINUE = 0x40,      /* carry on from the previous program's time */
+    OCTRL_STAT_SAVE_TIME = 0x80,     /* store the current time in slot dat[4] */
+    OCTRL_STAT_LOAD_TIME = 0x100,    /* resume from the time stored in slot dat[4] */
+    OCTRL_STAT_BLUR2 = 0x200         /* BLMV_BLUR2 link option */
+};
+
 typedef struct { // 0x20
     /* 0x00 */ u_int frame;
     /* 0x04 */ u_short objctrl_type;

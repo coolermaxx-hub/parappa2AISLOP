@@ -382,12 +382,6 @@ static SCENECTRL *check_scenectrl[20];
 static int dr_tap_req_num;
 static int scenectrl_outside_cnt;
 static int scenectrl_outside_read_cnt;
-//  BLMV_NONE = 0,
-//  BLMV_BLUR = 1,
-//  BLMV_MOVE = 2,
-//  BLMV_BLUR2 = 3,
-//  BLMV_MAX = 4
-// };
 static MOZAIKU_POLL_STR *mozaiku_poll_str_current_pp;
 static int drawCurrentLine;
 static int drawCurrentTime;
@@ -1315,7 +1309,7 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
                 objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
 
-                if (objctrl_pp->status & 0x1) {
+                if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                     objactprg_tmp_pp->job_type = OCTRL_NON;
                     break;
                 }
@@ -1327,10 +1321,10 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                     objactprg_tmp_pp->first_flag = 1;
                 }
 
-                if (objctrl_pp->status & 0x80) {
+                if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                     octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                 }
-                if (objctrl_pp->status & 0x100) {
+                if (objctrl_pp->status & OCTRL_STAT_LOAD_TIME) {
                     if (first_f) {
                         octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
                     }
@@ -1360,22 +1354,22 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                     objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[1]].maxfr;
                 }
 
-                if (objctrl_pp->status & 0x4) {
+                if (objctrl_pp->status & OCTRL_STAT_START_OVERRIDE) {
                     objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
                 }
-                if (objctrl_pp->status & 0x8) {
+                if (objctrl_pp->status & OCTRL_STAT_END_OVERRIDE) {
                     objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
                 }
-                if (objctrl_pp->status & 0x4) {
+                if (objctrl_pp->status & OCTRL_STAT_START_OVERRIDE) {
                     objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
                 }
-                if (objctrl_pp->status & 0x8) {
+                if (objctrl_pp->status & OCTRL_STAT_END_OVERRIDE) {
                     objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
                 }
 
-                if (objctrl_pp->status & 0x2) {
+                if (objctrl_pp->status & OCTRL_STAT_LOOP) {
                     objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
-                    if (objctrl_pp->status & 0x80) {
+                    if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                         octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                     }
                 } else {
@@ -1393,17 +1387,17 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 objactprg_tmp_pp->main_num = objctrl_pp->dat[1];
                 objactprg_tmp_pp->sub_num = objctrl_pp->dat[0];
 
-                if (objctrl_pp->status & 0x1) {
+                if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                     objactprg_tmp_pp->job_type = OCTRL_NON;
                     break;
                 }
 
                 objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
 
-                if (objctrl_pp->status & 0x80) {
+                if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                     octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                 }
-                if (objctrl_pp->status & 0x100) {
+                if (objctrl_pp->status & OCTRL_STAT_LOAD_TIME) {
                     if (first_f) {
                         octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
                     }
@@ -1418,16 +1412,16 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
 
                 objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[1]].maxfr;
 
-                if (objctrl_pp->status & 0x4) {
+                if (objctrl_pp->status & OCTRL_STAT_START_OVERRIDE) {
                     objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
                 }
-                if (objctrl_pp->status & 0x8) {
+                if (objctrl_pp->status & OCTRL_STAT_END_OVERRIDE) {
                     objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
                 }
 
-                if (objctrl_pp->status & 0x2) {
+                if (objctrl_pp->status & OCTRL_STAT_LOOP) {
                     objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
-                    if (objctrl_pp->status & 0x80) {
+                    if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                         octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                     }
                 } else {
@@ -1445,7 +1439,7 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
                 objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
 
-                if (objctrl_pp->status & 0x1) {
+                if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                     objactprg_tmp_pp->job_type = OCTRL_NON;
                     break;
                 }
@@ -1467,7 +1461,7 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 break;
             case OCTRL_SUB:
                 if (objctrl_pp->PRdata <= objstr_pp->PRdata) {
-                    if (objctrl_pp->status & 0x1) {
+                    if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                         DrawObjStrKill(scn_pp, objctrl_pp->dat[0]);
                     } else {
                         DrawObjStrReq(scn_pp, objctrl_pp->dat[0], objctrl_pp->frame);
@@ -1617,17 +1611,17 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
             objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
             objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
 
-            if (objctrl_pp->status & 0x1) {
+            if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                 objactprg_tmp_pp->job_type = OCTRL_NON;
                 break;
             }
 
             objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
 
-            if (objctrl_pp->status & 0x80) {
+            if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                 octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
             }
-            if (objctrl_pp->status & 0x100) {
+            if (objctrl_pp->status & OCTRL_STAT_LOAD_TIME) {
                 if (first_f) {
                     octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
                 }
@@ -1654,7 +1648,7 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
                 break;
             }
 
-            if (objctrl_pp->status & 0x40) {
+            if (objctrl_pp->status & OCTRL_STAT_CONTINUE) {
                 if (objactprg_tmp_pp->job_type == objactprg_tmp_org_pp->job_type) {
                     objactprg_tmp_pp->now_time = objactprg_tmp_org_pp->now_time + 1;
                     objctrl_pp->PRdata = 1;
@@ -1666,14 +1660,14 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
                 }
             }
 
-            if (objctrl_pp->status & 0x4) {
+            if (objctrl_pp->status & OCTRL_STAT_START_OVERRIDE) {
                 objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
             }
-            if (objctrl_pp->status & 0x8) {
+            if (objctrl_pp->status & OCTRL_STAT_END_OVERRIDE) {
                 objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
             }
 
-            if (objctrl_pp->status & 0x2) {
+            if (objctrl_pp->status & OCTRL_STAT_LOOP) {
                 int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
                 objactprg_tmp_pp->now_time %= haba;
             } else {
@@ -1720,17 +1714,17 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
             objactprg_tmp_pp->main_num = objctrl_pp->dat[1];
             objactprg_tmp_pp->sub_num = objctrl_pp->dat[0];
 
-            if (objctrl_pp->status & 0x1) {
+            if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                 objactprg_tmp_pp->job_type = OCTRL_NON;
                 break;
             }
 
             objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
 
-            if (objctrl_pp->status & 0x80) {
+            if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                 octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
             }
-            if (objctrl_pp->status & 0x100) {
+            if (objctrl_pp->status & OCTRL_STAT_LOAD_TIME) {
                 if (first_f) {
                     octst_timeLoad[objctrl_pp->dat[4]] = octst_time[objctrl_pp->dat[4]];
                 }
@@ -1745,13 +1739,13 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
 
             objactprg_tmp_pp->end_time = scn_pp->objdat_pp[objctrl_pp->dat[1]].maxfr;
 
-            if (objctrl_pp->status & 0x4) {
+            if (objctrl_pp->status & OCTRL_STAT_START_OVERRIDE) {
                 objactprg_tmp_pp->start_time = objctrl_pp->dat[2];
             }
-            if (objctrl_pp->status & 0x8) {
+            if (objctrl_pp->status & OCTRL_STAT_END_OVERRIDE) {
                 objactprg_tmp_pp->end_time = objctrl_pp->dat[3];
             }
-            if (objctrl_pp->status & 0x2) {
+            if (objctrl_pp->status & OCTRL_STAT_LOOP) {
                 int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
                 objactprg_tmp_pp->now_time %= haba;
             } else {
@@ -1771,7 +1765,7 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
             objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
             objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
 
-            if (objctrl_pp->status & 0x1) {
+            if (objctrl_pp->status & OCTRL_STAT_DISABLED) {
                 objactprg_tmp_pp->job_type = OCTRL_NON;
                 break;
             }
@@ -2058,20 +2052,20 @@ void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
             if (prg_pp[i].job_type == OCTRL_NON) {
                 continue;
             }
-            if (prg_pp[i].status & 0x1) {
+            if (prg_pp[i].status & OCTRL_STAT_DISABLED) {
                 continue;
             }
 
             switch (prg_pp[i].job_type) {
             case OCTRL_ANI:
                 blumove = 0;
-                if (prg_pp[i].status & 0x20) {
+                if (prg_pp[i].status & OCTRL_STAT_MOVE) {
                     blumove = 2;
                 }
-                if (prg_pp[i].status & 0x10) {
+                if (prg_pp[i].status & OCTRL_STAT_BLUR) {
                     blumove = 1;
                 }
-                if (prg_pp[i].status & 0x200) {
+                if (prg_pp[i].status & OCTRL_STAT_BLUR2) {
                     blumove = 3;
                 }
 
@@ -2177,7 +2171,7 @@ void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
             if (objactprg_pp->job_type == OCTRL_ANI || objactprg_pp->job_type == OCTRL_CAM) {
                 time_tmp = (objactprg_pp->end_time - objactprg_pp->start_time) + 1;
 
-                if (objactprg_pp->status & 0x2) {
+                if (objactprg_pp->status & OCTRL_STAT_LOOP) {
                     objactprg_pp->now_time %= time_tmp;
                 }
 
