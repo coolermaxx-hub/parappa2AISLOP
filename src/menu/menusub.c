@@ -29,6 +29,14 @@
 /* Set on a map direction's destination number when the move is blocked once the map limit is reached. */
 #define MNMAP_LIMITED    0x8000
 
+/* Stage map positions (MAPPOS::curPos); the stages 1-8 lie between these two. */
+#define MAP_POS_CITY_HALL   0
+#define MAP_POS_RECORD_SHOP 9
+
+/* Ends of a scripted cursor path (P3GAMESTATE::pAutoMove): stop there, or go into the record shop. */
+#define AUTO_MOVE_STOP        -1
+#define AUTO_MOVE_RECORD_SHOP -2
+
 /* ABGR colours. GS texture modulation treats 0x80 as 1.0, so this is "draw the texture unchanged". */
 #define MN_COLOR_NEUTRAL 0x80808080
 #define MN_COLOR_WHITE   0x80ffffff
@@ -332,12 +340,25 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
 };
-static short RecordShopRute_Route0[20] = { 5, 4, 3, 9, -1, 0, 0, 0, 0, 3, 9, -1, 1, 2, 3, 9, -1, 0, 0, 0 };
+/*
+ * Cursor paths to the record shop, ending in AUTO_MOVE_STOP. The paths from
+ * the other positions are the tails of these three.
+ */
+static short RecordShopRute_From6[] = { 5, 4, 3, MAP_POS_RECORD_SHOP, AUTO_MOVE_STOP };
+static short RecordShopRute_From7[] = { MAP_POS_CITY_HALL, 3, MAP_POS_RECORD_SHOP, AUTO_MOVE_STOP };
+static short RecordShopRute_From8[] = { 1, 2, 3, MAP_POS_RECORD_SHOP, AUTO_MOVE_STOP };
+/* Indexed by the map position the walk starts from. */
 static short *RecordShopRute[] = {
-    &RecordShopRute_Route0[9], &RecordShopRute_Route0[13], &RecordShopRute_Route0[14],
-    &RecordShopRute_Route0[15], &RecordShopRute_Route0[2], &RecordShopRute_Route0[1],
-    RecordShopRute_Route0, &RecordShopRute_Route0[8], &RecordShopRute_Route0[12],
-    &RecordShopRute_Route0[15],
+    &RecordShopRute_From7[1], /* city hall */
+    &RecordShopRute_From8[1],
+    &RecordShopRute_From8[2],
+    &RecordShopRute_From8[3],
+    &RecordShopRute_From6[2],
+    &RecordShopRute_From6[1],
+    RecordShopRute_From6,
+    RecordShopRute_From7,
+    RecordShopRute_From8,
+    &RecordShopRute_From8[3], /* already at the record shop */
 };
 static MNMAPPOS mnmapCityHall[] = {
     {
@@ -1652,10 +1673,29 @@ static void  TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank);
 /* static */ int   TsCheckTimeMapChange(void);
 static int   TsMemCardCheck_Flow(int flg, u_int tpad);
 static int   TsMap_Flow(int flg, u_int tpad, u_int tpad2);
+/* TsMap_Flow entrances (the tpad argument with MNFLOW_INIT). */
+enum {
+    TSMAP_ENTER_FROM_HALL = 0,  /* left the city hall: put the cursor back on it */
+    TSMAP_ENTER_REPLAY_END = 1, /* a replay ended: go straight back into the city hall */
+    TSMAP_ENTER_STAGE_END = 2,  /* a stage ended: update the rankings and offer to save */
+    TSMAP_ENTER_MAP = 3         /* open the map on the current stage */
+};
 /* static */ void  TsMakeUserWork(int mode);
 /* static */ void  TsSaveSuccessProc(void);
 /* static */ int   MpSave_Flow(int flg, u_int tpad, u_int tpad2);
 static int   MpCityHall_Flow(int flg, u_int tpad, u_int tpad2);
+/* MpCityHall_Flow entrances (the tpad argument with MNFLOW_INIT). */
+enum {
+    CHALL_ENTER_DOOR = 0,
+    CHALL_ENTER_FROM_REPLAY = 1 /* a replay ended: start on the replay counter */
+};
+/* MpCityHall_Flow results. */
+enum {
+    CHALL_RES_RUNNING = 0,
+    CHALL_RES_EXIT = 1,   /* the player walked out */
+    CHALL_RES_REPLAY = 2, /* a replay was loaded: play it */
+    CHALL_RES_LOADED = 3  /* a save was loaded; the screen is already faded out */
+};
 /* static */ void  MpCityHallParaStart(int pos);
 static void  MpCityHallFPHSSoundMask(int flg);
 /* static */ int   MpCityHallFPHSMove(int pos, int fpos);
@@ -1663,6 +1703,17 @@ static void  MpCityHallFPHOK(int flg);
 /* static */ void  MpCityHallCharPosSet(int pos);
 static int   MpPopMenu_Flow(int flg, u_int tpad);
 /* static */ int   MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad);
+/* MpMapMenu_Flow commands beyond MNFLOW_INIT / MNFLOW_RUN. */
+enum {
+    MAPMENU_PLACE = 3,  /* put the cursor on position tpad */
+    MAPMENU_STEP_TO = 4 /* walk the cursor to the neighbouring position tpad */
+};
+/* MpMapMenu_Flow results with MNFLOW_RUN. */
+enum {
+    MAPMENU_CANCELLED = -1,
+    MAPMENU_RUNNING = 0,
+    MAPMENU_DECIDED = 1
+};
 static int   _MapGetMovableDir(MAPPOS *mpw);
 /* static */ int   McErrorMess(int err);
 static void  McInitFlow(void);
@@ -1699,6 +1750,13 @@ enum {
 };
 
 /* static */ int   McUserCheckFlow(int type, int mode, int *bError);
+/* McUserCheckFlow keeps returning this until it shows the "checking" message, then MCFLOW_RUNNING. */
+#define MCUCHK_RUN_QUIET -2
+/* What McUserCheckFlow reports through bError once the "checking" message is up. */
+enum {
+    MCUCHK_REPORT_ERROR = 1,  /* an error message follows */
+    MCUCHK_REPORT_RESTART = 2 /* the card was swapped: the check starts over */
+};
 /* Results of McUserSaveFlow / McUserLoadFlow. */
 enum {
     MCFLOW_RUNNING = -1,
@@ -1752,6 +1810,15 @@ static int   TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2);
 /* static */ void  _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp);
 /* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank);
 /* static */ int   TsPopMenu_Flow(int flg, u_int tpad);
+/*
+ * TsPopMenu_Flow / MpPopMenu_Flow result: -1 when cancelled, otherwise the play
+ * mode picked, with the computer's level above it for POPSEL_VS_COM.
+ */
+#define POPSEL_SINGLE         1
+#define POPSEL_VS_MAN         2
+#define POPSEL_VS_COM         3
+#define POPSEL_MODE(ret)      ((ret) & 0xff)
+#define POPSEL_VS_LEVEL(ret)  ((ret) >> 8)
 /* static */ void  TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
 /* static */ int   TsSaveMenu_Flow(int flg, u_int tpad);
 /* static */ void  TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
@@ -1785,6 +1852,12 @@ static int   TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno);
 /* static */ int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
 
 /* static */ int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
+/* TsUserList_Flow results with MNFLOW_RUN (0 while running). */
+enum {
+    ULIST_RECHECK = -3,   /* a card went in or was swapped: check it again */
+    ULIST_CANCELLED = -1,
+    ULIST_PICKED = 1      /* a file was chosen (TsUserList_GetCurFileNo) */
+};
 /* static */ void  TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  NameSpaceCut(u_char *dst, u_char *src);
 /* static */ void  TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog);
@@ -2778,11 +2851,11 @@ static void TsSet_ParappaCapColor(void) {
     if (nStage < 0 || nStage >= 8) {
         return;
     }
-    if (pstate->nMode == 1) {
+    if (pstate->nMode == PLAY_MODE_VS_MAN) {
         return;
     }
 
-    if (pstate->nMode == 2) {
+    if (pstate->nMode == PLAY_MODE_VS_COM) {
         vslev = pstate->vsLev;
         if (nRound >= 4 && pLog->clrVSCOM1[nStage] < 4 && vslev + 1 >= 4) {
             flg = 0;
@@ -2799,14 +2872,14 @@ static void TsSet_ParappaCapColor(void) {
         if (pLog->clrVSCOM1[nStage] < vslev + 1) {
             pLog->clrVSCOM1[nStage] = vslev + 1;
         }
-    } else if (pstate->nMode == 0) {
+    } else if (pstate->nMode == PLAY_MODE_SINGLE) {
         pstate->pAutoMove = NULL;
         if (nRound == 0 && pLog->clrCount[nStage] <= 0) {
             nextPos = pstate->nStage + 1;
             if (nextPos >= 9) {
                 nextPos = 1;
             }
-            pstate->autoMovePos[1] = -1;
+            pstate->autoMovePos[1] = AUTO_MOVE_STOP;
             pstate->autoMovePos[0] = nextPos;
             pstate->pAutoMove = pstate->autoMovePos;
         }
@@ -2859,7 +2932,7 @@ static void TsSet_ParappaCapColor(void) {
                 break;
             }
         }
-        pstate->autoMovePos[i] = -2;
+        pstate->autoMovePos[i] = AUTO_MOVE_RECORD_SHOP;
         pstate->pAutoMove = pstate->autoMovePos;
         pstate->curRecJacket = bRecJacket;
     }
@@ -2875,7 +2948,7 @@ static void TsCheckEnding(P3GAMESTATE *pstate) {
     nRound = pstate->pLog->nRound;
     nStage = pstate->nStage - 1;
 
-    if (pstate->nMode != 0) {
+    if (pstate->nMode != PLAY_MODE_SINGLE) {
         pstate->endingGame = ENDING_NONE;
         return;
     }
@@ -2970,7 +3043,7 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
 
     if (!iniflg) {
         MENUSubt_PadFontSw(0);
-        TsMemCardCheck_Flow(1, 0);
+        TsMemCardCheck_Flow(MNFLOW_INIT, 0);
     } else {
         MENUSubt_PadFontSw(1);
 
@@ -3087,15 +3160,15 @@ void TsMenu_InitFlow(P3GAMESTATE *pstate) {
     TsSet_ParappaCapColor();
 
     switch (pstate->endFlg) {
-    case 0:
-        TsMap_Flow(1, 3, 0);
+    case SEL_MENU_STAGESEL:
+        TsMap_Flow(MNFLOW_INIT, TSMAP_ENTER_MAP, 0);
         break;
-    case 1:
+    case SEL_MENU_SAVE:
         TsClearSet(pP3GameState);
-        TsMap_Flow(1, 2, 0);
+        TsMap_Flow(MNFLOW_INIT, TSMAP_ENTER_STAGE_END, 0);
         break;
-    case 2:
-        TsMap_Flow(1, 1, 0);
+    case SEL_MENU_REPLAY:
+        TsMap_Flow(MNFLOW_INIT, TSMAP_ENTER_REPLAY_END, 0);
         break;
     }
 }
@@ -3108,7 +3181,7 @@ int TsMenuMemcChk_Flow(void) {
     TsGetMenuPad(1, &tpad2);
 
     TsMCAMes_Flow(tpad);
-    ret = TsMemCardCheck_Flow(0, tpad);
+    ret = TsMemCardCheck_Flow(MNFLOW_RUN, tpad);
 
     TsSCFADE_Flow(0, 0);
     TsBGMPoll();
@@ -3123,7 +3196,7 @@ int TsMenu_Flow(void) {
     TsGetMenuPad(0, &tpad);
     TsGetMenuPad(1, &tpad2);
 
-    ret = TsMap_Flow(0, tpad, tpad2);
+    ret = TsMap_Flow(MNFLOW_RUN, tpad, tpad2);
 
     TsMCAMes_Flow(tpad);
     TsSCFADE_Flow(0, 0);
@@ -3268,7 +3341,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
 
     if (pDataW->pMemTop != NULL) {
         switch (mode) {
-        case 1:
+        case P3MC_MODE_LOG:
             pP3GameState->pLog->game_status = *pP3GameState->pGameStatus;
             memcpy(pDataW->pData, pP3GameState->pLog, sizeof(P3LOG_VAL));
 
@@ -3279,7 +3352,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
             TsSetRanking2UData(&pDataW->pHead->user, pCStageRank);
             TsSetRankingName(pDataW->pHead->user.stageRank, plog->name);
             break;
-        case 2:
+        case P3MC_MODE_REPLAY:
             memcpy(pDataW->pData, pP3GameState->pReplayArea, sizeof(MC_REP_STR));
 
             pRank = pDataW->pHead->user.stageRank;
@@ -3288,13 +3361,13 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
 
             if (nStage >= 0 && nStage < 8) {
                 switch (puser->isVs) {
-                case 2:
+                case PLAY_MODE_VS_COM:
                     vsLev = puser->vsLev;
                     pRank[nStage].nVplay[vsLev] = 1;
                     pScore = pRank[nStage].vplay[vsLev];
                     *pScore = CurRankScore;
                     break;
-                case 0:
+                case PLAY_MODE_SINGLE:
                     pRank[nStage].nSplay = 1;
                     pScore = pRank[nStage].splay;
                     *pScore = CurRankScore;
@@ -3313,7 +3386,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
 
     if (pDataW->pMemTop != NULL) {
         switch (mode) {
-        case 1:
+        case P3MC_MODE_LOG:
             memcpy(UserWork, &pDataW->pHead->user, sizeof(USER_DATA));
             memcpy(pP3GameState->pLog, pDataW->pData, sizeof(P3LOG_VAL));
             *pP3GameState->pGameStatus = pP3GameState->pLog->game_status;
@@ -3323,20 +3396,20 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
                 memcpy(&pCStageRank[i], &UserWork->stageRank[i], sizeof(P3MC_STAGERANK));
             }
             break;
-        case 2:
+        case P3MC_MODE_REPLAY:
             memcpy(pP3GameState->pReplayArea, pDataW->pData, sizeof(MC_REP_STR));
 
             switch (pDataW->pHead->user.isVs) {
-            case 0:
-                pP3GameState->nMode = 0;
+            case PLAY_MODE_SINGLE:
+                pP3GameState->nMode = PLAY_MODE_SINGLE;
                 pP3GameState->vsLev = 0;
                 break;
-            case 1:
-                pP3GameState->nMode = 1;
+            case PLAY_MODE_VS_MAN:
+                pP3GameState->nMode = PLAY_MODE_VS_MAN;
                 pP3GameState->vsLev = 0;
                 break;
-            case 2:
-                pP3GameState->nMode = 2;
+            case PLAY_MODE_VS_COM:
+                pP3GameState->nMode = PLAY_MODE_VS_COM;
                 pP3GameState->vsLev = pDataW->pHead->user.vsLev;
                 if (pP3GameState->vsLev >= 4) {
                     pP3GameState->vsLev = 3;
@@ -3389,11 +3462,11 @@ void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
     nStage = pstate->nStage;
     memset(&CurRankScore, 0, sizeof(CurRankScore));
 
-    if (nStage < 1 || nStage > 8 || pstate->nMode == 1) {
+    if (nStage < 1 || nStage > 8 || pstate->nMode == PLAY_MODE_VS_MAN) {
         return -1;
     }
 
-    if (pstate->nMode == 2) {
+    if (pstate->nMode == PLAY_MODE_VS_COM) {
         vsLev   = pstate->vsLev;
         RankMAX = 10;
         score   = pstate->score;
@@ -3496,25 +3569,32 @@ int TsAnimeWait_withKeySkip(u_int tpad, MN_SCENE *scene, int ltim, u_int bnk) {
     }
 }
 
+/* TsMemCardCheck_Flow states: the card check shown before the title. */
+enum {
+    MCCARD_CHECK    = 0,      /* run the check, warning while there is no card or no room */
+    MCCARD_FADE_OUT = 0x1000, /* fade out and start watching the card for swaps */
+    MCCARD_WAIT     = 0x1010  /* hold 30 frames before moving on */
+};
+
 static int TsMemCardCheck_Flow(int flg, u_int tpad) {
     static int state;
     static int mesNo;
     int ret;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         McInitFlow();
-        state = 0;
+        state = MCCARD_CHECK;
         mesNo = -1;
-        McStartCheckFlow(1);
+        McStartCheckFlow(MNFLOW_INIT);
         TsMCAMes_SetMes(-1);
         return 0;
     }
 
     switch (state) {
-    case 0:
-        ret = McStartCheckFlow(0);
+    case MCCARD_CHECK:
+        ret = McStartCheckFlow(MNFLOW_RUN);
         if (ret == MCSTART_DONE) {
-            state = 0x1000;
+            state = MCCARD_FADE_OUT;
             return 0;
         }
 
@@ -3534,22 +3614,22 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
             /* The player may dismiss the warning and continue without saving. */
             if (TsMCAMes_GetSelect()) {
-                state = 0x1000;
+                state = MCCARD_FADE_OUT;
             }
         }
 
         break;
-    case 0x1000:
+    case MCCARD_FADE_OUT:
         if (TsSCFADE_Set(2, 0xf, 0)) {
             return 0;
         }
         TsMCAMes_SetMes(-1);
-        McStartCheckFlow(2);
+        McStartCheckFlow(MNFLOW_END);
         P3MC_CheckChangeSet();
         _MNwaitTime = 30;
-        state = 0x1010;
+        state = MCCARD_WAIT;
     /* fallthrough */
-    case 0x1010:
+    case MCCARD_WAIT:
         if (--_MNwaitTime <= 0) {
             return 1;
         }
@@ -3559,6 +3639,43 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
     return 0;
 }
 
+/* TsMap_Flow states. */
+enum {
+    TSMAP_OPEN = 0,                  /* build the map cursor on the current stage */
+    TSMAP_SHOW = 0x1000,             /* show the stage map in place of the city hall */
+    TSMAP_SHOW_WAIT = 0x1010,        /* wait for the wipe, the BGM and the map's intro animation */
+    TSMAP_AUTO_MOVE = 0x1018,        /* take one step of a scripted cursor path */
+    TSMAP_SELECT = 0x1020,           /* the player moves the cursor */
+    TSMAP_DECIDED = 0x1100,
+    TSMAP_TO_TITLE = 0x1200,
+    TSMAP_TO_TITLE_WAIT = 0x1210,
+    TSMAP_SAVE = 0x2000,             /* back from a stage: rankings, then the save menu */
+    TSMAP_SAVE_WIPE_WAIT = 0x2010,
+    TSMAP_SAVE_DELAY = 0x2020,
+    TSMAP_SAVE_MENU = 0x2100,
+    TSMAP_SAVE_FADE_OUT = 0x2200,
+    TSMAP_SAVE_FADE_IN = 0x2400,
+    TSMAP_STAGE_MENU_OPEN = 0x3000,  /* the pop-up menu for the chosen stage */
+    TSMAP_STAGE_MENU = 0x3010,
+    TSMAP_PLAY = 0x4000,
+    TSMAP_PLAY_WAIT = 0x4010,
+    TSMAP_SHOP = 0x5000,             /* the player picked the record shop */
+    TSMAP_SHOP_ARRIVE = 0x5010,      /* a scripted path ended at the record shop */
+    TSMAP_SHOP_ARRIVE_WAIT = 0x5018,
+    TSMAP_SHOP_OPEN = 0x5100,
+    TSMAP_SHOP_MENU = 0x5200,
+    TSMAP_HALL = 0x6000,             /* the player picked the city hall */
+    TSMAP_HALL_FADE_OUT = 0x6001,
+    TSMAP_HALL_OPEN = 0x6010,
+    TSMAP_HALL_FROM_REPLAY = 0x6500,
+    TSMAP_HALL_WIPE_WAIT = 0x6510,
+    TSMAP_HALL_MENU = 0x7000,
+    TSMAP_HALL_EXIT = 0x7010,
+    TSMAP_HALL_EXIT_FADE = 0x7011,
+    TSMAP_HALL_EXIT_BGM_WAIT = 0x7020,
+    TSMAP_REPLAY = 0xff00
+};
+
 static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     /* TODO: Fix names once made static. */
     static int state;
@@ -3566,25 +3683,25 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     int ret;
     int mn;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         switch (tpad) {
-        case 0:
-            pP3GameState->nStage = 0;
+        case TSMAP_ENTER_FROM_HALL:
+            pP3GameState->nStage = MAP_POS_CITY_HALL;
             MenuVoiceBankSet(0);
-            state = 0;
+            state = TSMAP_OPEN;
             break;
-        case 1:
+        case TSMAP_ENTER_REPLAY_END:
             MenuVoiceBankSet(0);
-            state = 0x6500;
+            state = TSMAP_HALL_FROM_REPLAY;
             break;
-        case 2:
+        case TSMAP_ENTER_STAGE_END:
             MenuVoiceBankSet(0);
             TsBGMPlay(1, 0x14);
-            state = 0x2000;
+            state = TSMAP_SAVE;
             break;
-        case 3:
+        case TSMAP_ENTER_MAP:
             MenuVoiceBankSet(0);
-            state = 0;
+            state = TSMAP_OPEN;
             break;
         }
 
@@ -3593,7 +3710,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     switch (state) {
-    case 0:
+    case TSMAP_OPEN:
         CurMapOldFlg = -1;
         mn = TsMENU_GetMapNo(NULL);
         TsMENU_SetMapScreen(mn);
@@ -3609,7 +3726,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             MapCity.mnmap = mnmapMap;
         }
 
-        MpMapMenu_Flow(1, &MapCity, 0);
+        MpMapMenu_Flow(MNFLOW_INIT, &MapCity, 0);
 
         switch (pP3GameState->nStage) {
         case 1:
@@ -3645,20 +3762,20 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        MpMapMenu_Flow(3, &MapCity, mn);
+        MpMapMenu_Flow(MAPMENU_PLACE, &MapCity, mn);
         TsCMPMes_SetMes(-1);
         TsSet_ParappaCapColor();
         if (pP3GameState->pAutoMove == NULL) {
             TsBGMPlay(MapCity.curPos + 1, 0xa);
         }
-        state = 0x1000;
+        state = TSMAP_SHOW;
         /* fallthrough */
-    case 0x1000:
+    case TSMAP_SHOW:
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap, 1);
-        state = 0x1010;
+        state = TSMAP_SHOW_WAIT;
         break;
-    case 0x1010:
+    case TSMAP_SHOW_WAIT:
         if (!pP3GameState->isWipeEnd || TsBGMLoadCheck()) {
             return 0;
         }
@@ -3666,7 +3783,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             return 0;
         }
         /* fallthrough */
-    case 0x1018:
+    case TSMAP_AUTO_MOVE:
         mn = 0;
 
         if (pP3GameState->pAutoMove != NULL) {
@@ -3701,11 +3818,11 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             case 0:
                 mn = 0;
                 break;
-            case -2:
-                mn = -2;
+            case AUTO_MOVE_RECORD_SHOP:
+                mn = AUTO_MOVE_RECORD_SHOP;
                 pP3GameState->pAutoMove = NULL;
                 break;
-            case -1:
+            case AUTO_MOVE_STOP:
             default:
                 pP3GameState->pAutoMove = NULL;
                 mn = 0;
@@ -3713,264 +3830,264 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             }
 
             if (pP3GameState->pAutoMove != NULL) {
-                MpMapMenu_Flow(4, &MapCity, mn);
+                MpMapMenu_Flow(MAPMENU_STEP_TO, &MapCity, mn);
 
-                if (MapCity.sndtrg == 1) {
+                if (MapCity.sndtrg == MAPSND_MOVE) {
                     TsBGMChangePos(MapCity.curPos + 1);
                 }
 
                 pP3GameState->pAutoMove++;
-                if (*pP3GameState->pAutoMove == -1) {
+                if (*pP3GameState->pAutoMove == AUTO_MOVE_STOP) {
                     pP3GameState->pAutoMove = NULL;
                 }
             }
         } 
 
-        if (mn == -2) {
-            state = 0x5010;
+        if (mn == AUTO_MOVE_RECORD_SHOP) {
+            state = TSMAP_SHOP_ARRIVE;
             break;
         }
 
-        state = 0x1020;
+        state = TSMAP_SELECT;
         /* fallthrough */
-    case 0x1020:
+    case TSMAP_SELECT:
         if (!MapCity.bMove) {
             if (TsCheckTimeMapChange()) {
                 break;
             }
         }
 
-        ret = MpMapMenu_Flow(0, &MapCity, tpad);
+        ret = MpMapMenu_Flow(MNFLOW_RUN, &MapCity, tpad);
         if (MapCity.anmStop != 0) {
             if (pP3GameState->pAutoMove != NULL) {
-                state = 0x1018;
+                state = TSMAP_AUTO_MOVE;
                 break;
             }
         }
 
         switch (MapCity.sndtrg) {
-        case 1:
+        case MAPSND_MOVE:
             TsBGMChangePos(MapCity.curPos + 1);
             break;
-        case 3:
+        case MAPSND_CANCEL:
             TSSNDPLAY(VSND_CANCEL);
             break;
-        case 2:
+        case MAPSND_DECIDE:
             break;
         }
 
-        if (ret == 0) {
+        if (ret == MAPMENU_RUNNING) {
             break;
-        } else if (ret == 1) {
-            state = 0x1100;
-        } else if (ret == -1) {
-            state = 0x1200;
+        } else if (ret == MAPMENU_DECIDED) {
+            state = TSMAP_DECIDED;
+        } else if (ret == MAPMENU_CANCELLED) {
+            state = TSMAP_TO_TITLE;
             break;
         } else {
             break;
         }
 
         /* fallthrough */
-    case 0x1100:
-        if (MapCity.curPos == 0) {
+    case TSMAP_DECIDED:
+        if (MapCity.curPos == MAP_POS_CITY_HALL) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
-            state = 0x6000;
+            state = TSMAP_HALL;
             break;
-        } else if (MapCity.curPos == 9) {
+        } else if (MapCity.curPos == MAP_POS_RECORD_SHOP) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
-            state = 0x5000;
+            state = TSMAP_SHOP;
             break;
         }
 
         TSSNDPLAY(VSND_SELMODE);
         pP3GameState->nStage = MapCity.curPos;
-        state = 0x3000;
+        state = TSMAP_STAGE_MENU_OPEN;
         break;
-    case 0x1200:
+    case TSMAP_TO_TITLE:
         TsBGMStop(0x26);
         _MNwaitTime = 40;
         TsCMPMes_SetMes(-1);
         pP3GameState->nStage = MapCity.curPos;
-        state = 0x1210;
+        state = TSMAP_TO_TITLE_WAIT;
         /* fallthrough */
-    case 0x1210:
+    case TSMAP_TO_TITLE_WAIT:
         if (--_MNwaitTime <= 0) {
             return P3MRET_TOTITLE;
         }
         break;
-    case 0x2000:
+    case TSMAP_SAVE:
         if (pP3GameState->nStage < 1 || pP3GameState->nStage > 8) {
-            state = 0;
+            state = TSMAP_OPEN;
             return 0;
         }
         TsRanking_Set();
-        MpSave_Flow(1, 0, 0);
-        state = 0x2010;
+        MpSave_Flow(MNFLOW_INIT, 0, 0);
+        state = TSMAP_SAVE_WIPE_WAIT;
         /* fallthrough */
-    case 0x2010:
+    case TSMAP_SAVE_WIPE_WAIT:
         if (!pP3GameState->isWipeEnd) {
             break;
         }
         _MNwaitTime = 30;
-        state = 0x2020;
+        state = TSMAP_SAVE_DELAY;
         /* fallthrough */
-    case 0x2020:
+    case TSMAP_SAVE_DELAY:
         if (--_MNwaitTime <= 0) {
-            state = 0x2100;
+            state = TSMAP_SAVE_MENU;
         } else {
             break;
         }        
         /* fallthrough */
-    case 0x2100:
-        if (!MpSave_Flow(0, tpad, tpad2)) {
+    case TSMAP_SAVE_MENU:
+        if (!MpSave_Flow(MNFLOW_RUN, tpad, tpad2)) {
             return 0;
         }
-        state = 0x2200;
+        state = TSMAP_SAVE_FADE_OUT;
         /* fallthrough */
-    case 0x2200:
+    case TSMAP_SAVE_FADE_OUT:
         if (TsSCFADE_Set(2, 0x1e, 0)) {
             return 0;
         }
         TsSet_ParappaCapColor();
-        state = 0x2400;
+        state = TSMAP_SAVE_FADE_IN;
         /* fallthrough */
-    case 0x2400:
+    case TSMAP_SAVE_FADE_IN:
         TsSCFADE_Set(1, 0x1e, 0);
-        state = 0;
+        state = TSMAP_OPEN;
         break;
-    case 0x3000:
+    case TSMAP_STAGE_MENU_OPEN:
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
-        MpPopMenu_Flow(1, 0);
-        state = 0x3010;
+        MpPopMenu_Flow(MNFLOW_INIT, 0);
+        state = TSMAP_STAGE_MENU;
         /* fallthrough */
-    case 0x3010:
-        ret = MpPopMenu_Flow(0, tpad);
+    case TSMAP_STAGE_MENU:
+        ret = MpPopMenu_Flow(MNFLOW_RUN, tpad);
 
         if (ret == 0) {
             break;
         } else if (ret == -1) {
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-            state = 0x1000;
+            state = TSMAP_SHOW;
             break;
         }
 
-        switch (ret & 0xff) {
-        case 1:
-            pP3GameState->nMode = 0;
+        switch (POPSEL_MODE(ret)) {
+        case POPSEL_SINGLE:
+            pP3GameState->nMode = PLAY_MODE_SINGLE;
             pP3GameState->vsLev = 0;
             break;
-        case 2:
-            pP3GameState->nMode = 1;
+        case POPSEL_VS_MAN:
+            pP3GameState->nMode = PLAY_MODE_VS_MAN;
             pP3GameState->vsLev = 0;
             break;
-        case 3:
-            pP3GameState->nMode = 2;
-            pP3GameState->vsLev = ret >> 0x8;
+        case POPSEL_VS_COM:
+            pP3GameState->nMode = PLAY_MODE_VS_COM;
+            pP3GameState->vsLev = POPSEL_VS_LEVEL(ret);
             break;
         }
 
-        state = 0x4000;
+        state = TSMAP_PLAY;
         break;
-    case 0x4000:
+    case TSMAP_PLAY:
         TsCheckEnding(pP3GameState);
         TsBGMStop(0x20);
         _MNwaitTime = 32;
         TsCMPMes_SetMes(-1);
-        state = 0x4010;
+        state = TSMAP_PLAY_WAIT;
         /* fallthrough */
-    case 0x4010:
+    case TSMAP_PLAY_WAIT:
         if (--_MNwaitTime <= 0) {
             return P3MRET_PLAYGAME;
         }
         break;
-    case 0x5000:
+    case TSMAP_SHOP:
         pP3GameState->curRecJacket = 0;
-        state = 0x5100;
+        state = TSMAP_SHOP_OPEN;
         break;
-    case 0x5010:
+    case TSMAP_SHOP_ARRIVE:
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-        state = 0x5018;
+        state = TSMAP_SHOP_ARRIVE_WAIT;
         _MNwaitTime = 40;
         /* fallthrough */
-    case 0x5018:
+    case TSMAP_SHOP_ARRIVE_WAIT:
         if (--_MNwaitTime <= 0) {
             TSSNDPLAY(VSND_SELMODE);
-            state = 0x5100;
+            state = TSMAP_SHOP_OPEN;
         }
         break;
-    case 0x5100:
+    case TSMAP_SHOP_OPEN:
         pP3GameState->nStage = MapCity.curPos;
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
-        TsJukeMenu_Flow(1, pP3GameState->curRecJacket);
-        state = 0x5200;
+        TsJukeMenu_Flow(MNFLOW_INIT, pP3GameState->curRecJacket);
+        state = TSMAP_SHOP_MENU;
         /* fallthrough */
-    case 0x5200:
-        if (!TsJukeMenu_Flow(0, tpad)) {
+    case TSMAP_SHOP_MENU:
+        if (!TsJukeMenu_Flow(MNFLOW_RUN, tpad)) {
             return 0;
         }
-        TsJukeMenu_Flow(2, 0);
+        TsJukeMenu_Flow(MNFLOW_END, 0);
         MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
-        state = 0x1000;
+        state = TSMAP_SHOW;
         break;
-    case 0x6000:
+    case TSMAP_HALL:
         MenuVoiceBankSet(0);
-        state = 0x6001;
+        state = TSMAP_HALL_FADE_OUT;
         /* fallthrough */
-    case 0x6001:
+    case TSMAP_HALL_FADE_OUT:
         if (TsSCFADE_Set(2, 0x14, 0)) {
             return 0;
         }
-        state = 0x6010;
+        state = TSMAP_HALL_OPEN;
         /* fallthrough */
-    case 0x6010:
+    case TSMAP_HALL_OPEN:
         TsBGMPlay(1, 0x14);
         TsSCFADE_Set(1, 0x14, 0);
-        MpCityHall_Flow(1, 0, 0);
-        state = 0x7000;
+        MpCityHall_Flow(MNFLOW_INIT, CHALL_ENTER_DOOR, 0);
+        state = TSMAP_HALL_MENU;
         break;
-    case 0x6500:
+    case TSMAP_HALL_FROM_REPLAY:
         TsBGMPlay(1, 0x14);
-        MpCityHall_Flow(1, 1, 0);
-        state = 0x6510;
+        MpCityHall_Flow(MNFLOW_INIT, CHALL_ENTER_FROM_REPLAY, 0);
+        state = TSMAP_HALL_WIPE_WAIT;
         /* fallthrough */
-    case 0x6510:
+    case TSMAP_HALL_WIPE_WAIT:
         if (!pP3GameState->isWipeEnd) {
             break;
         }
-        state = 0x7000;
+        state = TSMAP_HALL_MENU;
         /* fallthrough */
-    case 0x7000:
-        ret = MpCityHall_Flow(0, tpad, tpad2);
-        if (ret == 0) {
+    case TSMAP_HALL_MENU:
+        ret = MpCityHall_Flow(MNFLOW_RUN, tpad, tpad2);
+        if (ret == CHALL_RES_RUNNING) {
             break;
-        } else if (ret == 2) {
-            state = 0xff00;
-        } else if (ret == 3) {
-            state = 0x7020;
+        } else if (ret == CHALL_RES_REPLAY) {
+            state = TSMAP_REPLAY;
+        } else if (ret == CHALL_RES_LOADED) {
+            state = TSMAP_HALL_EXIT_BGM_WAIT;
         } else {
-            state = 0x7010;
+            state = TSMAP_HALL_EXIT;
         }
         break;
-    case 0x7010:
+    case TSMAP_HALL_EXIT:
         MenuVoiceBankSet(0);
-        state = 0x7011;
+        state = TSMAP_HALL_EXIT_FADE;
         /* fallthrough */
-    case 0x7011:
+    case TSMAP_HALL_EXIT_FADE:
         if (TsSCFADE_Set(2, 0x1e, 0)) {
             return 0;
         }
-        state = 0x7020;
+        state = TSMAP_HALL_EXIT_BGM_WAIT;
         /* fallthrough */
-    case 0x7020:
+    case TSMAP_HALL_EXIT_BGM_WAIT:
         if (TsBGMLoadCheck()) {
             return 0;
         }
-        TsMap_Flow(1, 0, 0);
+        TsMap_Flow(MNFLOW_INIT, TSMAP_ENTER_FROM_HALL, 0);
         TsSCFADE_Set(1, 0xf, 0);
         break;
-    case 0xff00:
+    case TSMAP_REPLAY:
         return P3MRET_REPLAY;
     }
 
@@ -3999,7 +4116,8 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         *(USER_NAME*)UserWork->name1 = *(USER_NAME*)pP3GameState->pLog->name1;
         UserWork->name1[11] = 0;
 
-        if (pP3GameState->nMode == mode) {
+        /* Against the computer, the stage's teacher is the opponent. */
+        if (pP3GameState->nMode == PLAY_MODE_VS_COM) {
             no = (stage > 8) ? 8 : stage;
             if (no > 0) {
                 no--;
@@ -4040,7 +4158,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     UserWork->roundNo = round;
     UserWork->score2 = pP3GameState->score2P;
 
-    if (pP3GameState->nMode == 1 || pP3GameState->nMode == 2) {
+    if (pP3GameState->nMode == PLAY_MODE_VS_MAN || pP3GameState->nMode == PLAY_MODE_VS_COM) {
         UserWork->winner = pP3GameState->winPlayer;
     } else {
         UserWork->winner = 0;
@@ -4056,16 +4174,16 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     switch (pP3GameState->nMode) {
-    case 0:
-        UserWork->isVs = 0;
+    case PLAY_MODE_SINGLE:
+        UserWork->isVs = PLAY_MODE_SINGLE;
         UserWork->vsLev = 0;
         break;
-    case 1:
-        UserWork->isVs = 1;
+    case PLAY_MODE_VS_MAN:
+        UserWork->isVs = PLAY_MODE_VS_MAN;
         UserWork->vsLev = 0;
         break;
-    case 2:
-        UserWork->isVs = 2;
+    case PLAY_MODE_VS_COM:
+        UserWork->isVs = PLAY_MODE_VS_COM;
         UserWork->vsLev = pP3GameState->vsLev;
         if (UserWork->vsLev > 3) {
             UserWork->vsLev = 3;
@@ -4236,13 +4354,13 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         ret = TsUserList_Flow(0, tpad, tpad2);
         if (ret != 0) {
             McInitFlow();
-            if (ret != -1) {
+            if (ret != ULIST_CANCELLED) {
                 if (ret < 0) {
-                    if (ret != -3) {
+                    if (ret != ULIST_RECHECK) {
                         return 0;
                     }
                     state = MPSAVE_CARD_CHANGED;
-                } else if (ret == 1) {
+                } else if (ret == ULIST_PICKED) {
                     state = MPSAVE_WRITE_BEGIN;
                 }
             } else {
@@ -4340,6 +4458,67 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
     return 0;
 }
 
+/* City hall counters (MapCHall positions). */
+enum {
+    CHALL_POS_LOG = 0,    /* load or save the game, in the middle */
+    CHALL_POS_OPTION = 1, /* on the left */
+    CHALL_POS_REPLAY = 2  /* on the right */
+};
+
+/* MpCityHall_Flow camera (scstate). The resting states have none of the low 12 bits set. */
+enum {
+    CHCAM_HALL = 0,            /* at rest on the whole hall */
+    CHCAM_BACK = 0x100,        /* fade out of a counter's screen */
+    CHCAM_BACK_PLACE = 0x110,  /* put the hall and the cursor back */
+    CHCAM_BACK_FADE_IN = 0x120,
+    CHCAM_COUNTER = 0x2000,    /* at rest on the chosen counter */
+    CHCAM_ZOOM = 0x2100,       /* start the zoom to the counter */
+    CHCAM_ZOOMING = 0x2200
+};
+#define CHCAM_MOVING(st) ((st) & 0xfff)
+
+/* Where MpCityHall_Flow wants the camera (scstPos). */
+enum {
+    CHCAM_TO_HALL = 0,
+    CHCAM_TO_COUNTER = 1
+};
+
+/* MpCityHall_Flow states. */
+enum {
+    CHALL_INTRO = 0,               /* the entrance animation, greeting at frame 70 */
+    CHALL_SELECT = 0x100,          /* walk between the counters */
+    CHALL_DECIDED = 0x1000,
+    CHALL_CARD_CHECK = 0x1010,     /* start the card check before zooming in */
+    CHALL_ZOOM_IN = 0x1500,
+    CHALL_LIST_CHECK = 0x2000,     /* finish the card check for the user list */
+    CHALL_LIST_ZOOM_WAIT = 0x2020,
+    CHALL_LIST_FADE_OUT = 0x2021,
+    CHALL_LIST_SETUP = 0x2022,
+    CHALL_LIST_FADE = 0x2024,
+    CHALL_LIST_FADE_WAIT = 0x2026,
+    CHALL_LIST = 0x2028,           /* pick a file in the user list */
+    CHALL_LOAD = 0x2030,
+    CHALL_LOADED = 0x2040,
+    CHALL_LOAD_FAILED = 0x2050,
+    CHALL_SAVE_BEGIN = 0x2830,     /* save the current game into the chosen file */
+    CHALL_SAVE = 0x2840,
+    CHALL_SAVED = 0x2850,
+    CHALL_SAVED_WAIT = 0x2860,
+    CHALL_SAVE_END = 0x2900,
+    CHALL_OPTION_OPEN = 0x3000,
+    CHALL_OPTION_FADE = 0x3005,
+    CHALL_OPTION = 0x3010,
+    CHALL_OPTION_END = 0x3f00,
+    CHALL_ZOOM_OUT = 0x5000,       /* from a counter back to the hall */
+    CHALL_ZOOM_OUT_WAIT = 0x5008,
+    CHALL_LOG_LOADED = 0xef00,     /* a save was loaded: fade out and leave */
+    CHALL_LOG_LOADED_FADE = 0xef10,
+    CHALL_EXIT = 0xf000,
+    CHALL_REPLAY_LOADED = 0xf010,  /* a replay was loaded: zoom out, stop the BGM, play it */
+    CHALL_REPLAY_ZOOM_WAIT = 0xf014,
+    CHALL_REPLAY_BGM_WAIT = 0xf018
+};
+
 static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     /* TODO: Fix names once made static. */
     static int state;
@@ -4358,9 +4537,9 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     int isError;
     int ntag;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         switch (tpad) {
-        case 0:
+        case CHALL_ENTER_DOOR:
             MNScene_DispSw(&MNS_StageMap, 0);
             MNScene_DispSw(&MNS_CityHall, 1);
             AnmBit = MNScene_StartAnime(&MNS_CityHall, -1, CityHallAnime);
@@ -4368,85 +4547,85 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             MapCHall.pscene = &MNS_CityHall;
             MapCHall.panime = CityHallAnime;
             MapCHall.mnmap = mnmapCityHall;
-            MpMapMenu_Flow(1, &MapCHall, 0);
-            MapCHall.curPos = 0;
+            MpMapMenu_Flow(MNFLOW_INIT, &MapCHall, 0);
+            MapCHall.curPos = CHALL_POS_LOG;
             waitTime = 0;
-            state = 0;
-            scstate = 0;
-            scstPos = 0;
-            MpCityHallCharPosSet(0);
-            fphs_pos = 0;
+            state = CHALL_INTRO;
+            scstate = CHCAM_HALL;
+            scstPos = CHCAM_TO_HALL;
+            MpCityHallCharPosSet(CHALL_POS_LOG);
+            fphs_pos = CHALL_POS_LOG;
             MpCityHallFPHSSoundMask(0);
             TSSNDPLAY(TSSND_SEQ_FLAG | 1);
             return 0;
-        case 1:
+        case CHALL_ENTER_FROM_REPLAY:
             MNScene_DispSw(&MNS_StageMap, 0);
             MNScene_DispSw(&MNS_CityHall, 1);
             MapCHall.pscene = &MNS_CityHall;
             MapCHall.panime = CityHallAnime;
             MapCHall.mnmap = mnmapCityHall;
-            MpMapMenu_Flow(1, &MapCHall, 0);
-            MpMapMenu_Flow(3, &MapCHall, 2);
+            MpMapMenu_Flow(MNFLOW_INIT, &MapCHall, 0);
+            MpMapMenu_Flow(MAPMENU_PLACE, &MapCHall, CHALL_POS_REPLAY);
             TsCMPMes_SetMes(-1);
-            scstate = 0;
-            state = 0x100;
-            scstPos = 0;
-            MpCityHallCharPosSet(2);
-            fphs_pos = 2;
+            scstate = CHCAM_HALL;
+            state = CHALL_SELECT;
+            scstPos = CHCAM_TO_HALL;
+            MpCityHallCharPosSet(CHALL_POS_REPLAY);
+            fphs_pos = CHALL_POS_REPLAY;
             return 0;
         }
     }
 
     switch (scstate) {
-    case 0:
-        if (scstPos != 0) {
-            scstate = 0x2100;
+    case CHCAM_HALL:
+        if (scstPos != CHCAM_TO_HALL) {
+            scstate = CHCAM_ZOOM;
         }
         break;
-    case 0x100:
+    case CHCAM_BACK:
         if (TsSCFADE_Set(2, 0xa, 1)) {
             break;
         }
-        TsUserList_Flow(2, 0, 0);
+        TsUserList_Flow(MNFLOW_END, 0, 0);
         UserList_Sw = 0;
         MNScene_DispSw(&MNS_OptCounter, 0);
         OptionList_Sw = 0;
-        scstate = 0x110;
+        scstate = CHCAM_BACK_PLACE;
         /* fallthrough */
-    case 0x110:
+    case CHCAM_BACK_PLACE:
         MNScene_DispSw(&MNS_CityHall, 1);
-        MpMapMenu_Flow(3, &MapCHall, MapCHall.curPos);
+        MpMapMenu_Flow(MAPMENU_PLACE, &MapCHall, MapCHall.curPos);
         MpCityHallCharPosSet(MapCHall.curPos);
         fphs_pos = MapCHall.curPos;
         MpCityHallFPHSSoundMask(0);
-        scstate = 0x120;
+        scstate = CHCAM_BACK_FADE_IN;
         /* fallthrough */
-    case 0x120:
+    case CHCAM_BACK_FADE_IN:
         if (!TsSCFADE_Set(1, 0x14, 1)) {
-            scstate = 0;
+            scstate = CHCAM_HALL;
         }
         break;
-    case 0x2000:
-        if (scstPos == 0) {
-            scstate = 0x100;
+    case CHCAM_COUNTER:
+        if (scstPos == CHCAM_TO_HALL) {
+            scstate = CHCAM_BACK;
         }
         break;
-    case 0x2100:
+    case CHCAM_ZOOM:
         anmno = -1;
         cmpmesNo = -1;
 
         switch (MapCHall.curPos) {
-        case 0:
+        case CHALL_POS_LOG:
             anmno = 3;
             cmpmesNo = MENU_LOGLOAD_CAM;
             MpCityHallFPHOK(0);
             break;
-        case 2:
+        case CHALL_POS_REPLAY:
             anmno = 9;
             cmpmesNo = MENU_REPLOAD_CAM;
             MpCityHallFPHOK(1);
             break;
-        case 1:
+        case CHALL_POS_OPTION:
             anmno = 6;
             cmpmesNo = MENU_OPT_CAM;
             MpCityHallFPHOK(2);
@@ -4460,14 +4639,14 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
         MpCityHallFPHSSoundMask(1);
         TsCMPMes_SetMes(cmpmesNo);
-        scstate = 0x2200;
+        scstate = CHCAM_ZOOMING;
         /* fallthrough */
-    case 0x2200:
-        if (scstPos == 0) {
-            scstate = 0x100;
+    case CHCAM_ZOOMING:
+        if (scstPos == CHCAM_TO_HALL) {
+            scstate = CHCAM_BACK;
         }
         if (!TsAnimeWait_withKeySkip(tpad, &MNS_CityHall, 0xa, AnmBit)) {
-            scstate = 0x2000;
+            scstate = CHCAM_COUNTER;
         }
         break;
     }
@@ -4475,7 +4654,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     fphs_pos = MpCityHallFPHSMove(MapCHall.curPos, fphs_pos);
 
     switch (state) {
-    case 0:
+    case CHALL_INTRO:
         if (++waitTime == 70) {
             TsCMPMes_SetMes(MENU_HALL_INSIDE);
             TSSNDPLAY(VSND_MENU1);
@@ -4485,11 +4664,11 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         TSSND_SKIPPLAY(VSND_MENU1);
         TsCMPMes_SetMes(MENU_HALL_INSIDE);
-        MpMapMenu_Flow(3, &MapCHall, 0);
-        state = 0x100;
+        MpMapMenu_Flow(MAPMENU_PLACE, &MapCHall, CHALL_POS_LOG);
+        state = CHALL_SELECT;
         /* fallthrough */
-    case 0x100:
-        ret = MpMapMenu_Flow(0, &MapCHall, tpad);
+    case CHALL_SELECT:
+        ret = MpMapMenu_Flow(MNFLOW_RUN, &MapCHall, tpad);
         if (MapCHall.anmStop != 0) {
             TSSND_SKIPSTOP(2);
         }
@@ -4498,55 +4677,55 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
 
         switch (MapCHall.sndtrg) {
-        case 1:
+        case MAPSND_MOVE:
             TSSNDPLAY(VSND_MVCUS_LR);
             break;
-        case 2:
+        case MAPSND_DECIDE:
             TSSNDPLAY(VSND_SELPOPUP);
             break;
-        case 3:
+        case MAPSND_CANCEL:
             TSSNDPLAY(VSND_CANCEL);
             break;
         }
 
-        if (ret != 0) {
-            if (ret == 1) {
+        if (ret != MAPMENU_RUNNING) {
+            if (ret == MAPMENU_DECIDED) {
                 switch (MapCHall.curPos) {
-                case 0:
+                case CHALL_POS_LOG:
                     TSSNDSTOP(3);
                     TSSNDPLAY(VSND_MENU2);
                     break;
-                case 2:
+                case CHALL_POS_REPLAY:
                     TSSNDSTOP(3);
                     TSSNDPLAY(VSND_MENU3);
                     break;
-                case 1:
+                case CHALL_POS_OPTION:
                     TSSNDSTOP(3);
                     TSSNDPLAY(VSND_MENU4);
                     break;
                 }
 
-                state = 0x1000;
+                state = CHALL_DECIDED;
             }
 
-            if (ret == -1) {
-                state = 0xf000;
+            if (ret == MAPMENU_CANCELLED) {
+                state = CHALL_EXIT;
             }
 
             return 0;
         }
 
         break;
-    case 0x1000:
-        if (MapCHall.curPos == 1) {
-            state = 0x1500;
+    case CHALL_DECIDED:
+        if (MapCHall.curPos == CHALL_POS_OPTION) {
+            state = CHALL_ZOOM_IN;
             break;
         }
         McInitFlow();
-        state = 0x1010;
+        state = CHALL_CARD_CHECK;
         /* fallthrough */
-    case 0x1010:
-        if (MapCHall.curPos == 0) {
+    case CHALL_CARD_CHECK:
+        if (MapCHall.curPos == CHALL_POS_LOG) {
             curTag = 0;
             chkMode = P3MC_MODE_LOG;
             chkType = MCCHECK_BOTH;
@@ -4556,32 +4735,33 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             chkMode = P3MC_MODE_REPLAY;
         }
 
+        /* Zoom in as soon as the check finishes or puts its message up; CHALL_LIST_CHECK carries it on. */
         ret = McUserCheckFlow(chkType, chkMode, 0);
-        if (ret == -2) {
+        if (ret == MCUCHK_RUN_QUIET) {
             break;
         }
-        if (ret > 0 && ret < 3) {
-            state = 0x5000;
+        if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
+            state = CHALL_ZOOM_OUT;
             break;
         }
-        state = 0x1500;
+        state = CHALL_ZOOM_IN;
         /* fallthrough */
-    case 0x1500:
-        scstPos = 1;
+    case CHALL_ZOOM_IN:
+        scstPos = CHCAM_TO_COUNTER;
     
         switch (MapCHall.curPos) {
-        case 0:
-        case 2:
-            state = 0x2000;
+        case CHALL_POS_LOG:
+        case CHALL_POS_REPLAY:
+            state = CHALL_LIST_CHECK;
             break;
-        case 1:
-            state = 0x3000;
+        case CHALL_POS_OPTION:
+            state = CHALL_OPTION_OPEN;
             break;
         }
     
         break;
-    case 0x2000:
-        if (MapCHall.curPos == 0) {
+    case CHALL_LIST_CHECK:
+        if (MapCHall.curPos == CHALL_POS_LOG) {
             chkMode = P3MC_MODE_LOG;
             chkType = MCCHECK_BOTH;
         } else {
@@ -4592,39 +4772,39 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         isError = 0;
         ret = McUserCheckFlow(chkType, chkMode, &isError);
         if (ret < 0) {
-            if (isError == 1) {
-                scstPos = 0;
+            if (isError == MCUCHK_REPORT_ERROR) {
+                scstPos = CHCAM_TO_HALL;
             }
-            if (isError == 2) {
-                scstPos = 1;
+            if (isError == MCUCHK_REPORT_RESTART) {
+                scstPos = CHCAM_TO_COUNTER;
                 break;
             }
             return 0;
         }
-        if (ret > 0 && ret < 3) {
-            state = 0x5000;
+        if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
+            state = CHALL_ZOOM_OUT;
             break;
         }
         TsMCAMes_SetMes(-1);
-        state = 0x2020;
+        state = CHALL_LIST_ZOOM_WAIT;
         break;
-    case 0x2020:
-        if (scstate & 0xfff) {
+    case CHALL_LIST_ZOOM_WAIT:
+        if (CHCAM_MOVING(scstate)) {
             return 0;
         }
-        state = 0x2021;
+        state = CHALL_LIST_FADE_OUT;
         /* fallthrough */
-    case 0x2021:
+    case CHALL_LIST_FADE_OUT:
         if (UserList_Sw) {
             if (TsSCFADE_Set(2, 0x14, 0)) {
                 return 0;
             }
         }
-        TsMakeUserWork(1);
-        state = 0x2022;
+        TsMakeUserWork(P3MC_MODE_LOG);
+        state = CHALL_LIST_SETUP;
         /* fallthrough */
-    case 0x2022:
-        if (MapCHall.curPos == 0) {
+    case CHALL_LIST_SETUP:
+        if (MapCHall.curPos == CHALL_POS_LOG) {
             if (UCheckLoadError != 0) {
                 ntag = 1;
                 curTag = 1;
@@ -4641,9 +4821,9 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_CopyState(&MNS_StageMap2, &MNS_CityHall);
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 2);
-        state = 0x2024;
+        state = CHALL_LIST_FADE;
         /* fallthrough */
-    case 0x2024:
+    case CHALL_LIST_FADE:
         if (!UserList_Sw) {
             chkType = 5;
             TsSCFADE_Set(chkType, 0x14, 2);
@@ -4652,33 +4832,33 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             TsSCFADE_Set(chkType, 0x14, 0);
         }
         UserList_Sw = 1;
-        state = 0x2026;
+        state = CHALL_LIST_FADE_WAIT;
         /* fallthrough */
-    case 0x2026:
+    case CHALL_LIST_FADE_WAIT:
         if (TsSCFADE_Set(0, 0, 0) >= 9) {
             break;
         }
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 0);
         MNScene_End(&MNS_StageMap2);
-        state = 0x2028;
+        state = CHALL_LIST;
         /* fallthrough */
-    case 0x2028:
-        ret = TsUserList_Flow(0, tpad, tpad2);
+    case CHALL_LIST:
+        ret = TsUserList_Flow(MNFLOW_RUN, tpad, tpad2);
 
         if (ret != 0) {
             switch (ret) {
-            case -1:
-                state = 0x5000;
+            case ULIST_CANCELLED:
+                state = CHALL_ZOOM_OUT;
                 break;
-            case 1:
+            case ULIST_PICKED:
                 if (TsUserList_IsGetFileSave()) {
-                    state = 0x2830;
+                    state = CHALL_SAVE_BEGIN;
                 } else {
-                    state = 0x2030;
+                    state = CHALL_LOAD;
                 }
                 break;
-            case -3:
+            case ULIST_RECHECK:
                 if (TsUserList_IsGetFileSave()) {
                     curTag = 1;
                 } else {
@@ -4686,7 +4866,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
                 }
 
                 McInitFlow();
-                state = 0x2000;
+                state = CHALL_LIST_CHECK;
                 break;
             }
 
@@ -4695,8 +4875,8 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
 
         break;
-    case 0x2030:
-        if (MapCHall.curPos == 0) {
+    case CHALL_LOAD:
+        if (MapCHall.curPos == CHALL_POS_LOG) {
             chkMode = P3MC_MODE_LOG;
         } else {
             chkMode = P3MC_MODE_REPLAY;
@@ -4710,38 +4890,38 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         waitTime = 0;
         if (ret != 0) {
             if (ret == MCFLOW_BROKEN) {
-                state = 0x2028;
+                state = CHALL_LIST;
             }
             if (ret == MCFLOW_FAILED) {
-                state = 0x2050;
+                state = CHALL_LOAD_FAILED;
             }
             if (ret != MCFLOW_CARD_CHANGED) {
                 return 0;
             }
             McInitFlow();
-            state = 0x2000;
+            state = CHALL_LIST_CHECK;
             break;
         }
 
         TsCMPMes_SetMes(-1);
-        state = 0x2040;
+        state = CHALL_LOADED;
         /* fallthrough */
-    case 0x2040:
+    case CHALL_LOADED:
         if (++waitTime >= 35) {
             waitTime = 0;
             TsSet_ParappaCapColor();
-            if (MapCHall.curPos == 2) {
-                state = 0xf010;
+            if (MapCHall.curPos == CHALL_POS_REPLAY) {
+                state = CHALL_REPLAY_LOADED;
             } else {
-                state = 0xef00;
+                state = CHALL_LOG_LOADED;
             }
         }
         break;
-    case 0x2830:
+    case CHALL_SAVE_BEGIN:
         UserWork->fileNo = TsUserList_GetCurFileNo(NULL);
-        state = 0x2840;
+        state = CHALL_SAVE;
         /* fallthrough */
-    case 0x2840:
+    case CHALL_SAVE:
         ret = McUserSaveFlow(UserWork);
         if (ret < 0) {
             TsUserList_SetCurDispUserData(UserWork);
@@ -4749,126 +4929,126 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         if (ret != 0) {
             if (ret == MCFLOW_BROKEN) {
-                state = 0x2020;
+                state = CHALL_LIST_ZOOM_WAIT;
             }
             if (ret == MCFLOW_FAILED) {
-                state = 0x2900;
+                state = CHALL_SAVE_END;
             }
             if (ret == MCFLOW_CARD_CHANGED) {
                 McInitFlow();
-                state = 0x2000;
+                state = CHALL_LIST_CHECK;
                 break;
             }
             return 0;
         }
         /* fallthrough */
-    case 0x2850:
+    case CHALL_SAVED:
         TsSaveSuccessProc();
         waitTime = 0;
-        state = 0x2860;
+        state = CHALL_SAVED_WAIT;
         /* fallthrough */
-    case 0x2860:
+    case CHALL_SAVED_WAIT:
         TsCMPMes_SetMes(-1);
         if (++waitTime >= 35) {
             waitTime = 0;
-            state = 0x2900;
+            state = CHALL_SAVE_END;
         } else {
             break;
         }
         /* fallthrough */
-    case 0x2050:
-    case 0x2900:
-        state = 0x5000;
+    case CHALL_LOAD_FAILED:
+    case CHALL_SAVE_END:
+        state = CHALL_ZOOM_OUT;
         break;
-    case 0x3000:
-        if (scstate & 0xfff) {
+    case CHALL_OPTION_OPEN:
+        if (CHCAM_MOVING(scstate)) {
             return 0;
         }
         OptionList_Sw = 1;
-        TsOption_Flow(1, tpad);
+        TsOption_Flow(MNFLOW_INIT, tpad);
         MNScene_End(&MNS_StageMap2);
         MNScene_Init(&MNS_StageMap2, &Scene_CityHall, 0);
         MNScene_CopyState(&MNS_StageMap2, &MNS_CityHall);
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 2);
         MNScene_DispSw(&MNS_OptCounter, 1);
-        state = 0x3005;
+        state = CHALL_OPTION_FADE;
         /* fallthrough */
-    case 0x3005:
+    case CHALL_OPTION_FADE:
         if (TsSCFADE_Set(5, 0x14, 2)) {
             return 0;
         }
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap2, 0);
         MNScene_End(&MNS_StageMap2);
-        state = 0x3010;
+        state = CHALL_OPTION;
         /* fallthrough */
-    case 0x3010:
-        ret = TsOption_Flow(0, tpad);
+    case CHALL_OPTION:
+        ret = TsOption_Flow(MNFLOW_RUN, tpad);
         if (ret != 0) {
             if (ret == -1) {
-                state = 0x3f00;
+                state = CHALL_OPTION_END;
             }
             if (ret == 1) {
-                state = 0x3f00;
+                state = CHALL_OPTION_END;
             }
             return 0;
         }
         break;
-    case 0x3f00:
-        state = 0x5000;
+    case CHALL_OPTION_END:
+        state = CHALL_ZOOM_OUT;
         /* fallthrough */
-    case 0x5000:
-        scstPos = 0;
-        state = 0x5008;
+    case CHALL_ZOOM_OUT:
+        scstPos = CHCAM_TO_HALL;
+        state = CHALL_ZOOM_OUT_WAIT;
         break;
-    case 0x5008:
-        if (scstate & 0xfff) {
+    case CHALL_ZOOM_OUT_WAIT:
+        if (CHCAM_MOVING(scstate)) {
             return 0;
         }
-        state = 0x100;
+        state = CHALL_SELECT;
         break;
-    case 0xef00:
+    case CHALL_LOG_LOADED:
         TSSNDSTOP(3);
         MenuVoiceBankSet(0);
-        state = 0xef10;
+        state = CHALL_LOG_LOADED_FADE;
         /* fallthrough */
-    case 0xef10:
+    case CHALL_LOG_LOADED_FADE:
         if (TsSCFADE_Set(2, 0x14, 1)) {
             return 0;
         }
-        TsUserList_Flow(2, 0, 0);
+        TsUserList_Flow(MNFLOW_END, 0, 0);
         UserList_Sw = 0;
         MNScene_DispSw(&MNS_OptCounter, 0);
         OptionList_Sw = 0;
         TSSNDSTOP(3);
-        return 3;
-    case 0xf000:
+        return CHALL_RES_LOADED;
+    case CHALL_EXIT:
         TSSNDSTOP(3);
-        return 1;
-    case 0xf010:
+        return CHALL_RES_EXIT;
+    case CHALL_REPLAY_LOADED:
         TSSNDSTOP(3);
-        scstPos = 0;
-        state = 0xf014;
+        scstPos = CHCAM_TO_HALL;
+        state = CHALL_REPLAY_ZOOM_WAIT;
         break;
-    case 0xf014:
+    case CHALL_REPLAY_ZOOM_WAIT:
         TsCMPMes_SetMes(-1);
-        if (scstate & 0xfff) {
+        if (CHCAM_MOVING(scstate)) {
             return 0;
         }
         TsBGMStop(12);
         _MNwaitTime = 10;
-        state = 0xf018;
+        state = CHALL_REPLAY_BGM_WAIT;
         /* fallthrough */
-    case 0xf018:
+    case CHALL_REPLAY_BGM_WAIT:
         if (--_MNwaitTime <= 0) {
             TSSNDSTOP(3);
-            return 2;
+            return CHALL_RES_REPLAY;
         }
         break;
     }
 
-    return 0;
+    return CHALL_RES_RUNNING;
 }
 
 /* static */ void MpCityHallParaStart(int pos) {
@@ -5022,45 +5202,53 @@ static void MpCityHallFPHOK(int flg) {
     TSSNDPLAY(TSSND_SEQ_FLAG | 2);
 }
 
+/* MpPopMenu_Flow states. */
+enum {
+    POPMENU_START = 0,
+    POPMENU_OPEN = 0x1000,
+    POPMENU_SELECT = 0x1010,
+    POPMENU_CANCELLED = 0xf000
+};
+
 static int MpPopMenu_Flow(int flg, u_int tpad) {
     static int state;
     int ret;
     int mpsize;
 
-    if (flg == 1) {
-        state = 0;
+    if (flg == MNFLOW_INIT) {
+        state = POPMENU_START;
         return 0;
     }
 
     switch (state) {
-    case 0:
-        state = 0x1000;
+    case POPMENU_START:
+        state = POPMENU_OPEN;
         break;
-    case 0x1000:
+    case POPMENU_OPEN:
         TsMENU_GetMapNo(&mpsize);
-        TsPopMenu_Flow(1, mpsize);
-        state = 0x1010;
+        TsPopMenu_Flow(MNFLOW_INIT, mpsize);
+        state = POPMENU_SELECT;
     /* fallthrough */
-    case 0x1010:
-        ret = TsPopMenu_Flow(0, tpad);
+    case POPMENU_SELECT:
+        ret = TsPopMenu_Flow(MNFLOW_RUN, tpad);
         if (ret == 0) {
             break;
         }
 
-        TsPopMenu_Flow(2, 0);
+        TsPopMenu_Flow(MNFLOW_END, 0);
 
         if (ret == -1) {
-            state = 0xf000;
+            state = POPMENU_CANCELLED;
             break;
         }
 
         if (ret < 0) {
-            state = 0xf000;
+            state = POPMENU_CANCELLED;
             break;
         }
 
         return ret;
-    case 0xf000:
+    case POPMENU_CANCELLED:
         return -1;
     }
 
@@ -5074,8 +5262,8 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
     int       idx;
     MNMAPPOS *mpos;
 
-    if (flg == 1) {
-        mpw->state = 0;
+    if (flg == MNFLOW_INIT) {
+        mpw->state = MAPMENU_ST_START;
         mpw->anmStop = 0;
         mpw->bMove = 0;
         mpw->curPos = 0;
@@ -5084,7 +5272,7 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         return 0;
     }
 
-    if (flg == 3) {
+    if (flg == MAPMENU_PLACE) {
         mpw->curPos = tpad;
         if (mpw->mnmap != NULL) {
             mpos = &mpw->mnmap[tpad];
@@ -5111,7 +5299,7 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         return 0;
     }
 
-    if (flg == 4) {
+    if (flg == MAPMENU_STEP_TO) {
         bkNo = mpw->curPos;
         if (mpw->mnmap != NULL) {
             mpos = &mpw->mnmap[bkNo];
@@ -5154,8 +5342,8 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
                     }
                 }
                 mpw->anmtrg = mpos->mapdir[idx].exflg;
-                mpw->sndtrg = 1;
-                mpw->state = 0x1100;
+                mpw->sndtrg = MAPSND_MOVE;
+                mpw->state = MAPMENU_ST_MOVING;
                 return 0;
             }
         }
@@ -5169,14 +5357,15 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
     state = mpw->state;
     posNo = mpw->curPos;
     mpw->anmtrg = 0;
-    mpw->sndtrg = 0;
+    mpw->sndtrg = MAPSND_NONE;
     mpw->anmStop = 0;
 
     switch (state) {
-    case 0:
+    case MAPMENU_ST_START:
         mpw->bMove = 0;
-        state = 0x1000;
-    case 0x1000:
+        state = MAPMENU_ST_IDLE;
+        /* fallthrough */
+    case MAPMENU_ST_IDLE:
         mpos = &mpw->mnmap[posNo];
         if (mpw->bMove != 0 && !TsAnimeWait_withKeySkip(tpad, mpw->pscene, 0, mpw->anmBit)) {
             mpw->bMove = 0;
@@ -5202,21 +5391,21 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         TsCMPMes_SetMes(mpos->cmpmes);
 
         if (tpad & SCE_PADRright) {
-            state = 0x1200;
-            mpw->sndtrg = 2;
+            state = MAPMENU_ST_DECIDE;
+            mpw->sndtrg = MAPSND_DECIDE;
         } else if (tpad & SCE_PADRdown) {
-            state = 0x1f00;
-            mpw->sndtrg = 3;
+            state = MAPMENU_ST_CANCELLED;
+            mpw->sndtrg = MAPSND_CANCEL;
         }
 
         if (tpad & SCE_PADLleft) {
-            idx = 0;
+            idx = MNMAP_DIR_LEFT;
         } else if (tpad & SCE_PADLright) {
-            idx = 1;
+            idx = MNMAP_DIR_RIGHT;
         } else if (tpad & SCE_PADLup) {
-            idx = 2;
+            idx = MNMAP_DIR_UP;
         } else if (tpad & SCE_PADLdown) {
-            idx = 3;
+            idx = MNMAP_DIR_DOWN;
         }
 
         if (idx >= 0 && ((mpw->mvFlag >> idx) & 1)) {
@@ -5239,35 +5428,35 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
                         mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
                     }
                 }
-                state = 0x1100;
+                state = MAPMENU_ST_MOVING;
                 mpw->anmtrg = mpos->mapdir[idx].exflg;
-                mpw->sndtrg = 1;
+                mpw->sndtrg = MAPSND_MOVE;
             }
         }
         break;
-    case 0x1100:
+    case MAPMENU_ST_MOVING:
         if (!TsAnimeWait_withKeySkip(tpad, mpw->pscene, mpw->anmLtim, mpw->anmBit)) {
             mpw->anmStop = 1;
-            state = 0x1000;
+            state = MAPMENU_ST_IDLE;
         }
         break;
-    case 0x1200:
-        state = 0x2000;
+    case MAPMENU_ST_DECIDE:
+        state = MAPMENU_ST_DECIDED;
         break;
-    case 0x2000:
-    case 0xf000:
-        mpw->state = 0;
+    case MAPMENU_ST_DECIDED:
+    case MAPMENU_ST_EXIT_DECIDED:
+        mpw->state = MAPMENU_ST_START;
         MENUSubt_PadFontArrowSet(0);
-        return 1;
-    case 0x1f00:
-    case 0xf010:
-        mpw->state = 0;
+        return MAPMENU_DECIDED;
+    case MAPMENU_ST_CANCELLED:
+    case MAPMENU_ST_EXIT_CANCELLED:
+        mpw->state = MAPMENU_ST_START;
         MENUSubt_PadFontArrowSet(0);
-        return -1;
+        return MAPMENU_CANCELLED;
     }
 
     mpw->state = state;
-    return 0;
+    return MAPMENU_RUNNING;
 }
 
 static int _MapGetMovableDir(MAPPOS *mpw) {
@@ -5396,13 +5585,13 @@ enum {
 static int McStartCheckFlow(/* a0 4 */ int flg) {
     /* v1 3 */ int ret;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         McInitFlow();
         P3MC_OpeningCheckStart();
         return 0;
     }
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         P3MC_OpeningCheckEnd();
         return 0;
     }
@@ -5495,13 +5684,13 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 }
 
 /* static */ int McUserCheckFlow(int type, int mode, int *bError) {
-    static int isRun = -2;
+    static int isRun = MCUCHK_RUN_QUIET;
     int flg;
 
     switch (subStatus) {
     case MCUCHK_START:
         UCheckSaveError = 0;
-        isRun = -2;
+        isRun = MCUCHK_RUN_QUIET;
         UCheckLoadError = 0;
         if (type == MCCHECK_BROWSE) {
             flg = P3MC_GetUserStart(mode, UserLst, 0);
@@ -5515,12 +5704,12 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         break;
     case MCUCHK_SCAN:
-        isRun = -2;
+        isRun = MCUCHK_RUN_QUIET;
         ret = P3MC_GetUserCheck();
         errorNo = 0;
         if (ret < 0) {
-            if (ret == -1) {
-                isRun = -1;
+            if (ret == P3MC_RES_BUSY) {
+                isRun = MCFLOW_RUNNING;
                 subStatus = MCUCHK_SHOW_SCANNING;
             }
         } else {
@@ -5529,7 +5718,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         break;
     case MCUCHK_SHOW_SCANNING:
-        isRun = -1;
+        isRun = MCFLOW_RUNNING;
         waitTime = 90;
         TsMCAMes_SetMes(MCMES(0, 3));
         if (errorNo == 0) {
@@ -5539,7 +5728,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         break;
     case MCUCHK_SCAN_WAIT:
-        isRun = -1;
+        isRun = MCFLOW_RUNNING;
         waitTime--;
         errorNo = P3MC_GetUserCheck();
         if (errorNo >= 0) {
@@ -5547,7 +5736,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         break;
     case MCUCHK_MIN_WAIT:
-        isRun = -1;
+        isRun = MCFLOW_RUNNING;
         if (--waitTime > 0) {
             break;
         }
@@ -5615,8 +5804,8 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         break;
     case MCUCHK_ERROR:
         TsMCAMes_SetMes(-1);
-        if (isRun == -1 && bError != NULL) {
-            *bError = 1;
+        if (isRun == MCFLOW_RUNNING && bError != NULL) {
+            *bError = MCUCHK_REPORT_ERROR;
         }
         subStatus = MCUCHK_ERROR_MES;
     case MCUCHK_ERROR_MES:
@@ -5637,8 +5826,8 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case MCUCHK_CARD_CHANGED:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
-            if (isRun == -1 && bError != NULL) {
-                *bError = 2;
+            if (isRun == MCFLOW_RUNNING && bError != NULL) {
+                *bError = MCUCHK_REPORT_RESTART;
             }
             subStatus = MCUCHK_START;
         } else {
@@ -6652,7 +6841,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     int bkSel;
     int i;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         TsANIME_Init(&pfw->awork);
         pfw->isRnkWAnime = 0;
         TsPopCusInit(&pfw->cani, 0);
@@ -6691,7 +6880,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         return 0;
     }
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         PopMenu_Sw = 0;
         pfw->isRankOn = 0;
         pfw->isSelLev = 0;
@@ -7034,13 +7223,13 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         }
         switch (pfw->selno) {
         case 0:
-            ret = 1;
+            ret = POPSEL_SINGLE;
             break;
         case 1:
-            ret = 2;
+            ret = POPSEL_VS_MAN;
             break;
         case 2:
-            ret = (pfw->selLev << 8) | 3;
+            ret = (pfw->selLev << 8) | POPSEL_VS_COM;
             break;
         }
         return ret;

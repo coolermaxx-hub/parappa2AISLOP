@@ -10,6 +10,13 @@
 
 #include <eetypes.h>
 
+/* The flg argument of the menu flows: step one frame, set up, or shut down. */
+enum {
+    MNFLOW_RUN = 0,
+    MNFLOW_INIT = 1,
+    MNFLOW_END = 2
+};
+
 typedef struct { // 0x18
     /* 0x00 */ int wtim;
     /* 0x04 */ short tim;
@@ -375,6 +382,34 @@ typedef struct { // 0x34
     /* 0x2c */ MN_SCENE *pscene;
     /* 0x30 */ MNANM_TBL *panime;
 } MAPPOS;
+
+/* MNMAPPOS::mapdir order; MAPPOS::mvFlag uses the same bit order (MCODE_ARROW_*). */
+enum {
+    MNMAP_DIR_LEFT = 0,
+    MNMAP_DIR_RIGHT = 1,
+    MNMAP_DIR_UP = 2,
+    MNMAP_DIR_DOWN = 3
+};
+
+/* MAPPOS::sndtrg: what happened this frame, for the caller to play a sound. */
+enum {
+    MAPSND_NONE = 0,
+    MAPSND_MOVE = 1,   /* the cursor set off for another position */
+    MAPSND_DECIDE = 2,
+    MAPSND_CANCEL = 3
+};
+
+/* MAPPOS::state, run by MpMapMenu_Flow. */
+enum {
+    MAPMENU_ST_START = 0,
+    MAPMENU_ST_IDLE = 0x1000,     /* wait for a direction or a button */
+    MAPMENU_ST_MOVING = 0x1100,   /* the move animation is playing */
+    MAPMENU_ST_DECIDE = 0x1200,
+    MAPMENU_ST_DECIDED = 0x2000,
+    MAPMENU_ST_CANCELLED = 0x1f00,
+    MAPMENU_ST_EXIT_DECIDED = 0xf000, /* never set; exits like MAPMENU_ST_DECIDED */
+    MAPMENU_ST_EXIT_CANCELLED = 0xf010 /* never set; exits like MAPMENU_ST_CANCELLED */
+};
 
 typedef struct { // 0x8
     /* 0x0 */ u_short state;

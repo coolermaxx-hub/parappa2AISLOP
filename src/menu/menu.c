@@ -97,7 +97,7 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
         P3GameState.pLog->clrFlg[0] = 0;
 
         P3GameState.nStage = 0;
-        P3GameState.endFlg = 0;
+        P3GameState.endFlg = SEL_MENU_STAGESEL;
     } else {
         P3GameState.nStage = pGStatus->play_stageG;
     }
@@ -153,13 +153,13 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
     case P3MRET_SELECT:
         break;
     case P3MRET_PLAYGAME:
-        P3GameState.endFlg = 1;
+        P3GameState.endFlg = SEL_MENU_SAVE;
         break;
     case P3MRET_REPLAY:
-        P3GameState.endFlg = 2;
+        P3GameState.endFlg = SEL_MENU_REPLAY;
         break;
     case P3MRET_TOTITLE:
-        P3GameState.endFlg = 0;
+        P3GameState.endFlg = SEL_MENU_STAGESEL;
         break;
     }
 
@@ -248,7 +248,7 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
         P3Log_Val.nRound = 0;
         P3Log_Val.clrFlg[0] = 0;
         P3GameState.nStage = 0;
-        P3GameState.endFlg = 0;
+        P3GameState.endFlg = SEL_MENU_STAGESEL;
     } else {
         P3GameState.nStage = pGStatus->play_stageG;
     }
@@ -300,13 +300,13 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     case P3MRET_SELECT:
         break;
     case P3MRET_PLAYGAME:
-        P3GameState.endFlg = 1;
+        P3GameState.endFlg = SEL_MENU_SAVE;
         break;
     case P3MRET_REPLAY:
-        P3GameState.endFlg = 2;
+        P3GameState.endFlg = SEL_MENU_REPLAY;
         break;
     case P3MRET_TOTITLE:
-        P3GameState.endFlg = 0;
+        P3GameState.endFlg = SEL_MENU_STAGESEL;
         break;
     }
 

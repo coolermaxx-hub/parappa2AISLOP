@@ -58,7 +58,7 @@ typedef struct { // 0x2664
     /* 0x0026 */ u_short fileNo;
     /* 0x0028 */ u_char flg;
     /* 0x0029 */ u_char mode;
-    /* 0x002a */ u_char isVs;
+    /* 0x002a */ u_char isVs; /* PLAY_MODE of the stage that was played */
     /* 0x002b */ u_char vsLev;
     /* 0x002c */ u_int score;
     /* 0x0030 */ u_int score2;

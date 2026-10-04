@@ -119,12 +119,12 @@ typedef struct { // 0x188
 
 typedef struct { // 0x58
     /* 0x00 */ int nStage;
-    /* 0x04 */ int nMode;
+    /* 0x04 */ int nMode; /* PLAY_MODE */
     /* 0x08 */ int vsLev;
     /* 0x0c */ P3LOG_VAL *pLog;
     /* 0x10 */ GAME_STATUS *pGameStatus;
     /* 0x14 */ MC_REP_STR *pReplayArea;
-    /* 0x18 */ int endFlg;
+    /* 0x18 */ int endFlg; /* SEL_MENU_ENUM: why the menu was entered, and so where it starts */
     /* 0x1c */ u_int score;
     /* 0x20 */ u_int score2P;
     /* 0x24 */ u_int bonusG;
