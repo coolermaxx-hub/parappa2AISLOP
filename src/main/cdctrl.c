@@ -166,7 +166,7 @@ void CdctrlInit(void) {
 
     WP2Ctrl(WP2_CDINIT, SCECdDVD);
     WP2Ctrl(WP2_SDINIT, WP2_NONE);
-    WP2Ctrl(WP2_SETMASTERVOL, PR_CONCAT(0x3fff, 0x3fff));
+    WP2Ctrl(WP2_SETMASTERVOL, SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX));
 
     /*
      * WP2 init--allocate 384KB for the read
@@ -181,7 +181,7 @@ void CdctrlQuit(void) {
 }
 
 void CdctrlMasterVolSet(u_int vol) {
-    WP2Ctrl(WP2_SETMASTERVOL, PR_CONCAT(vol, vol));
+    WP2Ctrl(WP2_SETMASTERVOL, SPU_VOLUME_LR(vol, vol));
 }
 
 int CdctrlSerch(FILE_STR *fstr_pp) {
@@ -719,7 +719,7 @@ void CdctrlWP2SetVolume(u_short vol) {
         vol = 0x7fff;
     }
 
-    WP2Ctrl(WP2_SETVOLDIRECT, PR_CONCAT(vol, vol));
+    WP2Ctrl(WP2_SETVOLDIRECT, SPU_VOLUME_LR(vol, vol));
 }
 
 u_short CdctrlWP2GetVolume(void) {
@@ -906,7 +906,7 @@ static void cdctrlSndFadeOut(void *x) {
     int timer;
 
     for (timer = 0; timer < sndFadeTime; timer++) {
-        CdctrlMasterVolSet(((sndFadeTime - timer) * 0x3fff) / sndFadeTime);
+        CdctrlMasterVolSet(((sndFadeTime - timer) * SPU_VOLUME_MAX) / sndFadeTime);
         MtcWait(1);
     }
 

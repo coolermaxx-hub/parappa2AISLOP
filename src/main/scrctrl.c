@@ -550,8 +550,8 @@ void ScrTapDataTrans(SNDREC *sndrec_pp, int bank, void *data_top) {
 
     scr_sndtap_pp[bank] = sndrec_pp->sndtap_pp;
 
-    TapCt(TAPCT_SETMASTERVOL, PR_CONCAT(0x3fff, 0x3fff), TAPCT_NONE);
-    TapCt(TAPCT_SETVOLUME,    PR_CONCAT(0x3fff, 0x3fff), TAPCT_NONE);
+    TapCt(TAPCT_SETMASTERVOL, SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
+    TapCt(TAPCT_SETVOLUME,    SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
 }
 
 int ScrTapDataTransCheck(void) {
@@ -4517,7 +4517,7 @@ void ScrCtrlInit(STDAT_DAT *sdat_pp, void *data_top) {
     }
 
     TapCt(TAPCT_SETEFFECTMODE, SD_REV_MODE_OFF, 0x1fff);
-    TapCt(TAPCT_SETEFFECTVOL,  PR_CONCAT(0x3fff, 0x3fff), TAPCT_NONE);
+    TapCt(TAPCT_SETEFFECTVOL,  SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
 
     for (i = 0; i < PR_ARRAYSIZE(score_str.stdat_dat_pp->sndfile); i++) {
         if (score_str.stdat_dat_pp->sndfile[i].fname != NULL) {
@@ -4915,10 +4915,10 @@ static void bonusScoreDraw(void) {
 
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEST_1, GS_TEST_OFF);
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, GS_TEXA_STP);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, GS_TEXA_STP);
 
     scr_bn  = ingame_common_str.BonusScore;
     scr_stg = ingame_common_str.SingleScore;
@@ -4964,10 +4964,10 @@ static void LessonRoundDisp(SCRRJ_LESSON_ROUND_ENUM type) {
 
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-        sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
+        sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, GS_TEXA_STP);
         sceGifPkAddGsAD(&gifpk, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
         sceGifPkAddGsAD(&gifpk, SCE_GS_PABE, 0);
-        sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
+        sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, GS_TEXA_STP);
         sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, tim2_dat_pp->GsTex0);
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, tim2_dat_pp->GsTex1);

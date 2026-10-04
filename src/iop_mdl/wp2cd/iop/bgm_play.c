@@ -242,16 +242,16 @@ static int makeMySem(void) {
 
 void BgmSetVolumeDirect(unsigned int vol) {
     CpuSuspendIntr(&oldstat);
-    sceSdSetParam(0xf81,  vol >> 16);
-    sceSdSetParam(0x1081, vol);
+    sceSdSetParam(SD_P_BVOLL | SD_CORE_1, vol >> 16);
+    sceSdSetParam(SD_P_BVOLR | SD_CORE_1, vol);
     CpuResumeIntr(oldstat);
     return; /* Explicit return needed to match. */
 }
 
 void BgmSetMasterVolume(unsigned int vol) {
     CpuSuspendIntr(&oldstat);
-    sceSdSetParam(0x981, vol >> 16);
-    sceSdSetParam(0xa81, vol);
+    sceSdSetParam(SD_P_MVOLL | SD_CORE_1, vol >> 16);
+    sceSdSetParam(SD_P_MVOLR | SD_CORE_1, vol);
     CpuResumeIntr(oldstat);
     return; /* Explicit return needed to match. */
 }

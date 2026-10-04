@@ -214,7 +214,7 @@ void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *te
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_CLAMP, /*WMT*/SCE_GS_CLAMP, 0, 0, 0, 0));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, SCE_GS_SET_COLCLAMP(1));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, SCE_GS_SET_PABE(FALSE));
 
@@ -330,7 +330,7 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
 
     sceGifPkAddGsAD(ndlPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, 0));
 
-    sceGifPkAddGsAD(ndlPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(SCE_GS_REPEAT, SCE_GS_REPEAT, 0, 0, 0, 0));
+    sceGifPkAddGsAD(ndlPkSpr, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
 
     sceGifPkAddGsAD(ndlPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(ndl_pp->r, ndl_pp->g, ndl_pp->b, ndl_pp->a, 0x00000001));
 

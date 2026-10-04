@@ -275,7 +275,7 @@ void examCharSet(EX_CHAR_DISP *ecd_pp, sceGifPacket *gifpk_pp) {
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_COLCLAMP, 1);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(ecd_pp->kido[0], ecd_pp->kido[1], ecd_pp->kido[2], 128, GS_Q_ONE));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, GS_TEXA_STP);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(ecd_pp->alpha));
 
     wl = ecd_pp->w * ecd_pp->scalex * 16.0f;
@@ -440,10 +440,10 @@ static void MbarNikoDisp(sceGifPacket *gifpk_pp) {
     ChangeDrawAreaSetGifTag(DrawGetDrawEnvP(DNUM_DRAW), gifpk_pp);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, GS_TEXA_STP);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXA, GS_TEXA_STP);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
 
     niko_pp = niko_chan_str_pp;
@@ -1046,7 +1046,7 @@ void MbarGifInit(void) {
     CmnGifADPacketMake(&mbar_gif, 0);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(&mbar_gif, SCE_GS_TEXA, GS_TEXA_STP);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_PABE, 0);    
 }

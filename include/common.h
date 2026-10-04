@@ -58,6 +58,11 @@ typedef float f32;
 /* A GIF tag built as two 64-bit words, read as the 128-bit quadword libgifpk takes. */
 #define GIF_TAG_QWORD(words) (*(const u_long128 *)(words))
 
+/* SPU2 volume at full scale, and a stereo pair as the IOP sound modules take it
+ * (left in the high half, which they write to the ...L register). */
+#define SPU_VOLUME_MAX      0x3fff
+#define SPU_VOLUME_LR(l, r) PR_CONCAT(l, r)
+
 #define PR_EXTERN extern "C"
 
 #define PR_SIZEOF(x) (int)(sizeof(x))

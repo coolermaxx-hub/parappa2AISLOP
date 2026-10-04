@@ -283,7 +283,7 @@ void SubtFlash(void) {
 void SubtMcodeSet(int code) {
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX0_1, SubtGsTex0[code]);
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, 0, 1, 1, 0, 0));
-    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEXA, GS_TEXA_STP);
 }
 
 MCODE_DAT* codeKanjiCheck(u_char dat0, u_char dat1) {

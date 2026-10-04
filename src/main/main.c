@@ -519,7 +519,7 @@ int selPlayDisp(int sel_stage, int sel_disp, int firstf) {
     CdctrlWP2SetVolume(0);
     CdctrlWp2FileEnd();
     ScrCtrlQuit();
-    CdctrlMasterVolSet(0x3fff);
+    CdctrlMasterVolSet(SPU_VOLUME_MAX);
 
     return ret;
 }
@@ -668,6 +668,7 @@ void xtrView(FILE_STR *file_str_pp) {
     seek_top = getTopSeekPos();
 
     CdctrlWP2Play();
+    /* Past the 0-127 scale the volume takes; it clamps to full volume. */
     CdctrlWP2SetVolume(0x3fff);
 
     while (1) {

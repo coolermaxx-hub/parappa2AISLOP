@@ -772,7 +772,7 @@ void BallThrowPoll(void) {
                 bts_pp = bthrow_ctrl[i].bthrow_str;
 
                 CmnGifADPacketMake(&gifP, DrawGetFrameP(DNUM_DRAW));
-                sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
+                sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, GS_TEXA_STP);
                 sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
 
@@ -2830,7 +2830,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_TRUE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_RGB_ONLY, SCE_GS_FALSE, 0, SCE_GS_TRUE, 1));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 64));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));

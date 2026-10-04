@@ -1045,7 +1045,7 @@ void MenuDataSndInit(void) {
     _BankChan1Stat = 0;
 
     TapCt(TAPCT_ALLOCSPU | 1, 0x135010, TAPCT_NONE);
-    TapCt(TAPCT_SETMASTERVOL, PR_CONCAT(0x3fff, 0x3fff), TAPCT_NONE);
+    TapCt(TAPCT_SETMASTERVOL, SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
 }
 
 void MenuDataSndReq(int chanId, int req) {
@@ -1091,13 +1091,13 @@ void MenuDataSndReqChan(int chanId, int req, MENU_SPU_ENUM trId) {
 }
 
 void MenuDataSpuVolume(int vol) {
-    if ((vol * 128) <= 0x3fff) {
+    if ((vol * 128) <= SPU_VOLUME_MAX) {
         vol = vol << 7;
     } else {
-        vol = 0x3fff;
+        vol = SPU_VOLUME_MAX;
     }
 
-    TapCt(TAPCT_SETMASTERVOL, PR_CONCAT(vol, vol), TAPCT_NONE);
+    TapCt(TAPCT_SETMASTERVOL, SPU_VOLUME_LR(vol, vol), TAPCT_NONE);
 }
 
 void MenuDataDiskVolume(u_int vol) {
