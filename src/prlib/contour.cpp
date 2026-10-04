@@ -26,7 +26,7 @@ void PrModelObject::SaveContour() {
 void SpmComplexNode::SaveContour(PrModelObject *model) {
     PrVuNodeHeaderDmaPacket *source = m_geometryPacket;
     const NaMATRIX<float, 4, 4> &matrix = source->m_matrix;
-    const bool identity = matrix.inl0();
+    const bool identity = matrix.IsIdentity();
 
     // SaveContour writes history after two quadwords. RenderContour uses the
     // same mapping against the packet base; these distinct conventions come
@@ -56,7 +56,7 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
 
     PrVuNodeHeaderDmaPacket *source = m_geometryPacket;
     const NaMATRIX<float, 4, 4> &matrix = source->m_matrix;
-    const bool identity = matrix.inl0();
+    const bool identity = matrix.IsIdentity();
     for (u_int i = 0; i < m_contourCount; i++) {
         const SpmContourIndex &mapping = m_contourIndices[i];
         const NaVECTOR<float, 4> &position = source->PositionAtQuadword(mapping.m_src);

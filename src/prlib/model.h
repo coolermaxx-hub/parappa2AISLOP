@@ -100,11 +100,11 @@ public:
     void RenderBackgroundScreenModel();
     void RenderContext2Node(PrModelObject *model);
 
-    void ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
     void ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
-    void ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
 
-    void BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& arg1);
+    void BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& mtx);
 
     void ApplyBillboardMatrix();
 
@@ -188,11 +188,11 @@ class SpmFileHeader {
 public:
     void ChangePointer();
 
-    void CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
-    void CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
+    void CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
 
-    void CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
-    void CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1);
+    void CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
+    void CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix);
 
     void RenderContext1Model(PrModelObject *model);
     void RenderScreenModelNode();
@@ -261,7 +261,7 @@ public:
     void LinkPositionAnimation(SpaFileHeader *animation);
     void CleanupPositionAnimation();
 
-    void UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4> *arg1);
+    void UnionBoundaryBox(NaVECTOR<float, 4> *boxMin, NaVECTOR<float, 4> *boxMax);
 
     void GetPrimitivePosition(NaVECTOR<float, 4> *position);
     void GetScreenPosition(NaVECTOR<float, 4> *position);

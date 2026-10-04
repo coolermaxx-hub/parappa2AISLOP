@@ -281,11 +281,11 @@ bool SpaTransform::IsEverIdentical() {
     }
     case Matrix: {
         const SpaTrack<NaMATRIX<float, 4, 4> >* track = GetTrack<NaMATRIX<float, 4, 4> >();
-        return track->GetKeyCount() == 1 && track->KeyValue(0).inl0();
+        return track->GetKeyCount() == 1 && track->KeyValue(0).IsIdentity();
     }
     default:
         // Preserve the original fallback, including its unusual predicate.
-        return NaMATRIX<float, 4, 4>::IDENT.inl1();
+        return NaMATRIX<float, 4, 4>::IDENT.IsNonZero();
     }
 }
 

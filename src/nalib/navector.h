@@ -24,8 +24,8 @@ public:
         return v[index];
     }
 
-    T operator[](int arg0) const {
-        return v[arg0];
+    T operator[](int index) const {
+        return v[index];
     }
 
     T* Data() { return v; }
@@ -37,9 +37,9 @@ public:
         return result;
     }
 
-    bool inl0(const NaVECTOR<T, t0>& arg0) const {
+    bool Differs(const NaVECTOR<T, t0>& other) const {
         for (int i = 0; i < t0; i++) {
-            if (arg0[i] != v[i]) {
+            if (other[i] != v[i]) {
                 return true;
             }
         }
@@ -47,7 +47,7 @@ public:
         return false;
     }
 
-    bool inl1() const {
+    bool IsNonZero() const {
         for (int i = 0; i < t0; i++) {
             if (v[i] != 0.0f) {
                 return true;

@@ -146,8 +146,8 @@ void WaveCtrlDisp(WAVE_STR *wstr, sceGsFrame *frame_pp) {
     CG_WaveDisp(wstr, frame_pp);
 }
 
-void WaveCtrlUpdate(WAVE_STR *wstr, float arg1) {
-    wstr->currentAng += arg1 * wstr->plsAng1time;
+void WaveCtrlUpdate(WAVE_STR *wstr, float frames) {
+    wstr->currentAng += frames * wstr->plsAng1time;
     if (wstr->currentAng >= (PR_PI*2)) {
         wstr->currentAng -= (PR_PI*2);
     }

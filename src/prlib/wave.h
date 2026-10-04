@@ -34,6 +34,6 @@ typedef struct { // 0x2c
 
 void WaveCtrlInit(WAVE_STR *wstr, short w, short h, WMODE_ENUM wmode);
 void WaveCtrlDisp(WAVE_STR *wstr, sceGsFrame *frame_pp);
-void WaveCtrlUpdate(WAVE_STR *wstr, float arg1);
+void WaveCtrlUpdate(WAVE_STR *wstr, float frames);
 
 #endif /* PRLIB_WAVE_H */

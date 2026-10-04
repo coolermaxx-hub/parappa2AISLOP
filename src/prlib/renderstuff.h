@@ -38,7 +38,7 @@ public:
     void AllocateTransmitDmaArray(u_int size);
     void AppendTransmitDmaTag(const sceDmaTag *tag, u_int sortGroup, float depth);
 
-    static int CompareFunction(const void *arg0, const void *arg1);
+    static int CompareFunction(const void *lhs, const void *rhs);
     void SortTransmitDmaArray();
 
     void MergeRender();
@@ -50,8 +50,8 @@ public:
     static void RenderVertexEECoreRefmap();
     static void RenderVertexEECoreContour();
 
-    void RenderNodeEECore(PrVuNodeHeaderDmaPacket *arg0);
-    void RenderChunkEECore(PrVuDataChunkPacketHeader *arg0, float arg1);
+    void RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet);
+    void RenderChunkEECore(PrVuDataChunkPacketHeader *chunk, float disturbance);
 
 public:
     void AppendDmaTag(const sceDmaTag *tag) {

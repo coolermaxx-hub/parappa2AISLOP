@@ -23,14 +23,14 @@ public:
         Copy(*this, rhs);
     }
 
-    const NaVECTOR<T, t0>& operator[](int arg0) const {
-        return m[arg0];
+    const NaVECTOR<T, t0>& operator[](int index) const {
+        return m[index];
     }
 
-    bool inl0() const {
-        const NaMATRIX<T, t0, t1>& a0 = IDENT;
+    bool IsIdentity() const {
+        const NaMATRIX<T, t0, t1>& ident = IDENT;
         for (int i = 0; i < t1; i++) {
-            if (a0[i].inl0(this->m[i])) {
+            if (ident[i].Differs(this->m[i])) {
                 return false;
             }
         }
@@ -38,9 +38,9 @@ public:
         return true;
     }
 
-    bool inl1() const {
+    bool IsNonZero() const {
         for (int i = 0; i < t1; i++) {
-            if (this->m[i].inl1()) {
+            if (this->m[i].IsNonZero()) {
                 return true;
             }
         }

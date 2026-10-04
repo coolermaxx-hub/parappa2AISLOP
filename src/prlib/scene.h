@@ -17,7 +17,7 @@ class SpcFileHeader;
 
 class PrSceneObject {
 public:
-    PrSceneObject(sceGsDrawEnv1 *arg0, const char *name, u_int arg2);
+    PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int workFbp);
     ~PrSceneObject();
 
     void SelectCamera(SpcFileHeader *camera);

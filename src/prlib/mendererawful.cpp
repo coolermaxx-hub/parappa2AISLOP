@@ -107,12 +107,12 @@ void PrStartAwfulRotation() {
     SetNextSwitchRotationTimer();
 }
 
-void PrFadeFrameImage(float arg0) {
-    if (arg0 == 0.0f) {
+void PrFadeFrameImage(float fade) {
+    if (fade == 0.0f) {
         return;
     }
 
-    u_int alp = (u_int)(arg0 * 128.0f + 0.5f);
+    u_int alp = (u_int)(fade * 128.0f + 0.5f);
     mendererFadeData.color.value =
         SCE_GS_SET_RGBAQ(
             (mendererAwfulColor >> 0 ) & 255,

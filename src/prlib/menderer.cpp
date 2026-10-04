@@ -472,7 +472,7 @@ void PrRestartMenderer() {
 void UpdateNoodleRotation();
 void DrawNoodleStrip(float ratio, float rot);
 void PrWaitDmaFinish(u_int channel);
-void PrFadeFrameImage(float arg0);
+void PrFadeFrameImage(float fade);
 void PrCreateAlphaModulation(float alpha);
 void PrStartAwfulRotation();
 void PrBlendNoodleImage(bool clear);

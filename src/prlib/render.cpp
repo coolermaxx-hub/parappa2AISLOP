@@ -220,8 +220,8 @@ void PrModelObject::CalculateCurrentMatrix() {
     }
 }
 
-void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    m_nodes[0]->ComposeGlobalMatrix(model, arg1);
+void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
+    m_nodes[0]->ComposeGlobalMatrix(model, parentMatrix);
 
     for (u_int i = 1; i < m_node_num; i++) {
         SpmNode *node = m_nodes[i];
@@ -278,9 +278,9 @@ void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const 
     }
 }
 
-void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     SpmNode *node = m_nodes[0];
-    node->ComposeGlobalMatrix(model, arg1);
+    node->ComposeGlobalMatrix(model, parentMatrix);
     if (node->m_flags & eSpmSkinned) {
         const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
         node->m_skinningMatrix = node->m_worldMatrix * b;
@@ -296,9 +296,9 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
     }
 }
 
-void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     SpmNode *node = m_nodes[0];
-    node->ComposeAnimatedMatrix(model, arg1);
+    node->ComposeAnimatedMatrix(model, parentMatrix);
     if (node->m_flags & eSpmSkinned) {
         const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
         node->m_skinningMatrix = node->m_worldMatrix * b;
@@ -578,7 +578,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
 }
 
 /* prlib/render.cpp */
-void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     SpmNode *parent = this->m_parent;
 
     if (parent != NULL && !(parent->m_flags & eSpmVisible)) {
@@ -593,12 +593,12 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
     }
 
     if (m_flags & eSpmVisible) {
-        ComposeGlobalMatrixWithoutVisibility(model, arg1);
+        ComposeGlobalMatrixWithoutVisibility(model, parentMatrix);
     }
 }
 
 /* prlib/render.cpp */
-void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     if (model->m_postureMatrices[0] != NULL) {
         PrSPRAM_DATA *spram;
         if (m_flags & eSpmIdentityLocalMatrix) {
@@ -614,13 +614,13 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
             spram = prSpramData;
         }
 
-        this->m_worldMatrix = arg1 * spram->m_nodeMatrix;
+        this->m_worldMatrix = parentMatrix * spram->m_nodeMatrix;
         int idx = this->m_animationIndex;
         model->m_postureMatrices[model->m_active_transition][idx] = spram->m_nodeMatrix;
     } else if (m_flags & eSpmIdentityLocalMatrix) {
-        this->m_worldMatrix = arg1;
+        this->m_worldMatrix = parentMatrix;
     } else {
-        this->m_worldMatrix = arg1 * this->m_localMatrix;
+        this->m_worldMatrix = parentMatrix * this->m_localMatrix;
     }
 
     if (m_flags & eSpmBillboard) {

@@ -156,7 +156,7 @@ void PrModelObject::CleanupPositionAnimation() {
     m_position_animation = NULL;
 }
 
-void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4> *arg1) {
+void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *boxMin, NaVECTOR<float, 4> *boxMax) {
     asm volatile(
         "lqc2       $vf13,   0x0(%0)       \n\t"
         "lqc2       $vf14,  0x10(%0)       \n\t"
@@ -176,7 +176,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "lqc2       $vf04,  0x0(%0)        \n\t"
         "vmini.xyz  $vf04,  $vf04,  $vf17  \n\t"
         "sqc2       $vf04,  0x0(%0)        \n\t"
-    : : "r"(arg0));
+    : : "r"(boxMin));
 
     asm volatile(
         "lqc2       $vf17,  0x0(%0)        \n\t"
@@ -190,7 +190,7 @@ void PrModelObject::UnionBoundaryBox(NaVECTOR<float, 4> *arg0, NaVECTOR<float, 4
         "lqc2       $vf04,  0x0(%0)        \n\t"
         "vmax.xyz   $vf04,  $vf04,  $vf17  \n\t"
         "sqc2       $vf04,  0x0(%0)        \n\t"
-    : : "r"(arg1));
+    : : "r"(boxMax));
 }
 
 void PrModelObject::GetPrimitivePosition(NaVECTOR<float, 4> *position) {

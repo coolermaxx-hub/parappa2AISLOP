@@ -168,9 +168,9 @@ void PrRenderStuff::AppendTransmitDmaTag(const sceDmaTag *tag, u_int sortGroup, 
     }
 }
 
-int PrRenderStuff::CompareFunction(const void *arg0, const void *arg1) {
-    PrTransmitEntry *a0 = (PrTransmitEntry*)arg0;
-    PrTransmitEntry *a1 = (PrTransmitEntry*)arg1;
+int PrRenderStuff::CompareFunction(const void *lhs, const void *rhs) {
+    PrTransmitEntry *a0 = (PrTransmitEntry*)lhs;
+    PrTransmitEntry *a1 = (PrTransmitEntry*)rhs;
 
     if (a0->sortGroup != a1->sortGroup) {
         return (a0->sortGroup >= a1->sortGroup) ? 1 : -1;

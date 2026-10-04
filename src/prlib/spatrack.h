@@ -56,31 +56,31 @@ template <> int* SpaTrack<int>::GetValue(float time) const;
 template <> float* SpaTrack<float>::GetSprineValue(unsigned int segment, float time) const;
 template <> float* SpaTrack<float>::GetLinearValue(unsigned int segment, float time) const;
 
-inline unsigned int SpaTrackBase::SearchSegment(float arg0) const {
+inline unsigned int SpaTrackBase::SearchSegment(float time) const {
     if (this->m_keyCount == 1) {
         return (unsigned int)-1;
     }
 
-    if (arg0 <= this->m_times[0]) {
+    if (time <= this->m_times[0]) {
         return (unsigned int)-1;
     }
 
-    if (arg0 >= this->m_times[this->m_keyCount - 1]) {
+    if (time >= this->m_times[this->m_keyCount - 1]) {
         return this->m_keyCount;
     }
 
-    if (arg0 >= this->m_times[this->m_cachedSegment]) {
-        if (arg0 < this->m_times[this->m_cachedSegment + 1]) {
+    if (time >= this->m_times[this->m_cachedSegment]) {
+        if (time < this->m_times[this->m_cachedSegment + 1]) {
             return this->m_cachedSegment;
         }
 
         if ((this->m_cachedSegment + 2) < this->m_keyCount) {
-            if (arg0 < this->m_times[this->m_cachedSegment + 2]) {
+            if (time < this->m_times[this->m_cachedSegment + 2]) {
                 return ++this->m_cachedSegment;
             }
         }
     } else if (this->m_cachedSegment != 0) {
-        if (arg0 >= this->m_times[this->m_cachedSegment - 1]) {
+        if (time >= this->m_times[this->m_cachedSegment - 1]) {
             return --this->m_cachedSegment;
         }
     }
@@ -91,9 +91,9 @@ inline unsigned int SpaTrackBase::SearchSegment(float arg0) const {
 
     while (left <= right) {
         mid = (left + right) / 2;
-        if (arg0 < this->m_times[mid]) {
+        if (time < this->m_times[mid]) {
             right = mid - 1;
-        } else if (arg0 >= this->m_times[mid + 1]) {
+        } else if (time >= this->m_times[mid + 1]) {
             left = mid + 1;
         } else {
             break;

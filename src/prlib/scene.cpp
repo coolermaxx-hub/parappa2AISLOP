@@ -8,7 +8,7 @@
 /* data */
 static char defaultSceneName[] = "(noname)";
 
-PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int arg2) {
+PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int workFbp) {
     m_list.next = NULL;
     m_list.prev = NULL;
     m_obj_set = NULL;
@@ -21,7 +21,7 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_default_defocus_len = 0.0f;
     m_default_depth_level = 3;
     m_dbuff = NULL;
-    m_workFbp = arg2;
+    m_workFbp = workFbp;
 
     m_drawEnv = draw_env;
     m_frame = draw_env->frame1;
