@@ -23,6 +23,18 @@ class PrSceneObject;
 class SpmFileHeader;
 class SpaFileHeader;
 
+// Contour microcode reads alternating position/color records. Each mapped
+// contour point supplies the current vertex and its previous-frame vertex.
+struct PrVuContourVertex {
+    NaVECTOR<float, 4> position;
+    NaVECTOR<float, 4> color;
+};
+
+struct PrVuContourVertexPair {
+    PrVuContourVertex current;
+    PrVuContourVertex previous;
+};
+
 struct PrVuNodeHeaderDmaPacket {
     sceDmaTag m_tag;
     NaMATRIX<float, 4, 4> m_matrix;
@@ -37,6 +49,12 @@ struct PrVuNodeHeaderDmaPacket {
     float m_textureOffsetV;
     PR_PADDING(unk78, 0x11C);
     int m_microprogramCall;
+
+    PrVuContourVertexPair& ContourPairAtQuadword(u_int index) {
+        // The serialized contour map indexes the pair's current position.
+        return *reinterpret_cast<PrVuContourVertexPair*>(
+            reinterpret_cast<u_long128*>(this) + index);
+    }
 
     NaVECTOR<float, 4>& PositionAtQuadword(u_int index) {
         // SPM geometry tables contain absolute quadword indices into the

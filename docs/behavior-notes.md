@@ -343,9 +343,11 @@ not been validated through a PS2 game run.
   buffers. The handwritten kernels share VF1..VF11 and preserve strip state in
   VF17/VF19. Disturbance uses the VU R register and mixes seed/position components
   in the original order; a host RNG substitute would change behavior.
-- Contour save destinations include a two-quadword prefix while the render
-  mapping is relative to the packet base. This difference is explicit in the
-  source. Its relationship to real contour history assets still needs testing.
+- Contour mapping destinations select a current/previous vertex pair. Save
+  writes `previous.position` at pair + 0x20; render writes `current.position`
+  at pair + 0x00. The [built-in model audit](spm-packet-layout.md) verifies all
+  201 mapped destinations. The offset is a pair member, not a packet prefix;
+  save timing remains controlled by the original caller.
 - Memory-card user scanning retries the asynchronous load immediately after
   submitting it. Refactoring the nested jump preserves that retry and avoids
   marking a scan page complete while its load is pending.

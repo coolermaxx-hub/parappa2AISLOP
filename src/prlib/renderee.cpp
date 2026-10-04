@@ -248,16 +248,16 @@ void PrRenderStuff::RenderChunkEECore(PrVuDataChunkPacketHeader *chunk, float di
     u_long128 *buffer = scratchpad->m_noodle_buffer[2];
     sceDmaTag *dma = reinterpret_cast<sceDmaTag*>(buffer);
     *dma = eeCoreChunkDmaTag;
-    const u_int prefixQuadwords = chunk->metadata.prefixVertexCount * 3 + 1;
+    const u_int prefixQuadwords = chunk->metadata.prefixTripletCount * 3 + 1;
     dma->qwc = prefixQuadwords + chunk->metadata.vertexCount * 3;
 
-    // The GIF prefix can contain already transformed vertices. Preserve these
-    // quadwords exactly before appending the CPU-rendered vertex records.
+    // Preserve the complete variable GIF prefix (GS state and drawing tags)
+    // before appending the CPU-rendered vertex records.
     const u_long128 *prefix = reinterpret_cast<const u_long128*>(&chunk->gif);
     u_long128 *destination = buffer + 1;
     for (u_int i = 0; i < prefixQuadwords; i++) destination[i] = prefix[i];
     PrEECoreOutputVertex *output = reinterpret_cast<PrEECoreOutputVertex*>(destination + prefixQuadwords);
-    const PrEECoreInputVertex *input = chunk->vertices + chunk->metadata.prefixVertexCount;
+    const PrEECoreInputVertex *input = chunk->InputVertices();
 
     // Reset clip flags once per strip; VF11.z alternates its winding sign in
     // the normal kernel. VF17/VF19 retain the previous strip positions.

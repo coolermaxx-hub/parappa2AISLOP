@@ -28,14 +28,12 @@ void SpmComplexNode::SaveContour(PrModelObject *model) {
     const NaMATRIX<float, 4, 4> &matrix = source->m_matrix;
     const bool identity = matrix.IsIdentity();
 
-    // SaveContour writes history after two quadwords. RenderContour uses the
-    // same mapping against the packet base; these distinct conventions come
-    // from the original routines and must not be silently unified.
-    const u_int historyPrefixQuadwords = 2;
+    // Save the previous-frame position; the paired current position is
+    // populated by RenderContour before both vertices reach the VU program.
     for (u_int i = 0; i < m_contourCount; i++) {
         const SpmContourIndex &mapping = m_contourIndices[i];
         const NaVECTOR<float, 4> &position = source->PositionAtQuadword(mapping.m_src);
-        NaVECTOR<float, 4> &saved = m_contourPacket->PositionAtQuadword(historyPrefixQuadwords + mapping.m_dst);
+        NaVECTOR<float, 4> &saved = m_contourPacket->ContourPairAtQuadword(mapping.m_dst).previous.position;
         if (identity) {
             saved = position;
         } else {
@@ -60,7 +58,7 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
     for (u_int i = 0; i < m_contourCount; i++) {
         const SpmContourIndex &mapping = m_contourIndices[i];
         const NaVECTOR<float, 4> &position = source->PositionAtQuadword(mapping.m_src);
-        NaVECTOR<float, 4> &destination = m_contourPacket->PositionAtQuadword(mapping.m_dst);
+        NaVECTOR<float, 4> &destination = m_contourPacket->ContourPairAtQuadword(mapping.m_dst).current.position;
         if (identity) {
             destination = position;
         } else {

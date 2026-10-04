@@ -70,11 +70,11 @@ The test verifies original offsets and walks serialized multiple-target,
 duplicate-target, empty and single-target records. It does not execute COP2,
 validate actual model assets or establish rendered equivalence.
 
-The three chunk transport quadwords, reserved node/header fields and the
-contour history's distinct index origins remain unresolved. Naming the fields
-above does not resolve those separate questions.
+The follow-up [real-asset packet audit](spm-packet-layout.md) identifies the
+clipped-polygon GIF template and the current/previous contour vertex pairs.
+Two zero chunk quadwords and other reserved node/header fields remain unresolved.
 
-The follow-up objdiff report retains 1325/1429 exact functions and 264612/342284
+The historical geometry-pass objdiff report retained 1325/1429 exact functions and 264612/342284
 exact code bytes. Only the already-unmatched cluster and shape unit scores change
 (from 80.92% to 74.925%, and 85.73163% to 75.0703%, respectively). Explicit record
 stepping and indexed target access replace the old incremented integer cursor.

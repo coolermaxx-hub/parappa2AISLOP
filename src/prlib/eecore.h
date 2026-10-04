@@ -41,7 +41,7 @@ struct PrEECoreContext {
 };
 
 struct PrVuChunkMetadata {
-    u_int prefixVertexCount;
+    u_int prefixTripletCount;
     u_int reserved;
     float winding;
     u_int vertexCount;
@@ -50,11 +50,19 @@ struct PrVuChunkMetadata {
 struct PrVuDataChunkPacketHeader {
     sceDmaTag dma;
     PrVuChunkMetadata metadata;
-    // These three transport quadwords are not interpreted by the EE path.
-    // Their VIF-side meanings remain to be decoded; do not invent fields.
-    u_long128 transportRecords[3];
+    // VU scissor_initialize loads TOP+1 as the clipped polygon GIF template.
+    sceGifTag clippedPolygonGif;
+    // TOP+2 and TOP+3 are zero in the built-in models; purpose still unknown.
+    u_long128 reserved[2];
     sceGifTag gif;
-    PrEECoreInputVertex vertices[1];
+
+    const PrEECoreInputVertex *InputVertices() const {
+        // The variable GIF prefix follows this header. Its count is measured
+        // in three-quadword groups, not vertices; it can contain GS state.
+        const u_long128 *payload = reinterpret_cast<const u_long128*>(this + 1);
+        return reinterpret_cast<const PrEECoreInputVertex*>(
+            payload + metadata.prefixTripletCount * 3);
+    }
 
     PrVuDataChunkPacketHeader *Next() {
         if (dma.id != 0x10) return NULL;

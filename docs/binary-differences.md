@@ -40,3 +40,14 @@ Total: 94 functions differ, 32 original symbols have no counterpart (mostly orph
 | `prlib/model.cpp.o` | 1 | 1 | GetPrimitivePosition calls the shared NaVECTOR::Set instead of a local weak copy (the missing symbol), and the inlined matrix Apply is scheduled differently. |
 
 Regenerate with `python3 tools/dev/audit/alldiff.py && python3 tools/dev/audit/gen_binary_diff_doc.py`.
+
+## Packet layout follow-up (2026-10-04)
+
+The [SPM packet reconstruction](spm-packet-layout.md) replaces the contour
+`destination + 2` convention with `pair.previous.position` and removes a false
+vertex-array member from the chunk header. Comparison against `3edc2a2` with
+the historical compiler shows changed address arithmetic and scheduling in
+`SaveContour` and changed base formation/register allocation in
+`RenderChunkEECore`. Both functions already differed from the original; this
+pass preserves the typed expressions rather than steering the compiler back.
+The table above is the earlier `alldiff.py` snapshot, not a rerun of that audit.

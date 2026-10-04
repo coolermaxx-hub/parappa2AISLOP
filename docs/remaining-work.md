@@ -14,13 +14,15 @@ cannot prove original behavior or complete understanding of the data formats.
 1. Validate reconstructed camera/animation/geometry and noodle rendering against
    original PS2 execution. Generic MIPS scalar tests cannot exercise COP2,
    pipeline transfer delays, VU R randomness, DMA ordering or GS drawing.
-2. Decode the chunk's three currently uninterpreted transport quadwords and
+2. Decode the chunk's two remaining reserved transport quadwords and
    remaining reserved/unknown SPM, animation and render fields. The
    [SPM hierarchy and deformation lists](spm-geometry-layout.md) now have
    evidence-backed names and typed variable-length records. The
    [SPA node tables](spa-animation-layout.md) now have typed boundary binding
-   and named visibility, transform and shape-weight fields. Explain the
-   distinct contour save/render index origins and test real model assets.
+   and named visibility, transform and shape-weight fields. The
+   [packet audit](spm-packet-layout.md) identifies the clipping GIF template and
+   current/previous contour pairs in 43 built-in models; broader stage asset
+   coverage remains open.
 3. Validate the derived [texture wave model](noodle-texture-model.md) on PS2,
    including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
    frequency groups are now decoded and named; setup arithmetic has independent
@@ -38,19 +40,20 @@ cannot prove original behavior or complete understanding of the data formats.
    backend. Matrix products and other hardware interfaces remain to audit.
 
 The supplied OLM overlays do not contain recognizable SPM records. The retained
-original executable and data templates support layout/disassembly analysis;
-rendering equivalence still needs matching game model assets and PS2 execution.
+original executable and its built-in `common.ipk` support layout/disassembly
+analysis and real model packet checks. Rendering equivalence still needs
+original PS2 execution, and the packet audit does not cover all stage models.
 No runtime rendering equivalence has been claimed.
 
 ## Current exact-match measurement
 
-The 2026-10-03 objdiff report measured **1325 / 1429 exact functions (92.72218%)**
-and **264612 / 342284 exact code bytes (77.30773%)** across 70 units. Its fuzzy
-instruction score was 93.18579%. The full report is retained outside the checkout
-at `/workspace/shared/parappa-env/animation-report.json`.
+The 2026-10-04 objdiff report measured **1316 / 1429 exact functions (92.09237%)**
+and **259636 / 342284 exact code bytes (75.853966%)** across 70 units. Its fuzzy
+instruction score was 94.78401%. The full report is retained outside the checkout
+at `/workspace/shared/parappa-env/chunk-report.json`.
 
 The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
-main-ROM checksum fails. These figures include exact retained handwritten kernels
+main-ROM checksum fails. These figures include the accumulated readability changes on `codex-work`
 and do not imply execution equivalence for the new source.
 
 Function matching, source reconstruction and ROM checksums are separate measures.

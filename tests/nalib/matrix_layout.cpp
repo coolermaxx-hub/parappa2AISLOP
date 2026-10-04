@@ -68,9 +68,19 @@ extern "C" int matrix_layout_test() {
         reinterpret_cast<const char*>(&scratchpad.m_eeCore.output) - base != 0x360 ||
         reinterpret_cast<const char*>(&scratchpad.m_eeCore.vertexKernel) - base != 0x3a0) return 20;
     PrVuDataChunkPacketHeader chunk;
+    chunk.metadata.prefixTripletCount = 0;
     const char *chunkBase = reinterpret_cast<const char*>(&chunk);
     if (reinterpret_cast<const char*>(&chunk.gif) - chunkBase != 0x50 ||
-        reinterpret_cast<const char*>(chunk.vertices) - chunkBase != 0x60) return 21;
+        reinterpret_cast<const char*>(chunk.InputVertices()) - chunkBase != 0x60) return 21;
+    if (sizeof(chunk) != 0x60 ||
+        reinterpret_cast<const char*>(&chunk.clippedPolygonGif) - chunkBase != 0x20 ||
+        reinterpret_cast<const char*>(chunk.reserved) - chunkBase != 0x30) return 33;
+    chunk.metadata.prefixTripletCount = 2;
+    if (reinterpret_cast<const char*>(chunk.InputVertices()) - chunkBase != 0xc0) return 34;
+    PrVuContourVertexPair contourPair;
+    if (sizeof(contourPair) != 64 || sizeof(PrVuContourVertex) != 32 ||
+        reinterpret_cast<const char*>(&contourPair.previous.position) -
+        reinterpret_cast<const char*>(&contourPair) != 32) return 35;
     PrNoodleTextureParameters texture;
     const char *textureBase = reinterpret_cast<const char*>(&texture);
     if (reinterpret_cast<const char*>(texture.amplitude) - textureBase != 0 ||
@@ -88,9 +98,9 @@ extern "C" int matrix_layout_test() {
     mediumCopy = mediumCopy;
     if (mediumCopy[0][2] != 3.0f || mediumCopy[2][0] != 7.0f || mediumCopy[2][2] != 9.0f) return 25;
     NaMATRIX<float, 3, 3>::IDENT.Set(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-    if (mediumCopy.inl0()) return 26;
+    if (mediumCopy.IsIdentity()) return 26;
     mediumCopy = NaMATRIX<float, 3, 3>::IDENT;
-    if (!mediumCopy.inl0()) return 27;
+    if (!mediumCopy.IsIdentity()) return 27;
     const NaVECTOR<int, 3> integerVector(7, -11, 19);
     NaVECTOR<int, 3> integerCopy(integerVector);
     NaVECTOR<int, 3>::Copy(integerCopy, integerCopy);
@@ -101,7 +111,7 @@ extern "C" int matrix_layout_test() {
     pairResult = -pair;
     if (pairResult[0] != -8.0f || pairResult[1] != 12.0f) return 30;
     NaMATRIX<float, 3, 3> arithmetic = (medium * 2.0f + medium) / 3.0f - medium;
-    if (arithmetic.inl1()) return 31;
+    if (arithmetic.IsNonZero()) return 31;
     NaVECTOR<int, 3> doubled = integerVector * 2;
     if (doubled[0] != 14 || doubled[1] != -22 || doubled[2] != 38) return 32;
     return 0;
