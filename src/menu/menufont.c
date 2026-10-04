@@ -645,7 +645,7 @@ static void _PKFontPut(SPR_PKT pk, SPR_PRM *spr, SUBT_CODE *psubt, int line_num,
                 spr->sw = pfnt->w;
                 spr->sh = pfnt->h;
 
-                PkNSprite_Add2(pk, spr, 3);
+                PkNSprite_Add2(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
             }
 
             w = pfnt->w * rtx + 0.5f;
@@ -679,7 +679,7 @@ static void _PADArrow_Put(SPR_PKT pk, SPR_PRM *spr, MCODE_DAT *pfnt, int x, int 
     spr->sw = pat->w;
     spr->sh = pat->h;
 
-    PkNSprite_Add2(pk, spr, 3);
+    PkNSprite_Add2(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
     pat++;
 
     for (i = 0; i < 4; i++, pat++, aflg >>= 1) {
@@ -696,7 +696,7 @@ static void _PADArrow_Put(SPR_PKT pk, SPR_PRM *spr, MCODE_DAT *pfnt, int x, int 
             spr->sw = pat->w;
             spr->sh = pat->h;
 
-            PkNSprite_Add2(pk, spr, 3);
+            PkNSprite_Add2(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
         }
     }
 }

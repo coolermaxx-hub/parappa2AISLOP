@@ -606,7 +606,7 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
 
-    if (flg & 0x1) {
+    if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
         asm volatile("lq $9, 0x00(%0)" : : "r"(ppspr) : "$9", "memory");
@@ -636,7 +636,7 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.zw $vf01, $vf01, $vf02 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -676,7 +676,7 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
 
-    if (flg & 0x1) {
+    if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
         asm volatile("lq $9, 0x00(%0)" : : "r"(ppspr) : "$9", "memory");
@@ -706,7 +706,7 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.zw $vf01, $vf01, $vf02 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -746,7 +746,7 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
 
-    if (flg & 0x1) {
+    if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
         asm volatile("lq $9, 0x00(%0)" : : "r"(ppspr) : "$9", "memory");
@@ -776,7 +776,7 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.zw $vf01, $vf01, $vf02 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -823,7 +823,7 @@ void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.zw $vf01, $vf01, $vf02 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -873,7 +873,7 @@ void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.zw $vf01, $vf01, $vf02 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -994,7 +994,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = 0x154;
     sp->rgba = ppspr->rgba0;
 
-    if (flg & 0x1) {
+    if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
         asm volatile("lq $9, 0x00(%0)" : : "r"(ppspr) : "$9", "memory");
@@ -1035,7 +1035,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vmul.xy $vf04, $vf04, $vf03 \n\t"
     : : "r"(ppspr) : "$8", "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lq       $8,    0x00(%0)     \n\t"
             "qmtc2    $8,    $vf05        \n\t"
@@ -1115,7 +1115,7 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 4);
     ((u_long*)sp->GifCord)[1] = 0x4410;
 
-    if (flg & 0x4) {
+    if (flg & PKSPR_ANTIALIAS) {
         sp->prim = 0x1c1;
     } else {
         sp->prim = 0x141;
@@ -1129,7 +1129,7 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vitof0 $vf01, $vf01    \n\t"
     : : "r"(ppspr) : "memory");
 
-    if (flg & 0x1) {
+    if (flg & PKSPR_UV_RECT) {
         asm volatile(
             "vmul.zw $vf01, $vf01, $vf02 \n\t"
         );
@@ -1140,7 +1140,7 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         );
     }
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -1180,7 +1180,7 @@ void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((u_long*)sp->GifCord2)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
     ((u_long*)sp->GifCord2)[1] = 0xe;
 
-    if (flg & 0x4) {
+    if (flg & PKSPR_ANTIALIAS) {
         sp->prim = 0x1ca;
     } else {
         sp->prim = 0x14a;
@@ -1194,7 +1194,7 @@ void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vitof0 $vf01, $vf01    \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -1234,7 +1234,7 @@ void PkCLineS_AddNext(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vitof0 $vf01, $vf01    \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf03, 0x00(%0)     \n\t"
             "vmr32   $vf04, $vf03        \n\t"
@@ -1276,7 +1276,7 @@ void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vadd.xy $vf03, $vf00, $vf04 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf04, 0x00(%0)     \n\t"
             "vmr32   $vf05, $vf04        \n\t"
@@ -1333,7 +1333,7 @@ void PkPolyF4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vadd.xy $vf03, $vf00, $vf04 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf04, 0x00(%0)     \n\t"
             "vmr32   $vf05, $vf04        \n\t"
@@ -1437,7 +1437,7 @@ void PkPolyFT4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "vadd.xy $vf03, $vf00, $vf04 \n\t"
     : : "r"(ppspr) : "memory");
 
-    if ((flg & 0x2) && ppspr->zoom.isOn) {
+    if ((flg & PKSPR_ZOOM) && ppspr->zoom.isOn) {
         asm volatile(
             "lqc2    $vf04, 0x0(%0)      \n\t"
             "vmr32   $vf05, $vf04        \n\t"

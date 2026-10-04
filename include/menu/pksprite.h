@@ -78,6 +78,11 @@ typedef struct { // 0x90
     /* 0x70 */ SPR_ZOOM zoom;
 } SPR_PRM;
 
+/* Flags for the Pk*Sprite/Line _Add functions. */
+#define PKSPR_UV_RECT   0x1 /* texture rectangle comes from ux/uy/uw/uh instead of px/py/sw/sh */
+#define PKSPR_ZOOM      0x2 /* apply SPR_PRM::zoom when it is switched on */
+#define PKSPR_ANTIALIAS 0x4 /* antialiased line */
+
 typedef struct { // 0x18
     /* 0x00 */ float u;
     /* 0x04 */ float v;

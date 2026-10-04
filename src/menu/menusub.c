@@ -8459,7 +8459,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     spr->py = CellCusPos[n + 1].y + oy;
     spr->sw = 0x234;
     spr->sh = ptex->h * 2;
-    PkNSprite_Add(pk, spr, 1);
+    PkNSprite_Add(pk, spr, PKSPR_UV_RECT);
     PkALPHA_Add(pk, 0x44);
 }
 
@@ -9351,7 +9351,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             spr->py = y;
             spr->sw = 0x230;
             spr->sh = 0x1a;
-            PkNSprite_AddAdj(pk, spr, 1);
+            PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
         }
 
         spr->ofsy = ofsy;
@@ -9884,7 +9884,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     }
 
     spr->rgba0 = GetDToneColor(curcol & 0xffffff, curcol, ton);
-    PkCRect_Add(pk, spr, 2);
+    PkCRect_Add(pk, spr, PKSPR_ZOOM);
 
     spr->rgba0 = col;
     TsPatPut(pk, spr, pok, px, py);
@@ -10015,7 +10015,7 @@ static void TsSCFADE_Flow(int flg, int prm) {
         PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, (pfw->ton * 128) >> 8));
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
         SetSprScreenXYWH(spr);
-        PkNSprite_AddAdj(pk, spr, 1);
+        PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
         PkALPHA_Add(pk, 0x44);
         break;
     case 1:
@@ -10119,7 +10119,7 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     spr->uw = spr->sw;
     spr->uh = spr->sh;
 
-    PkNSprite_AddAdj(pk, spr, 1);
+    PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
     PkTEX1_Add(pk, 0x2020);
 
     PkSprPkt_SetDrawEnv(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
@@ -10280,7 +10280,7 @@ static void TsPatTexFnc(int flg) {
 
 static void TsPatPut(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
     _TsPatSetPrm(pk, spr, ppos, ox, oy);
-    PkNSprite_Add(pk, spr, 3);
+    PkNSprite_Add(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
 }
 
 static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
@@ -10323,7 +10323,7 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
     spr->rot = rot;
     spr->cx = spr->sw * 0.5f;
     spr->cy = spr->sh * 0.5f;
-    PkRSprite_Add(pk, spr, 3);
+    PkRSprite_Add(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
 
     spr->zx = zx;
     spr->zy = zy;
@@ -10594,7 +10594,7 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     spr->rot = rot;
     spr->cx = spr->sw * 0.5f;
     spr->cy = spr->sh * 0.5f;
-    PkRSprite_Add(pk, spr, 3);
+    PkRSprite_Add(pk, spr, PKSPR_UV_RECT | PKSPR_ZOOM);
 
     spr->zx = zx;
     spr->zy = zy;
