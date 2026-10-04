@@ -585,6 +585,21 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw);
 
 void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw,int px, int py, u_int hicol, u_int nmcol, int dflg);
 
+/* TsSCFADE_Set kinds, kept in SCFADE::state. SCFADE::ton is 256 while the screen is fully covered. */
+enum {
+    SCFADE_QUERY = 0,        /* change nothing, only report the frames left */
+    SCFADE_FROM_BLACK = 1,
+    SCFADE_TO_BLACK = 2,
+    SCFADE_FROM_CAPTURE = 5, /* dissolve from the copy of the old screen in DNUM_VRAM2 */
+    SCFADE_TO_CAPTURE = 6
+};
+/* TsSCFADE_Set prio: the draw pass the fade is drawn in. */
+enum {
+    SCFADE_LAYER_TOP = 0,         /* over everything */
+    SCFADE_LAYER_UNDER_MCMES = 1, /* under the memory card messages only */
+    SCFADE_LAYER_UNDER_MENUS = 2  /* under the pop-up, save and juke box menus */
+};
+/* Starts a fade of num frames unless that kind is already running; returns the frames left (0 when done). */
 int TsSCFADE_Set(int flg, int num, int prio);
 
 void _PkMCMsgPut(SPR_PKT pk, SPR_PRM *spr, int id, int x, int y, u_int abgr);

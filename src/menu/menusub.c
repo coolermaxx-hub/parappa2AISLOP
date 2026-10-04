@@ -1661,6 +1661,8 @@ static int   TSLOOP(int no, int max);
 static int   TSLIMIT(int no, int min, int max);
 static int   TsMENU_GetMapNo(int *psize);
 static void  TsMENU_GetMapTimeState(int flg);
+/* TsMENU_GetMapTimeState: hold the next clock read off for 30 frames (never passed). */
+#define MAPTIME_DELAY 3
 /* static */ void  TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus);
 static void  TsSet_ParappaCapColor(void);
 /* static */ void  TsClearSet(P3GAMESTATE *pstate);
@@ -1852,6 +1854,8 @@ static int   TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno);
 /* static */ int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
 
 /* static */ int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
+/* TsUserList_Flow: reset the list onto tab tpad. */
+#define ULIST_FLOW_SET_TAG 3
 /* TsUserList_Flow results with MNFLOW_RUN (0 while running). */
 enum {
     ULIST_RECHECK = -3,   /* a card went in or was swapped: check it again */
@@ -1864,8 +1868,12 @@ static void  NameSpaceCut(u_char *dst, u_char *src);
 /* static */ void  TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name);
 static void  TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name);
 /* static */ int   TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad);
+/* TsNAMEINBox_Flow: start the box's closing animation. */
+#define NAMEIN_FLOW_CLOSE 3
 /* static */ void  TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side);
 static void  TsSCFADE_Flow(int flg, int prm);
+/* TsSCFADE_Flow: like MNFLOW_INIT, but leave the screen covered at tone prm. */
+#define SCFADE_FLOW_HOLD 3
 /* static */ void  TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio);
 static void  TsPatTexFnc(int flg);
 /* static */ void  _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy);
@@ -2436,7 +2444,7 @@ static void TsSndFlow(int flg) {
     TSSND_CHAN  *pchan;
     u_short     *pSeq, *pCur;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         memset(&TsSndChan, 0, sizeof(TsSndChan));
         return;
     }
@@ -2636,12 +2644,12 @@ static void TsMENU_GetMapTimeState(int flg) {
 
     mptim = &MapTime;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         CurMapOldFlg = -1;
         CurMapBakFlg = -1;
         memset(mptim, 0, sizeof(*mptim));
-        nTim = flg;
-    } else if (flg == 3) {
+        nTim = flg; /* 1: read the clock on this call */
+    } else if (flg == MAPTIME_DELAY) {
         nTim = 30;
         return;
     }
@@ -3102,7 +3110,7 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
     TsClearMenuPad(0);
     TsClearMenuPad(1);
 
-    TsSCFADE_Flow(1, 0);
+    TsSCFADE_Flow(MNFLOW_INIT, 0);
     TsBGMInit();
 
     _bMapCaptureReq = FALSE;
@@ -3112,9 +3120,9 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
     SaveMenu_Sw     = FALSE;
     JukeMenu_Sw     = FALSE;
 
-    TsSndFlow(1);
+    TsSndFlow(MNFLOW_INIT);
 
-    TsMENU_GetMapTimeState(1);
+    TsMENU_GetMapTimeState(MNFLOW_INIT);
 }
 
 void TsMenu_End(void) {
@@ -3183,7 +3191,7 @@ int TsMenuMemcChk_Flow(void) {
     TsMCAMes_Flow(tpad);
     ret = TsMemCardCheck_Flow(MNFLOW_RUN, tpad);
 
-    TsSCFADE_Flow(0, 0);
+    TsSCFADE_Flow(MNFLOW_RUN, 0);
     TsBGMPoll();
 
     return ret;
@@ -3199,9 +3207,9 @@ int TsMenu_Flow(void) {
     ret = TsMap_Flow(MNFLOW_RUN, tpad, tpad2);
 
     TsMCAMes_Flow(tpad);
-    TsSCFADE_Flow(0, 0);
+    TsSCFADE_Flow(MNFLOW_RUN, 0);
     TsBGMPoll();
-    TsSndFlow(0);
+    TsSndFlow(MNFLOW_RUN);
 
     return ret;
 }
@@ -3253,7 +3261,7 @@ void TsMenu_Draw(void) {
         TsOption_Draw(pk, spr);
     }
 
-    TsSCFADE_Draw(pk, spr, 2);
+    TsSCFADE_Draw(pk, spr, SCFADE_LAYER_UNDER_MENUS);
 
     if (PopMenu_Sw) {
         TsPopMenu_Draw(pk, spr);
@@ -3277,7 +3285,7 @@ void TsMenu_Draw(void) {
     PkSprPkt_SetDefault(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
     TsCMPMes_SetPos(0x140, 0xba);
     TsCMPMes_Draw(pk, spr);
-    TsSCFADE_Draw(pk, spr, 1);
+    TsSCFADE_Draw(pk, spr, SCFADE_LAYER_UNDER_MCMES);
     TsMCAMes_SetPos(0x140, 0x65);
 
     TsMCAMes_Draw(pk, spr);
@@ -3290,7 +3298,7 @@ void TsMenu_Draw(void) {
     pkt = TsCmnPkOpen(&FPacket);
 
     PkSprPkt_SetDefault(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
-    TsSCFADE_Draw(pk, spr, 0);
+    TsSCFADE_Draw(pk, spr, SCFADE_LAYER_TOP);
 
     TsCmnPkClose(&FPacket, pkt, 0xf);
 }
@@ -3537,7 +3545,7 @@ static int TsCheckTimeMapChange() {
 
     switch (CurMapState) {
     case 0:
-        TsMENU_GetMapTimeState(0);
+        TsMENU_GetMapTimeState(MNFLOW_RUN);
         break;
     case 1:
         TsSetScene_Map(&MNS_StageMap2, CurMapNo, CurMapBakFlg, 0);
@@ -3549,7 +3557,7 @@ static int TsCheckTimeMapChange() {
         CurMapState = 2;
         /* fallthrough */
     case 2:
-        if (TsSCFADE_Set(5, 30, 2) == 0) {
+        if (TsSCFADE_Set(SCFADE_FROM_CAPTURE, 30, SCFADE_LAYER_UNDER_MENUS) == 0) {
             MNScene_DispSw(&MNS_StageMap2, 0);
             MNScene_End(&MNS_StageMap2);
             MNScene_DispSw(&MNS_StageMap, 1);
@@ -3620,7 +3628,7 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
         break;
     case MCCARD_FADE_OUT:
-        if (TsSCFADE_Set(2, 0xf, 0)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 15, SCFADE_LAYER_TOP)) {
             return 0;
         }
         TsMCAMes_SetMes(-1);
@@ -3705,7 +3713,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        TsMENU_GetMapTimeState(1);
+        TsMENU_GetMapTimeState(MNFLOW_INIT);
         return 0;
     }
 
@@ -3947,14 +3955,14 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_SAVE_FADE_OUT;
         /* fallthrough */
     case TSMAP_SAVE_FADE_OUT:
-        if (TsSCFADE_Set(2, 0x1e, 0)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 30, SCFADE_LAYER_TOP)) {
             return 0;
         }
         TsSet_ParappaCapColor();
         state = TSMAP_SAVE_FADE_IN;
         /* fallthrough */
     case TSMAP_SAVE_FADE_IN:
-        TsSCFADE_Set(1, 0x1e, 0);
+        TsSCFADE_Set(SCFADE_FROM_BLACK, 30, SCFADE_LAYER_TOP);
         state = TSMAP_OPEN;
         break;
     case TSMAP_STAGE_MENU_OPEN:
@@ -4036,14 +4044,14 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_HALL_FADE_OUT;
         /* fallthrough */
     case TSMAP_HALL_FADE_OUT:
-        if (TsSCFADE_Set(2, 0x14, 0)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 20, SCFADE_LAYER_TOP)) {
             return 0;
         }
         state = TSMAP_HALL_OPEN;
         /* fallthrough */
     case TSMAP_HALL_OPEN:
         TsBGMPlay(1, 0x14);
-        TsSCFADE_Set(1, 0x14, 0);
+        TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_TOP);
         MpCityHall_Flow(MNFLOW_INIT, CHALL_ENTER_DOOR, 0);
         state = TSMAP_HALL_MENU;
         break;
@@ -4075,7 +4083,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_HALL_EXIT_FADE;
         /* fallthrough */
     case TSMAP_HALL_EXIT_FADE:
-        if (TsSCFADE_Set(2, 0x1e, 0)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 30, SCFADE_LAYER_TOP)) {
             return 0;
         }
         state = TSMAP_HALL_EXIT_BGM_WAIT;
@@ -4085,7 +4093,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             return 0;
         }
         TsMap_Flow(MNFLOW_INIT, TSMAP_ENTER_FROM_HALL, 0);
-        TsSCFADE_Set(1, 0xf, 0);
+        TsSCFADE_Set(SCFADE_FROM_BLACK, 15, SCFADE_LAYER_TOP);
         break;
     case TSMAP_REPLAY:
         return P3MRET_REPLAY;
@@ -4262,7 +4270,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
     int chkMode;
     int ret;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         if (tpad == 0) {
             saveSel = MPSAVE_SEL_LOG;
         } else {
@@ -4282,12 +4290,12 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = MPSAVE_MENU_OPEN;
         /* fallthrough */
     case MPSAVE_MENU_OPEN:
-        TsSaveMenu_Flow(1, saveSel - 1);
-        TsUserList_Flow(1, 0, 0);
+        TsSaveMenu_Flow(MNFLOW_INIT, saveSel - 1);
+        TsUserList_Flow(MNFLOW_INIT, 0, 0);
         state = MPSAVE_MENU;
         /* fallthrough */
     case MPSAVE_MENU:
-        ret = TsSaveMenu_Flow(0, tpad);
+        ret = TsSaveMenu_Flow(MNFLOW_RUN, tpad);
         if (ret != 0) {
             saveSel = ret;
             if (ret >= 3) {
@@ -4311,8 +4319,8 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
         if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
-            TsMENU_GetMapTimeState(1);
-            MpSave_Flow(1, saveSel, 0);
+            TsMENU_GetMapTimeState(MNFLOW_INIT);
+            MpSave_Flow(MNFLOW_INIT, saveSel, 0);
             if (UserList_Sw != 0) {
                 state = MPSAVE_CLOSE_FADE_OUT;
             } else {
@@ -4328,7 +4336,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = MPSAVE_LIST_FADE_OUT;
         /* fallthrough */
     case MPSAVE_LIST_FADE_OUT:
-        if (TsSCFADE_Set(2, 20, 0) != 0) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 20, SCFADE_LAYER_TOP) != 0) {
             break;
         }
         state = MPSAVE_LIST_OPEN;
@@ -4345,13 +4353,13 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = MPSAVE_LIST_FADE_IN;
         /* fallthrough */
     case MPSAVE_LIST_FADE_IN:
-        if (TsSCFADE_Set(1, 20, 0) >= 9) {
+        if (TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_TOP) >= 9) {
             break;
         }
         state = MPSAVE_LIST;
         /* fallthrough */
     case MPSAVE_LIST:
-        ret = TsUserList_Flow(0, tpad, tpad2);
+        ret = TsUserList_Flow(MNFLOW_RUN, tpad, tpad2);
         if (ret != 0) {
             McInitFlow();
             if (ret != ULIST_CANCELLED) {
@@ -4417,17 +4425,17 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = MPSAVE_CLOSE_FADE_OUT;
         /* fallthrough */
     case MPSAVE_CLOSE_FADE_OUT:
-        if (TsSCFADE_Set(2, 20, 0) != 0) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 20, SCFADE_LAYER_TOP) != 0) {
             break;
         }
-        TsUserList_Flow(2, 0, 0);
+        TsUserList_Flow(MNFLOW_END, 0, 0);
         UserList_Sw = 0;
-        TsMENU_GetMapTimeState(1);
-        MpSave_Flow(1, saveSel, 0);
+        TsMENU_GetMapTimeState(MNFLOW_INIT);
+        MpSave_Flow(MNFLOW_INIT, saveSel, 0);
         state = MPSAVE_CLOSE_FADE_IN;
         /* fallthrough */
     case MPSAVE_CLOSE_FADE_IN:
-        if (TsSCFADE_Set(1, 20, 0) < 9) {
+        if (TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_TOP) < 9) {
             state = MPSAVE_START;
         }
         break;
@@ -4438,7 +4446,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = MPSAVE_EXIT_FADE;
         /* fallthrough */
     case MPSAVE_EXIT_FADE:
-        if (TsSCFADE_Set(2, 30, 0) >= 2) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 30, SCFADE_LAYER_TOP) >= 2) {
             break;
         }
         state = MPSAVE_EXIT_DONE;
@@ -4451,7 +4459,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
             TsSetRankingName(pCStageRank, pP3GameState->pLog->name1);
             TsSetRanking2UData(UserWork, pCStageRank);
         }
-        TsMENU_GetMapTimeState(1);
+        TsMENU_GetMapTimeState(MNFLOW_INIT);
         return 1;
     }
 
@@ -4583,7 +4591,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         break;
     case CHCAM_BACK:
-        if (TsSCFADE_Set(2, 0xa, 1)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 10, SCFADE_LAYER_UNDER_MCMES)) {
             break;
         }
         TsUserList_Flow(MNFLOW_END, 0, 0);
@@ -4601,7 +4609,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         scstate = CHCAM_BACK_FADE_IN;
         /* fallthrough */
     case CHCAM_BACK_FADE_IN:
-        if (!TsSCFADE_Set(1, 0x14, 1)) {
+        if (!TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_UNDER_MCMES)) {
             scstate = CHCAM_HALL;
         }
         break;
@@ -4796,7 +4804,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         /* fallthrough */
     case CHALL_LIST_FADE_OUT:
         if (UserList_Sw) {
-            if (TsSCFADE_Set(2, 0x14, 0)) {
+            if (TsSCFADE_Set(SCFADE_TO_BLACK, 20, SCFADE_LAYER_TOP)) {
                 return 0;
             }
         }
@@ -4825,17 +4833,15 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         /* fallthrough */
     case CHALL_LIST_FADE:
         if (!UserList_Sw) {
-            chkType = 5;
-            TsSCFADE_Set(chkType, 0x14, 2);
+            TsSCFADE_Set(SCFADE_FROM_CAPTURE, 20, SCFADE_LAYER_UNDER_MENUS);
         } else {
-            chkType = 1;
-            TsSCFADE_Set(chkType, 0x14, 0);
+            TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_TOP);
         }
         UserList_Sw = 1;
         state = CHALL_LIST_FADE_WAIT;
         /* fallthrough */
     case CHALL_LIST_FADE_WAIT:
-        if (TsSCFADE_Set(0, 0, 0) >= 9) {
+        if (TsSCFADE_Set(SCFADE_QUERY, 0, 0) >= 9) {
             break;
         }
         MNScene_DispSw(&MNS_CityHall, 0);
@@ -4975,7 +4981,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         state = CHALL_OPTION_FADE;
         /* fallthrough */
     case CHALL_OPTION_FADE:
-        if (TsSCFADE_Set(5, 0x14, 2)) {
+        if (TsSCFADE_Set(SCFADE_FROM_CAPTURE, 20, SCFADE_LAYER_UNDER_MENUS)) {
             return 0;
         }
         MNScene_DispSw(&MNS_CityHall, 0);
@@ -5014,7 +5020,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         state = CHALL_LOG_LOADED_FADE;
         /* fallthrough */
     case CHALL_LOG_LOADED_FADE:
-        if (TsSCFADE_Set(2, 0x14, 1)) {
+        if (TsSCFADE_Set(SCFADE_TO_BLACK, 20, SCFADE_LAYER_UNDER_MCMES)) {
             return 0;
         }
         TsUserList_Flow(MNFLOW_END, 0, 0);
@@ -7494,7 +7500,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
     int        aret;
     int        sel;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         if (tpad < 2) {
             pfw->selno = tpad;
         } else {
@@ -7507,7 +7513,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
         return 0;
     }
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         SaveMenu_Sw = FALSE;
         return 0;
     }
@@ -8307,7 +8313,7 @@ static int TsJukeObjAnime2(int isOut) {
     static int scstate;
     static int scstPos;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         memset(pfw, 0, sizeof(*pfw));
 
         pfw->selno = tpad;
@@ -8383,7 +8389,7 @@ static int TsJukeObjAnime2(int isOut) {
         return 0;
     }
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         JukeMenu_Sw = 0;
         scstate = 0;
         scstPos = 0;
@@ -8573,7 +8579,7 @@ static int TsJukeObjAnime2(int isOut) {
             }
             MenuDataDiskVolume(pfw->bgmFadeVol);
         }
-        if (TsSCFADE_Set(5, 60, 2)) {
+        if (TsSCFADE_Set(SCFADE_FROM_CAPTURE, 60, SCFADE_LAYER_UNDER_MENUS)) {
             break;
         }
         state = 0x5020;
@@ -8805,7 +8811,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     static int opt_vibr;
     static int opt_oneb;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         pfw->state = 0;
         pfw->selno = 0;
         opt_lang = pP3GameState->pGameStatus->language_type;
@@ -8849,7 +8855,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     }
 
     state = pfw->state;
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         return 0;
     }
 
@@ -9088,12 +9094,12 @@ static void TsUserList_SetCurDispUserData(USER_DATA *psrc) {
 static void TsUserList_SetType(USERLISTTYPE_TABLE *ptbl, int mode, int curTag) {
     USERLIST_MENU *pfw = &UserListMenu;
 
-    TsUserList_Flow(1, 0, 0);
+    TsUserList_Flow(MNFLOW_INIT, 0, 0);
 
     pfw->ptypttbl = ptbl;
     pfw->gameMode = mode;
 
-    TsUserList_Flow(3, curTag, 0);
+    TsUserList_Flow(ULIST_FLOW_SET_TAG, curTag, 0);
 }
 
 static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
@@ -9125,7 +9131,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     int            fileNo;
 
     TsUserList_TagChangeAble(pfw, &no);
-    TsUserList_Flow(2, 0, 0);
+    TsUserList_Flow(MNFLOW_END, 0, 0);
 
     fileNo = -1;
     ptbl = &UserListTbl[pfw->ptypttbl->typeNo[no]];
@@ -9172,7 +9178,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     int            sflg;
     int            errNo;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         pfw->curFileNo = -1;
         pfw->state = 0;
         pfw->wuser = UserWork;
@@ -9194,8 +9200,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->mcerrNo = 0;
         pfw->mcRetTag = 0;
 
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
 
         memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
         for (i = 0; i < 5; i++) {
@@ -9204,7 +9210,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         return 0;
     }
 
-    if (flg == 3) {
+    if (flg == ULIST_FLOW_SET_TAG) {
         if (pfw->ptypttbl != NULL && TsUserList_SetCurTag(pfw, tpad)) {
             return 0;
         }
@@ -9215,8 +9221,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->exitflg = 0;
         pfw->userMax = TsUserList_SortUser();
 
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
 
         pfw->curuser = 0;
         pfw->curPageTop = 0;
@@ -9250,7 +9256,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
 
     state = pfw->state;
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         pfw->isNameIn = 0;
         pfw->pusrlst = NULL;
         pfw->exitflg = 0;
@@ -9270,8 +9276,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             TsCMPMes_SetMes(-1);
             TsMCAMes_SetMes(-1);
             pfw->isNameIn = 0;
-            TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-            TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+            TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+            TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         }
     }
 
@@ -9281,7 +9287,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             break;
         }
         pfw->nTag = pfw->mcRetTag;
-        TsUserList_Flow(3, pfw->nTag, 0);
+        TsUserList_Flow(ULIST_FLOW_SET_TAG, pfw->nTag, 0);
         state = 0x3000;
         break;
     case 0:
@@ -9339,7 +9345,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
                 pfw->mcRetTag = pfw->nTag;
             }
             pfw->nTag = sely;
-            TsUserList_Flow(3, sely, 0);
+            TsUserList_Flow(ULIST_FLOW_SET_TAG, sely, 0);
             break;
         }
 
@@ -9493,9 +9499,9 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->wuser->fileNo = TsUserList_GetCurFileNo(NULL);
 
         if (pfw->dataMode == P3MC_MODE_LOG) {
-            TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name);
+            TsNAMEINBox_Flow(MNFLOW_INIT, &pfw->nameinw[0], (u_int)pfw->wuser->name);
         } else {
-            TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name1);
+            TsNAMEINBox_Flow(MNFLOW_INIT, &pfw->nameinw[0], (u_int)pfw->wuser->name1);
         }
 
         if (pfw->dataMode == P3MC_MODE_LOG) {
@@ -9505,7 +9511,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         } else {
             pfw->nameinw[0].dispType = 1;
             if (pfw->gameMode == 1) {
-                TsNAMEINBox_Flow(1, &pfw->nameinw[1], (u_int)pfw->wuser->name2);
+                TsNAMEINBox_Flow(MNFLOW_INIT, &pfw->nameinw[1], (u_int)pfw->wuser->name2);
                 pfw->nameinw[1].dispType = 2;
             }
         }
@@ -9518,15 +9524,15 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     case 0x4030:
         pfw->nameinw[0].isCan = 1;
         ret2 = 1;
-        ret = TsNAMEINBox_Flow(0, &pfw->nameinw[0], tpad);
+        ret = TsNAMEINBox_Flow(MNFLOW_RUN, &pfw->nameinw[0], tpad);
         if (pfw->gameMode == 1 && pfw->dataMode != P3MC_MODE_LOG) {
             pfw->nameinw[1].isCan = 1;
-            ret2 = TsNAMEINBox_Flow(0, &pfw->nameinw[1], tpad2);
+            ret2 = TsNAMEINBox_Flow(MNFLOW_RUN, &pfw->nameinw[1], tpad2);
         }
 
         if (ret == -2 || ret2 == -2) {
-            TsNAMEINBox_Flow(3, &pfw->nameinw[0], 0);
-            TsNAMEINBox_Flow(3, &pfw->nameinw[1], 0);
+            TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, &pfw->nameinw[0], 0);
+            TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, &pfw->nameinw[1], 0);
         }
         if (ret == -1 || ret2 == -1) {
             state = 0x4f10;
@@ -9540,8 +9546,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         break;
     case 0x4f10:
         state = 0x3000;
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         pfw->exitflg = 1;
         break;
     case 0xe000:
@@ -9575,8 +9581,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->exitflg = 0;
         pfw->state = 0x3000;
         pfw->isNameIn = 0;
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         return 1;
     case 0xff20:
         if (P3MC_CheckChange() < 0) {
@@ -9585,14 +9591,14 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->isNameIn = 0;
         pfw->exitflg = 1;
         TsMCAMes_SetMes(-1);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         return -1;
     case 0xff40:
         pfw->isNameIn = 0;
         pfw->exitflg = 1;
-        TsNAMEINBox_Flow(2, &pfw->nameinw[0], 0);
-        TsNAMEINBox_Flow(2, &pfw->nameinw[1], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         return -3;
     }
 
@@ -9963,7 +9969,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     int state;
     int aflg;
 
-    if (flg == 1) {
+    if (flg == MNFLOW_INIT) {
         TsANIME_Init(&pfw->awork);
         pfw->isOn = 1;
         pfw->isCan = 1;
@@ -9981,7 +9987,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         return 0;
     }
 
-    if (flg == 2) {
+    if (flg == MNFLOW_END) {
         pfw->isOn = 0;
         pfw->state = 0;
         pfw->nameMsk = 0;
@@ -9990,7 +9996,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         return 0;
     }
 
-    if (flg == 3) {
+    if (flg == NAMEIN_FLOW_CLOSE) {
         if (pfw->isOn && pfw->state < 0xff30) {
             TsANIME_Init(&pfw->awork);
             pfw->nameMsk = 0;
@@ -10099,7 +10105,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         }
         break;
     case 0xff20:
-        TsNAMEINBox_Flow(3, pfw, 0);
+        TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, pfw, 0);
         return -2;
     case 0xff30:
         pfw->onTime = 0;
@@ -10253,19 +10259,19 @@ int TsSCFADE_Set(int flg, int num, int prio) {
     int     t;
 
     switch (flg) {
-    case 1:
-    case 5:
+    case SCFADE_FROM_BLACK:
+    case SCFADE_FROM_CAPTURE:
         if (pfw->state != flg) {
-            TsSCFADE_Flow(1, 0);
+            TsSCFADE_Flow(MNFLOW_INIT, 0);
             pfw->ton = 256;
         } else {
             state = 1;
         }
         break;
-    case 2:
-    case 6:
+    case SCFADE_TO_BLACK:
+    case SCFADE_TO_CAPTURE:
         if (pfw->state != flg) {
-            TsSCFADE_Flow(1, 0);
+            TsSCFADE_Flow(MNFLOW_INIT, 0);
             pfw->ton = 0;
         } else {
             state = 1;
@@ -10298,9 +10304,9 @@ int TsSCFADE_Set(int flg, int num, int prio) {
 static void TsSCFADE_Flow(int flg, int prm) {
     SCFADE *pfw = &ScFade;
 
-    if (flg == 1 || flg == 3) {
+    if (flg == MNFLOW_INIT || flg == SCFADE_FLOW_HOLD) {
         memset(pfw, 0, sizeof(*pfw));
-        if (flg == 3) {
+        if (flg == SCFADE_FLOW_HOLD) {
             pfw->ton = prm;
         }
         return;
@@ -10311,18 +10317,18 @@ static void TsSCFADE_Flow(int flg, int prm) {
     }
 
     switch (pfw->state) {
-    case 1:
-    case 5:
+    case SCFADE_FROM_BLACK:
+    case SCFADE_FROM_CAPTURE:
         pfw->ton = 256 - ((pfw->ttim * 256) / pfw->ttim0);
         if (pfw->ton <= 0) {
-            TsSCFADE_Flow(1, 0);
+            TsSCFADE_Flow(MNFLOW_INIT, 0);
         }
         break;
-    case 2:
-    case 6:
+    case SCFADE_TO_BLACK:
+    case SCFADE_TO_CAPTURE:
         pfw->ton = (pfw->ttim * 256) / pfw->ttim0;
         if (pfw->ton >= 256) {
-            TsSCFADE_Flow(3, 256);
+            TsSCFADE_Flow(SCFADE_FLOW_HOLD, 256);
         }
         break;
     }
@@ -10337,8 +10343,8 @@ static void TsSCFADE_Flow(int flg, int prm) {
     }
 
     switch (pfw->state) {
-    case 5:
-    case 6:
+    case SCFADE_FROM_CAPTURE:
+    case SCFADE_TO_CAPTURE:
         spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->zx = spr->zy = 1.0f;
         PkALPHA_Add(pk, GS_ALPHA_FIXED((pfw->ton * 128) >> 8));
@@ -10347,8 +10353,8 @@ static void TsSCFADE_Flow(int flg, int prm) {
         PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
         PkALPHA_Add(pk, 0x44);
         break;
-    case 1:
-    case 2:
+    case SCFADE_FROM_BLACK:
+    case SCFADE_TO_BLACK:
     default:
         spr->zx = spr->zy = 1.0f;
         abgr = GetDToneColor(0, 0x80000000, pfw->ton);
