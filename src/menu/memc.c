@@ -550,6 +550,10 @@ int memc_get_dir_continue(sceMcTblGetDir *dir, int max) {
     return re;
 }
 
+/* Private result code: sceMcResNoFormat reported while getting the card info, i.e. an
+ * unformatted card was inserted in place of the previous one. */
+#define MEMC_RES_SWAPPED_UNFORMATTED (-2000)
+
 static int memc_mansub_ErrChk(int result) {
     MEMC_STAT *pmw = &memc_stat;
 
@@ -570,8 +574,7 @@ static int memc_mansub_ErrChk(int result) {
     case sceMcResNoFormat:
         pmw->func = MEMC_FUNC_IDLE;
         return MEMC_ERR_UNFORMATTED;
-    /* Switched to unformatted MC (sceMcGetInfo) */
-    case -2000: /* sceMcResNoFormat */
+    case MEMC_RES_SWAPPED_UNFORMATTED:
         pmw->func = MEMC_FUNC_IDLE;
         pmw->isChange = TRUE;
         return MEMC_ERR_SWAP_UNFORMATTED;
@@ -661,7 +664,7 @@ static int memc_mansub_GetInfo(int result) {
                 if (result != sceMcResNoFormat) {
                     re = result;
                 } else {
-                    re = -2000;
+                    re = MEMC_RES_SWAPPED_UNFORMATTED;
                 }
 
                 return memc_mansub_ErrChk(re);
@@ -1163,7 +1166,7 @@ static int memc_manager_chk(int mode) {
             return memc_manager_save(result);
         case MEMC_FUNC_PORTCHECK:
             if (result == sceMcResNoFormat) {
-                result = -2000;
+                result = MEMC_RES_SWAPPED_UNFORMATTED;
             }
             return memc_mansub_ErrChk(result);
         case MEMC_FUNC_FORMAT:
