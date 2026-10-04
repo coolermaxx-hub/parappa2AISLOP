@@ -50,13 +50,22 @@ enum {
     P3MC_MODE_ALL = 3
 };
 
+/* USER_DATA::flg */
+enum {
+    P3MC_USER_NEW = 0,    /* the "new save" row of a list: no file yet */
+    P3MC_USER_VALID = 1,
+    P3MC_USER_BROKEN = 2  /* a damaged file, listed as "(BROKEN)" */
+};
+/* USER_DATA::fileNo of the new-save row when the card has no room for another file. */
+#define P3MC_FILE_NONE 0xffff
+
 typedef struct { // 0x2664
     /* 0x0000 */ char name[12];
     /* 0x000c */ char name1[12];
     /* 0x0018 */ char name2[12];
     /* 0x0024 */ u_short stageNo;
     /* 0x0026 */ u_short fileNo;
-    /* 0x0028 */ u_char flg;
+    /* 0x0028 */ u_char flg; /* P3MC_USER_* */
     /* 0x0029 */ u_char mode;
     /* 0x002a */ u_char isVs; /* PLAY_MODE of the stage that was played */
     /* 0x002b */ u_char vsLev;

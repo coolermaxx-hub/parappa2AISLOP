@@ -456,6 +456,16 @@ typedef struct { // 0x18
     /* 0x10 */ int cmpMesTbl[2];
 } USERLIST_TYPE;
 
+/* Characters in a player name. */
+#define USERNAME_LEN 8
+
+/* NAMEINW::nameMsk: how the user list shows the name being typed. */
+enum {
+    NAMEIN_MSK_OFF = 0,
+    NAMEIN_MSK_EDIT = 1,  /* the box is open: show the name as it is typed */
+    NAMEIN_MSK_DONE = 2
+};
+
 typedef struct { // 0x44
     /* 0x00 */ int state;
     /* 0x04 */ int isOn;
@@ -467,7 +477,7 @@ typedef struct { // 0x44
     /* 0x28 */ int nameMsk;
     /* 0x2c */ int onTime;
     /* 0x30 */ char *desname;
-    /* 0x34 */ u_short curnchr[8];
+    /* 0x34 */ u_short curnchr[USERNAME_LEN]; /* USERNAME_CHAR values */
 } NAMEINW;
 
 typedef struct { // 0x118

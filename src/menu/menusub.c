@@ -1890,6 +1890,13 @@ static void  TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name);
 /* static */ int   TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad);
 /* TsNAMEINBox_Flow: start the box's closing animation. */
 #define NAMEIN_FLOW_CLOSE 3
+/* TsNAMEINBox_Flow results with MNFLOW_RUN. */
+enum {
+    NAMEIN_RES_CANCEL = -2,  /* the player backed out: the caller closes every open box */
+    NAMEIN_RES_CLOSED = -1,  /* closed by NAMEIN_FLOW_CLOSE */
+    NAMEIN_RES_RUNNING = 0,
+    NAMEIN_RES_ENTERED = 1   /* the name was stored into the caller's buffer */
+};
 /* static */ void  TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side);
 static void  TsSCFADE_Flow(int flg, int prm);
 /* TsSCFADE_Flow: like MNFLOW_INIT, but leave the screen covered at tone prm. */
@@ -4159,7 +4166,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     UserWork->mode = mode;
-    UserWork->flg = 1;
+    UserWork->flg = P3MC_USER_VALID;
 
     round = pP3GameState->pLog->nRound;
     for (i = 0; i < 8; i++) {
@@ -6626,7 +6633,7 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
         P3MC_RANKSCORE *pRank;
         USER_DATA      *pUser = UserLst->pUserTbl[i];
 
-        if (pUser->flg == 1) {
+        if (pUser->flg == P3MC_USER_VALID) {
             if (flag == 0) {
                 n     = pUser->stageRank[stageNo].nSplay;
                 pRank = pUser->stageRank[stageNo].splay;
@@ -6644,7 +6651,7 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
         P3MC_RANKSCORE *pRank;
         USER_DATA      *pUser = UserLst->pUserTbl[i];
 
-        if (pUser->flg == 1) {
+        if (pUser->flg == P3MC_USER_VALID) {
             if (flag == 0) {
                 if (pUser->isVs != 0) {
                     continue;
@@ -9128,7 +9135,7 @@ static int TsUserList_GetCurFileNo(int *isBroken) {
     USER_DATA     *puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
 
     if (isBroken != NULL) {
-        *isBroken = (puser->flg == 2);
+        *isBroken = (puser->flg == P3MC_USER_BROKEN);
     }
 
     return puser->fileNo;
@@ -9168,7 +9175,7 @@ static void TsUserList_SetCurUserData(USER_DATA *psrc) {
     }
 
     puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
-    if (puser->flg == 0) {
+    if (puser->flg == P3MC_USER_NEW) {
         P3MC_AddUser(pfw->pusrlst, pfw->dataMode, psrc);
     } else {
         *puser = *psrc;
@@ -9283,6 +9290,45 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return 0;
 }
 
+/* Rows of the user list on screen at once. */
+#define ULST_ROWS 5
+
+/* How a cursor move in the user list went (sflg). */
+enum {
+    ULST_BLOCKED = 0,       /* at the top or bottom of the list */
+    ULST_MOVED = 1,
+    ULST_SCROLLED_UP = 2,
+    ULST_SCROLLED_DOWN = 3
+};
+
+/* TsUserList_Flow states. */
+enum {
+    ULST_START = 0,
+    ULST_TAG_ERROR = 0x1000,           /* a tab change hit a card error: show it, then go back */
+    ULST_SELECT_START = 0x3000,
+    ULST_SELECT = 0x3100,
+    ULST_PICKED = 0x3f00,              /* flash the chosen row */
+    ULST_PICKED_NEXT = 0x3f08,
+    ULST_CANCEL = 0x3f10,
+    ULST_SAVE_CHECK = 0x4000,
+    ULST_SAVE_NO_ROOM = 0x4005,        /* the new-save row on a full card */
+    ULST_SAVE_OVERWRITE = 0x4010,      /* ask before writing over a save */
+    ULST_SAVE_OVERWRITE_WAIT = 0x4015,
+    ULST_NAME_START = 0x4020,
+    ULST_NAME = 0x4030,
+    ULST_NAME_DONE = 0x4f00,
+    ULST_NAME_CANCELLED = 0x4f10,
+    ULST_LOAD_CONFIRM = 0x5000,
+    ULST_LOAD_CONFIRM_WAIT = 0x5010,
+    ULST_CARD_CHANGED = 0xe000,        /* states from here on do not watch the card */
+    ULST_CARD_CHANGED_DONE = 0xee10,
+    ULST_SAVE_READY = 0xf000,
+    ULST_SAVE_READY_MES_OFF = 0xf100,
+    ULST_EXIT_PICKED = 0xff10,
+    ULST_EXIT_CANCELLED = 0xff20,
+    ULST_EXIT_RECHECK = 0xff40
+};
+
 /* static */ int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
     USERLIST_MENU *pfw = &UserListMenu;
     USER_DATA     *puser;
@@ -9302,7 +9348,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
 
     if (flg == MNFLOW_INIT) {
         pfw->curFileNo = -1;
-        pfw->state = 0;
+        pfw->state = ULST_START;
         pfw->wuser = UserWork;
         pfw->ptypttbl = NULL;
         pfw->scene = NULL;
@@ -9326,7 +9372,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
 
         memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i < ULST_ROWS; i++) {
             TsCmnCell_CusorMASK(&pfw->cellcs[i]);
         }
         return 0;
@@ -9350,8 +9396,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->curPageTop = 0;
 
         nCell = pfw->userMax;
-        if (nCell > 5) {
-            nCell = 5;
+        if (nCell > ULST_ROWS) {
+            nCell = ULST_ROWS;
         }
 
         if (pfw->curFileNo >= 0) {
@@ -9363,7 +9409,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         }
 
         memset(pfw->cellcs, 0, sizeof(pfw->cellcs));
-        for (i = nCell; i < 5; i++) {
+        for (i = nCell; i < ULST_ROWS; i++) {
             TsCmnCell_CusorMASK(&pfw->cellcs[i]);
         }
 
@@ -9391,10 +9437,11 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         return 0;
     }
 
-    if (state < 0xe000) {
+    /* Watch the card everywhere except in the card-change and exit states. */
+    if (state < ULST_CARD_CHANGED) {
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
-            state = 0xe000;
+            state = ULST_CARD_CHANGED;
             TsCMPMes_SetMes(-1);
             TsMCAMes_SetMes(-1);
             pfw->isNameIn = 0;
@@ -9404,21 +9451,21 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     }
 
     switch (state) {
-    case 0x1000:
+    case ULST_TAG_ERROR:
         if (pfw->mcerrNo != 0 && McErrorMess(pfw->mcerrNo) < 0) {
             break;
         }
         pfw->nTag = pfw->mcRetTag;
         TsUserList_Flow(ULIST_FLOW_SET_TAG, pfw->nTag, 0);
-        state = 0x3000;
+        state = ULST_SELECT_START;
         break;
-    case 0:
-    case 0x3000:
+    case ULST_START:
+    case ULST_SELECT_START:
         pfw->isNameIn = 0;
-        state = 0x3100;
+        state = ULST_SELECT;
         pfw->exitflg = 0;
         /* fallthrough */
-    case 0x3100:
+    case ULST_SELECT:
         if (pfw->cmpMesTbl != NULL) {
             TsCMPMes_SetMes(pfw->cmpMesTbl[0]);
         }
@@ -9462,7 +9509,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             dumy = sely;
             err = TsUserList_TagChangeAble(pfw, &dumy);
             if (err) {
-                state = 0x1000;
+                state = ULST_TAG_ERROR;
                 pfw->mcerrNo = err;
                 pfw->mcRetTag = pfw->nTag;
             }
@@ -9491,23 +9538,23 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         }
 
         if (osely != sely) {
-            sflg = 1;
+            sflg = ULST_MOVED;
             if (sely < 0) {
-                sflg = 2;
+                sflg = ULST_SCROLLED_UP;
                 pfw->curPageTop += sely;
                 sely = 0;
             }
-            if (sely >= 5) {
-                sflg = 3;
-                pfw->curPageTop += sely - 4;
-                sely = 4;
+            if (sely >= ULST_ROWS) {
+                sflg = ULST_SCROLLED_DOWN;
+                pfw->curPageTop += sely - (ULST_ROWS - 1);
+                sely = ULST_ROWS - 1;
             }
             if (pfw->curPageTop < 0) {
                 pfw->curPageTop = 0;
-                sflg = 0;
+                sflg = ULST_BLOCKED;
             }
             if (pfw->curPageTop + sely >= pfw->userMax) {
-                sflg = 0;
+                sflg = ULST_BLOCKED;
                 if (pfw->curPageTop == 0) {
                     sely = pfw->userMax - 1;
                 } else {
@@ -9537,86 +9584,86 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
                 TsCmnCell_CusorON(&pfw->cellcs[sely]);
             }
 
-            if (sflg == 2) {
+            if (sflg == ULST_SCROLLED_UP) {
                 TsCmnCell_CusorOFF(&pfw->cellcs[sely + 1]);
                 TsCmnCell_CusorON(&pfw->cellcs[sely]);
-            } else if (sflg == 3) {
+            } else if (sflg == ULST_SCROLLED_DOWN) {
                 TsCmnCell_CusorOFF(&pfw->cellcs[sely - 1]);
                 TsCmnCell_CusorON(&pfw->cellcs[sely]);
             }
         }
 
         if (tpad & SCE_PADRright) {
-            state = 0x3f00;
+            state = ULST_PICKED;
             TsCmnCell_CusorSEL(&pfw->cellcs[pfw->curuser]);
             pfw->wtim = 28;
             TSSNDPLAY(VSND_SELPOPUP);
         }
         if (tpad & SCE_PADRdown) {
-            state = 0x3f10;
+            state = ULST_CANCEL;
             TSSNDPLAY(VSND_CANCEL);
         }
         break;
-    case 0x3f00:
+    case ULST_PICKED:
         if (--pfw->wtim <= 0) {
-            state = 0x3f08;
+            state = ULST_PICKED_NEXT;
         }
         break;
-    case 0x3f08:
-        state = pfw->isSave ? 0x4000 : 0x5000;
+    case ULST_PICKED_NEXT:
+        state = pfw->isSave ? ULST_SAVE_CHECK : ULST_LOAD_CONFIRM;
         break;
-    case 0x3f10:
+    case ULST_CANCEL:
         pfw->exitflg = 1;
-        state = 0xff20;
+        state = ULST_EXIT_CANCELLED;
         break;
-    case 0x5000:
-        state = 0x5010;
+    case ULST_LOAD_CONFIRM:
+        state = ULST_LOAD_CONFIRM_WAIT;
         TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 22));
         /* fallthrough */
-    case 0x5010:
+    case ULST_LOAD_CONFIRM_WAIT:
         ret = TsMCAMes_GetSelect();
         if (ret == 0) {
             break;
         }
         if (ret == 1) {
-            state = 0xff10;
+            state = ULST_EXIT_PICKED;
             break;
         }
-        state = 0x3000;
+        state = ULST_SELECT_START;
         TsMCAMes_SetMes(-1);
         break;
-    case 0x4000:
+    case ULST_SAVE_CHECK:
         puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
-        state = 0x4010;
-        if (puser->fileNo != 0xffff) {
+        state = ULST_SAVE_OVERWRITE;
+        if (puser->fileNo != P3MC_FILE_NONE) {
             break;
         }
-        state = 0x4005;
+        state = ULST_SAVE_NO_ROOM;
         /* fallthrough */
-    case 0x4005:
+    case ULST_SAVE_NO_ROOM:
         errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? 15 : 7;
         if (McErrorMess(errNo) >= 0) {
-            state = 0x3000;
+            state = ULST_SELECT_START;
         }
         break;
-    case 0x4010:
+    case ULST_SAVE_OVERWRITE:
         puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
-        if (!puser->flg) {
-            state = 0x4020;
+        if (puser->flg == P3MC_USER_NEW) {
+            state = ULST_NAME_START;
             break;
         }
-        state = 0x4015;
+        state = ULST_SAVE_OVERWRITE_WAIT;
         TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 15));
         /* fallthrough */
-    case 0x4015:
+    case ULST_SAVE_OVERWRITE_WAIT:
         ret = TsMCAMes_GetSelect();
         if (ret == 0) {
             break;
         }
-        state = (ret == 1) ? 0x4020 : 0x3000;
+        state = (ret == 1) ? ULST_NAME_START : ULST_SELECT_START;
         TsMCAMes_SetMes(-1);
         break;
-    case 0x4020:
+    case ULST_NAME_START:
         pfw->isNameIn = 1;
         pfw->wuser->fileNo = TsUserList_GetCurFileNo(NULL);
 
@@ -9628,54 +9675,54 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
 
         if (pfw->dataMode == P3MC_MODE_LOG) {
             pfw->nameinw[0].dispType = 0;
-        } else if (pfw->gameMode == 0) {
+        } else if (pfw->gameMode == PLAY_MODE_SINGLE) {
             pfw->nameinw[0].dispType = 0;
         } else {
             pfw->nameinw[0].dispType = 1;
-            if (pfw->gameMode == 1) {
+            if (pfw->gameMode == PLAY_MODE_VS_MAN) {
                 TsNAMEINBox_Flow(MNFLOW_INIT, &pfw->nameinw[1], (u_int)pfw->wuser->name2);
                 pfw->nameinw[1].dispType = 2;
             }
         }
 
-        state = 0x4030;
+        state = ULST_NAME;
         if (pfw->cmpMesTbl != NULL) {
             TsCMPMes_SetMes(pfw->cmpMesTbl[1]);
         }
         /* fallthrough */
-    case 0x4030:
+    case ULST_NAME:
         pfw->nameinw[0].isCan = 1;
-        ret2 = 1;
+        ret2 = NAMEIN_RES_ENTERED;
         ret = TsNAMEINBox_Flow(MNFLOW_RUN, &pfw->nameinw[0], tpad);
-        if (pfw->gameMode == 1 && pfw->dataMode != P3MC_MODE_LOG) {
+        if (pfw->gameMode == PLAY_MODE_VS_MAN && pfw->dataMode != P3MC_MODE_LOG) {
             pfw->nameinw[1].isCan = 1;
             ret2 = TsNAMEINBox_Flow(MNFLOW_RUN, &pfw->nameinw[1], tpad2);
         }
 
-        if (ret == -2 || ret2 == -2) {
+        if (ret == NAMEIN_RES_CANCEL || ret2 == NAMEIN_RES_CANCEL) {
             TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, &pfw->nameinw[0], 0);
             TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, &pfw->nameinw[1], 0);
         }
-        if (ret == -1 || ret2 == -1) {
-            state = 0x4f10;
+        if (ret == NAMEIN_RES_CLOSED || ret2 == NAMEIN_RES_CLOSED) {
+            state = ULST_NAME_CANCELLED;
         }
-        if (ret == 1 && ret2 == 1) {
-            state = 0x4f00;
+        if (ret == NAMEIN_RES_ENTERED && ret2 == NAMEIN_RES_ENTERED) {
+            state = ULST_NAME_DONE;
         }
         break;
-    case 0x4f00:
-        state = 0xf000;
+    case ULST_NAME_DONE:
+        state = ULST_SAVE_READY;
         break;
-    case 0x4f10:
-        state = 0x3000;
+    case ULST_NAME_CANCELLED:
+        state = ULST_SELECT_START;
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
         pfw->exitflg = 1;
         break;
-    case 0xe000:
+    case ULST_CARD_CHANGED:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
-            state = 0xff40;
+            state = ULST_EXIT_RECHECK;
             break;
         }
         err = 3;
@@ -9683,30 +9730,30 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             err = (pfw->dataMode == P3MC_MODE_REPLAY) ? 60 : 50;
         }
         if (McErrorMess(err) >= 0) {
-            state = 0xee10;
+            state = ULST_CARD_CHANGED_DONE;
         }
         break;
-    case 0xee10:
-        state = 0xff20;
+    case ULST_CARD_CHANGED_DONE:
+        state = ULST_EXIT_CANCELLED;
         break;
-    case 0xf000:
+    case ULST_SAVE_READY:
         TsUserList_SetCurDispUserData(pfw->wuser);
-        pfw->state = 0xf100;
+        pfw->state = ULST_SAVE_READY_MES_OFF;
         /* fallthrough */
-    case 0xf100:
+    case ULST_SAVE_READY_MES_OFF:
         TsMCAMes_SetMes(-1);
         /* fallthrough */
-    case 0xff10:
+    case ULST_EXIT_PICKED:
         if (P3MC_CheckChange() < 0) {
             break;
         }
         pfw->exitflg = 0;
-        pfw->state = 0x3000;
+        pfw->state = ULST_SELECT_START;
         pfw->isNameIn = 0;
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
-        return 1;
-    case 0xff20:
+        return ULIST_PICKED;
+    case ULST_EXIT_CANCELLED:
         if (P3MC_CheckChange() < 0) {
             break;
         }
@@ -9715,13 +9762,13 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         TsMCAMes_SetMes(-1);
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
-        return -1;
-    case 0xff40:
+        return ULIST_CANCELLED;
+    case ULST_EXIT_RECHECK:
         pfw->isNameIn = 0;
         pfw->exitflg = 1;
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[0], 0);
         TsNAMEINBox_Flow(MNFLOW_END, &pfw->nameinw[1], 0);
-        return -3;
+        return ULIST_RECHECK;
     }
 
     pfw->state = state;
@@ -9861,8 +9908,8 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             user = &pfw->pusrdspWk->pUserDisp[k];
 
             if (pfw->curuser == i) {
-                pflg = (pfw->nameinw[0].nameMsk == 1) ? 2 : 0;
-                if (pfw->nameinw[1].nameMsk == 1) {
+                pflg = (pfw->nameinw[0].nameMsk == NAMEIN_MSK_EDIT) ? 2 : 0;
+                if (pfw->nameinw[1].nameMsk == NAMEIN_MSK_EDIT) {
                     pflg |= 4;
                 }
                 if (pfw->nameinw[0].nameMsk || pfw->nameinw[1].nameMsk) {
@@ -9929,7 +9976,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
     spr->zy = 0.5f;
     PkALPHA_Add(pk, 0x44);
 
-    if (user == NULL || user->flg == 0) {
+    if (user == NULL || user->flg == P3MC_USER_NEW) {
         spr->rgba0 = MN_COLOR_NEUTRAL;
         TsPatPut(pk, spr, (isLog >= 0) ? ((isLog < 2) ? &LG_NEWDATA_MARK : &RP_NEWDATA_MARK) : &RP_NEWDATA_MARK, px, py);
         return;
@@ -9972,13 +10019,13 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
         }
     }
 
-    if (user->flg == 2) {
+    if (user->flg == P3MC_USER_BROKEN) {
         strcpy(buf, " STAGE?");
     }
     ps = strpos;
     MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
 
-    if (user->flg != 2 && user->date.year != 0) {
+    if (user->flg != P3MC_USER_BROKEN && user->date.year != 0) {
         m = user->date.month;
         if (m >= 19) {
             m = 18;
@@ -10086,6 +10133,20 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     *name = '\0';
 }
 
+/* TsNAMEINBox_Flow states. */
+enum {
+    NAMEIN_OPEN = 0,
+    NAMEIN_OPENING = 0x80,
+    NAMEIN_EDIT_START = 0x1000,
+    NAMEIN_EDIT = 0x4100,             /* positions 0-7 are characters, USERNAME_LEN is "end" */
+    NAMEIN_ENTERED = 0xff00,          /* hold the confirmed name for 30 frames */
+    NAMEIN_ENTERED_CLOSE = 0xff10,
+    NAMEIN_ENTERED_CLOSING = 0xff18,
+    NAMEIN_CANCELLED = 0xff20,
+    NAMEIN_CLOSE = 0xff30,            /* NAMEIN_FLOW_CLOSE: close without a name */
+    NAMEIN_CLOSING = 0xff38
+};
+
 /* static */ int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
     int i;
     int state;
@@ -10095,13 +10156,13 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         TsANIME_Init(&pfw->awork);
         pfw->isOn = 1;
         pfw->isCan = 1;
-        pfw->nameMsk = 0;
+        pfw->nameMsk = NAMEIN_MSK_OFF;
         pfw->onTime = 0;
         pfw->desname = (char *)tpad;
-        pfw->state = 0;
+        pfw->state = NAMEIN_OPEN;
         pfw->dispType = 0;
         if (*(char *)tpad != '\0') {
-            pfw->curnpos = 8;
+            pfw->curnpos = USERNAME_LEN;
         } else {
             pfw->curnpos = 0;
         }
@@ -10111,18 +10172,18 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
 
     if (flg == MNFLOW_END) {
         pfw->isOn = 0;
-        pfw->state = 0;
-        pfw->nameMsk = 0;
+        pfw->state = NAMEIN_OPEN;
+        pfw->nameMsk = NAMEIN_MSK_OFF;
         pfw->onTime = 0;
         TsANIME_Init(&pfw->awork);
         return 0;
     }
 
     if (flg == NAMEIN_FLOW_CLOSE) {
-        if (pfw->isOn && pfw->state < 0xff30) {
+        if (pfw->isOn && pfw->state < NAMEIN_CLOSE) {
             TsANIME_Init(&pfw->awork);
-            pfw->nameMsk = 0;
-            pfw->state = 0xff30;
+            pfw->nameMsk = NAMEIN_MSK_OFF;
+            pfw->state = NAMEIN_CLOSE;
         }
         return 0;
     }
@@ -10131,20 +10192,23 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     state = pfw->state;
 
     switch (state) {
-    case 0:
-        state = 0x80;
+    case NAMEIN_OPEN:
+        state = NAMEIN_OPENING;
         TsNAMEINBox_SetName(pfw, (u_char *)pfw->desname);
         pfw->isOn = 1;
-        pfw->nameMsk = 1;
+        pfw->nameMsk = NAMEIN_MSK_EDIT;
         TsANIME_Start(&pfw->awork, ANIME_WIN_OPEN, 15);
         aflg = TsANIME_Poll(&pfw->awork);
-    case 0x80:
+        /* fallthrough */
+    case NAMEIN_OPENING:
         if (aflg != 0) {
             break;
         }
-    case 0x1000:
-        state = 0x4100;
-    case 0x4100:
+        /* fallthrough */
+    case NAMEIN_EDIT_START:
+        state = NAMEIN_EDIT;
+        /* fallthrough */
+    case NAMEIN_EDIT:
     {
         int sel;
         int osel;
@@ -10156,24 +10220,25 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         if (tpad & SCE_PADLright) {
             sel++;
         }
-        if (sel < 8 && (tpad & SCE_PADRright)) {
+        /* Circle on a character steps to the next one instead of confirming. */
+        if (sel < USERNAME_LEN && (tpad & SCE_PADRright)) {
             sel++;
-            tpad &= ~0x20;
+            tpad &= ~SCE_PADRright;
         }
         if (osel != sel) {
-            sel = TSLOOP(sel, 9);
+            sel = TSLOOP(sel, USERNAME_LEN + 1);
             pfw->curnpos = sel;
             pfw->curchrmode = pfw->curnchr[sel] >> USERNAME_CHAR_SET_SHIFT;
             TSSNDPLAY(VSND_MVCUS_LR);
         }
 
-        if (sel < 8) {
+        if (sel < USERNAME_LEN) {
             sel = pfw->curchrmode;
             if (tpad & SCE_PADselect) {
                 sel++;
             }
             if (pfw->curchrmode != sel) {
-                pfw->curchrmode = TSLOOP(sel, 2);
+                pfw->curchrmode = TSLOOP(sel, PR_ARRAYSIZE(UserName_CharSet));
                 pfw->curnchr[pfw->curnpos] = USERNAME_CHAR(pfw->curchrmode, pfw->curnchr[pfw->curnpos] & USERNAME_CHAR_INDEX_MASK);
                 TSSNDPLAY(VSND_MVCUS_UD);
             }
@@ -10192,59 +10257,62 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         }
     }
 
-        if ((tpad & SCE_PADRright) && pfw->curnpos == 8) {
+        if ((tpad & SCE_PADRright) && pfw->curnpos == USERNAME_LEN) {
             pfw->onTime = 30;
             TsNAMEINBox_GetName(pfw, (u_char *)pfw->desname);
-            state = 0xff00;
+            state = NAMEIN_ENTERED;
             TSSNDPLAY(VSND_SELPOPUP);
         }
         if (pfw->isCan && (tpad & SCE_PADRdown)) {
-            state = 0xff20;
+            state = NAMEIN_CANCELLED;
             TSSNDPLAY(VSND_CANCEL);
         }
         if (tpad & SCE_PADRleft) {
-            for (i = 0; i < 8; i++) {
+            for (i = 0; i < USERNAME_LEN; i++) {
                 TsNAMEINBox_SetName(pfw, UserName_InitialStr2);
                 pfw->curnpos = 0;
             }
             TSSNDPLAY(VSND_CANCEL);
         }
         break;
-    case 0xff00:
+    case NAMEIN_ENTERED:
         if (pfw->onTime != 0) {
             pfw->onTime--;
             break;
         }
-    case 0xff10:
-        pfw->nameMsk = 2;
-        state = 0xff18;
+        /* fallthrough */
+    case NAMEIN_ENTERED_CLOSE:
+        pfw->nameMsk = NAMEIN_MSK_DONE;
+        state = NAMEIN_ENTERED_CLOSING;
         TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
-    case 0xff18:
+        /* fallthrough */
+    case NAMEIN_ENTERED_CLOSING:
         if (aflg == 0) {
             pfw->isOn = 0;
-            return 1;
+            return NAMEIN_RES_ENTERED;
         }
         break;
-    case 0xff20:
+    case NAMEIN_CANCELLED:
         TsNAMEINBox_Flow(NAMEIN_FLOW_CLOSE, pfw, 0);
-        return -2;
-    case 0xff30:
+        return NAMEIN_RES_CANCEL;
+    case NAMEIN_CLOSE:
         pfw->onTime = 0;
-        pfw->nameMsk = 0;
-        state = 0xff38;
+        pfw->nameMsk = NAMEIN_MSK_OFF;
+        state = NAMEIN_CLOSING;
         TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
-    case 0xff38:
+        /* fallthrough */
+    case NAMEIN_CLOSING:
         if (aflg == 0) {
             pfw->isOn = 0;
-            return -1;
+            return NAMEIN_RES_CLOSED;
         }
         break;
     }
 
     pfw->state = state;
-    return 0;
+    return NAMEIN_RES_RUNNING;
 }
 
 /* static */ void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {

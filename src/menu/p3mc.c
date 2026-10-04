@@ -1095,7 +1095,7 @@ static void _P3MC_AddUserBroken(P3MC_USRLST *pUser, int mode, int fno) {
     newUser->stageNo = 0;
     newUser->fileNo = fno;
     newUser->mode = mode;
-    newUser->flg = 2;
+    newUser->flg = P3MC_USER_BROKEN;
 
     newUser->date.year = -0xfb0 - fno;
 
@@ -1165,7 +1165,7 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave) {
                 newUser->fileNo = i;
             }
         } else {
-            newUser->fileNo = -1;
+            newUser->fileNo = P3MC_FILE_NONE;
         }
 
         pUser->nUserMax = 1;
@@ -1216,7 +1216,7 @@ int P3MC_CheckBrokenUser(P3MC_USRLST *pUser, int mode) {
         nmuser = pUser->nLogGet;
 
         for (i = 0; i < nmuser; i++, pmuser++) {
-            if ((*pmuser)->flg == 2) {
+            if ((*pmuser)->flg == P3MC_USER_BROKEN) {
                 nBrk++;
             }
         }
@@ -1227,7 +1227,7 @@ int P3MC_CheckBrokenUser(P3MC_USRLST *pUser, int mode) {
         nmuser = pUser->nRepGet;
 
         for (i = 0; i < nmuser; i++, pmuser++) {
-            if ((*pmuser)->flg == 2) {
+            if ((*pmuser)->flg == P3MC_USER_BROKEN) {
                 nBrk++;
             }
         }
