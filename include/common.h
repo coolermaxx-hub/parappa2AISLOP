@@ -66,9 +66,6 @@ typedef float f32;
 #define PR_CONCAT(x, y) ((x << 16) | (y))
 #define PR_BIT(x) (1 << x)
 
-#define PR_SCOPE() {
-#define PR_SCOPEEND() }
-
 #define PR_ALIGNU(size, align) ((u_int)(size + (align - 1)) & ~(align - 1))
 #define PR_ALIGN(size, align) ((size + (align - 1)) & ~(align - 1))
 

@@ -1674,10 +1674,10 @@ int MbarDispScene(void *para_pp, int frame, int first_f, int useDisp, int drDisp
     saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
-    PR_SCOPE()
-    VCLR_PARA vclr_para = {};
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
-    PR_SCOPEEND()
+    {
+        VCLR_PARA vclr_para = {};
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
+    }
 
     ChangeDrawArea(DrawGetDrawEnvP(drDisp));
     MbarGifInit();
@@ -1744,10 +1744,10 @@ int MbarDispSceneDraw(void *para_pp, int frame, int first_f, int useDisp, int dr
     saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
-    PR_SCOPE()
-    VCLR_PARA vclr_para = {};
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
-    PR_SCOPEEND()
+    {
+        VCLR_PARA vclr_para = {};
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
+    }
 
     ChangeDrawArea(DrawGetDrawEnvP(drDisp));
     MbarGifInit();
@@ -1890,10 +1890,10 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
 
     ChangeDrawArea(DrawGetDrawEnvP(drDisp));
 
-    PR_SCOPE()
-    VCLR_PARA vclr_para = {};
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
-    PR_SCOPEEND()
+    {
+        VCLR_PARA vclr_para = {};
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
+    }
 
     otehonAniCnt++;
     otehonAniCnt %= 140;
@@ -1981,12 +1981,12 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
 
     PrSetMendererRatio(saved_ratio);
 
-    PR_SCOPE()
-    static sceGifPacket mbarNiko_gif;
-    CmnGifADPacketMake(&mbarNiko_gif, NULL);
-    MbarNikoDisp(&mbarNiko_gif);
-    CmnGifADPacketMakeTrans(&mbarNiko_gif);
-    PR_SCOPEEND()
+    {
+        static sceGifPacket mbarNiko_gif;
+        CmnGifADPacketMake(&mbarNiko_gif, NULL);
+        MbarNikoDisp(&mbarNiko_gif);
+        CmnGifADPacketMakeTrans(&mbarNiko_gif);
+    }
 
     return 0;
 }
@@ -1999,10 +1999,10 @@ int MbarDispGuiSceneMbarArea(void *para_pp, int frame, int first_f, int useDisp,
 
     ChangeDrawArea(DrawGetDrawEnvP(drDisp));
 
-    PR_SCOPE()
-    VCLR_PARA vclr_para = {};
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
-    PR_SCOPEEND()
+    {
+        VCLR_PARA vclr_para = {};
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
+    }
 
     otehonAniCnt++;
     otehonAniCnt %= 140;

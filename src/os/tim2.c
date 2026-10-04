@@ -116,14 +116,14 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
 
             current_pp = (char*)info_pp->clut_pp + info_pp->picturH->ClutSize;
 
-            PR_SCOPE()
-            /* BUG: Can't use PSMCT24 for the CLUT PSM. */
-            int ct_tbl[4] = { SCE_GS_PSMCT32, SCE_GS_PSMCT16, SCE_GS_PSMCT24, SCE_GS_PSMCT32 };
-            int Ct = info_pp->picturH->ClutType & 3;
+            {
+                /* BUG: Can't use PSMCT24 for the CLUT PSM. */
+                int ct_tbl[4] = { SCE_GS_PSMCT32, SCE_GS_PSMCT16, SCE_GS_PSMCT24, SCE_GS_PSMCT32 };
+                int Ct = info_pp->picturH->ClutType & 3;
 
-            info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0x3fff, 0x3f, 0x3f, 0xf, 0xf, 0x1, 0x3, 0x3fff, 8, 0x1, 0x1f, 0x7);
-            info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(0, 0, 0, 0, 0, 0, 0, 0, ct_tbl[Ct], 0, 0, 0);
-            PR_SCOPEEND()
+                info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0x3fff, 0x3f, 0x3f, 0xf, 0xf, 0x1, 0x3, 0x3fff, 8, 0x1, 0x1f, 0x7);
+                info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(0, 0, 0, 0, 0, 0, 0, 0, ct_tbl[Ct], 0, 0, 0);
+            }
         }
     }
 

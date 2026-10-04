@@ -53,12 +53,12 @@ void CmnGifFlush(void) {
         }
     }
 
-    PR_SCOPE()
-    int i;
-    for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[i].pBase; i++) {
-        sceGifPkCall(&cmnGifPacket, cmngif_pri[i].pBase, 0, 0, 0);
+    {
+        int i;
+        for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[i].pBase; i++) {
+            sceGifPkCall(&cmnGifPacket, cmngif_pri[i].pBase, 0, 0, 0);
+        }
     }
-    PR_SCOPEEND()
 
     sceGifPkEnd(&cmnGifPacket, 0, 0, 0);
     sceGifPkTerminate(&cmnGifPacket);

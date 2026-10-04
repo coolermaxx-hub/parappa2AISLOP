@@ -1825,15 +1825,15 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
         padType = sindv_pp->global_ply->pad_type;
     }
 
-    PR_SCOPE()
-    int tapset_pos_tmp = sindv_pp->tapset_pos;
-    if (tapset_pos_tmp == -1) {
-        ScrCtrlIndvNextReadLine(sindv_pp, 0);
-        if (tapset_pos_tmp == sindv_pp->tapset_pos) {
-            return;
+    {
+        int tapset_pos_tmp = sindv_pp->tapset_pos;
+        if (tapset_pos_tmp == -1) {
+            ScrCtrlIndvNextReadLine(sindv_pp, 0);
+            if (tapset_pos_tmp == sindv_pp->tapset_pos) {
+                return;
+            }
         }
     }
-    PR_SCOPEEND()
 
     if (sindv_pp->tapset_pos >= sindv_pp->scrdat_pp->tapstr[global_data.tapLevel].tapset_size) {
         printf("TAP !! tap set pos is OVER!!\n");
@@ -2159,36 +2159,36 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
             mkey_pp->key = KiTR;
         }
 
-        PR_SCOPE()
-        int local_map;
-        int xx;
+        {
+            int local_map;
+            int xx;
 
-        local_map = MapNormalNumGet(mkey_pp->ofs_frame + 96);
+            local_map = MapNormalNumGet(mkey_pp->ofs_frame + 96);
 
-        mkey_pp->othOn = FALSE;
+            mkey_pp->othOn = FALSE;
 
-        for (xx = 0; xx < tapset_pp->tapdat_size; xx++) {
-            int map = MapNormalNumGet(tapset_pp->tapdat_pp[xx].time + 96);
-            if (local_map == map) {
-                if (global_data.play_typeL == PLAY_TYPE_ONE) {
-                    mkey_pp->othOn = TRUE;
-                    break;
-                }
+            for (xx = 0; xx < tapset_pp->tapdat_size; xx++) {
+                int map = MapNormalNumGet(tapset_pp->tapdat_pp[xx].time + 96);
+                if (local_map == map) {
+                    if (global_data.play_typeL == PLAY_TYPE_ONE) {
+                        mkey_pp->othOn = TRUE;
+                        break;
+                    }
 
-                if (tapset_pp->tapdat_pp[xx].KeyIndex == mkey_pp->key) {
-                    mkey_pp->othOn = TRUE;
-                    break;
+                    if (tapset_pp->tapdat_pp[xx].KeyIndex == mkey_pp->key) {
+                        mkey_pp->othOn = TRUE;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (mkey_pp->othOn) {
-            MbarHookUseOK();
-        } else {
-            MbarHookUseNG();
-        }
+            if (mkey_pp->othOn) {
+                MbarHookUseOK();
+            } else {
+                MbarHookUseNG();
+            }
     
-        PR_SCOPEEND()
+        }
     }
 }
 
@@ -2480,60 +2480,60 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
         }
     }
 
-    PR_SCOPE()
-    u_char yaku_map[4] = { 16, 17, 1,  0  };
-    u_char yaku_scr[4] = { 6,  9,  15, 18 };
-    u_char yaku_cnt[4] = {};
-    u_char ymin, ymax;
+    {
+        u_char yaku_map[4] = { 16, 17, 1,  0  };
+        u_char yaku_scr[4] = { 6,  9,  15, 18 };
+        u_char yaku_cnt[4] = {};
+        u_char ymin, ymax;
 
-    for (i = 0; i < PR_ARRAYSIZE(yaku_tmp_buf); i++) {
-        for (j = 0; j < 4; j++) {
-            if (yaku_tmp_buf[i] == yaku_map[j]) {
-                yaku_cnt[j]++;
-            }
-        }
-    }
-
-    if (!hane_flag) {
-        ymin = 0;
-
-        for (i = 0; i < 3; i++) {
-            if (yaku_cnt[i] != 0) {
-                ymin++;
+        for (i = 0; i < PR_ARRAYSIZE(yaku_tmp_buf); i++) {
+            for (j = 0; j < 4; j++) {
+                if (yaku_tmp_buf[i] == yaku_map[j]) {
+                    yaku_cnt[j]++;
+                }
             }
         }
 
-        if (ymin == 0 || ymin == 1) {
-            yaku_cnt[3] = 0;
-            yaku_cnt[2] = 0;
-            yaku_cnt[1] = 0;
-            yaku_cnt[0] = 0;
+        if (!hane_flag) {
+            ymin = 0;
+
+            for (i = 0; i < 3; i++) {
+                if (yaku_cnt[i] != 0) {
+                    ymin++;
+                }
+            }
+
+            if (ymin == 0 || ymin == 1) {
+                yaku_cnt[3] = 0;
+                yaku_cnt[2] = 0;
+                yaku_cnt[1] = 0;
+                yaku_cnt[0] = 0;
+            }
         }
-    }
 
-    ymax = min(min(yaku_cnt[0], yaku_cnt[1]), yaku_cnt[2]);
+        ymax = min(min(yaku_cnt[0], yaku_cnt[1]), yaku_cnt[2]);
 
-    if (hane_flag) {
-        if (yaku_cnt[1] == 0 && yaku_cnt[2] == 0) {
-            yaku_cnt[3] = 0;
-            yaku_cnt[2] = 0;
-            yaku_cnt[1] = 0;
-            yaku_cnt[0] = 0;
+        if (hane_flag) {
+            if (yaku_cnt[1] == 0 && yaku_cnt[2] == 0) {
+                yaku_cnt[3] = 0;
+                yaku_cnt[2] = 0;
+                yaku_cnt[1] = 0;
+                yaku_cnt[0] = 0;
+            }
         }
+
+        if (yaku_cnt[3] > ymax) {
+            yaku_cnt[3] = ymax;
+        }
+
+        ret = 0;
+
+        for (i = 0; i < 4; i++) {
+            ret += yaku_cnt[i] * yaku_scr[i];
+        }
+
+        return ret;
     }
-
-    if (yaku_cnt[3] > ymax) {
-        yaku_cnt[3] = ymax;
-    }
-
-    ret = 0;
-
-    for (i = 0; i < 4; i++) {
-        ret += yaku_cnt[i] * yaku_scr[i];
-    }
-
-    return ret;
-    PR_SCOPEEND()
 }
 
 static int exh_yaku_original(EXAM_CHECK *ec_pp) {
@@ -4730,74 +4730,74 @@ static void bonusGameCtrl(int time) {
         }
     }
 
-    PR_SCOPE()
-    int         i;
-    BNG_KOTAMA *bng_kotama_pp = bng_str.bng_kotama;
+    {
+        int         i;
+        BNG_KOTAMA *bng_kotama_pp = bng_str.bng_kotama;
 
-    for (i = 0; i < 4; i++, bng_kotama_pp++) {
-        bng_kotama_pp->wait_time++;
+        for (i = 0; i < 4; i++, bng_kotama_pp++) {
+            bng_kotama_pp->wait_time++;
 
-        switch (bng_kotama_pp->bng_kotama_act_enum) {
-        case BNGKA_NOTHING:
-            bonusGameKoamaReq(i, BNGAKE_5_TOP);
-            bng_kotama_pp->wait_time = 0;
-            bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
-            break;
-        case BNGKA_LIFT: {
-            int randam_num;
+            switch (bng_kotama_pp->bng_kotama_act_enum) {
+            case BNGKA_NOTHING:
+                bonusGameKoamaReq(i, BNGAKE_5_TOP);
+                bng_kotama_pp->wait_time = 0;
+                bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
+                break;
+            case BNGKA_LIFT: {
+                int randam_num;
 
-            if (bng_kotama_pp->wait_time == 1) {
-                randam_num = (rand() % 130);
-                randam_num -= bng_str.renzoku_cnt;
+                if (bng_kotama_pp->wait_time == 1) {
+                    randam_num = (rand() % 130);
+                    randam_num -= bng_str.renzoku_cnt;
 
-                if (randam_num < 0) {
-                    randam_num = 0;
-                }
+                    if (randam_num < 0) {
+                        randam_num = 0;
+                    }
 
-                randam_num += 10;
+                    randam_num += 10;
 
-                bng_kotama_pp->wait_next_time = randam_num;
-            } else {
-                randam_num = bng_kotama_pp->wait_next_time;
-            }
-
-            if (bng_kotama_pp->wait_time > randam_num) {
-                if ((rand() % 2) != 0) {
-                    bonusGameKoamaReq(i, mochimono_ofs);
-                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
+                    bng_kotama_pp->wait_next_time = randam_num;
                 } else {
-                    bonusGameKoamaReq(i, BNGAKE_2_TOP);
-                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
+                    randam_num = bng_kotama_pp->wait_next_time;
                 }
 
-                bng_kotama_pp->wait_time = 0;
-            }
+                if (bng_kotama_pp->wait_time > randam_num) {
+                    if ((rand() % 2) != 0) {
+                        bonusGameKoamaReq(i, mochimono_ofs);
+                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
+                    } else {
+                        bonusGameKoamaReq(i, BNGAKE_2_TOP);
+                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
+                    }
 
-            break;
-        }
-        case BNGKA_LIFT_NG:
-            if (bng_kotama_pp->wait_time >= 24) {
-                bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                bng_kotama_pp->wait_time = 0;
+                    bng_kotama_pp->wait_time = 0;
+                }
+
+                break;
             }
-            break;
-        case BNGKA_BLOW:
-            if (bng_kotama_pp->wait_time >= 180) {
-                bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                bng_kotama_pp->wait_time = 0;
+            case BNGKA_LIFT_NG:
+                if (bng_kotama_pp->wait_time >= 24) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
+                }
+                break;
+            case BNGKA_BLOW:
+                if (bng_kotama_pp->wait_time >= 180) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
+                }
+                break;
+            case BNGKA_BREAK:
+                if (bng_kotama_pp->wait_time >= 36) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
+                }
+                break;
+            case BNGKA_LIFTED:
+                break;
             }
-            break;
-        case BNGKA_BREAK:
-            if (bng_kotama_pp->wait_time >= 36) {
-                bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                bng_kotama_pp->wait_time = 0;
-            }
-            break;
-        case BNGKA_LIFTED:
-            break;
         }
     }
-    PR_SCOPEEND()
 }
 
 static u_long hex2dec(u_long data) {

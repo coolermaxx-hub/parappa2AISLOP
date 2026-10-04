@@ -2009,22 +2009,22 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
         }
     }
 
-    PR_SCOPE()
-    u_short typemode[6] = {
-        SCE_GS_PSMCT32, /* TIM2_NONE   */ /* No CLUT (ClutType only) */
-        SCE_GS_PSMCT16, /* TIM2_RGB16  */
-        SCE_GS_PSMCT24, /* TIM2_RGB24  */
-        SCE_GS_PSMCT32, /* TIM2_RGB32  */
-        SCE_GS_PSMCT32, /* TIM2_IDTEX4 */
-        SCE_GS_PSMCT32  /* TIM2_IDTEX8 */
-    };
+    {
+        u_short typemode[6] = {
+            SCE_GS_PSMCT32, /* TIM2_NONE   */ /* No CLUT (ClutType only) */
+            SCE_GS_PSMCT16, /* TIM2_RGB16  */
+            SCE_GS_PSMCT24, /* TIM2_RGB24  */
+            SCE_GS_PSMCT32, /* TIM2_RGB32  */
+            SCE_GS_PSMCT32, /* TIM2_IDTEX4 */
+            SCE_GS_PSMCT32  /* TIM2_IDTEX8 */
+        };
 
-    sceGsSetDefLoadImage(&l_image, trTbp0, trTbw, typemode[trType0], 0, 0, trW, trH);
-    FlushCache(WRITEBACK_DCACHE);
+        sceGsSetDefLoadImage(&l_image, trTbp0, trTbw, typemode[trType0], 0, 0, trW, trH);
+        FlushCache(WRITEBACK_DCACHE);
 
-    sceGsExecLoadImage(&l_image, (u_long128*)dat_pp);
-    sceGsSyncPath(0, 0);
-    PR_SCOPEEND()
+        sceGsExecLoadImage(&l_image, (u_long128*)dat_pp);
+        sceGsSyncPath(0, 0);
+    }
 
     usrFree(dat_pp);
 }
@@ -3651,13 +3651,13 @@ static void ddbg_event_sub_bmp(void) {
 
     VramTmpSave(dat1_pp, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1);
 
-    PR_SCOPE()
-    VCLR_PARA vclr_para = {};
+    {
+        VCLR_PARA vclr_para = {};
         
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_DRAW);
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
-    DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
-    PR_SCOPEEND()
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_DRAW);
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_VRAM2);
+        DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
+    }
 
     sceGsSetHalfOffset(&DBufDc.draw11,  2048, 2048, 1);
     sceGsSetHalfOffset2(&DBufDc.draw12, 2048, 2048, 1);
@@ -3675,12 +3675,12 @@ static void ddbg_event_sub_bmp(void) {
 
     VramTmpSave(dat2_pp, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1);
 
-    PR_SCOPE()
-    char save_name[20];
+    {
+        char save_name[20];
 
-    sprintf(save_name, "scr%04d.bmp", ddbg_bmp_frame);
-    VramTmpSaveOutBMP(save_name, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1, dat1_pp, dat2_pp);
-    PR_SCOPEEND()
+        sprintf(save_name, "scr%04d.bmp", ddbg_bmp_frame);
+        VramTmpSaveOutBMP(save_name, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1, dat1_pp, dat2_pp);
+    }
 
     usrFree(dat2_pp);
     usrFree(dat1_pp);

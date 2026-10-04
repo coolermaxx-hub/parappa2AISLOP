@@ -335,29 +335,29 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
     sceGifPkAddGsAD(ndlPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0/*IIP*/, SCE_GS_TRUE/*TME*/, SCE_GS_FALSE/*FGE*/,
                                                            SCE_GS_TRUE/*ABE*/, SCE_GS_FALSE/*AA1*/, 1/*FST*/, SCE_GS_PRIM_CTXT1, 0/*FIX*/));
 
-    PR_SCOPE()
-    int      i, j; 
-    NDL_PRM *tmp1_pp, *tmp2_pp;
+    {
+        int      i, j; 
+        NDL_PRM *tmp1_pp, *tmp2_pp;
 
-    for (i = 0; i < ndl_pp->cntW; i++) {
-        tmp1_pp = &ndl_prm_pp[(i + 0) * (ndl_pp->cntW + 1)];
-        tmp2_pp = &ndl_prm_pp[(i + 1) * (ndl_pp->cntW + 1)];
+        for (i = 0; i < ndl_pp->cntW; i++) {
+            tmp1_pp = &ndl_prm_pp[(i + 0) * (ndl_pp->cntW + 1)];
+            tmp2_pp = &ndl_prm_pp[(i + 1) * (ndl_pp->cntW + 1)];
 
-        for (j = 0; j <= ndl_pp->cntH; j++) {
-            sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp1_pp->u + 8, tmp1_pp->v + 8));
-            sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp1_pp->xp, tmp1_pp->yp, 1));
+            for (j = 0; j <= ndl_pp->cntH; j++) {
+                sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp1_pp->u + 8, tmp1_pp->v + 8));
+                sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp1_pp->xp, tmp1_pp->yp, 1));
 
-            sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp2_pp->u + 8, tmp2_pp->v + 8));
-            sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp2_pp->xp, tmp2_pp->yp, 1));
+                sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp2_pp->u + 8, tmp2_pp->v + 8));
+                sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp2_pp->xp, tmp2_pp->yp, 1));
 
-            tmp1_pp++;
-            tmp2_pp++;
+                tmp1_pp++;
+                tmp2_pp++;
+            }
+
+            sceGifPkAddGsAD(ndlPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0/*IIP*/, SCE_GS_TRUE/*TME*/, SCE_GS_FALSE/*FGE*/,
+                                                                   SCE_GS_TRUE/*ABE*/, SCE_GS_FALSE/*AA1*/, 1/*FST*/, SCE_GS_PRIM_CTXT1, 0/*FIX*/));
         }
-
-        sceGifPkAddGsAD(ndlPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0/*IIP*/, SCE_GS_TRUE/*TME*/, SCE_GS_FALSE/*FGE*/,
-                                                               SCE_GS_TRUE/*ABE*/, SCE_GS_FALSE/*AA1*/, 1/*FST*/, SCE_GS_PRIM_CTXT1, 0/*FIX*/));
     }
-    PR_SCOPEEND()
 
     usrFree(ndl_prm_pp);
 }
