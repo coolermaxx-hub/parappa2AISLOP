@@ -17,6 +17,11 @@
 
 #include <stdio.h>
 
+/* The wipe's sounds have their own TapCtrl bank (0 is the common bank, 1 and 2
+ * the stage's double buffer, see ScrTapCtrlInit) and play on voice 15. */
+#define WIPE_TAP_BANK  3
+#define WIPE_TAP_VOICE 15
+
 static SNDTAP sndtap_wipe[] = {
     /* STW_TURN_IN */
     { .prg = 0, .key = 0xc,  .volume = 80 },
@@ -135,8 +140,8 @@ static int ldlogo_rate = 0;
 static LDMAP ldmap[] = {
     /* LDMAP_TURN */
     {
-        .spmmap = 0x4,
-        .spamap = 0xc,
+        .spmmap = CMNF_SPM_TURN,
+        .spamap = CMNF_SPA_TURN_LOAD0,
         .spamapP = -1,
 
         .spmHdl = NULL,
@@ -148,8 +153,8 @@ static LDMAP ldmap[] = {
     },
     /* LDMAP_LOGO */
     {
-        .spmmap = 0x2,
-        .spamap = 0x9,
+        .spmmap = CMNF_SPM_LOADING,
+        .spamap = CMNF_SPA_LOADING_LOAD0,
         .spamapP = -1,
 
         .spmHdl = NULL,
@@ -161,9 +166,9 @@ static LDMAP ldmap[] = {
     },
     /* LDMAP_RECODE */
     {
-        .spmmap = 0x3,
-        .spamap = 0xa,
-        .spamapP = 0xb,
+        .spmmap = CMNF_SPM_RECORD,
+        .spamap = CMNF_SPA_RECORD_LOAD0,
+        .spamapP = CMNF_SPA_RECORD_LOAD0_P,
 
         .spmHdl = NULL,
         .spaHdl = NULL,
@@ -174,9 +179,9 @@ static LDMAP ldmap[] = {
     },
     /* LDMAP_RECODE_LT */
     {
-        .spmmap = 0x0,
-        .spamap = 0x5,
-        .spamapP = 0x6,
+        .spmmap = CMNF_SPM_HIRECORD,
+        .spamap = CMNF_SPA_HIRECORD_LOAD0,
+        .spamapP = CMNF_SPA_HIRECORD_LOAD0_P,
 
         .spmHdl = NULL,
         .spaHdl = NULL,
@@ -187,9 +192,9 @@ static LDMAP ldmap[] = {
     },
     /* LDMAP_LABEL */
     {
-        .spmmap = 0x1,
-        .spamap = 0x7,
-        .spamapP = 0x8,
+        .spmmap = CMNF_SPM_LABEL,
+        .spamap = CMNF_SPA_LABEL_LOAD0,
+        .spamapP = CMNF_SPA_LABEL_LOAD0_P,
 
         .spmHdl = NULL,
         .spaHdl = NULL,
@@ -218,17 +223,17 @@ void wipeSndReq(SNDTAP_WIPE_ENUM req) {
     sndtap_pp = &sndtap_wipe[req];
 
     TapCt(TAPCT_SETEFFECTMODE, SD_REV_MODE_OFF, 0);
-    TapCt(TAPCT_TAPVOLUME | 3, 0xf, sndtap_pp->volume);
-    TapCt(TAPCT_TAPREQ    | 3, 0xf, sndtap_pp->prg + sndtap_pp->key * 256);
+    TapCt(TAPCT_TAPVOLUME | WIPE_TAP_BANK, WIPE_TAP_VOICE, sndtap_pp->volume);
+    TapCt(TAPCT_TAPREQ    | WIPE_TAP_BANK, WIPE_TAP_VOICE, sndtap_pp->prg + sndtap_pp->key * 256);
 }
 
 void wipeSndStop(void) {
-    TapCt(TAPCT_TAPSTOP, 0xf, TAPCT_NONE);
+    TapCt(TAPCT_TAPSTOP, WIPE_TAP_VOICE, TAPCT_NONE);
 }
 
 void wipeSndFileTrans(void) {
-    TapCt(TAPCT_BDSPUTRANS | 3, (int)cmnfGetFileAdrs(74), cmnfGetFileSize(74));
-    TapCt(TAPCT_HDIOPTRANS | 3, (int)cmnfGetFileAdrs(73), cmnfGetFileSize(73));
+    TapCt(TAPCT_BDSPUTRANS | WIPE_TAP_BANK, (int)cmnfGetFileAdrs(CMNF_WIPE_SND_BD), cmnfGetFileSize(CMNF_WIPE_SND_BD));
+    TapCt(TAPCT_HDIOPTRANS | WIPE_TAP_BANK, (int)cmnfGetFileAdrs(CMNF_WIPE_SND_HD), cmnfGetFileSize(CMNF_WIPE_SND_HD));
 
     TapCt(TAPCT_SETMASTERVOL, SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
     TapCt(TAPCT_SETVOLUME,    SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
@@ -682,7 +687,7 @@ static void WipeYesNoDispTask(void *x) {
         PrSetFrameRate(60.0f);
 
         scn_hdl = PrInitializeScene(&DBufDc.draw01, "wipe", -1);
-        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(47), scn_hdl);
+        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_TRYAGAIN), scn_hdl);
         PrShowModel(spm_hdl, NULL);
         PrSetSceneEnv(scn_hdl, DrawGetDrawEnvP(DNUM_DRAW));
 
@@ -723,17 +728,17 @@ static void WipeInitPrDataPara(sceGsFrame *fr_pp) {
     
     fbp = DrawGetFbpPos(DNUM_VRAM2);
     wipe_para_str.scene_hdl = PrInitializeScene(&DBufDc.draw01, "wipe para", fbp);
-    wipe_para_str.spm_hdl   = PrInitializeModel(cmnfGetFileAdrs(75), wipe_para_str.scene_hdl);
+    wipe_para_str.spm_hdl   = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_PARA_PARA), wipe_para_str.scene_hdl);
 
     if (wipe_para_spa_type) { /* PaRappa "bye-bye" waving animation */
-        wipe_para_str.spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(76));
+        wipe_para_str.spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_PARA_PARA_WP_END));
     } else {
-        wipe_para_str.spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(77));
+        wipe_para_str.spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_PARA_PARA_WP_R));
     }
 
     PrLinkAnimation(wipe_para_str.spm_hdl, wipe_para_str.spa_hdl);
 
-    wipe_para_str.spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(78));
+    wipe_para_str.spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(CMNF_SPC_WP_R));
 
     PrSelectCamera(wipe_para_str.spc_hdl, wipe_para_str.scene_hdl);
     PrSetSceneFrame(wipe_para_str.scene_hdl, *fr_pp);
@@ -1047,7 +1052,7 @@ static void WipeBoxyInDisp(void *x) {
 
     spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);
 
-    Tim2Trans(cmnfGetFileAdrs(79));
+    Tim2Trans(cmnfGetFileAdrs(CMNF_WIPE_SUBT_FONT));
     SprInit();
 
     PrSetFrameRate(60.0f);
@@ -1059,14 +1064,14 @@ static void WipeBoxyInDisp(void *x) {
         PrSetFrameRate(60.0f);
 
         scn2_hdl = PrInitializeScene(&DBufDc.draw01, "wipe boxy 2", -1);
-        spm2_hdl = PrInitializeModel(cmnfGetFileAdrs(40), scn2_hdl);
-        spa2_hdl = PrInitializeAnimation(cmnfGetFileAdrs(60));
+        spm2_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_HKBACK), scn2_hdl);
+        spa2_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_HKBACK_HK_WIPE_COOL));
 
         PrLinkAnimation(spm2_hdl, spa2_hdl);
         PrAnimateModel(spm2_hdl, animate_frame);
         PrShowModel(spm2_hdl, NULL);
 
-        PrSelectCamera(PrInitializeCamera(cmnfGetFileAdrs(71)), scn2_hdl);
+        PrSelectCamera(PrInitializeCamera(cmnfGetFileAdrs(CMNF_SPC_HK_WIPE)), scn2_hdl);
 
         PrSetSceneFrame(scn2_hdl, *DrawGetFrameP(DNUM_DRAW));
         PrSetSceneEnv(scn2_hdl, DrawGetDrawEnvP(DNUM_DRAW));
@@ -1096,19 +1101,19 @@ static void WipeBoxyInDisp(void *x) {
         }
 
         scn_hdl = PrInitializeScene(&DBufDc.draw01, "wipe boxy", -1);
-        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(15), scn_hdl);
-        spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(54));
+        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_BXY_BXY), scn_hdl);
+        spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_BXY_BXY_HK_WIPE_COOL));
 
         PrLinkAnimation(spm_hdl, spa_hdl);
         PrAnimateModel(spm_hdl, animate_frame);
         PrShowModel(spm_hdl, NULL);
 
-        spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(71));
+        spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(CMNF_SPC_HK_WIPE));
         PrSelectCamera(spc_hdl, scn_hdl);
 
         PrSetSceneFrame(scn_hdl, *DrawGetFrameP(DNUM_DRAW));
 
-        spm_subt_hdl = PrInitializeModel(cmnfGetFileAdrs(43), scn_hdl);
+        spm_subt_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_LS_JIMAKU1), scn_hdl);
         if (game_status.subtitle == SUBTITLE_ON) {
             PrShowModel(spm_subt_hdl, NULL);
         } else {
@@ -1131,7 +1136,7 @@ static void WipeBoxyInDisp(void *x) {
 
         if (game_status.subtitle == SUBTITLE_ON) {
             /* Print initial practice mode subtitles */
-            SubtCtrlPrintBoxyWipe(jimaku_str, 0, animate_frame, game_status.language_type, cmnfGetFileAdrs(80));
+            SubtCtrlPrintBoxyWipe(jimaku_str, 0, animate_frame, game_status.language_type, cmnfGetFileAdrs(CMNF_WIPE_SUBT_CODE));
         }
 
         animate_frame++;
@@ -1175,26 +1180,26 @@ static void WipeBoxyWaitDisp(void *x) {
         PrSetFrameRate(60.0f);
 
         scn_hdl = PrInitializeScene(&DBufDc.draw01, "wipe boxy wait", -1);
-        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(15), scn_hdl);
-        spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(53));
+        spm_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_BXY_BXY), scn_hdl);
+        spa_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_BXY_BXY_HK_AKEWIPE));
 
         PrLinkAnimation(spm_hdl, spa_hdl);
         PrAnimateModel(spm_hdl, animate_frame);
         PrShowModel(spm_hdl, NULL);
 
-        spm2_hdl = PrInitializeModel(cmnfGetFileAdrs(40), scn_hdl);
-        spa2_hdl = PrInitializeAnimation(cmnfGetFileAdrs(59));
+        spm2_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_HKBACK), scn_hdl);
+        spa2_hdl = PrInitializeAnimation(cmnfGetFileAdrs(CMNF_SPA_HKBACK_HK_AKEWIPE));
 
         PrLinkAnimation(spm2_hdl, spa2_hdl);
         PrAnimateModel(spm2_hdl, animate_frame);
         PrShowModel(spm2_hdl, NULL);
 
-        spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(71));
+        spc_hdl = PrInitializeCamera(cmnfGetFileAdrs(CMNF_SPC_HK_WIPE));
 
         PrSelectCamera(spc_hdl, scn_hdl);
         PrSetSceneFrame(scn_hdl, *DrawGetFrameP(DNUM_DRAW));
 
-        spm_subt_hdl = PrInitializeModel(cmnfGetFileAdrs(43), scn_hdl);
+        spm_subt_hdl = PrInitializeModel(cmnfGetFileAdrs(CMNF_SPM_LS_JIMAKU1), scn_hdl);
         if (game_status.subtitle == SUBTITLE_ON) {
             PrShowModel(spm_subt_hdl, NULL);
         } else {

@@ -169,8 +169,8 @@ static NIKO_CHAN_STR niko_chan_str_vs[] = {
 };
 
 static MBHOOK_STR mbhook_str[2] = {
-    { 90, 91, 0 },
-    { 92, 93, 0 },
+    { CMNF_HOOK_NG, CMNF_HOOK_NG_FLASH, 0 },
+    { CMNF_HOOK_OK, CMNF_HOOK_OK_FLASH, 0 },
 };
 
 static u_int hook_fr_dat[16] = { 0, 38, 76, 128, 128, 128, 115, 102, 89, 76, 64, 51, 38, 25, 12, 0 };
@@ -183,9 +183,9 @@ static u_char scr_tenmetu_col[4][3] = {
 };
 
 static METCOL_STR metcol_str[3] = {
-    { 82, 81, 83 },
-    { 85, 84, 86 },
-    { 88, 87, 89 },
+    { CMNF_METCOL_NORMAL, CMNF_METCOL_NORMAL_NG, CMNF_METCOL_NORMAL_OK },
+    { CMNF_METCOL_ORIGINAL, CMNF_METCOL_ORIGINAL_NG, CMNF_METCOL_ORIGINAL_OK },
+    { CMNF_METCOL_HANE, CMNF_METCOL_HANE_NG, CMNF_METCOL_HANE_OK },
 };
 
 static MBA_CHAR_DATA mba_char_data[] = {
@@ -243,16 +243,16 @@ static u_char colp[][3] = {
 static void (*marSetPrgTbl[])(MBAR_REQ_STR*) = { MbarPosOffsetSet, MbarBackSet, MbarOthSet, MbarCurSet };
 
 static GUIMAP guimap[] = {
-    { 22, -1, -1, 0, 0, 0, NULL, NULL },
-    { 44, 63, 64, 0, 0, 0, metFrameCnt, metFrameCntLight },
-    { 45, 67, 68, 0, 0, 0, &metFrameCnt[1], &metFrameCntLight[1] },
-    { 46, 69, 70, 0, 0, 0, &metFrameCnt[2], &metFrameCntLight[2] },
-    { 42, -1, -1, 0, 0, 0, NULL, NULL },
-    { 43, -1, -1, 0, 0, 0, NULL, NULL },
-    { 14, 52, -1, 0, 0, 0, &otehonAniCnt, NULL },
-    { 13, 50, -1, 0, 0, 0, &othon_frame, NULL },
-    { 23, 55, 56, 0, 0, 0, vsScoreAni, vsScoreMove },
-    { 24, 57, 58, 0, 0, 0, &vsScoreAni[1], &vsScoreMove[1] },
+    { CMNF_SPM_COUNTER, -1, -1, 0, 0, 0, NULL, NULL },
+    { CMNF_SPM_METER1, CMNF_SPA_METER1_METER, CMNF_SPA_METER1_METER_P, 0, 0, 0, metFrameCnt, metFrameCntLight },
+    { CMNF_SPM_METER2, CMNF_SPA_METER2_METER, CMNF_SPA_METER2_METER_P, 0, 0, 0, &metFrameCnt[1], &metFrameCntLight[1] },
+    { CMNF_SPM_METER3, CMNF_SPA_METER3_METER, CMNF_SPA_METER3_METER_P, 0, 0, 0, &metFrameCnt[2], &metFrameCntLight[2] },
+    { CMNF_SPM_JIMAKU1, -1, -1, 0, 0, 0, NULL, NULL },
+    { CMNF_SPM_LS_JIMAKU1, -1, -1, 0, 0, 0, NULL, NULL },
+    { CMNF_SPM_BXY_BAR, CMNF_SPA_BXY_BAR_OTE_BAR, -1, 0, 0, 0, &otehonAniCnt, NULL },
+    { CMNF_SPM_BAR_BAR, CMNF_SPA_BAR_BAR_OTE_BAR, -1, 0, 0, 0, &othon_frame, NULL },
+    { CMNF_SPM_CUNT1P, CMNF_SPA_CUNT1P_CUNT, CMNF_SPA_CUNT1P_CUNT_P, 0, 0, 0, vsScoreAni, vsScoreMove },
+    { CMNF_SPM_CUNT2P, CMNF_SPA_CUNT2P_CUNT, CMNF_SPA_CUNT2P_CUNT_P, 0, 0, 0, &vsScoreAni[1], &vsScoreMove[1] },
 };
 
 static int guimap_single[] = { 0, 1, 4, 0 };
@@ -1810,7 +1810,7 @@ static void guidisp_init_pr(void) {
     PrSetFrameRate(60.0f);
 
     guime_hdl = PrInitializeScene(&DBufDc.draw01, "gui", -1);
-    guime_camera_hdl = PrInitializeCamera(cmnfGetFileAdrs(72));
+    guime_camera_hdl = PrInitializeCamera(cmnfGetFileAdrs(CMNF_SPC_OTE_BAR));
     PrSelectCamera(guime_camera_hdl, guime_hdl);
     PrAnimateSceneCamera(guime_hdl, 0.0f);
 
@@ -1884,19 +1884,19 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
     if (global_data.play_step == PSTEP_GAME || global_data.play_step == PSTEP_VS) {
         switch (clearStageCheck()) {
         case P3_STAGE_0:
-            guimap[GUIME_HARI_L].spamapP = 0x44;
-            guimap[GUIME_HARI_M].spamapP = 0x40;
-            guimap[GUIME_HARI_R].spamapP = 0x46;
+            guimap[GUIME_HARI_L].spamapP = CMNF_SPA_METER2_METER_P;
+            guimap[GUIME_HARI_M].spamapP = CMNF_SPA_METER1_METER_P;
+            guimap[GUIME_HARI_R].spamapP = CMNF_SPA_METER3_METER_P;
             break;
         case P3_STAGE_1:
-            guimap[GUIME_HARI_L].spamapP = 0x3e;
-            guimap[GUIME_HARI_M].spamapP = 0x42;
-            guimap[GUIME_HARI_R].spamapP = 0x46;
+            guimap[GUIME_HARI_L].spamapP = CMNF_SPA_METER1_METER2_P;
+            guimap[GUIME_HARI_M].spamapP = CMNF_SPA_METER2_METER2_P;
+            guimap[GUIME_HARI_R].spamapP = CMNF_SPA_METER3_METER_P;
             break;
         default:
-            guimap[GUIME_HARI_L].spamapP = 0x40;
-            guimap[GUIME_HARI_M].spamapP = 0x44;
-            guimap[GUIME_HARI_R].spamapP = 0x46;
+            guimap[GUIME_HARI_L].spamapP = CMNF_SPA_METER1_METER_P;
+            guimap[GUIME_HARI_M].spamapP = CMNF_SPA_METER2_METER_P;
+            guimap[GUIME_HARI_R].spamapP = CMNF_SPA_METER3_METER_P;
             break;
         }
     }
