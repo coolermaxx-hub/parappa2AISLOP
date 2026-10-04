@@ -562,25 +562,25 @@ static int _P3MC_freesize_chk(void) {
 int P3MC_CheckChange(void) {
     int re, err;
 
-    err = 0;
+    err = P3MC_RES_OK;
     re = memc_manager(1);
-    if (re == 0x10) {
-        return -1;
+    if (re == MEMC_ERR_BUSY) {
+        return P3MC_RES_BUSY;
     }
 
     switch (re) {
-    case 1:
+    case MEMC_ERR_FILE_INVALID:
         portCheckFlg = 0;
-        return -1;
-    case 2:
-        err = 3;
+        return P3MC_RES_BUSY;
+    case MEMC_ERR_INVALID:
+        err = P3MC_RES_NO_CARD;
         P3MC_CheckChangeClear();
         break;
-    case 6:
-    case 48:
-        err = 5;
+    case MEMC_ERR_SWAP:
+    case MEMC_ERR_SWAP_UNFORMATTED:
+        err = P3MC_RES_CARD_SWAPPED;
         break;
-    case 0:
+    case MEMC_OK:
     default:
         FreeSizeFlg = _P3MC_freesize_chk();
         break;
@@ -592,25 +592,25 @@ int P3MC_CheckChange(void) {
         if (mcmenu_info.flag == 2) {
             return err;
         } else {
-            return 3;
+            return P3MC_RES_NO_CARD;
         }
     }
 
     if (portCheckFlg == 0) {
         portCheckFlg = 1;
         memc_port_check(0, &mcmenu_info.flag, &mcmenu_info.free);
-        return -1;
+        return P3MC_RES_BUSY;
     }
 
     portCheckFlg = 0;
     if (mcmenu_info.flag != 2) {
         FreeSizeFlg = 0;
-        err = 3;
+        err = P3MC_RES_NO_CARD;
     } else {
         if (memc_getChangeState()) {
-            err = 5;
+            err = P3MC_RES_CARD_SWAPPED;
         } else {
-            err = 0;
+            err = P3MC_RES_OK;
         }
     }
  

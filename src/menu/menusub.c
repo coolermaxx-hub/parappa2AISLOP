@@ -5511,7 +5511,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x165;
     case 0x165:
         ret = P3MC_CheckChange();
-        if (ret == 3 || ret == 5) {
+        if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             subStatus = 0xe000;
             break;
         }
@@ -5526,7 +5526,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         break;
     case 0xe000:
         ret = P3MC_CheckChange();
-        if (ret == 0 || ret == 5) {
+        if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
             if (isRun == -1 && bError != NULL) {
                 *bError = 2;
             }
@@ -5598,7 +5598,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x1010;
     case 0x1010:
         ret = P3MC_CheckChange();
-        if (ret == 3 || ret == 5) {
+        if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             TsMCAMes_SetMes(-1);
             subStatus = 0xe000;
             break;
@@ -5683,7 +5683,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x2201;
     case 0x2201:
         ret = P3MC_CheckChange();
-        if (ret == 3 || ret == 5) {
+        if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             subStatus = 0xe000;
             break;
         }
@@ -5811,7 +5811,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x2201;
     case 0x2201:
         ret = P3MC_CheckChange();
-        if (ret == 3 || ret == 5) {
+        if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             subStatus = 0xe000;
             break;
         }
@@ -5831,7 +5831,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         break;
     case 0xe000:
         ret = P3MC_CheckChange();
-        if (ret == 0 || ret == 5) {
+        if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
             subStatus = MCUSER_EXIT_CARD_CHANGED;
         } else if (McErrorMess(errorNo) >= 0) {
             subStatus = 0xee10;
@@ -8966,7 +8966,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
 
     if (state < 0xe000) {
         ret = P3MC_CheckChange();
-        if (ret == 3 || ret == 5) {
+        if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             state = 0xe000;
             TsCMPMes_SetMes(-1);
             TsMCAMes_SetMes(-1);
@@ -9247,7 +9247,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         break;
     case 0xe000:
         ret = P3MC_CheckChange();
-        if (ret == 0 || ret == 5) {
+        if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
             state = 0xff40;
             break;
         }

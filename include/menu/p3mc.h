@@ -144,6 +144,7 @@ typedef struct { // 0x3b00
 int P3MC_InitReady(void);
 int P3MC_GetSaveSize(int size, int mode);
 void P3MC_SetCheckSaveSize(int mode, int fsize, int csize);
+/* Polls the card slot: P3MC_RES_BUSY while checking, then P3MC_RES_OK, P3MC_RES_NO_CARD or P3MC_RES_CARD_SWAPPED. */
 int P3MC_CheckChange(void);
 void P3MC_CheckChangeClear(void);
 void P3MC_CheckChangeSet(void);
