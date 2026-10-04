@@ -763,9 +763,6 @@ segments:
       - { path: src/main/fadectrl.c.o }
       - { path: src/main/subt.c.o }
       - { path: src/main/drawctrl.c.o }
-      # The original drawctrl .sdata ends with 8 unreferenced zero bytes (0x399550).
-      # No source construct producing them has been identified; see docs/remaining-work.md.
-      - { kind: pad, pad_amount: 0x8, section: .sdata }
       - { path: src/main/effect.c.o }
       - { path: src/main/mbar.c.o }
       - { path: src/main/pack.c.o }
@@ -996,6 +993,9 @@ segments:
       - { path: src/main/drawctrl.c.o }
       - { path: src/main/effect.c.o }
       - { path: src/main/mbar.c.o }
+      # The original mbar bss runs 0x1E28 bytes past mbar_gif (to 0x1c72000) with no symbol,
+      # debug info entry or code reference in that range; contents unknown.
+      - { kind: pad, pad_amount: 0x1E28, section: .bss }
       - { path: src/main/pack.c.o }
       - { path: src/main/etc.c.o }
       - { path: src/main/wipe.c.o }

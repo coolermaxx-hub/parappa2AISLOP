@@ -193,10 +193,27 @@ The asm objects that remain are not project source:
 - `prlib` `lit4`: float literals, handled by `tools/buildtools/lit4fix.py`.
 
 Padding that no source construct explains is an explicit slinky `pad` entry
-rather than a placeholder variable: 8 bytes after the `drawctrl` `.sdata`,
-16 bytes in `.data` where the `napacket` object used to be, and 0xAA0 bytes of
-`.bss` after `os/tim2` (the original `tim2` bss is 2720 bytes larger than its
-five statics; the contents are unknown).
+rather than a placeholder variable: 16 bytes in `.data` where the `napacket`
+object used to be, 0xAA0 bytes of `.bss` after `os/tim2` (the original `tim2`
+bss is 2720 bytes larger than its five statics) and 0x1E28 bytes of `.bss`
+after `main/mbar` (up to `pack`'s buffer at 0x1c72000). Neither bss range has a
+symbol, a debug-info entry or a code reference in the original; the contents
+are unknown.
+
+The 8 bytes that used to be padded after the `drawctrl` `.sdata` are the
+variable `ANI_BLUMOVE_ENUM`: the original declares its animation-blend enum
+as `enum { ... } ANI_BLUMOVE_ENUM;` without `typedef`, which defines an unused
+global that its linker put after the file's small data. `mbar.c`'s
+`SCR_TENMETU_ENUM` is the same slip. Both are defined last in their files.
+
+`tools/dev/audit/layout_orig.py` compares every data symbol's offset with the
+original executable. `.data`, `.sdata`, `.sbss` and `.bss` agree, except that
+`common_ipk_end` sits 4 bytes late: the extracted asset includes the 4 zero
+bytes of alignment that follow the archive. Nothing references that label.
+Two `.bss` drifts were found and fixed this way (bss is not in the ROM image,
+so image comparisons cannot see it): the `mbar` gap above was missing, and
+`screenClipMatrix` / `screenPrimitiveMatrix` (`prlib/spram.cpp`) had lost their
+16-byte alignment, which their `lq`/`sq` copies need.
 
 The `spadata` template layout is deliberate: `SpaTrack` accessors are defined
 once in `spadata.cpp` so that only that unit owns their function-local statics,

@@ -10,6 +10,7 @@ Helpers used during the readability pass. Run them from the repository root afte
 | `cmpasm.sh <file>...` | Compile HEAD and the working copy of a source file to assembly and count differing lines. Use after pure renames and macro substitutions. |
 | `symcmp.py new.elf expected.elf <symbols...>` | Compare symbol bytes between two ELFs. |
 | `layout2.py <lo> <hi>` | Show symbol address deltas against `symbol_addrs`; all deltas in a section must be one constant. |
+| `layout_orig.py [sections]` | Compare every data symbol's offset within `.data`, `.sdata`, `.sbss` and `.bss` with the original executable. The only way to check `.bss`, which is not in the ROM image. |
 | `qwdump.py`, `tex0dec.py` | Decode GS quadwords and TEX0 values into `SCE_GS_SET_*` arguments. |
 | `cmpsec.py`, `cmpdata.py`, `cmpbss.py`, `dataconv.py` | Section-level comparisons used while converting data to C. |
 | `stabs.py <name>` | Dump the original executable's debug symbols for source files whose name contains `<name>`: original local names, register or stack slots and block scopes for the C units. |

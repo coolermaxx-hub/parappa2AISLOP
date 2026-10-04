@@ -34,18 +34,13 @@ static VS_SCR_CTRL vs_scr_ctrl[4];
 static MBAR_REQ_STR mbar_req_str[5];
 static sceGifPacket mbar_gif;
 static GLOBAL_PLY *exam_global_ply_current;
-/*
- * The original declares this enum without `typedef`, so it also defines an
- * unused global of the same name (it is in the original symbol table).
- * drawctrl.h's ANI_BLUMOVE_ENUM had the same slip; nothing reads either.
- */
-/* sdata 399584 */ enum SCR_TENMETU_ENUM {
+enum SCR_TENMETU_ENUM {
     SCR_TENMETU_NORMAL = 0,
     SCR_TENMETU_PL = 1,
     SCR_TENMETU_MI = 2,
     SCR_TENMETU_BLACK = 3,
     SCR_TENMETU_MAX = 4
-} SCR_TENMETU_ENUM = SCR_TENMETU_NORMAL;
+};
 static int mbar_ctrl_time;
 static int mbar_ctrl_stage;
 static int mbar_ctrl_stage_selT;
@@ -2082,3 +2077,12 @@ void MbarDemoCharDisp(void) {
     SprDispAlp(&spr_prim);
     SprFlash();
 }
+
+/*
+ * The original declares the enum near the top as `enum { ... } SCR_TENMETU_ENUM;`.
+ * Without `typedef` that also defines an unused variable, which the original
+ * linker put right after this file's small data (sdata 399584). It is defined
+ * last, with an initializer, so it lands in the same place. drawctrl.c's
+ * ANI_BLUMOVE_ENUM is the same slip.
+ */
+enum SCR_TENMETU_ENUM SCR_TENMETU_ENUM = SCR_TENMETU_NORMAL;

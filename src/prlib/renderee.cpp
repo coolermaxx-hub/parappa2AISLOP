@@ -64,7 +64,7 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     sceDmaSend(chan, &initEECoreDmaPacket);
 }
 
-static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(EE_SCRATCHPAD_BASE);
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 
 // The two vertex kernels below are handwritten VU0 macro-mode code. VF1-VF4
 // hold the clip matrix, VF5-VF8 the screen matrix and VF10 the depth bias, all
@@ -75,7 +75,7 @@ static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(EE_SCRAT
 // outside the clip volume, in the flagged clip window, or - for the normal
 // kernel - when it faces away from the camera.
 void PrRenderStuff::RenderVertexEECoreBothface() {
-    PrEECoreContext &context = eeCoreScratchpad->m_eeCore;
+    PrEECoreContext &context = prSpramData->m_eeCore;
     asm volatile(
         ".set push\n\t"
         ".set noreorder\n\t"
@@ -121,7 +121,7 @@ void PrRenderStuff::RenderVertexEECoreBothface() {
 }
 
 void PrRenderStuff::RenderVertexEECoreNormal() {
-    PrEECoreContext &context = eeCoreScratchpad->m_eeCore;
+    PrEECoreContext &context = prSpramData->m_eeCore;
     asm volatile(
         ".set push\n\t"
         ".set noreorder\n\t"
@@ -211,11 +211,11 @@ void PrRenderStuff::RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet) {
     }
 
     packet = reinterpret_cast<PrVuNodeHeaderDmaPacket*>(PR_UNCACHEDACCEL(packet));
-    PrEECoreContext &context = eeCoreScratchpad->m_eeCore;
+    PrEECoreContext &context = prSpramData->m_eeCore;
     context.WaitForVuTransfers();
-    NaMATRIX<float, 4, 4>::Multiply(context.screenMatrix, eeCoreScratchpad->m_view_projection_matrix, packet->m_matrix);
+    NaMATRIX<float, 4, 4>::Multiply(context.screenMatrix, prSpramData->m_view_projection_matrix, packet->m_matrix);
     context.WaitForVuTransfers();
-    NaMATRIX<float, 4, 4>::Multiply(context.clipMatrix, eeCoreScratchpad->m_worldClipMatrix, packet->m_matrix);
+    NaMATRIX<float, 4, 4>::Multiply(context.clipMatrix, prSpramData->m_worldClipMatrix, packet->m_matrix);
     context.WaitForVuTransfers();
     context.vertexKernel = eeCoreVertexKernels[packet->m_microprogram];
 
@@ -243,7 +243,7 @@ void PrRenderStuff::RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet) {
 }
 
 void PrRenderStuff::RenderChunkEECore(PrVuDataChunkPacketHeader *chunk, float disturbance) {
-    PrSPRAM_DATA *scratchpad = eeCoreScratchpad;
+    PrSPRAM_DATA *scratchpad = prSpramData;
     PrEECoreContext &context = scratchpad->m_eeCore;
     u_long128 *buffer = scratchpad->m_noodle_buffer[2];
     sceDmaTag *dma = reinterpret_cast<sceDmaTag*>(buffer);
@@ -294,7 +294,7 @@ void PrRenderStuff::RenderChunkEECore(PrVuDataChunkPacketHeader *chunk, float di
         output[i] = context.output;
     }
     PrSendMfifo(dma);
-    scratchpad = eeCoreScratchpad;
+    scratchpad = prSpramData;
     buffer = scratchpad->m_noodle_buffer[0];
     scratchpad->m_noodle_buffer[0] = scratchpad->m_noodle_buffer[1];
     scratchpad->m_noodle_buffer[1] = scratchpad->m_noodle_buffer[2];

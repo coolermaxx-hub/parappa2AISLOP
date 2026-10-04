@@ -13,8 +13,10 @@
 
 #include <eestruct.h>
 
-static NaMATRIX<float, 4, 4> screenClipMatrix;
-static NaMATRIX<float, 4, 4> screenPrimitiveMatrix;
+// Copied with lq/sq, which ignore the low four address bits, so these must be
+// quadword aligned (the original has them at 16-byte boundaries).
+static NaMATRIX<float, 4, 4> screenClipMatrix PR_ALIGNED(16);
+static NaMATRIX<float, 4, 4> screenPrimitiveMatrix PR_ALIGNED(16);
 
 extern "C" float tanf(float);
 

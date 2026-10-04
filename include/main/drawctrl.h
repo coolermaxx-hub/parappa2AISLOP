@@ -18,14 +18,6 @@ typedef struct { // 0x8
     /* 0x4 */ SPR_PRIM *spr_prim;
 } TIM2DISP_STR;
 
-enum ANI_BLUMOVE_ENUM {
-    BLMV_NONE = 0,
-    BLMV_BLUR = 1,
-    BLMV_MOVE = 2,
-    BLMV_BLUR2 = 3,
-    BLMV_MAX = 4
-};
-
 typedef enum {
     MEN_CTRL_BtoG = 0,
     MEN_CTRL_AtoAB = 1,

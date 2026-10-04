@@ -27,6 +27,16 @@
 #include <string.h>
 
 static VCLR_PARA vclr_black = { 0, 0, 0, 0 };
+
+/* XAnimationLinkOption: how a newly linked animation takes over from the last one. */
+enum ANI_BLUMOVE_ENUM {
+    BLMV_NONE = 0,
+    BLMV_BLUR = 1,
+    BLMV_MOVE = 2,
+    BLMV_BLUR2 = 3,
+    BLMV_MAX = 4
+};
+
 /* Tap-bar layouts, mosaic stage tables and title-cut timings. */
 static float bra_tap[10][2] = {
     { 0.25f, 0.1f },
@@ -3923,3 +3933,11 @@ void DrawCtrlInitDebug(EVENTREC *ev_pp, int ctrlTbl, void *dat_top) {
 
     MtcExec(DrawCtrlMainDebug, MTC_TASK_DRAWCTRL);
 }
+
+/*
+ * The original declares the enum above as `enum { ... } ANI_BLUMOVE_ENUM;`.
+ * Without `typedef` that also defines an unused variable, which the
+ * original linker put right after this file's small data. It is defined
+ * last, with an initializer, so it lands in the same place.
+ */
+enum ANI_BLUMOVE_ENUM ANI_BLUMOVE_ENUM = BLMV_NONE;
