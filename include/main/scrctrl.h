@@ -379,14 +379,14 @@ typedef struct { // 0x66c
     /* 0x330 */ TAP_EXAM_DATA oth[256];
     /* 0x630 */ int top_ofs;
     /* 0x634 */ int end_ofs;
-    /* 0x638 */ int each_point[12];
+    /* 0x638 */ int each_point[EXH_MAX];
     /* 0x668 */ int otehon_all;
 } EXAM_CHECK;
 
 typedef struct { // 0x8
     /* 0x0 */ int (*score_prg)(EXAM_CHECK *ec_pp);
-    /* 0x4 */ short save_p;
-    /* 0x6 */ short bairitu;
+    /* 0x4 */ short save_p;  /* EXAM_HANTEI slot in EXAM_CHECK::each_point */
+    /* 0x6 */ short bairitu; /* multiplier in sixteenths: 16 counts the result once */
 } EXH_STR;
 
 typedef struct { // 0x8

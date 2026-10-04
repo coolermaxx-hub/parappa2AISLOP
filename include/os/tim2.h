@@ -11,7 +11,7 @@
 #define TIM2_RGB24  (2) // 24bit color (only used with ImageType)
 #define TIM2_RGB32  (3) // 32bit color (used for both ClutType and ImageType)
 #define TIM2_IDTEX4 (4) // 16 color texture (only used with ImageType)
-#define TIM2_IDTEX8 (5) // 16 color texture (only used with ImageType)
+#define TIM2_IDTEX8 (5) // 256 color texture (only used with ImageType)
 
 #define TIM2(x) ((TIM2_FILEHEADER*)x)
 

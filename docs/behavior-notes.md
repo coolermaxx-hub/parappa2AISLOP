@@ -101,6 +101,29 @@ the file. A port that reproduces `{cell index per press, key per press}` and
 these tables reproduces judgement.
 *Inferred, not tested:* the exact meaning of the `yaku` pattern codes.
 
+**Yaku (pattern) score (checked in source, 2026-10-04).** `exh_yaku`
+(`scrctrl.c`) grades up to 72 judgement windows, two per byte of
+`yaku_tmp_buf`, as `YAKU_EMPTY`, `YAKU_HIT` or `YAKU_SPOIL`. A window is
+spoiled when it lies outside the line's `top_ofs`..`end_ofs` range, when a
+press lands in the gap after it (odd `th_num`), when the key is not in the
+example's key set (`otehon_all`), or when it already holds a press. It then
+counts the window pairs (windows 2k and 2k+1) that match one of four shapes:
+
+| Pair | Weight |
+| --- | --- |
+| hit, empty | 6 |
+| hit, hit | 9 |
+| empty, hit | 15 |
+| empty, empty | 18 |
+
+A pair containing a spoiled window scores nothing. Empty pairs count at most as
+often as the rarest of the three pressed shapes. The plain rule
+(`exh_yaku_original`, counted at x1) scores zero unless at least two of the
+three pressed shapes occur; the "hane" rule (`exh_yaku_hane`, counted at x1.5,
+`bairitu` 24/16) scores zero unless a hit-hit or empty-hit pair occurs. *Inferred:* the weights
+reward syncopation and rests over pressing on every grid point; which beat
+position window 2k falls on depends on `ofs_tick` and was not traced.
+
 **Pad input (checked in source, 2026-10-03).** `GPadSysRead()` (`src/os/syssub.c:55`)
 runs the libpad state machine for each port (identify the pad, switch a standard
 pad to analog mode, set vibration alignment) and copies the raw 32-byte report into

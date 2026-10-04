@@ -444,6 +444,18 @@ static TAP_GROUPE_STR tap_groupe_str[5];
 static COMMAKE_STR commake_str[32];
 static int commake_str_cnt;
 static EXAM_CHECK exam_check[3];
+/*
+ * exh_yaku grades each judgement window (thnum_get index / 2) as one of the
+ * YAKU_* states and packs two windows per byte, the earlier one in the high
+ * nibble.
+ */
+#define YAKU_EMPTY 0x0 /* no press */
+#define YAKU_HIT   0x1 /* one press inside the window, with a key the example uses */
+#define YAKU_SPOIL 0x2 /* outside the line, in a gap, a wrong key, or a second press */
+#define YAKU_PAIR(first, second) (((first) << 4) | (second))
+#define YAKU_FIRST_MASK  YAKU_PAIR(0xf, 0)
+#define YAKU_SECOND_MASK YAKU_PAIR(0, 0xf)
+
 static u_char yaku_tmp_buf[36];
 static BNG_STR bng_str;
 
@@ -2436,11 +2448,11 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
     for (i = 0; i < (PR_ARRAYSIZE(yaku_tmp_buf) * 2); i++) {
         if (i < ofsT || i > ofsE) {
             if ((i % 2) != 0) {
-                yaku_tmp_buf[i / 2] &= 0xf0;
-                yaku_tmp_buf[i / 2] |= 0x02;
+                yaku_tmp_buf[i / 2] &= YAKU_FIRST_MASK;
+                yaku_tmp_buf[i / 2] |= YAKU_PAIR(YAKU_EMPTY, YAKU_SPOIL);
             } else {
-                yaku_tmp_buf[i / 2] &= 0x0f;
-                yaku_tmp_buf[i / 2] |= 0x20;
+                yaku_tmp_buf[i / 2] &= YAKU_SECOND_MASK;
+                yaku_tmp_buf[i / 2] |= YAKU_PAIR(YAKU_SPOIL, YAKU_EMPTY);
             }
         }
     }
@@ -2451,38 +2463,44 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
         if ((ec_pp->ted[i].th_num % 2) == 0 && (GetIndex2KeyCode(ec_pp->ted[i].key) & ec_pp->otehon_all) != 0) {
             u_char setD;
             if ((bufID % 2) != 0) {
-                setD = 0x01;
+                setD = YAKU_PAIR(YAKU_EMPTY, YAKU_HIT);
 
-                if ((yaku_tmp_buf[bufID / 2] & 0x0f) != 0) {
-                    setD = 0x02;
+                if ((yaku_tmp_buf[bufID / 2] & YAKU_SECOND_MASK) != 0) {
+                    setD = YAKU_PAIR(YAKU_EMPTY, YAKU_SPOIL);
                 }
 
-                yaku_tmp_buf[bufID / 2] &= 0xf0;
+                yaku_tmp_buf[bufID / 2] &= YAKU_FIRST_MASK;
                 yaku_tmp_buf[bufID / 2] |= setD;
             } else {
-                setD = 0x10;
+                setD = YAKU_PAIR(YAKU_HIT, YAKU_EMPTY);
 
-                if ((yaku_tmp_buf[bufID / 2] & 0xf0) != 0) {
-                    setD = 0x20;
+                if ((yaku_tmp_buf[bufID / 2] & YAKU_FIRST_MASK) != 0) {
+                    setD = YAKU_PAIR(YAKU_SPOIL, YAKU_EMPTY);
                 }
 
-                yaku_tmp_buf[bufID / 2] &= 0x0f;
+                yaku_tmp_buf[bufID / 2] &= YAKU_SECOND_MASK;
                 yaku_tmp_buf[bufID / 2] |= setD;
             }
         } else {
             if ((bufID % 2) != 0) {
-                yaku_tmp_buf[bufID / 2] &= 0xf0;
-                yaku_tmp_buf[bufID / 2] |= 0x02;
+                yaku_tmp_buf[bufID / 2] &= YAKU_FIRST_MASK;
+                yaku_tmp_buf[bufID / 2] |= YAKU_PAIR(YAKU_EMPTY, YAKU_SPOIL);
             } else {
-                yaku_tmp_buf[bufID / 2] &= 0x0f;
-                yaku_tmp_buf[bufID / 2] |= 0x20;
+                yaku_tmp_buf[bufID / 2] &= YAKU_SECOND_MASK;
+                yaku_tmp_buf[bufID / 2] |= YAKU_PAIR(YAKU_SPOIL, YAKU_EMPTY);
             }
         }
     }
 
     {
-        u_char yaku_map[4] = { 16, 17, 1,  0  };
-        u_char yaku_scr[4] = { 6,  9,  15, 18 };
+        /* Window pairs that score, and what each is worth. A pair with a spoiled window never matches. */
+        u_char yaku_map[4] = {
+            YAKU_PAIR(YAKU_HIT,   YAKU_EMPTY),
+            YAKU_PAIR(YAKU_HIT,   YAKU_HIT),
+            YAKU_PAIR(YAKU_EMPTY, YAKU_HIT),
+            YAKU_PAIR(YAKU_EMPTY, YAKU_EMPTY),
+        };
+        u_char yaku_scr[4] = { 6, 9, 15, 18 };
         u_char yaku_cnt[4] = {};
         u_char ymin, ymax;
 
