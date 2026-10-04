@@ -805,6 +805,7 @@ static void ExamDispOn(void) {
             }
             perd = exam_disp_cursor_timer;
             perd *= 16;
+            /* fold the 9-bit ramp into a 0..255..0 triangle wave for the blink */
             if (perd & 0x100) {
                 perd ^= 0xff;
             }
