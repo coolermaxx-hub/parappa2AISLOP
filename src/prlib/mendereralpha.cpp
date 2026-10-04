@@ -25,13 +25,13 @@ extern int prCurrentStage;
 // Parameter block uploaded to VU1 memory; only the GIF-style header is static.
 // PACKED, 24 loops of RGBAQ then XYZ2, with the PRIM field enabled.
 static PrNoodleAlphaParameters alphaModulationPacket = {
-    { 24, 1, 0, 0, 1, 0, 0, 2, 1 /* RGBAQ */, 5 /* XYZ2 */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { /*NLOOP*/24, /*EOP*/1, 0, 0, /*PRE*/1, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/2, SCE_GS_RGBAQ, SCE_GS_XYZ2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
 // Frame and test setup for the modulation pass. The frame value is patched
 // in PrInitializeAlphaModulation.
 static PrNoodleAlphaGsPacket alphaModulationGsPacket = {
-    { 3, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { /*NLOOP*/3, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/1, SCE_GIF_PACKED_AD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_FRAME_1 },
     { 0, SCE_GS_XYOFFSET_1 },
     { PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS), SCE_GS_TEST_1 },
@@ -40,7 +40,7 @@ static PrNoodleAlphaGsPacket alphaModulationGsPacket = {
 // Draws the modulated buffer back to the frame as a region-clamped sprite.
 // Frame and texture values are patched at runtime.
 static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
-    { 12, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { /*NLOOP*/12, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/1, SCE_GIF_PACKED_AD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_FRAME_1 },
     { 0, SCE_GS_TEX0_1 },
     { PR_TEX1_BILINEAR, SCE_GS_TEX1_1 },
@@ -138,8 +138,8 @@ void PrCreateAlphaModulation(float alpha) {
 static const sceDmaTag alphaBlendDmaTag = { 13, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } };
 // PACKED, twelve loops of one A+D register, EOP.
 static const sceGifTag alphaBlendGifTag = {
-    12, 1, 0, 0, 0, 0, 0, 1,
-    0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    /*NLOOP*/12, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/1,
+    SCE_GIF_PACKED_AD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 void PrBlendNoodleImage(bool clear) {

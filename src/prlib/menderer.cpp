@@ -52,7 +52,7 @@ float prMendererNoodleColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 // are filled in by InitializeNoodleStripRendering.
 static PrNoodleStripPacket noodleStripDmaPacket = {
     { 15, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } },
-    { 14, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { /*NLOOP*/14, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/1, SCE_GIF_PACKED_AD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_BITBLTBUF },
     { 0, SCE_GS_TRXPOS },
     { SCE_GS_SET_TRXREG(SCREEN_WIDTH, SCREEN_FIELD_HEIGHT), SCE_GS_TRXREG },
@@ -72,7 +72,7 @@ static PrNoodleStripPacket noodleStripDmaPacket = {
 // DMAcnt of two quadwords: the GIF tag and one clamp register write.
 static PrNoodleStripHeader noodleStripHeaderPacket = {
     { 2, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } },
-    { 1, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+    { /*NLOOP*/1, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_PACKED, /*NREG*/1, SCE_GIF_PACKED_AD, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     0,
     SCE_GS_CLAMP_2,
 };
@@ -235,8 +235,10 @@ void PushNoodleColor(u_long *rgbaq) {
 static const sceDmaTag noodleQuadDmaTag = { 6, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } };
 // REGLIST, one loop, EOP, ten registers: PRIM, RGBAQ, then (UV, XYZ2) x4.
 static const sceGifTag noodleQuadGifTag = {
-    1, 1, 0, 0, 0, 0, 1, 10,
-    0, 1, 3, 5, 3, 5, 3, 5, 3, 5, 0, 0, 0, 0, 0, 0
+    /*NLOOP*/1, /*EOP*/1, 0, 0, /*PRE*/0, /*PRIM*/0, /*FLG*/SCE_GIF_REGLIST, /*NREG*/10,
+    SCE_GS_PRIM, SCE_GS_RGBAQ,
+    SCE_GS_UV, SCE_GS_XYZ2, SCE_GS_UV, SCE_GS_XYZ2, SCE_GS_UV, SCE_GS_XYZ2, SCE_GS_UV, SCE_GS_XYZ2,
+    0, 0, 0, 0, 0, 0
 };
 
 void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
