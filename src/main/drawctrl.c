@@ -3176,7 +3176,7 @@ int sceneConditionCheck(u_int cond_flag) {
     int i;
 
     andor = cond_flag & SBE_ANDBIT;
-    cond_flag &= 0x7fffffff;
+    cond_flag &= ~SBE_ANDBIT;
 
     if (cond_flag == 0) {
         return 1;
@@ -3207,7 +3207,7 @@ int sceneConditionCheck(u_int cond_flag) {
             case SBI_TBL5:
             case SBI_TBL6:
             case SBI_TBL7:
-                if (GetCurrentTblNumber() != (i - 4)) {
+                if (GetCurrentTblNumber() != (i - SBI_TBL0)) {
                     if (andor != 0) {
                         return 0;
                     }
@@ -3226,7 +3226,7 @@ int sceneConditionCheck(u_int cond_flag) {
             case SBI_CLR6:
             case SBI_CLR7:
             case SBI_CLR8:
-                if (clearStageCheck() != (i - 12)) {
+                if (clearStageCheck() != (i - SBI_CLR0)) {
                     if (andor != 0) {
                         return 0;
                     }
@@ -3524,7 +3524,7 @@ void DrawCtrlTblChange(int ctrlTbl) {
 }
 
 int DrawTapReqTbl(int atap, PLAYER_INDEX pindx, u_char *prs_pp) {
-    if (dr_tap_req_num >= 16) {
+    if (dr_tap_req_num >= PR_ARRAYSIZE(dr_tap_req)) {
         printf("TAP REQ OVER ERROR!!\n");
         return 1;
     }
@@ -3701,9 +3701,10 @@ static void ddbg_event_sub_bmp(void) {
         }
     }
 
-    /* BUG: should use usrMalloc */
-    dat1_pp = malloc(0x8C000); /* ~573.4 KB */
-    dat2_pp = malloc(0x8C000);
+    /* One 32-bit field each. BUG: taken with malloc, so the usrFree calls below
+     * do not find them in their table and the buffers leak. */
+    dat1_pp = malloc(SCREEN_WIDTH * SCREEN_FIELD_HEIGHT * 4);
+    dat2_pp = malloc(SCREEN_WIDTH * SCREEN_FIELD_HEIGHT * 4);
 
     sceGsSetHalfOffset(&DBufDc.draw11,  2048, 2048, 0);
     sceGsSetHalfOffset2(&DBufDc.draw12, 2048, 2048, 0);
