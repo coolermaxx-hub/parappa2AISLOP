@@ -4,7 +4,7 @@
 #include "renderstuff.h"
 #include "spram.h"
 
-static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 static float clusterMaxDepth = 3.4028235e38f;
 
 void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {

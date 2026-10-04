@@ -9,7 +9,7 @@
 #include <libdma.h>
 #include <libgraph.h>
 
-static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 
 
 void PrSceneObject::ApplyDepthOfField() {

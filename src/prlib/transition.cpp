@@ -1,7 +1,7 @@
 #include "model.h"
 #include "spram.h"
 
-static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 
 void PrModelObject::SavePosture() {
     if (!(m_spm_image->m_flags & 0x40)) {

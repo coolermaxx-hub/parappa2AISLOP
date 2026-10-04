@@ -63,7 +63,7 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     sceDmaSend(chan, &initEECoreDmaPacket);
 }
 
-static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
+static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(EE_SCRATCHPAD_BASE);
 
 // The two vertex kernels below are handwritten VU0 macro-mode code. VF1-VF4
 // hold the clip matrix, VF5-VF8 the screen matrix and VF10 the depth bias, all

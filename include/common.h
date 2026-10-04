@@ -22,6 +22,9 @@ typedef float f32;
 #define UNK_FUN_PTR(name) void(*name)(void)
 #define UNK_ARGS
 
+/* Start of the EE's 16KB scratchpad RAM (SPR). */
+#define EE_SCRATCHPAD_BASE 0x70000000
+
 #ifndef NULL
 #define NULL  0
 #endif

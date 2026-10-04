@@ -10,7 +10,7 @@
 // Ring buffer for the GIF MFIFO; lives in its own section at the end of the image.
 char mfifoBase[PR_MFIFOSIZE] __attribute__((section(".mfifo")));
 
-static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 static bool mfifoProcessing = false;
 
 #define PR_ALIGNSPR(addr) ((u_int)addr&0xfff0)

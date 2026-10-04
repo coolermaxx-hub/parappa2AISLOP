@@ -9,7 +9,7 @@
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx);
 
-static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
+static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 
 NaMATRIX<float, 4, 4>& CreateBillboardMatrix(const NaMATRIX<float, 4, 4>& mtx) {
     NaVECTOR<float, 4> eye;
