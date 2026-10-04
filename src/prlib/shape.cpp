@@ -85,7 +85,7 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
         PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_context1Packets[0] | 0x30000000);
         packet->m_matrix = this->m_worldMatrix;
         packet->m_disturbance = prSpramData->m_disturbance;
-        prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)packet & 0x0FFFFFFF));
+        prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)PR_DECACHE(packet));
     }
 
     if (this->m_context1Packets[1] != NULL) {
@@ -99,6 +99,6 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
 
         float depth = result[3] == 0.0f ? result[2] * shapeMaxDepth : result[2] / result[3];
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF), arg, depth);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)PR_DECACHE(packet), arg, depth);
     }
 }

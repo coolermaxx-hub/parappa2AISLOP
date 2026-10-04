@@ -280,8 +280,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
 
         PrNoodleStripHeader *header = reinterpret_cast<PrNoodleStripHeader*>(buf);
         *header = noodleStripHeaderPacket;
-        header->clamp = ((u_long)(((block + 2) * 16) - 1) << 34)
-                        | 0x3FC00A | ((u_long)(next * 16) << 24);
+        header->clamp = SCE_GS_SET_CLAMP(2, 2, 0, 255, next * 16, ((block + 2) * 16) - 1);
         PrSendMfifo(&header->dma);
 
         u_long v0 = (u_long)(next * 256) << 16;

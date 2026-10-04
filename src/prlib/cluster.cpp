@@ -58,7 +58,7 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
         uc->m_matrix = NaMATRIX<float, 4, 4>::IDENT;
         uc->m_disturbance = prSpramData->m_disturbance * model->m_scaledDisturbance;
-        prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
+        prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)PR_DECACHE(uc));
     }
 
     PrVuNodeHeaderDmaPacket *uc = this->m_context1Packets[1];
@@ -114,6 +114,6 @@ void SpmClusterGeometryNode::RenderClusterNode(PrModelObject *model) {
             z = pos[2] / pos[3];
         }
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->m_sortGroup, z);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)PR_DECACHE(uc), this->m_sortGroup, z);
     }
 }

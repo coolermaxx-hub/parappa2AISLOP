@@ -232,7 +232,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     mendererTexturePacket.state[8].address = 0;
     mendererTexturePacket.state[9].value = 0;                                                      /* XYZ2 */
     mendererTexturePacket.state[9].address = 5;
-    mendererTexturePacket.state[10].value = 0x6001000;                                              /* XYZ2 */
+    mendererTexturePacket.state[10].value = SCE_GS_SET_XYZ(0x1000, 0x600, 0);
     mendererTexturePacket.state[10].address = 5;
     mendererTexturePacket.state[11].address = 0x4C;                                                   /* FRAME_1, data filled at draw time */
     mendererTexturePacket.state[12].address = 0x18;                                                   /* XYOFFSET_1, data filled at draw time */

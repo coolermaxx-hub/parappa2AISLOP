@@ -443,7 +443,7 @@ void SpmNode::RenderScreenModelNode() {
         prRenderStuff.m_statistics.opaque_context1_node_num++;
         PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
         uc->m_matrix = this->m_worldMatrix;
-        prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF));
+        prRenderStuff.AppendDmaTag((sceDmaTag*)PR_DECACHE(uc));
     }
 
     PrVuNodeHeaderDmaPacket *packet2 = this->m_context1Packets[1];
@@ -469,7 +469,7 @@ void SpmNode::RenderScreenModelNode() {
 
         pos = tmp;
 
-        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), this->m_sortGroup, -pos[2]);
+        prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)PR_DECACHE(uc), this->m_sortGroup, -pos[2]);
     }
 }
 
@@ -493,7 +493,7 @@ void SpmNode::RenderBackgroundScreenModel() {
             if (packet != NULL) {
                 packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 packet->m_matrix = this->m_worldMatrix;
-                prRenderStuff.AppendDmaTag((sceDmaTag*)((u_int)packet & 0x0FFFFFFF));
+                prRenderStuff.AppendDmaTag((sceDmaTag*)PR_DECACHE(packet));
 
                 if (i == 0) {
                     prRenderStuff.m_statistics.opaque_context1_node_num++;
@@ -543,7 +543,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                 PrVuNodeHeaderDmaPacket *uc = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(packet);
                 uc->m_matrix = this->m_worldMatrix;
                 uc->m_disturbance = prSpramData->m_disturbance;
-                prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)((u_int)uc & 0x0FFFFFFF));
+                prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)PR_DECACHE(uc));
             }
 
             PrVuNodeHeaderDmaPacket *uc = this->m_context1Packets[1];
@@ -566,7 +566,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
                     z = pos[2] * 3.40282347e+38f;
                 }
 
-                prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)((u_int)uc & 0x0FFFFFFF), key, z);
+                prRenderStuff.AppendTransmitDmaTag((sceDmaTag*)PR_DECACHE(uc), key, z);
             }
         }
 

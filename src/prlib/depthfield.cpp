@@ -105,5 +105,5 @@ void PrSceneObject::ApplyDepthOfField() {
     sceDmaChan *dma = sceDmaGetChan(SCE_DMA_GIF);
     dma->chcr.TTE = 0;
     FlushCache(0);
-    sceDmaSend(dma, (u_long128*)(((u_int)packet.pBase & 0x3fff) | 0x80000000));
+    sceDmaSend(dma, (u_long128*)PR_DMA_SPR_ADDR(packet.pBase));
 }
