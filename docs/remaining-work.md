@@ -101,7 +101,8 @@ already-differing functions were checked for identical assembly). Covered:
   and the primitive origin (`GS_X_COORD`, `GS_Y_COORD`).
 - Recurring GS register values as named macros: game side in `os/cmngifpk.h`
   (`GS_TEST_OFF`, `GS_TEST_ALPHA_NONZERO`, `GS_TEST_COLOR_ONLY`, `GS_ALPHA_BLEND`,
-  `GS_ALPHA_FIXED`, `GS_CLAMP_EDGES`, `GS_PRIM_TEX_SPRITE`, `GS_FRAME_TEX0`),
+  `GS_ALPHA_FIXED`, `GS_ALPHA_ADD`, `GS_ALPHA_SUBTRACT`, `GS_CLAMP_EDGES`,
+  `GS_PRIM_TEX_SPRITE`, `GS_FRAME_TEX0`),
   `GS_TEX1_LINEAR` in `os/tim2.h`, and prlib side in `prlib/gsstate.h`
   (`PR_TEST_*`, `PR_ALPHA_*`, `PR_TEX1_*`, `PR_FRAME_CT32`). TEX0 pixel formats use
   `SCE_GS_PSM*`, DMA tag ids use `PrDmaTagId`. Every read of a libgraph register
@@ -116,8 +117,9 @@ already-differing functions were checked for identical assembly). Covered:
   `P3MC_RES_*` results, `P3MC_FLAG_*`, save kinds (`P3MC_MODE_LOG/REPLAY`),
   file check results, `MEMC_ERR_*` codes at every call site, and the menu-side
   flow states and results (`MCUSER_*`, `MCUCHK_*`, `MCFLOW_*`, `MCCHECK_*`).
-- Menu message numbers (`MCMES`, kinds), subtitle alignment, scene animation
-  commands (`MNANM_*`), user-name character packing, stage indices
+- Menu message numbers (`MCMES`, kinds), text placement flags (`MNFONT_*`, shared
+  in `menu/menufont.h`), scene animation commands and timer banks (`MNANM_*`,
+  `MN_SCENE_BANKS`, bank sets `MNANM_BANK_SET`), user-name character packing, stage indices
   (`STDAT_STAGE_*`) and ending/bonus flags (`ENDING_*`).
 
 - Menu flows in `menusub.c`: the shared `MNFLOW_RUN/INIT/END` argument, and
