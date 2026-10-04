@@ -1,5 +1,6 @@
 #include "spram.h"
 
+#include "dma.h"
 #include "prpriv.h"
 
 #include "model.h"
@@ -84,7 +85,7 @@ void PrSPRAM_DATA::SendDisplayHeader() {
     static sceDmaTag dmaTagTemplate = {
         /* .qwc  */ (sizeof(PrDisplayHeader) / 16) - 1,
         /* .mark */ 0,
-        /* .id   */ 0x70, /* DMAend */
+        /* .id   */ PR_DMA_TAG_END,
         /* .next */ NULL,
         /* .p    */ {
             SCE_VIF1_SET_STCYCL(/*WL*/4, /*CL*/4, 0),

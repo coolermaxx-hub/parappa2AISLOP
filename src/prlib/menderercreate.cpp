@@ -11,6 +11,7 @@
 #include "renderstuff.h"
 #include "noodlepacket.h"
 #include "nalib/napacket.h"
+#include "vu1/vucommon.h"
 
 extern int prCurrentStage;
 
@@ -195,7 +196,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     dmaTag->id = 0x30;                        /* ref */
     dmaTag->next = (sceDmaTag*)noodleParameter;
     dmaTag->p[0] = 0;
-    dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, 0x4B, 0xC /* V4-32 */, 0);
+    dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, 0x4B, PR_VIF_UNPACK_V4_32(0), 0);
 
     dmaTag = &mendererCreatePacket.endDma;
     dmaTag->qwc = 0;

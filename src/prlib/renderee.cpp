@@ -191,7 +191,7 @@ static PrEECoreVertexKernel eeCoreVertexKernels[8] = {
     PrRenderStuff::RenderVertexEECoreContour,
     PrRenderStuff::RenderVertexEECoreRefmap,
 };
-static sceDmaTag eeCoreChunkDmaTag = { 0, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+static sceDmaTag eeCoreChunkDmaTag = { 0, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } };
 static float eeCoreRandomCenter[4] __attribute__((aligned(16))) = { 1.5f, 1.5f, 1.5f, 1.5f };
 struct PrEECoreDisturbance {
     u_int seed;

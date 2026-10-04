@@ -42,7 +42,7 @@ void PrDmaQueue::Initialize() {
 
         queue->stall_tag.qwc = 1;
         queue->stall_tag.mark = 0;
-        queue->stall_tag.id = 0x40; /* DMArefs */
+        queue->stall_tag.id = PR_DMA_TAG_REFS;
         queue->stall_tag.next = (sceDmaTag*)&queue->stall_qw;
         queue->stall_tag.p[0] = 0;
         queue->stall_tag.p[1] = 0;
@@ -56,7 +56,7 @@ void PrDmaQueue::Initialize() {
          */
         queue->call_tag.qwc = 0;
         queue->call_tag.mark = 0;
-        queue->call_tag.id = 0x50; /* DMAcall */
+        queue->call_tag.id = PR_DMA_TAG_CALL;
         queue->call_tag.p[0] = 0;
         queue->call_tag.p[1] = 0;
 
@@ -65,7 +65,7 @@ void PrDmaQueue::Initialize() {
          */
         queue->next_tag.qwc = 0;
         queue->next_tag.mark = 0;
-        queue->next_tag.id = 0x20; /* DMAnext */
+        queue->next_tag.id = PR_DMA_TAG_NEXT;
         queue->next_tag.next = &((queue + 1)->stall_tag);
         queue->next_tag.p[0] = 0;
         queue->next_tag.p[1] = 0;
@@ -128,7 +128,7 @@ void PrDmaQueue::Append(void *tag) {
 }
 
 void PrDmaQueue::Wait() {
-    m_queue[m_pos].call_tag.id = 0x70; /* DMAend */
+    m_queue[m_pos].call_tag.id = PR_DMA_TAG_END;
     m_queue[m_pos].call_tag.next = NULL;
     asm("sync.l");
 
@@ -142,6 +142,6 @@ void PrDmaQueue::Wait() {
      * Restore the original tag type
      * after stopping the queue.
      */
-    m_queue[m_pos].call_tag.id = 0x50; /* DMAcall */
+    m_queue[m_pos].call_tag.id = PR_DMA_TAG_CALL;
     m_started = false;
 }

@@ -10,6 +10,7 @@
 #include "spram.h"
 #include "utility.h"
 #include "noodlepacket.h"
+#include "vu1/vucommon.h"
 
 #include <eekernel.h>
 #include <libdma.h>
@@ -56,10 +57,10 @@ static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
 // VIF1 chain: GS state (REF), parameters (REF, UNPACK), microprogram (MSCAL,
 // patched at runtime) and the frame draw (REFE).
 static PrNoodleAlphaDmaPacket alphaModulationDmaPacket = {
-    { 4, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationGsPacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(4, 0) } },
-    { 16, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationPacket, { SCE_VIF1_SET_FLUSH(0), SCE_VIF1_SET_UNPACK(0, 16, 0xC /* V4-32 */, 0) } },
-    { 0, 0, 0x10 /* DMAcnt */, NULL, { SCE_VIF1_SET_MSCAL(0, 0), 0 } },
-    { 13, 0, 0x00 /* DMArefe */, (sceDmaTag*)&alphaModulationFramePacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(13, 0) } },
+    { 4, 0, PR_DMA_TAG_REF, (sceDmaTag*)&alphaModulationGsPacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(4, 0) } },
+    { 16, 0, PR_DMA_TAG_REF, (sceDmaTag*)&alphaModulationPacket, { SCE_VIF1_SET_FLUSH(0), SCE_VIF1_SET_UNPACK(0, 16, PR_VIF_UNPACK_V4_32(0), 0) } },
+    { 0, 0, PR_DMA_TAG_CNT, NULL, { SCE_VIF1_SET_MSCAL(0, 0), 0 } },
+    { 13, 0, PR_DMA_TAG_REFE, (sceDmaTag*)&alphaModulationFramePacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(13, 0) } },
 };
 
 static float mendererDeltaRotation[8];
@@ -132,7 +133,7 @@ void PrCreateAlphaModulation(float alpha) {
 
 /* rodata */
 // DMAcnt of thirteen quadwords: the GIF tag plus twelve A+D registers.
-static const sceDmaTag alphaBlendDmaTag = { 13, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+static const sceDmaTag alphaBlendDmaTag = { 13, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } };
 // PACKED, twelve loops of one A+D register, EOP.
 static const sceGifTag alphaBlendGifTag = {
     12, 1, 0, 0, 0, 0, 0, 1,

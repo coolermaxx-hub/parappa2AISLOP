@@ -6,6 +6,7 @@
 #include "dbug/syori.h"
 #endif
 
+#include "dma.h"
 #include "mfifo.h"
 #include "renderstuff.h"
 #include "spram.h"
@@ -49,7 +50,7 @@ float prMendererNoodleColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 // Work-buffer copy and draw state for the noodle strips. Frame and texture
 // are filled in by InitializeNoodleStripRendering.
 static PrNoodleStripPacket noodleStripDmaPacket = {
-    { 15, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } },
+    { 15, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } },
     { 14, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_BITBLTBUF },
     { 0, SCE_GS_TRXPOS },
@@ -69,7 +70,7 @@ static PrNoodleStripPacket noodleStripDmaPacket = {
 
 // DMAcnt of two quadwords: the GIF tag and one clamp register write.
 static PrNoodleStripHeader noodleStripHeaderPacket = {
-    { 2, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } },
+    { 2, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } },
     { 1, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     0,
     SCE_GS_CLAMP_2,
@@ -230,7 +231,7 @@ void PushNoodleColor(u_long *rgbaq) {
 
 /* rodata */
 // DMAcnt of six quadwords: the GIF tag plus five register-list quadwords.
-static const sceDmaTag noodleQuadDmaTag = { 6, 0, 0x10 /* DMAcnt */, NULL, { 0, 0 } };
+static const sceDmaTag noodleQuadDmaTag = { 6, 0, PR_DMA_TAG_CNT, NULL, { 0, 0 } };
 // REGLIST, one loop, EOP, ten registers: PRIM, RGBAQ, then (UV, XYZ2) x4.
 static const sceGifTag noodleQuadGifTag = {
     1, 1, 0, 0, 0, 0, 1, 10,

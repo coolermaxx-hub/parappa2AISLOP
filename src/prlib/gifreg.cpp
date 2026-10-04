@@ -1,5 +1,7 @@
 #include "gifreg.h"
 
+#include "dma.h"
+
 #include <libgraph.h>
 
 /* Draw only pixels with alpha above zero; depth test always passes, or Z >= buffer. */
@@ -127,7 +129,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             break;
         }
 
-        strip.Freeze(0x60 /* DMAret */, NULL);
+        strip.Freeze(PR_DMA_TAG_RET, NULL);
     }
 
     gifRegisterModeInitialized = true;
