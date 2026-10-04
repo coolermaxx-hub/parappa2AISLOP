@@ -1106,16 +1106,20 @@ void MbarCharSet2(MBARR_CHR2 *mb_pp) {
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(x2), GS_Y_COORD(y2), 1));
 }
 
+/* The up/down windows split the field in half and stop short of the right edge. */
+#define MBWINDOW_SPLIT_X1 525
+#define MBWINDOW_SPLIT_Y  (SCREEN_FIELD_HEIGHT / 2)
+
 void MbarWindowSet(MBWINDOW_ENUM wenum) {
     switch (wenum) {
     case MBWINDOW_NORMAL:
-        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, 639, 0, 223));
+        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH - 1, 0, SCREEN_FIELD_HEIGHT - 1));
         break;
     case MBWINDOW_UP:
-        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, 525, 0, 111));
+        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, MBWINDOW_SPLIT_X1, 0, MBWINDOW_SPLIT_Y - 1));
         break;
     case MBWINDOW_DOWN:
-        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, 525, 112, 223));
+        sceGifPkAddGsAD(&mbar_gif, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, MBWINDOW_SPLIT_X1, MBWINDOW_SPLIT_Y, SCREEN_FIELD_HEIGHT - 1));
         break;
     }
 }

@@ -9,6 +9,14 @@
 /* RGBAQ's Q field takes a float; 1.0f for untextured primitives. */
 #define GS_Q_ONE 0x3f800000
 
+/* TEX0 that samples a frame buffer as a 1024x256 CT32 texture; the 640x224 field sits in its top-left corner. */
+#define GS_FRAME_TEX0(frame, tcc, tfx) \
+    SCE_GS_SET_TEX0(/*TBP0*/(frame)->FBP << 5, /*TBW*/(frame)->FBW, /*PSM*/SCE_GS_PSMCT32, /*TW*/10, /*TH*/8, \
+                    /*TCC*/(tcc), /*TFX*/(tfx), /*CBP*/0, /*CPSM*/0, /*CSM*/0, /*CSA*/0, /*CLD*/0)
+
+/* Texel coordinate of the field's bottom-right corner, in 12.4 fixed point. */
+#define GS_FIELD_UV_MAX SCE_GS_SET_UV(SCREEN_WIDTH << 4, SCREEN_FIELD_HEIGHT << 4)
+
 typedef struct { // 0x8
     /* 0x0 */ u_long128 *pBase;
     /* 0x4 */ int pri;

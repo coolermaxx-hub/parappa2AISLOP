@@ -2291,9 +2291,9 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
     CmnGifADPacketMake(&gifpk, DrawGetFrameP(drDisp));
     req_req = 0;
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, 0, 10, 8, 0, SCE_GS_MODULATE, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, GS_FRAME_TEX0(use_pp, 0, SCE_GS_MODULATE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, 0, 0, 0, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
 
@@ -2301,9 +2301,9 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
     ck_pos = dpara_pp->pos_start + dpara_pp->pos_add * frame;
 
     if (dpara_pp->type == DDSP_VMOVE_U || dpara_pp->type == DDSP_VMOVE_D) {
-        cnt_size = 640;
+        cnt_size = SCREEN_WIDTH;
     } else {
-        cnt_size = 224;
+        cnt_size = SCREEN_FIELD_HEIGHT;
     }
 
     for (i = 0; i < cnt_size; i++) {
@@ -2319,8 +2319,8 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
             if (treat_pos < 1.0f) {
                 ng_f = 1;
             } else {
-                if (treat_pos > 640.0f) {
-                    treat_pos = 640.0f;
+                if (treat_pos > SCREEN_WIDTH) {
+                    treat_pos = SCREEN_WIDTH;
                 }
                 tmp_x = 0;
                 tmp_y = i;
@@ -2329,13 +2329,13 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
             }
             break;
         case DDSP_HMOVE_R:
-            if (treat_pos >= 639.0f) {
+            if (treat_pos >= SCREEN_WIDTH - 1) {
                 ng_f = 1;
             } else {
                 if (treat_pos < 0.0f) {
                     treat_pos = 0.0f;
                 }
-                adj_pos = 640.0f - treat_pos;
+                adj_pos = SCREEN_WIDTH - treat_pos;
                 tmp_y = i;
                 tmp_x = treat_pos;
                 tmp_w = adj_pos;
@@ -2346,8 +2346,8 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
             if (treat_pos < 1.0f) {
                 ng_f = 1;
             } else {
-                if (treat_pos > 224.0f) {
-                    treat_pos = 224.0f;
+                if (treat_pos > SCREEN_FIELD_HEIGHT) {
+                    treat_pos = SCREEN_FIELD_HEIGHT;
                 }
                 tmp_x = i;
                 tmp_h = treat_pos;
@@ -2355,13 +2355,13 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
             }
             break;
         case DDSP_VMOVE_D:
-            if (treat_pos > 223.0f) {
+            if (treat_pos > SCREEN_FIELD_HEIGHT - 1) {
                 ng_f = 1;
             } else {
                 if (treat_pos < 0.0f) {
                     treat_pos = 0.0f;
                 }
-                adj_pos = 224.0f - treat_pos;
+                adj_pos = SCREEN_FIELD_HEIGHT - treat_pos;
                 tmp_x = i;
                 tmp_y = treat_pos;
                 tmp_w = 1;
@@ -2441,9 +2441,9 @@ int DrawMoveDispIn(void *para_pp, int frame, int first_f, int useDisp, int drDis
 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, 0, 10, 8, 0, SCE_GS_MODULATE, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, GS_FRAME_TEX0(use_pp, 0, SCE_GS_MODULATE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, 0, 0, 0, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
 
@@ -2694,7 +2694,7 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
     if (use_pp != NULL) {
-        sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, SCE_GS_PSMCT32, 10, 8, 1, SCE_GS_MODULATE, 0, 0, 0, 0, 0));
+        sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, GS_FRAME_TEX0(use_pp, 1, SCE_GS_MODULATE));
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
     }
 
