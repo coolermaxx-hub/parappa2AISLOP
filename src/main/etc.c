@@ -70,27 +70,24 @@ void GlobalTimeJobChange(TIME_GET_FLAG tfg) {
 }
 
 void GlobalTimeJob(void) {
-    /* Not on STABS, but makes things shorter */
-    GLOBAL_DATA *gl_pp = &global_data;
+    if (global_data.TimeType == FGF_VSYNC) {
+        global_data.vsyncTime = TimeCallbackTimeGet();
 
-    if (gl_pp->TimeType == FGF_VSYNC) {
-        gl_pp->vsyncTime = TimeCallbackTimeGet();
+        global_data.currentTime = global_data.vsyncTime;
+        global_data.Snd_vsyncTime = (((global_data.currentTime * 96.0f * global_data.tempo) + 1800.0f) / 3600.0f);
+        global_data.Snd_currentTime = global_data.Snd_vsyncTime;
 
-        gl_pp->currentTime = gl_pp->vsyncTime;
-        gl_pp->Snd_vsyncTime = (((gl_pp->currentTime * 96.0f * gl_pp->tempo) + 1800.0f) / 3600.0f);
-        gl_pp->Snd_currentTime = gl_pp->Snd_vsyncTime;
-
-        gl_pp->Snd_cdSampleCnt = CdctrlSndTime2WP2sample(gl_pp->tempo, gl_pp->Snd_vsyncTime);
-    } else if (gl_pp->TimeType == FGF_CD) {
+        global_data.Snd_cdSampleCnt = CdctrlSndTime2WP2sample(global_data.tempo, global_data.Snd_vsyncTime);
+    } else if (global_data.TimeType == FGF_CD) {
         CdctrlWp2GetSampleTmpBuf();
 
-        gl_pp->Snd_cdTime = CdctrlWp2GetSndTimeTmp(gl_pp->tempo);
+        global_data.Snd_cdTime = CdctrlWp2GetSndTimeTmp(global_data.tempo);
 
-        gl_pp->Snd_currentTime = gl_pp->Snd_cdTime;
-        gl_pp->cdTime = ((gl_pp->Snd_currentTime * 3600.0f + gl_pp->tempo * 96.0f * 0.5f) / (gl_pp->tempo * 96.0f));
-        gl_pp->currentTime = gl_pp->cdTime;
+        global_data.Snd_currentTime = global_data.Snd_cdTime;
+        global_data.cdTime = ((global_data.Snd_currentTime * 3600.0f + global_data.tempo * 96.0f * 0.5f) / (global_data.tempo * 96.0f));
+        global_data.currentTime = global_data.cdTime;
 
-        gl_pp->Snd_cdSampleCnt = CdctrlWp2GetSampleTmp();
+        global_data.Snd_cdSampleCnt = CdctrlWp2GetSampleTmp();
     }
 }
 
@@ -117,18 +114,10 @@ TAP_ROUND_ENUM GetHatRound(void) {
 }
 
 int GlobalMendererUseCheck(void) {
-    int ret = FALSE;
-
-    if (global_data.play_step == PSTEP_GAME || global_data.play_step == PSTEP_SERIAL) {
-        ret = TRUE;
-    }
-    
-    return ret;
+    return global_data.play_step == PSTEP_GAME || global_data.play_step == PSTEP_SERIAL;
 }
 
 void GlobalLobcalCopy(void) {
-    int demo_rnd;
-
     switch (game_status.demo_flagG) {
     case DEMOF_OFF:
         global_data.play_modeL       = game_status.play_modeG;
@@ -142,8 +131,9 @@ void GlobalLobcalCopy(void) {
 
         global_data.level_vs_enumL   = game_status.level_vs_enumG;
         break;
-    case DEMOF_DEMO:
-        demo_rnd = clearStageCheck();
+    case DEMOF_DEMO: {
+        int demo_rnd = clearStageCheck();
+
         if (demo_rnd < 5) {
             demo_rnd = 5;
         }
@@ -160,6 +150,7 @@ void GlobalLobcalCopy(void) {
         global_data.demo_flagL       = DEMOF_DEMO;
         global_data.tapLevelCtrl     = LM_AUTO;
         break;
+    }
     case DEMOF_REPLAY:
     default:
         global_data.play_modeL       = mc_rep_str.play_modeS;
@@ -374,7 +365,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
 PAD_TYPE GetPcode2PadType(PLAYER_CODE player_code) {
     int         i;
     PAD_TYPE    ret;
-    GLOBAL_PLY *gl_pp = global_data.global_ply;
+    GLOBAL_PLY *gl_pp;
 
     ret = PAD_UNUSE;
 
@@ -392,11 +383,10 @@ PAD_TYPE GetPcode2PadType(PLAYER_CODE player_code) {
 static u_int vsync_time[51];
 
 static int TimeCallback(int x) {
-    int    i;
-    u_int *time = vsync_time;
+    int i;
 
-    for (i = 0; i < PR_ARRAYSIZE(vsync_time); i++, time++) {
-        (*time)++;
+    for (i = 0; i < PR_ARRAYSIZE(vsync_time); i++) {
+        vsync_time[i]++;
     }
 
     return 1;

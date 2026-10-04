@@ -89,7 +89,6 @@ static void dbg_select_disp(void) {
     int           selpos;
     DBG_MODE_STR *dbg_pp;
     int           i;
-    int           numkun; /* TODO: can't find an use for this (v0). */
 
     selpos = 0;
     DbgMsgInit();
@@ -145,7 +144,9 @@ static void dbg_select_disp(void) {
 
             DbgMsgPrint(dbg_mode_str[i].msg_pp, 1800, (1968 + (i*12)));
             if (dbg_mode_str[i].selmsg_pp != NULL) {
-                DbgMsgPrint(dbg_mode_str[i].selmsg_pp[*dbg_mode_str[i].set_pp - dbg_mode_str[i].min], 2000, (1968 + (i*12)));
+                int numkun = *dbg_mode_str[i].set_pp - dbg_mode_str[i].min;
+
+                DbgMsgPrint(dbg_mode_str[i].selmsg_pp[numkun], 2000, (1968 + (i*12)));
             }
         }
 
@@ -339,8 +340,7 @@ static void dummyPlay(int retTitle) {
         break;
     case DUMMY_MODE_VS_COM:
         if (ret == DUMMY_PRESS_CIRCLE || ret == DUMMY_PRESS_TRIANGLE) {
-            u_int       clrcnt;
-            GLOBAL_PLY *gply_pp;
+            u_int clrcnt;
 
             menu_str.sel_menu_enum = SEL_MENU_SAVE;
 
@@ -359,13 +359,17 @@ static void dummyPlay(int retTitle) {
             game_status.scoreG[0] = scoreTmp[0];
             game_status.scoreG[1] = scoreTmp[1];
 
-            gply_pp = &global_data.global_ply[0];
-            gply_pp->vsWin = 3;
-            gply_pp->vsLost = 0;
+            /* Player 1 beats the computer 3-0. */
+            {
+                GLOBAL_PLY *gply_pp = &global_data.global_ply[0];
 
-            gply_pp = &global_data.global_ply[1];
-            gply_pp->vsWin = 0;
-            gply_pp->vsLost = 3;
+                gply_pp->vsWin = 3;
+                gply_pp->vsLost = 0;
+
+                gply_pp = &global_data.global_ply[1];
+                gply_pp->vsWin = 0;
+                gply_pp->vsLost = 3;
+            }
         } else {
             menu_str.sel_menu_enum = SEL_MENU_STAGESEL;
             game_status.scoreG[0] = 0;
@@ -801,16 +805,15 @@ void startUpDisp(void) {
 
 int selPlayDispType(int sel_stage, int sel_disp, CANCEL_TYPE_ENUM canseltype) {
     STDAT_DAT  *stdat_dat_pp;
+    int         fsize;
     int         ret;
+    int         tmp_area;
     int         yn_disp_on;
     GLOBAL_PLY *gply_pp;
 
     stdat_dat_pp = &stdat_rec[sel_stage].stdat_dat_pp[sel_disp];
 
     if (stdat_dat_pp->play_step == PSTEP_XTR) {
-        int fsize;
-        int tmp_area;
-
         fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
         fsize = ((fsize + 2047) / 2048) * 2048;
 
@@ -1030,7 +1033,6 @@ int selPlayDispSetPlayOne(int sel_stage) {
     STDAT_DAT *stdat_dat_pp;
     int        fsize;
     int        ret;
-    int        decp;
 
     ret = 0;
 
@@ -1048,10 +1050,12 @@ int selPlayDispSetPlayOne(int sel_stage) {
     CdctrlReadOne(&stdat_dat_pp->intfile, UsrMemEndAlloc(fsize), NULL);
     CdctrlReadWait();
 
-    decp = UsrMemAllocEndNext();
-    UsrMemEndFree();
+    {
+        int decp = UsrMemAllocEndNext();
 
-    CdctrlMemIntgDecode(decp, UsrMemAllocNext());
+        UsrMemEndFree();
+        CdctrlMemIntgDecode(decp, UsrMemAllocNext());
+    }
 
     cmnfTim2Trans();
 
@@ -1075,8 +1079,6 @@ int gamePlayDisp(void) {
     u_int       clrcnt;
     int         cancel_flag;
     int         ret;
-    int         dsip_level;
-    int         i; /* Not in STABS */
 
     cancel_flag = 0;
 
@@ -1131,6 +1133,8 @@ int gamePlayDisp(void) {
         menu_str.sel_menu_enum = SEL_MENU_STAGESEL;
     } else {
         if (game_status.play_modeG == PLAY_MODE_SINGLE) {
+            int dsip_level;
+
             gply_pp = &global_data.global_ply[0];
 
             dsip_level = RANK_LEVEL2DISP_LEVEL(gply_pp->rank_level);
@@ -1293,8 +1297,8 @@ void titleDisp(int firstf) {
 
 int urawazaKeyCheck(void) {
     PADD *pad_pp;
-
-    int change_tbl[17] = {
+    int   ret;
+    int   change_tbl[17] = {
         TLL_LV01,   TLL_LV03, TLL_LV05, TLL_LV07,
         TLL_NORMAL, TLL_LV10, TLL_LV12, TLL_LV14,
         TLL_LV16,   TLL_LV15, TLL_LV13, TLL_LV11,
@@ -1302,19 +1306,21 @@ int urawazaKeyCheck(void) {
         TLL_LV02,
     };
 
-    int   ud_d, ret;
-    float pos;
-
     pad_pp = &pad[0];
 
     /* R3 button */
     if (!(pad_pp->shot & SCE_PADj)) {
         ret = -1;
     } else {
+        int   ud_d;
+        float pos;
+
+        /* With the right stick tilted, its direction picks one of 17 sectors; otherwise pick at random. */
         if (pad_pp->ana[PAD_ANA_RY] <  (128 - 64) || pad_pp->ana[PAD_ANA_RX] >= (64 + 128) ||
             pad_pp->ana[PAD_ANA_RY] >= (64 + 128) || pad_pp->ana[PAD_ANA_RX] <  (128 - 64)) {
-            int rx = pad_pp->ana[PAD_ANA_RX] - 128;
-            int ry = pad_pp->ana[PAD_ANA_RY] - 128;
+            short rx = pad_pp->ana[PAD_ANA_RX] - 128;
+            short ry = pad_pp->ana[PAD_ANA_RY] - 128;
+
             pos = atan2(-rx, ry);
             pos = (pos + PR_PI);
             pos = (pos * 17.0f) / (PR_PI*2);
@@ -1332,7 +1338,7 @@ int urawazaKeyCheck(void) {
 
         ud_d = change_tbl[ud_d];
         printf("level fix:%d\n", ud_d);
-    
+
         ret = ud_d;
     }
 
@@ -1367,7 +1373,6 @@ void ura_check(void) {
 
 void mainStart(void *xx) {
     static int first_f = TRUE;
-    int retTitle;
 
     mccReqInit();
     CdctrlInit();
@@ -1410,6 +1415,8 @@ void mainStart(void *xx) {
         game_status.demo_flagG = DEMOF_OFF;
 
         while (1) {
+            int retTitle;
+
             UsrMemClear();
             SpuBankSet();
 

@@ -8,14 +8,14 @@ That makes this more reliable than reading declarations from the source (stabs_l
     python3 tools/dev/audit/stabs_scopes.py [function-or-file-substring] [-o] [-s] [-v]
 
 For every function present in both, the locals are printed as a nested list, e.g.
-    nStage:r16 { n:r2 } { r:r6 i:r8 }
-where r<N> is a register, s<N> a stack offset, p a parameter and V/S a function-scope static. A
-function is reported when the names in a scope or the nesting differ. Scopes without any described
-variable (all of theirs were optimized away) only count with -s; the original has some that cannot
-be traced back to source, such as a block covering a whole function. With -o, the declaration
-order within a scope must match too; with -v, register and stack slots must match as well (they
-differ in functions whose code does not match the original). Run from the repository root after a
-build."""
+    mode:a4 nStage:r16 { n:r2 } { r:r6 i:r8 }
+where r<N> is a register, s<N> a stack offset, a<N> a parameter in a register, p a parameter on
+the stack and V/S a function-scope static. A function is reported when the names in a scope or the
+nesting differ. A block that encloses the whole function body counts as the body. Blocks without
+any described variable (all of theirs were optimized away) only count with -s. With -o, the
+declaration order within a scope must match too; with -v, register and stack slots must match as
+well (they differ in functions whose code does not match the original). Run from the repository
+root after a build."""
 import glob
 import re
 import struct
@@ -87,7 +87,8 @@ def describe(code, string, value):
     name, _, desc = string.partition(':')
     letter = desc[:1]
     if code == N_RSYM:
-        return '%s:r%s' % (name, value)
+        # A parameter that lives in a register is 'name:P<type>'.
+        return '%s:%s%s' % (name, 'a' if letter == 'P' else 'r', value)
     if code == N_PSYM or letter in 'Pp':
         return '%s:p' % name
     if code in (N_STSYM, N_LCSYM):
@@ -146,11 +147,16 @@ def tree(tokens):
             pending.append(t)
     root[0].extend(pending)
 
-    # Fold the function body block into the function.
-    if len(root[1]) == 1 and not root[0]:
+    # Fold the function body block into the function, and a block that encloses the whole body
+    # (only parameters outside it) into that.
+    while len(root[1]) == 1 and all(is_param(t) for t in root[0]):
         body = root[1][0]
-        root = (body[0], body[1])
+        root = (root[0] + body[0], body[1])
     return root
+
+
+def is_param(token):
+    return token.split(':')[1][:1] in 'ap'
 
 
 def render(scope, slots=True):
