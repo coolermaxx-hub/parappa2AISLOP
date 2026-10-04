@@ -443,7 +443,9 @@ static void WipeLoadInDisp(void *x) {
 
                 TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 67);
             } else {
-                int ttmp = (timer - 67) % 135;
+                int ttmp = timer - 67;
+
+                ttmp %= 135;
 
                 if (ttmp == 134 || ttmp == 0) {
                     wipe_end_flag = TRUE;

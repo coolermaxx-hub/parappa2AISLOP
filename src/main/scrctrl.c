@@ -435,7 +435,7 @@ static LERO_POS_STR lero_pos_str[][2] = {
 SCR_SND_DBUFF scr_snd_dbuff = {};
 static SNDTAP *scr_sndtap_pp[4];
 SCORE_STR score_str = {};
-static SCORE_INDV_STR score_indv_str[5]; /* global in the original; static keeps it out of the common symbols */
+static SCORE_INDV_STR score_indv_str[PINDEX_MAX]; /* global in the original; static keeps it out of the common symbols */
 TAPDAT vs_tapdat_work[64] = {};
 static int follow_scr_tap_memory_cnt;
 static int follow_scr_tap_memory_cnt_load;
@@ -523,13 +523,18 @@ u_int ScrTapDbuffSet(SNDREC *sndrec_pp) {
 }
 
 void ScrTapDbuffSetSp(SNDREC *sndrec_pp, int id) {
+    int ret;
+
     if (id < 0) {
         return;
     }
 
     scr_snd_dbuff.next_index = id;
-    ScrTapDataTrans(sndrec_pp, scr_snd_dbuff.bank[id & 1 ^ 1], scr_snd_dbuff.data_top);
-    scr_snd_dbuff.sndrec_pp[id & 1 ^ 1] = sndrec_pp;
+
+    /* The other buffer of the pair. */
+    ret = (id & 1) ^ 1;
+    ScrTapDataTrans(sndrec_pp, scr_snd_dbuff.bank[ret], scr_snd_dbuff.data_top);
+    scr_snd_dbuff.sndrec_pp[ret] = sndrec_pp;
 }
 
 void ScrTapDbuffClear(void) {
@@ -2747,7 +2752,8 @@ static int nextExamTime(void) {
         tapset_pp = IndvGetTapSetAdrs(sindv_pp);
         if (tapset_pp != NULL) {
             if (sindv_pp->scr_exam_str.exam_enum != EXAM_NONE) {
-                ret = (tapset_pp->taptimeEnd + sindv_pp->current_time) - sindv_pp->top_scr_ctrlpp[sindv_pp->useLine].lineTime;
+                ret = tapset_pp->taptimeEnd + sindv_pp->current_time;
+                ret -= sindv_pp->top_scr_ctrlpp[sindv_pp->useLine].lineTime;
                 return ret;
             }
         }
@@ -3001,7 +3007,6 @@ void ScrMoveSetSub(SCORE_INDV_STR *sindv_pp, int Pnum, int sub_job, int sub_time
     int             ttype;
     int             tmp_cdsample;
     int             target_move_time;
-    SCORE_INDV_STR *sub_in_pp;
 
     target_move_time = targetTimeGet(goto_job, goto_time, useIndevCodeGet());
 
@@ -3016,33 +3021,37 @@ void ScrMoveSetSub(SCORE_INDV_STR *sindv_pp, int Pnum, int sub_job, int sub_time
     sindv_pp->status |= SCS_WAIT;
     otherIndvPause(Pnum);
 
-    sub_in_pp = &score_indv_str[4]; /* MOVE */
-    sub_in_pp->status = SCS_USE;
-    sub_in_pp->plycode = PCODE_MOVE;
-    sub_in_pp->global_ply = 0;
+    /* Start the move line's player on sub_job. */
+    {
+        SCORE_INDV_STR *sub_in_pp = &score_indv_str[PINDEX_MOVE];
 
-    IndivMoveChange(sub_in_pp, 0, sub_job);
+        sub_in_pp->status = SCS_USE;
+        sub_in_pp->plycode = PCODE_MOVE;
+        sub_in_pp->global_ply = NULL;
 
-    sub_in_pp->retStartLine = start_move_line;
-    sub_in_pp->refStartTime = start_move_time;
+        IndivMoveChange(sub_in_pp, 0, sub_job);
 
-    sub_in_pp->refTartegLine = goto_job;
-    sub_in_pp->refTargetTime = target_move_time;
+        sub_in_pp->retStartLine = start_move_line;
+        sub_in_pp->refStartTime = start_move_time;
 
-    if (GetTimeType(sub_job) != GTIME_VSYNC) {
-        GlobalTimeJobChange(FGF_CD);
-    } else {
-        GlobalTimeJobChange(FGF_VSYNC);
+        sub_in_pp->refTartegLine = goto_job;
+        sub_in_pp->refTargetTime = target_move_time;
+
+        if (GetTimeType(sub_job) != GTIME_VSYNC) {
+            GlobalTimeJobChange(FGF_CD);
+        } else {
+            GlobalTimeJobChange(FGF_VSYNC);
+        }
+
+        TimeCallbackTimeSetChanTempo(sub_job, 0, GetLineTempo(sub_job));
+
+        sub_in_pp->top_scr_ctrlpp[sub_job].lineTime = 0;
+        sub_in_pp->top_scr_ctrlpp[sub_job].lineTimeFrame = 0;
+
+        ScrLincChangTbl(sub_job);
+
+        tapEventCheck(sub_in_pp, 0, 0, PINDEX_MOVE);
     }
-
-    TimeCallbackTimeSetChanTempo(sub_job, 0, GetLineTempo(sub_job));
-
-    sub_in_pp->top_scr_ctrlpp[sub_job].lineTime = 0;
-    sub_in_pp->top_scr_ctrlpp[sub_job].lineTimeFrame = 0;
-
-    ScrLincChangTbl(sub_job);
-
-    tapEventCheck(sub_in_pp, 0, 0, 4);
 
     ttype = GetTimeType(goto_job);
     if (ttype == GTIME_VSYNC) {
@@ -3648,7 +3657,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 otherIndvTapReset(Pnum);
                 otherIndvPause(Pnum);
 
-                sub_in_pp = &score_indv_str[4];
+                sub_in_pp = &score_indv_str[PINDEX_MOVE];
                 sub_in_pp->status = SCS_USE;
                 sub_in_pp->plycode = PCODE_MOVE;
                 sub_in_pp->global_ply = NULL;
@@ -4681,11 +4690,11 @@ void bngTapEventCheck(SCORE_INDV_STR *sindv_pp, int num, int id) {
 }
 
 static void bonusGameParaReq(BNG_ACT_P_ENUM actnum) {
-    bngTapEventCheck(&score_indv_str[2], actnum, 0);
+    bngTapEventCheck(&score_indv_str[PINDEX_PARA], actnum, 0);
 }
 
 static void bonusGameKoamaReq(int kotamaNum, BNG_ACT_K_ENUM actnum) {
-    bngTapEventCheck(&score_indv_str[1], actnum + kotamaNum, kotamaNum + 1);
+    bngTapEventCheck(&score_indv_str[PINDEX_TEACHER], actnum + kotamaNum, kotamaNum + 1);
 }
 
 static int bonus_minus_point_sub(int wtime) {
