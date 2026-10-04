@@ -161,6 +161,11 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   set TCC through the `sceGsTex0` fields instead of shifting the two 32-bit
   halves of the 64-bit TEX0 word. Same bits; the compiler now works on the
   whole word.
+- `PkTEX0_SetAdd` (src/menu/pksprite.c) builds its TEX0 value with
+  `SCE_GS_SET_TEX0` instead of writing the low and high 32-bit halves of the
+  register word separately. Same bits for valid (non-negative) inputs; the
+  compiler now does the work in 64-bit registers. The rest of the sprite
+  packet builder is typed (`PKGIFTAG`, `PK_AD_PACKET`) with unchanged code.
 - `ScrExamSetCheck` (src/main/scrctrl.c) declares the replay score buffer
   `mcr_scr` inside the block that fills it, where the original debug info
   places it. The old function-scope declaration only reproduced the original

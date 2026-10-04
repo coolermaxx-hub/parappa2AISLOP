@@ -13,6 +13,25 @@
 #define PK_REG_RGBAQ(slot) ((u_long)1 << ((slot) * 4))
 #define PK_REG_UV(slot)    ((u_long)3 << ((slot) * 4))
 #define PK_REG_XYZF2(slot) ((u_long)4 << ((slot) * 4))
+#define PK_REG_AD(slot)    ((u_long)SCE_GIF_PACKED_AD << ((slot) * 4))
+
+/*
+ * The register helpers below emit a PACKED GIF tag followed by A+D
+ * quadwords, each holding one register value and its address.
+ */
+typedef struct {
+    PKGIFTAG     gif;
+    sceGifPackAd ad[3];
+} PK_AD_PACKET;
+
+/*
+ * SCISSOR keeps each coordinate in its own 16-bit lane, of which the GS
+ * uses the low 11 bits. PkSCISSOR_Add stores whole lanes, so out-of-range
+ * bits land in the unused lane bits instead of being masked off.
+ */
+typedef struct {
+    short x0, x1, y0, y1;
+} PK_SCISSOR_LANES;
 
 static sceGsScissor _PkDefSCISSOR PR_ALIGNED(16) = {
     .SCAX0 = 0, .SCAX1 = SCREEN_WIDTH - 1,
@@ -144,164 +163,159 @@ void TsDrawUPacket(TsUSERPKT *up) {
 }
 
 void PkTEX0_Add(SPR_PKT pkt, u_long texreg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = texreg;
-    ((u_long*)*pk)[3] = SCE_GS_TEX0_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = texreg;
+    pk->ad[0].ADDR = SCE_GS_TEX0_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkTEX1_Add(SPR_PKT pkt, u_long texreg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = texreg;
-    ((u_long*)*pk)[3] = SCE_GS_TEX1_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = texreg;
+    pk->ad[0].ADDR = SCE_GS_TEX1_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkCLAMP_Add(SPR_PKT pkt, u_long texrp) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = texrp;
-    ((u_long*)*pk)[3] = SCE_GS_CLAMP_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = texrp;
+    pk->ad[0].ADDR = SCE_GS_CLAMP_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkALPHA_Add(SPR_PKT pkt, u_long alpreg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = alpreg;
-    ((u_long*)*pk)[3] = SCE_GS_ALPHA_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = alpreg;
+    pk->ad[0].ADDR = SCE_GS_ALPHA_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkTEST_Add(SPR_PKT pkt, u_long testsw) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = testsw;
-    ((u_long*)*pk)[3] = SCE_GS_TEST_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = testsw;
+    pk->ad[0].ADDR = SCE_GS_TEST_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkSCISSOR_Add(SPR_PKT pkt, short x, short y, short w, short h) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
 
-    ((short*)*pk)[8]  = x;
-    ((short*)*pk)[9]  = x + w - 1;
-    ((short*)*pk)[10] = y;
-    ((short*)*pk)[11] = y + h - 1;
+    GS_REG_VIEW(PK_SCISSOR_LANES, pk->ad[0].DATA).x0 = x;
+    GS_REG_VIEW(PK_SCISSOR_LANES, pk->ad[0].DATA).x1 = x + w - 1;
+    GS_REG_VIEW(PK_SCISSOR_LANES, pk->ad[0].DATA).y0 = y;
+    GS_REG_VIEW(PK_SCISSOR_LANES, pk->ad[0].DATA).y1 = y + h - 1;
 
-    ((u_long*)*pk)[3] = SCE_GS_SCISSOR_1;
+    pk->ad[0].ADDR = SCE_GS_SCISSOR_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkDefSCISSOR_Add(SPR_PKT pkt) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = GS_REG_WORD(_PkDefSCISSOR);
-    ((u_long*)*pk)[3] = SCE_GS_SCISSOR_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = GS_REG_WORD(_PkDefSCISSOR);
+    pk->ad[0].ADDR = SCE_GS_SCISSOR_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkOFFSET_Add(SPR_PKT pkt, int x, int y) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
 
-    ((short*)*pk)[8]  = x;
-    ((short*)*pk)[10] = y;
+    GS_REG_VIEW(sceGsXyoffset, pk->ad[0].DATA).OFX = x;
+    GS_REG_VIEW(sceGsXyoffset, pk->ad[0].DATA).OFY = y;
 
-    ((u_long*)*pk)[3] = SCE_GS_XYOFFSET_1;
+    pk->ad[0].ADDR = SCE_GS_XYOFFSET_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkPABE_Add(SPR_PKT pkt, u_int flg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = flg;
-    ((u_long*)*pk)[3] = SCE_GS_PABE;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = flg;
+    pk->ad[0].ADDR = SCE_GS_PABE;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkFBA_Add(SPR_PKT pkt, u_int flg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = flg;
-    ((u_long*)*pk)[3] = SCE_GS_FBA_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = flg;
+    pk->ad[0].ADDR = SCE_GS_FBA_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 void PkCCLAMP_Add(SPR_PKT pkt, u_int flg) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = flg;
-    ((u_long*)*pk)[3] = SCE_GS_COLCLAMP;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = flg;
+    pk->ad[0].ADDR = SCE_GS_COLCLAMP;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 }
 
 static void PkDefReg_Add(SPR_PKT pkt) {
-    qword *pk = (qword*)*pkt;
+    PK_AD_PACKET *pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 2);
-    ((u_long*)*pk)[1] = 0 |
-        SCE_GIF_PACKED_AD << (0 * 4) |
-        SCE_GIF_PACKED_AD << (1 * 4);
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 2);
+    pk->gif.regs = PK_REG_AD(0) | PK_REG_AD(1);
 
-    ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
+    pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
 
-    ((u_long*)*pk)[4] = GS_TEXA_STP;
-    ((u_long*)*pk)[5] = SCE_GS_TEXA;
+    pk->ad[1].DATA = GS_TEXA_STP;
+    pk->ad[1].ADDR = SCE_GS_TEXA;
 
-    *pkt = (u_long128*)pk + 3;
+    *pkt = (u_long128*)&pk->ad[2];
 }
 
 void PkTEX0_SetAdd(SPR_PKT pkt, int vram, int w, int h, int isLinear) {
-    qword *pk;
-    int    n;
-    int    tw, th;
+    PK_AD_PACKET *pk;
+    int           n;
+    int           tw, th;
 
-    pk = (qword*)*pkt;
+    pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
-    ((u_long*)*pk)[1] =
-        SCE_GIF_PACKED_AD << (0 * 4) |
-        SCE_GIF_PACKED_AD << (1 * 4) |
-        SCE_GIF_PACKED_AD << (2 * 4);
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
+    pk->gif.regs = PK_REG_AD(0) | PK_REG_AD(1) | PK_REG_AD(2);
 
-    ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
+    pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
 
     th = 0;
     tw = 0;
@@ -321,29 +335,17 @@ void PkTEX0_SetAdd(SPR_PKT pkt, int vram, int w, int h, int isLinear) {
     }
 
     if (isLinear) {
-        ((u_long*)*pk)[4] = SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0);
+        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0);
     } else {
-        ((u_long*)*pk)[4] = SCE_GS_SET_TEX1_1(0, 0, 0, 0, 0, 0, 0);
+        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, 0, 0, 0, 0, 0);
     }
 
-    ((u_long*)*pk)[5] = SCE_GS_TEX1_1;
+    pk->ad[1].ADDR = SCE_GS_TEX1_1;
 
-    /* Macros to set (a portion of) the TEX0 register as two words */
-    #define GS_SET_TEX0_W0(tbp, tbw, psm, tw, th) \
-        ((tbp)        | ((tbw) << 14) | \
-        ((psm) << 20) | ((tw ) << 26) | \
-        ((th ) << 30))
-    #define GS_SET_TEX0_W1(th, tcc) \
-        (((th) >> 2)  | ((tcc) << 2)) /* Set last two bits of TH, and TCC */
+    pk->ad[2].DATA = SCE_GS_SET_TEX0(vram, (w + 63) / 64, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
+    pk->ad[2].ADDR = SCE_GS_TEX0_1;
 
-    ((u_int*)*pk)[12] = GS_SET_TEX0_W0(vram, (w + 63) / 64, 0, tw, th);
-    ((u_int*)*pk)[13] = GS_SET_TEX0_W1(th, 1);
-    ((u_long*)*pk)[7] = SCE_GS_TEX0_1;
-
-    *pkt = (u_long128*)pk + 4;
-
-    #undef GS_SET_TEX0_W0
-    #undef GS_SET_TEX0_W1
+    *pkt = (u_long128*)&pk->ad[3];
 }
 
 u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
@@ -479,29 +481,26 @@ void SetSprScreenXYWH(SPR_PRM *spr) {
 }
 
 void PkSprPkt_SetDrawEnv(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
-    qword *pk;
+    PK_AD_PACKET *pk;
 
     if (pdenv == NULL) {
         return;
     }
 
-    pk = (qword*)*pkt;
+    pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
-    ((u_long*)*pk)[1] =
-        SCE_GIF_PACKED_AD << (0 * 4) |
-        SCE_GIF_PACKED_AD << (1 * 4) |
-        SCE_GIF_PACKED_AD << (2 * 4);
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
+    pk->gif.regs = PK_REG_AD(0) | PK_REG_AD(1) | PK_REG_AD(2);
 
-    ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
+    pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
 
-    ((u_long*)*pk)[4] = GS_REG_WORD(pdenv->frame1);
-    ((u_long*)*pk)[5] = SCE_GS_FRAME_1;
+    pk->ad[1].DATA = GS_REG_WORD(pdenv->frame1);
+    pk->ad[1].ADDR = SCE_GS_FRAME_1;
 
-    ((u_long*)*pk)[6] = GS_REG_WORD(pdenv->zbuf1);
-    ((u_long*)*pk)[7] = SCE_GS_ZBUF_1;
+    pk->ad[2].DATA = GS_REG_WORD(pdenv->zbuf1);
+    pk->ad[2].ADDR = SCE_GS_ZBUF_1;
 
-    *pkt = (u_long128*)pk + 4;
+    *pkt = (u_long128*)&pk->ad[3];
 
     _PkDefSCISSOR = pdenv->scissor1;
     _PkDefZBUFFER = pdenv->zbuf1;
@@ -514,28 +513,28 @@ void PkSprPkt_SetDrawEnv(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
 }
 
 void PkZBUFMask_Add(SPR_PKT pkt, int bMsk) {
-    qword *pk;
+    PK_AD_PACKET *pk;
 
     if (_PkDefZBUFFER.ZBP == 0) {
         return;
     }
 
-    pk = (qword*)*pkt;
+    pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
-    ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = GS_REG_WORD(_PkDefZBUFFER);
-    ((u_long*)*pk)[3] = SCE_GS_ZBUF_1;
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    pk->gif.regs = PK_REG_AD(0);
+    pk->ad[0].DATA = GS_REG_WORD(_PkDefZBUFFER);
+    pk->ad[0].ADDR = SCE_GS_ZBUF_1;
 
-    *pkt = (u_long128*)pk + 2;
+    *pkt = (u_long128*)&pk->ad[1];
 
-    ((sceGsZbuf*)*pk)[2].ZMSK = (bMsk != 0);
+    GS_REG_VIEW(sceGsZbuf, pk->ad[0].DATA).ZMSK = (bMsk != 0);
 }
 
 void PkSprPkt_SetTexVram(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
-    qword *pk;
-    int    x, y, w, h;
-    int    fbp, fbw, psm; /* note: variables not in STABS. */
+    PK_AD_PACKET *pk;
+    int           x, y, w, h;
+    int           fbp, fbw, psm; /* note: variables not in STABS. */
 
     if (pdenv == NULL) {
         return;
@@ -555,20 +554,18 @@ void PkSprPkt_SetTexVram(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     spr->uw = w;
     spr->uh = h;
 
-    pk = (qword*)*pkt;
+    pk = (PK_AD_PACKET*)*pkt;
 
-    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 2);
-    ((u_long*)*pk)[1] =
-        SCE_GIF_PACKED_AD << (0 * 4) |
-        SCE_GIF_PACKED_AD << (1 * 4);
+    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 2);
+    pk->gif.regs = PK_REG_AD(0) | PK_REG_AD(1);
 
     /* texflush doesn't use the data. */
-    ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
+    pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
 
-    ((u_long*)*pk)[4] = SCE_GS_SET_TEX0(fbp << 5, fbw, psm, 10/*1024*/, 10/*1024*/, 1, 0, 0, 0, 0, 0, 0);
-    ((u_long*)*pk)[5] = SCE_GS_TEX0_1;
+    pk->ad[1].DATA = SCE_GS_SET_TEX0(fbp << 5, fbw, psm, 10/*1024*/, 10/*1024*/, 1, 0, 0, 0, 0, 0, 0);
+    pk->ad[1].ADDR = SCE_GS_TEX0_1;
 
-    *pkt = (u_long128*)pk + 3;
+    *pkt = (u_long128*)&pk->ad[2];
 }
 
 void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
@@ -602,8 +599,8 @@ void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
 void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
-    ((u_long*)sp->GifCord)[1] = 0x434310;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 6);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5);
 
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
@@ -666,14 +663,14 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x38(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagTF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
-    ((u_long*)sp->GifCord)[1] = 0x434310;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 6);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5);
 
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
@@ -736,14 +733,14 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x38(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagTF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
-    ((u_long*)sp->GifCord)[1] = 0x434310;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 6);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5);
 
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
@@ -806,14 +803,14 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x38(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagTF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCF *sp = (SprTagCF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 4);
-    ((u_long*)sp->GifCord)[1] = 0x4410;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 4);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3);
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
@@ -853,14 +850,14 @@ void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x28(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagCF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCG *sp = (SprTagCG*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 9);
-    ((u_long*)sp->GifCord)[1] = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_RGBAQ(3) | PK_REG_XYZF2(4) | PK_REG_RGBAQ(5) | PK_REG_XYZF2(6) | PK_REG_RGBAQ(7) | PK_REG_XYZF2(8);
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 9);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_RGBAQ(3) | PK_REG_XYZF2(4) | PK_REG_RGBAQ(5) | PK_REG_XYZF2(6) | PK_REG_RGBAQ(7) | PK_REG_XYZF2(8);
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 1, 0, 0, 1, 0, 1, 0, 0);
     sp->rgba0 = ppspr->rgba0;
@@ -910,7 +907,7 @@ void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x50(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "$11", "memory");
 
-    ((SprTagCG*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 /* Sine series coefficients for rotcossin, loaded into VF01 as one quadword:
@@ -990,8 +987,8 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 
     _pkVU0RotMatrixZ(ppspr->rot);
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 10);
-    ((u_long*)sp->GifCord)[1] = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5) | PK_REG_UV(6) | PK_REG_XYZF2(7) | PK_REG_UV(8) | PK_REG_XYZF2(9);
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 10);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5) | PK_REG_UV(6) | PK_REG_XYZF2(7) | PK_REG_UV(8) | PK_REG_XYZF2(9);
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
@@ -1108,14 +1105,14 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $8,    0x58(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "$11", "$12", "memory");
 
-    ((SprTagTFR*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLF *sp = (SprTagLF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 4);
-    ((u_long*)sp->GifCord)[1] = 0x4410;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 4);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3);
 
     if (flg & PKSPR_ANTIALIAS) {
         sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINE, 0, 0, 0, 1, 1, 1, 0, 0);
@@ -1170,17 +1167,17 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x28(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagLF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLSF *sp = (SprTagLSF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 0, 0, 0, 1, 2);
-    ((u_long*)sp->GifCord)[1] = 0x10;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 0, 0, 0, SCE_GIF_REGLIST, 2);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1);
 
-    ((u_long*)sp->GifCord2)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
-    ((u_long*)sp->GifCord2)[1] = 0xe;
+    sp->GifCord2.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
+    sp->GifCord2.regs = PK_REG_AD(0);
 
     if (flg & PKSPR_ANTIALIAS) {
         sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINESTRIP, 1, 0, 0, 1, 1, 1, 0, 0);
@@ -1219,14 +1216,14 @@ void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sq      $10,   0x30(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagLSF*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkCLineS_AddNext(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLSFN *sp = (SprTagLSFN*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 2);
-    ((u_long*)sp->GifCord)[1] = 0x41;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 2);
+    sp->GifCord.regs = PK_REG_RGBAQ(0) | PK_REG_XYZF2(1);
 
     sp->rgba = ppspr->rgba0;
 
@@ -1257,14 +1254,14 @@ void PkCLineS_AddNext(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd      $10,   0x18(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagLSFN*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
-    SprTagCFR *sp = (SprTagCFR*)*pk;
+    TriTagCFR *sp = (TriTagCFR*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 5);
-    ((u_long*)sp->GifCord)[1] = 0x44410;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 5);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3) | PK_REG_XYZF2(4);
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRI, 0, 0, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
@@ -1314,14 +1311,14 @@ void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd     $10,   0x30(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagCFR*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkPolyF4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCFR *sp = (SprTagCFR*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
-    ((u_long*)sp->GifCord)[1] = 0x444410;
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 6);
+    sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3) | PK_REG_XYZF2(4) | PK_REG_XYZF2(5);
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 0, 0, 1, 0, 1, 0, 0);
     sp->rgba = ppspr->rgba0;
@@ -1374,14 +1371,14 @@ void PkPolyF4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd     $10,   0x38(%0)     \n\t"
     : : "r"(sp), "r"(&ppspr->zdepth) : "$8", "$9", "$10", "memory");
 
-    ((SprTagCFR*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 void PkPolyFT4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTFR *sp = (SprTagTFR*)*pk;
 
-    ((u_long*)&sp->GifCord)[0] = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, 0, 0, SCE_GIF_REGLIST, 10);
-    ((u_long*)&sp->GifCord)[1] =
+    sp->GifCord.tag = SCE_GIF_SET_TAG(1, SCE_GS_TRUE, 0, 0, SCE_GIF_REGLIST, 10);
+    sp->GifCord.regs =
         (u_long)(SCE_GS_PRIM ) << (0 * 4) |
         (u_long)(SCE_GS_RGBAQ) << (1 * 4) |
         (u_long)(SCE_GS_UV   ) << (2 * 4) |
@@ -1478,7 +1475,7 @@ void PkPolyFT4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         "sd     $10,   0x58(%1)     \n\t"
     : : "r"(&ppspr->zdepth), "r"(sp) : "$8", "$9", "$10", "memory");
 
-    ((SprTagTFR*)*pk) = sp + 1;
+    *pk = (u_long128*)(sp + 1);
 }
 
 PKMESH* PkMesh_Create(int w, int h) {

@@ -31,6 +31,7 @@ causes = {
     'prlib/model.cpp': 'GetPrimitivePosition calls the shared NaVECTOR::Set instead of a local weak copy (the missing symbol), and the inlined matrix Apply is scheduled differently.',
     'prlib/renderee.cpp': 'The two vertex kernels are inline asm blocks instead of standalone functions, and the orphan helper is gone; surrounding functions inherit the shifted register use.',
     'menu/menusub.c': 'Twelve functions were reconstructed from asm and never matched without compiler steering; `main-rom-matching` keeps their original asm under `NON_MATCHING` (TsRestoreSaveData, TsRanking_Set, TsPopMenu_Flow, TsPopMenu_Draw, TsPopMenCus_Draw, TsSaveMenu_Draw, TSJukeCDObj_Draw, TsCmnCell_CusorDraw, TsOption_Flow, TsUserList_SetCurTag, TsUserList_Flow, TsNAMEINBox_Draw). TsBGMStop lost a one-pass do-while (tail-call layout only), TsGetTm2Tex and TsGetTm2HedTex read TEX0 fields through `sceGsTex0` (see remaining-work.md), and TsHosiPut differs only by a trailing alignment nop.',
+    'menu/pksprite.c': 'PkTEX0_SetAdd builds TEX0 with `SCE_GS_SET_TEX0` as one 64-bit value; the original wrote it as two 32-bit halves (see remaining-work.md).',
     'prlib/depthfield.cpp': 'The original carried a local copy of `NaGifPacketWrapper::AddGsAD`; ours calls the shared weak symbol. The copy is a banned brute-forced template.',
 }
 d = sum(len(v[0]) for v in a.values())

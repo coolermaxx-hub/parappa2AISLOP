@@ -4,11 +4,12 @@ Function-level differences between this tree and the original-compiler objects (
 Each difference comes from a function that never matched as C (the `main-rom-matching` branch keeps its original asm), or from replacing compiler steering, alias casts and weak template copies with typed C/C++. None is a behaviour change by intent, but the original instruction order is not kept.
 Causes marked *inferred* were read from the source change, not traced instruction by instruction. A unit marked *not yet classified* is an open audit item.
 
-Total: 92 functions differ, 32 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
+Total: 93 functions differ, 32 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
 
 | Unit | Differing functions | Original symbols not reproduced | Cause |
 | --- | --- | --- | --- |
 | `nalib/navector.cpp.o` | 1 | 0 | Set(NaMATRIX3) is the real template. The original image carried a brute-forced copy; that copy is not reproduced. |
+| `menu/pksprite.c.o` | 1 | 0 | PkTEX0_SetAdd builds TEX0 with `SCE_GS_SET_TEX0` as one 64-bit value; the original wrote it as two 32-bit halves (see remaining-work.md). |
 | `menu/menu.c.o` | 1 | 0 | MenuCtrl: register pin removed (see remaining-work.md). |
 | `menu/p3mc.c.o` | 3 | 0 | Typed tables and `P3MC_DATE` replace word casts and a do-while (see remaining-work.md). |
 | `menu/menusub.c.o` | 16 | 0 | Twelve functions were reconstructed from asm and never matched without compiler steering; `main-rom-matching` keeps their original asm under `NON_MATCHING` (TsRestoreSaveData, TsRanking_Set, TsPopMenu_Flow, TsPopMenu_Draw, TsPopMenCus_Draw, TsSaveMenu_Draw, TSJukeCDObj_Draw, TsCmnCell_CusorDraw, TsOption_Flow, TsUserList_SetCurTag, TsUserList_Flow, TsNAMEINBox_Draw). TsBGMStop lost a one-pass do-while (tail-call layout only), TsGetTm2Tex and TsGetTm2HedTex read TEX0 fields through `sceGsTex0` (see remaining-work.md), and TsHosiPut differs only by a trailing alignment nop. |

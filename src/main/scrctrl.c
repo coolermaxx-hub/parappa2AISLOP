@@ -3596,7 +3596,8 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                 tapReqGroupInit();
 
-                exam_start = sindv_pp->current_time + tapset_pp->taptimeEnd; scex_pp->exam_start = exam_start;
+                exam_start = sindv_pp->current_time + tapset_pp->taptimeEnd;
+                scex_pp->exam_start = exam_start;
 
                 sej_pp = scex_pp->scr_exam_job_pp;
 
@@ -4821,7 +4822,6 @@ static void bnNumberDisp(sceGifPacket *gif_pp, long score, short x, short y, int
     u_char       num;
     int          first_f = FALSE;
     BN_NUM_TYPE *bn_num_type_pp;
-    int          tmp; /* note: variable not in STABS. */
 
     bn_num_type_pp = &bn_num_type[type];
 
@@ -4832,8 +4832,8 @@ static void bnNumberDisp(sceGifPacket *gif_pp, long score, short x, short y, int
     sceGifPkAddGsAD(gif_pp, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 
     for (i = 0; i < keta; i++) {
-        tmp = i + 1;
-        num = (score >> ((keta - tmp) << 2)) & 0xf;
+        /* score is BCD after hex2dec: one digit per nibble, most significant first. */
+        num = (score >> ((keta - 1 - i) * 4)) & 0xf;
 
         if (num != 0 || first_f || i == (keta - 1)) {
             sceGifPkAddGsAD(gif_pp, SCE_GS_UV, SCE_GS_SET_UV(bn_num_type_pp->map[num][0] << 4, bn_num_type_pp->map[num][1] << 4));

@@ -37,6 +37,12 @@ typedef struct { // 0xa0
 
 typedef u_long128 **SPR_PKT;
 
+/* A GIF tag as the two 64-bit words the sprite packets write. */
+typedef struct {
+    u_long tag;  /* SCE_GIF_SET_TAG(...) */
+    u_long regs; /* REGS: four bits per register, first register in the low nibble */
+} PR_ALIGNED(16) PKGIFTAG;
+
 typedef struct { // 0x18
     /* 0x00 */ float centerX;
     /* 0x04 */ float centerY;
@@ -103,7 +109,7 @@ typedef struct { // 0x1c
 } PKMESH;
 
 typedef struct { // 0x40
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long uv0;
@@ -113,7 +119,7 @@ typedef struct { // 0x40
 } SprTagTF;
 
 typedef struct { // 0x30
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long xyz2_0;
@@ -121,7 +127,7 @@ typedef struct { // 0x30
 } SprTagCF;
 
 typedef struct { // 0x60
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long uv0;
@@ -135,7 +141,7 @@ typedef struct { // 0x60
 } SprTagTFR;
 
 typedef struct { // 0x40
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long xyz2_0;
@@ -145,7 +151,7 @@ typedef struct { // 0x40
 } SprTagCFR;
 
 typedef struct { // 0x40
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long xyz2_0;
@@ -155,7 +161,7 @@ typedef struct { // 0x40
 } TriTagCFR;
 
 typedef struct { // 0x30
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
     /* 0x20 */ u_long xyz2_0;
@@ -163,22 +169,22 @@ typedef struct { // 0x30
 } SprTagLF;
 
 typedef struct { // 0x40
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba;
-    /* 0x20 */ qword GifCord2;
+    /* 0x20 */ PKGIFTAG GifCord2;
     /* 0x30 */ u_long xyz3;
     /* 0x38 */ u_long reg;
 } SprTagLSF;
 
 typedef struct { // 0x20
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long rgba;
     /* 0x18 */ u_long xyz2_0;
 } SprTagLSFN;
 
 typedef struct { // 0x60
-    /* 0x00 */ qword GifCord;
+    /* 0x00 */ PKGIFTAG GifCord;
     /* 0x10 */ u_long prim;
     /* 0x18 */ u_long rgba0;
     /* 0x20 */ u_long xyz2_0;
