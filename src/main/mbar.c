@@ -1164,10 +1164,10 @@ static int MbarGetTimeArea(MBAR_REQ_STR *mr_pp) {
         return ret;
     }
 
-    if (mr_pp->mbar_req_enum & 0x33) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_ELAPSED) {
         ret = mbar_ctrl_time - mr_pp->current_time - mr_pp->tapset_pp->taptimeStart;
     }
-    if (mr_pp->mbar_req_enum & 0xc) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_FUTURE) {
         ret = mr_pp->tapset_pp->taptimeEnd - mr_pp->tapset_pp->taptimeStart;
     }
 
@@ -1185,10 +1185,10 @@ static int MbarGetTimeArea2(MBAR_REQ_STR *mr_pp) {
         return ret;
     }
 
-    if (mr_pp->mbar_req_enum & 0x33) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_ELAPSED) {
         ret = mbar_ctrl_time - mr_pp->current_time - mr_pp->tapset_pp->taptimeStart;
     }
-    if (mr_pp->mbar_req_enum & 0xc) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_FUTURE) {
         ret = mr_pp->tapset_pp->taptimeEnd - mr_pp->tapset_pp->taptimeStart;
     }
 
@@ -1298,7 +1298,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     endt = MbarGetEndTime(mr_pp);
     sttap = MbarGetStartTap(mr_pp);
 
-    if (mr_pp->mbar_req_enum & 0x200) {
+    if (mr_pp->mbar_req_enum & MBAR_BIT_PARAPPA) {
         mbarr_chr2.mbc_enum = MBC_GLINE_P;
     } else {
         mbarr_chr2.mbc_enum = MBC_GLINE_T;
@@ -1326,10 +1326,10 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
         mbarr_chr2.xp2 = MbarGetDispPosX(endtime);
         mbarr_chr2.yp2 = MbarGetDispPosY(endtime);
 
-        if (mr_pp->mbar_req_enum & 0x40) {
+        if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
             mbarr_chr2.yp2 += 50;
             mbarr_chr2.yp += 50;
-        } else if (mr_pp->mbar_req_enum & 0x800) {
+        } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
             mbarr_chr2.yp2 += 25;
             mbarr_chr2.yp += 25;
         }
@@ -1338,9 +1338,9 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
             mbarr_chr2.xp2 = MbarGetDispPosX(479);
             mbarr_chr2.yp2 = MbarGetDispPosY(479);
 
-            if (mr_pp->mbar_req_enum & 0x40) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                 mbarr_chr2.yp2 += 50;
-            } else if (mr_pp->mbar_req_enum & 0x800) {
+            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
                 mbarr_chr2.yp2 += 25;
             }
 
@@ -1351,10 +1351,10 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
             mbarr_chr2.xp2 = MbarGetDispPosX(endtime);
             mbarr_chr2.yp2 = MbarGetDispPosY(endtime);
 
-            if (mr_pp->mbar_req_enum & 0x40) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                 mbarr_chr2.yp2 += 50;
                 mbarr_chr2.yp += 50;
-            } else if (mr_pp->mbar_req_enum & 0x800) {
+            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
                 mbarr_chr2.yp2 += 25;
                 mbarr_chr2.yp += 25;
             }
@@ -1374,13 +1374,13 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
                 mbarr.mbc_enum = MBC_STAR;
             }
 
-            if (mr_pp->mbar_req_enum & 0x40) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                 mbarr.yp += 50;
-            } else if (mr_pp->mbar_req_enum & 0x800) {
+            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
                 mbarr.yp += 25;
             }
 
-            if (mr_pp->mbar_req_enum & 0x80) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_GUIDE_LIGHT) {
                 MbarGuideLightMake(&mbarr, curtime - endtime);
             }
 
@@ -1416,7 +1416,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     gbalTapTime = mr_pp->current_time + mr_pp->tapset_pp->taptimeStart;
     curtime = mbar_ctrl_time - mr_pp->current_time - mr_pp->tapset_pp->taptimeStart;
 
-    if (mr_pp->mbar_req_enum & 0x3c) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_SCRIPT) {
         TAPDAT *tapdat_pp = mr_pp->tapdat_pp;
         for (i = 0; i < mr_pp->tapdat_size; i++, tapdat_pp++) {
             if (tapdat_pp->KeyIndex == KiNO) {
@@ -1425,23 +1425,23 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
 
             if (global_data.play_typeL == PLAY_TYPE_ONE) {
                 mbarr.mbc_enum = MBC_SP;
-                if (mr_pp->mbar_req_enum & 0x28) {
+                if (mr_pp->mbar_req_enum & MBAR_MASK_ALT) {
                     mbarr.mbc_enum = MBC_M_SP;
                 }
             } else {
                 mbarr.mbc_enum = tapdat_pp->KeyIndex;
-                if (mr_pp->mbar_req_enum & 0x28) {
+                if (mr_pp->mbar_req_enum & MBAR_MASK_ALT) {
                     mbarr.mbc_enum += MBC_SP;
                 }
             }
 
             if (tapdat_pp->time < curtime) {
-                if (!(mr_pp->mbar_req_enum & 0x30)) {
+                if (!(mr_pp->mbar_req_enum & MBAR_MASK_PAST)) {
                     continue;
                 }
                 mbarr.a = 64;
             } else {
-                if (!(mr_pp->mbar_req_enum & 0xc)) {
+                if (!(mr_pp->mbar_req_enum & MBAR_MASK_FUTURE)) {
                     continue;
                 }
             }
@@ -1449,9 +1449,9 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
             mbarr.xp = MbarGetDispPosX(gbalTapTime + tapdat_pp->time - stt);
             mbarr.yp = MbarGetDispPosY(gbalTapTime + tapdat_pp->time - stt);
 
-            if (mr_pp->mbar_req_enum & 0x40) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                 mbarr.yp += 50;
-            } else if (mr_pp->mbar_req_enum & 0x800) {
+            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
                 mbarr.yp += 25;
             }
 
@@ -1463,7 +1463,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
         }
     }
 
-    if (mr_pp->mbar_req_enum & 0x3) {
+    if (mr_pp->mbar_req_enum & MBAR_MASK_MEMORY) {
         SCR_TAP_MEMORY *stm_pp = mr_pp->scr_tap_memory_pp;
         for (i = 0; i < mr_pp->scr_tap_memory_cnt; i++, stm_pp++) {
             if (curtime < stm_pp->ofs_frame) {
@@ -1475,13 +1475,13 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
             }
 
             if (global_data.play_typeL == PLAY_TYPE_ONE) {
-                if (mr_pp->mbar_req_enum & 0x1) {
+                if (mr_pp->mbar_req_enum & MBAR_BIT_MEMORY) {
                     mbarr.mbc_enum = MBC_SP;
                 } else {
                     mbarr.mbc_enum = MBC_M_SP;
                 }
 
-                if (mr_pp->mbar_req_enum & 0x400) {
+                if (mr_pp->mbar_req_enum & MBAR_BIT_OTHER_DIM) {
                     if (!stm_pp->othOn) {
                         mbarr.mbc_enum = MBC_BW_SP;
                     }
@@ -1489,13 +1489,13 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
 
                 fl_type = 0;
             } else {
-                if (mr_pp->mbar_req_enum & 0x1) {
+                if (mr_pp->mbar_req_enum & MBAR_BIT_MEMORY) {
                     mbarr.mbc_enum = stm_pp->key;
                 } else {
                     mbarr.mbc_enum = stm_pp->key + MBC_SP;
                 }
 
-                if (mr_pp->mbar_req_enum & 0x400) {
+                if (mr_pp->mbar_req_enum & MBAR_BIT_OTHER_DIM) {
                     if (!stm_pp->othOn) {
                         mbarr.mbc_enum = stm_pp->key + MBC_M_SP;
                     }
@@ -1506,15 +1506,15 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
 
             mbarr.xp = MbarGetDispPosX(gbalTapTime + stm_pp->ofs_frame - stt);
             mbarr.yp = MbarGetDispPosY(gbalTapTime + stm_pp->ofs_frame - stt);
-            if (mr_pp->mbar_req_enum & 0x40) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                 mbarr.yp += 50;
-            } else if (mr_pp->mbar_req_enum & 0x800) {
+            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
                 mbarr.yp += 25;
             }
 
             MbarSclRotMake(&mbarr, curtime - stm_pp->ofs_frame);
 
-            if (mr_pp->mbar_req_enum & 0x80) {
+            if (mr_pp->mbar_req_enum & MBAR_BIT_GUIDE_LIGHT) {
                 MbarGuideLightMake(&mbarr, curtime - stm_pp->ofs_frame);
             }
 
@@ -1554,9 +1554,9 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     mbarr.xp = MbarGetDispPosX(gbalTapTime);
     mbarr.yp = MbarGetDispPosY(gbalTapTime);
 
-    if (mr_pp->mbar_req_enum & 0x40) {
+    if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
         mbarr.yp += 50;
-    } else if (mr_pp->mbar_req_enum & 0x800) {
+    } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
         mbarr.yp += 25;
     }
 
@@ -1611,7 +1611,7 @@ void mbar_othon_frame_set(MBAR_REQ_STR* mr_pp) {
         return;
     }
 
-    if (mr_pp->mbar_req_enum & 0x40) {
+    if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
         mp_st = 50;
         mp_end = 90;
         mp_fix = 90;

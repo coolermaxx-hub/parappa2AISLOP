@@ -29,15 +29,38 @@ typedef struct { // 0x8
     /* 0x4 */ int timer;
 } MBHOOK_STR;
 
+/* Bits of an MbarReq request, named from how the draw routines test them. */
+enum {
+    MBAR_BIT_MEMORY = 0x1,           /* recorded taps, first style */
+    MBAR_BIT_MEMORY_ALT = 0x2,       /* recorded taps, second style */
+    MBAR_BIT_SCRIPT_FUTURE = 0x4,    /* script taps that have not happened yet */
+    MBAR_BIT_SCRIPT_FUTURE_ALT = 0x8,
+    MBAR_BIT_SCRIPT_PAST = 0x10,     /* script taps already passed, drawn dimmed */
+    MBAR_BIT_SCRIPT_PAST_ALT = 0x20,
+    MBAR_BIT_ROW_LOW = 0x40,         /* bar sits 50 pixels lower */
+    MBAR_BIT_GUIDE_LIGHT = 0x80,     /* recorded taps get a guide light */
+    MBAR_BIT_UNREAD_100 = 0x100,     /* set by the teacher requests, never tested */
+    MBAR_BIT_PARAPPA = 0x200,        /* Parappa's line graphics instead of the teacher's */
+    MBAR_BIT_OTHER_DIM = 0x400,      /* recorded taps the other player did not match use another style */
+    MBAR_BIT_ROW_MID = 0x800         /* bar sits 25 pixels lower */
+};
+
+#define MBAR_MASK_MEMORY    (MBAR_BIT_MEMORY | MBAR_BIT_MEMORY_ALT)
+#define MBAR_MASK_FUTURE    (MBAR_BIT_SCRIPT_FUTURE | MBAR_BIT_SCRIPT_FUTURE_ALT)
+#define MBAR_MASK_PAST      (MBAR_BIT_SCRIPT_PAST | MBAR_BIT_SCRIPT_PAST_ALT)
+#define MBAR_MASK_SCRIPT    (MBAR_MASK_FUTURE | MBAR_MASK_PAST)
+#define MBAR_MASK_ALT       (MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_SCRIPT_PAST_ALT)
+#define MBAR_MASK_ELAPSED   (MBAR_MASK_MEMORY | MBAR_MASK_PAST)
+
 typedef enum {
     MBAR_NONE = 0,
-    MBAR_TEACHER = 393,
-    MBAR_PARAPPA = 745,
-    MBAR_TEACHER_HOOK = 393,
-    MBAR_PARAPPA_HOOK = 1769,
-    MBAR_TEACHER_VS = 105,
-    MBAR_PARAPPA_VS = 553,
-    MBAR_BOXY_VS = 2089
+    MBAR_TEACHER = MBAR_BIT_MEMORY | MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_GUIDE_LIGHT | MBAR_BIT_UNREAD_100,
+    MBAR_PARAPPA = MBAR_BIT_MEMORY | MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_SCRIPT_PAST_ALT | MBAR_BIT_ROW_LOW | MBAR_BIT_GUIDE_LIGHT | MBAR_BIT_PARAPPA,
+    MBAR_TEACHER_HOOK = MBAR_TEACHER,
+    MBAR_PARAPPA_HOOK = MBAR_PARAPPA | MBAR_BIT_OTHER_DIM,
+    MBAR_TEACHER_VS = MBAR_BIT_MEMORY | MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_SCRIPT_PAST_ALT | MBAR_BIT_ROW_LOW,
+    MBAR_PARAPPA_VS = MBAR_BIT_MEMORY | MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_SCRIPT_PAST_ALT | MBAR_BIT_PARAPPA,
+    MBAR_BOXY_VS = MBAR_BIT_MEMORY | MBAR_BIT_SCRIPT_FUTURE_ALT | MBAR_BIT_SCRIPT_PAST_ALT | MBAR_BIT_ROW_MID
 } MBAR_REQ_ENUM;
 
 typedef enum {
