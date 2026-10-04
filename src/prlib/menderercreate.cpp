@@ -141,21 +141,21 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
         packet.stateTag.REGS0 = 0xE;
 
         packet.state[0].value = frame;
-        packet.state[0].address = 0x4C;                /* FRAME_1 */
+        packet.state[0].address = SCE_GS_FRAME_1;
         packet.state[1].value = 0;
-        packet.state[1].address = 0x18;             /* XYOFFSET_1 */
+        packet.state[1].address = SCE_GS_XYOFFSET_1;
         packet.state[2].value = SCE_GS_SET_SCISSOR(0, 0x27F, i * 16, i * 16 + 15);
-        packet.state[2].address = 0x40;              /* SCISSOR_1 */
+        packet.state[2].address = SCE_GS_SCISSOR_1;
         packet.state[3].value = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0x3FE00000);
-        packet.state[3].address = 1;                   /* RGBAQ */
+        packet.state[3].address = SCE_GS_RGBAQ;
         packet.state[4].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 0, 0, 0);
-        packet.state[4].address = 0;                    /* PRIM */
+        packet.state[4].address = SCE_GS_PRIM;
         packet.state[5].value = SCE_GS_SET_CLAMP(2, 2, 0, 255, 0, 15); /* region clamp 256x16 */
-        packet.state[5].address = 8;                   /* CLAMP_1 */
+        packet.state[5].address = SCE_GS_CLAMP_1;
         packet.state[6].value = tex0;
-        packet.state[6].address = 6;                    /* TEX0_1 */
+        packet.state[6].address = SCE_GS_TEX0_1;
         packet.state[7].value = SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0); /* linear mag/min */
-        packet.state[7].address = 0x14;                 /* TEX1_1 */
+        packet.state[7].address = SCE_GS_TEX1_1;
 
         /* 64 sprites: ST, RGBAQ, XYZ2 x 2 */
         packet.spriteTag.NLOOP = 0x40;
@@ -213,28 +213,28 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     texTag->REGS0 = 0xE;
 
     mendererTexturePacket.state[0].value = SCE_GS_SET_BITBLTBUF(zbpBlocks, 10, SCE_GS_PSMCT32, tbp, 4, SCE_GS_PSMCT32);
-    mendererTexturePacket.state[0].address = 0x50;
+    mendererTexturePacket.state[0].address = SCE_GS_BITBLTBUF;
     mendererTexturePacket.state[1].value = SCE_GS_SET_TRXPOS(0, 0, 0, 16, 0);
-    mendererTexturePacket.state[1].address = 0x51;
+    mendererTexturePacket.state[1].address = SCE_GS_TRXPOS;
     mendererTexturePacket.state[2].value = SCE_GS_SET_TRXREG(256, 80);
-    mendererTexturePacket.state[2].address = 0x52;
-    mendererTexturePacket.state[3].value = 2;                                                       /* TRXDIR */
-    mendererTexturePacket.state[3].address = 0x53;
-    mendererTexturePacket.state[4].address = 0x40;                                                   /* SCISSOR_1, data filled at draw time */
-    mendererTexturePacket.state[5].value = 0;                                                      /* TEXFLUSH */
-    mendererTexturePacket.state[5].address = 0x3F;
-    mendererTexturePacket.state[6].value = NaGifPacketWrapper::EncodeRegister(zbuf);                                        /* ZBUF_1 */
-    mendererTexturePacket.state[6].address = 0x4E;
+    mendererTexturePacket.state[2].address = SCE_GS_TRXREG;
+    mendererTexturePacket.state[3].value = 2; /* local to local */
+    mendererTexturePacket.state[3].address = SCE_GS_TRXDIR;
+    mendererTexturePacket.state[4].address = SCE_GS_SCISSOR_1; /* data filled at draw time */
+    mendererTexturePacket.state[5].value = 0;
+    mendererTexturePacket.state[5].address = SCE_GS_TEXFLUSH;
+    mendererTexturePacket.state[6].value = NaGifPacketWrapper::EncodeRegister(zbuf);
+    mendererTexturePacket.state[6].address = SCE_GS_ZBUF_1;
     mendererTexturePacket.state[7].value = SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1);
-    mendererTexturePacket.state[7].address = 0x47;
+    mendererTexturePacket.state[7].address = SCE_GS_TEST_1;
     mendererTexturePacket.state[8].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 0, 0);
-    mendererTexturePacket.state[8].address = 0;
-    mendererTexturePacket.state[9].value = 0;                                                      /* XYZ2 */
-    mendererTexturePacket.state[9].address = 5;
+    mendererTexturePacket.state[8].address = SCE_GS_PRIM;
+    mendererTexturePacket.state[9].value = 0;
+    mendererTexturePacket.state[9].address = SCE_GS_XYZ2;
     mendererTexturePacket.state[10].value = SCE_GS_SET_XYZ(0x1000, 0x600, 0);
-    mendererTexturePacket.state[10].address = 5;
-    mendererTexturePacket.state[11].address = 0x4C;                                                   /* FRAME_1, data filled at draw time */
-    mendererTexturePacket.state[12].address = 0x18;                                                   /* XYOFFSET_1, data filled at draw time */
+    mendererTexturePacket.state[10].address = SCE_GS_XYZ2;
+    mendererTexturePacket.state[11].address = SCE_GS_FRAME_1; /* data filled at draw time */
+    mendererTexturePacket.state[12].address = SCE_GS_XYOFFSET_1; /* data filled at draw time */
 
     mendererTextureCreationInitialized = 1;
 }
