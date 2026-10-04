@@ -56,10 +56,10 @@ static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
 // VIF1 chain: GS state (REF), parameters (REF, UNPACK), microprogram (MSCAL,
 // patched at runtime) and the frame draw (REFE).
 static PrNoodleAlphaDmaPacket alphaModulationDmaPacket = {
-    { 4, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationGsPacket, { 0x10000000 /* FLUSHE */, 0x50000004 /* DIRECT 4 */ } },
-    { 16, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationPacket, { 0x11000000 /* FLUSH */, 0x6C100000 /* UNPACK V4-32 x16 */ } },
-    { 0, 0, 0x10 /* DMAcnt */, NULL, { 0x14000000 /* MSCAL */, 0 } },
-    { 13, 0, 0x00 /* DMArefe */, (sceDmaTag*)&alphaModulationFramePacket, { 0x10000000 /* FLUSHE */, 0x5000000D /* DIRECT 13 */ } },
+    { 4, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationGsPacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(4, 0) } },
+    { 16, 0, 0x30 /* DMAref */, (sceDmaTag*)&alphaModulationPacket, { SCE_VIF1_SET_FLUSH(0), SCE_VIF1_SET_UNPACK(0, 16, 0xC /* V4-32 */, 0) } },
+    { 0, 0, 0x10 /* DMAcnt */, NULL, { SCE_VIF1_SET_MSCAL(0, 0), 0 } },
+    { 13, 0, 0x00 /* DMArefe */, (sceDmaTag*)&alphaModulationFramePacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(13, 0) } },
 };
 
 static float mendererDeltaRotation[8];
@@ -92,7 +92,7 @@ void PrInitializeAlphaModulation() {
 
     alphaModulationGsPacket.frame.value = SCE_GS_SET_FRAME(zbp, 10, 0, 0);
     alphaModulationFramePacket.texture.value = SCE_GS_SET_TEX0(zbp * 32, 10, 0, tw, th, 1, 1, 0, 0, 0, 0, 0);
-    alphaModulationDmaPacket.microprogram.p[0] = PrGetMendererDrawMeshAddress() | 0x14000000; /* MSCAL */
+    alphaModulationDmaPacket.microprogram.p[0] = SCE_VIF1_SET_MSCAL(PrGetMendererDrawMeshAddress(), 0);
 }
 
 void PrCreateAlphaModulation(float alpha) {

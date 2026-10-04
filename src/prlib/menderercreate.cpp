@@ -176,8 +176,8 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     dmaTag->qwc = 3;
     dmaTag->id = 0x10;                        /* cnt */
     dmaTag->next = NULL;
-    dmaTag->p[0] = 0x11000000;                /* FLUSH */
-    dmaTag->p[1] = 0x50000003;                /* DIRECT, 3 qwords */
+    dmaTag->p[0] = SCE_VIF1_SET_FLUSH(0);
+    dmaTag->p[1] = SCE_VIF1_SET_DIRECT(3, 0);
 
     sceGifTag *gifTag = &mendererCreatePacket.stateGif;
     gifTag->NLOOP = 2;
@@ -196,14 +196,14 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     dmaTag->id = 0x30;                        /* ref */
     dmaTag->next = (sceDmaTag*)noodleParameter;
     dmaTag->p[0] = 0;
-    dmaTag->p[1] = 0x6C4B0000;                /* UNPACK V4-32, NUM = 0x4B, ADDR 0 */
+    dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, 0x4B, 0xC /* V4-32 */, 0);
 
     dmaTag = &mendererCreatePacket.endDma;
     dmaTag->qwc = 0;
     dmaTag->id = 0x70;                        /* end */
     dmaTag->next = NULL;
-    dmaTag->p[0] = 0x11000000;                /* FLUSH */
-    dmaTag->p[1] = 0x14000000 | PrGetMendererCreateTextureAddress(); /* MSCAL */
+    dmaTag->p[0] = SCE_VIF1_SET_FLUSH(0);
+    dmaTag->p[1] = SCE_VIF1_SET_MSCAL(PrGetMendererCreateTextureAddress(), 0);
 
     /* Packet that copies the finished texture from the z buffer area to tbp */
     sceGifTag *texTag = &mendererTexturePacket.tag;
