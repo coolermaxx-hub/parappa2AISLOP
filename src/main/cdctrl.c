@@ -20,6 +20,8 @@ void *current_intg_adrs = NULL;
 #define N        4096 /* Size of ring buffer */
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
+#define LZ_FLAG_REFILL 0xff00 /* eight pending flag bits, refilled with the next control byte */
+#define LZ_FLAG_EMPTY  256
 
 static unsigned char RBuff[N + F - 1]; /* Ring buffer for INT decompression */
 
@@ -53,9 +55,9 @@ int PackIntDecode(u_char *fp_r, u_char *fp_w) {
     }
 
     while (fp_w != fp_w_end) {
-        if (((flags >>= 1) & 256) == 0) {
+        if (((flags >>= 1) & LZ_FLAG_EMPTY) == 0) {
             c = *fp_r++;
-            flags = c | 0xff00;
+            flags = c | LZ_FLAG_REFILL;
         }
 
         if (flags & 1) {
@@ -120,9 +122,9 @@ int PackIntDecodeWait(u_char *fp_r, u_char *fp_w, int wait_hline) {
             MtcWait(1);
         }
 
-        if (((flags >>= 1) & 256) == 0) {
+        if (((flags >>= 1) & LZ_FLAG_EMPTY) == 0) {
             c = *fp_r++;
-            flags = c | 0xff00;
+            flags = c | LZ_FLAG_REFILL;
         }
 
         if (flags & 1) {

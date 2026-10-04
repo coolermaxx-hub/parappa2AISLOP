@@ -5,6 +5,9 @@
 #define N        4096 /* Size of ring buffer */
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
+#define PACK_MAGIC  0x12345678 /* PACK_HEADER::id of a valid pack file */
+#define LZ_FLAG_REFILL 0xff00 /* eight pending flag bits, refilled with the next control byte */
+#define LZ_FLAG_EMPTY  256
 
 static unsigned char RBuff[N + F - 1];
 
@@ -32,9 +35,9 @@ int PackDecode(u_char *fp_r, u_char *fp_w) {
     }
 
     while (fp_w != fp_w_end) {
-        if (((flags >>= 1) & 256) == 0) {
+        if (((flags >>= 1) & LZ_FLAG_EMPTY) == 0) {
             c = *fp_r++;
-            flags = c | 0xff00;
+            flags = c | LZ_FLAG_REFILL;
         }
         
         if (flags & 0x1) {
@@ -58,7 +61,7 @@ int PackDecode(u_char *fp_r, u_char *fp_w) {
         }
     }
 
-    return (pack_header_pp->id != 0x12345678);
+    return (pack_header_pp->id != PACK_MAGIC);
 }
 
 int PackGetAdrs(u_int adrs, int num) {
