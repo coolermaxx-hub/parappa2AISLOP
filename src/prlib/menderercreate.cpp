@@ -12,6 +12,7 @@
 #include "noodlepacket.h"
 #include "nalib/napacket.h"
 #include "vu1/vucommon.h"
+#include "gsstate.h"
 
 extern int prCurrentStage;
 
@@ -119,7 +120,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     /* TEX0: TBP0 = tbp, TBW = 4, PSM = CT32, TW/TH, TCC = 1 */
     u_long tex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
     /* FRAME: FBP = zbp, FBW = 10 */
-    u_long frame = SCE_GS_SET_FRAME(zbp, 10, SCE_GS_PSMCT32, 0);
+    u_long frame = PR_FRAME_CT32(zbp);
 
     for (u_int i = 0; i < 5; i++) {
         PrNoodleTextureParameters& param = noodleParameter[i];
@@ -145,17 +146,17 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
         packet.state[0].address = SCE_GS_FRAME_1;
         packet.state[1].value = 0;
         packet.state[1].address = SCE_GS_XYOFFSET_1;
-        packet.state[2].value = SCE_GS_SET_SCISSOR(0, 0x27F, i * 16, i * 16 + 15);
+        packet.state[2].value = SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH - 1, i * 16, i * 16 + 15);
         packet.state[2].address = SCE_GS_SCISSOR_1;
         packet.state[3].value = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0x3FE00000);
         packet.state[3].address = SCE_GS_RGBAQ;
         packet.state[4].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 0, 0, 0);
         packet.state[4].address = SCE_GS_PRIM;
-        packet.state[5].value = SCE_GS_SET_CLAMP(2, 2, 0, 255, 0, 15); /* region clamp 256x16 */
+        packet.state[5].value = SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_CLAMP, /*WMT*/SCE_GS_REGION_CLAMP, 0, 255, 0, 15); /* region clamp 256x16 */
         packet.state[5].address = SCE_GS_CLAMP_1;
         packet.state[6].value = tex0;
         packet.state[6].address = SCE_GS_TEX0_1;
-        packet.state[7].value = SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0); /* linear mag/min */
+        packet.state[7].value = PR_TEX1_BILINEAR;
         packet.state[7].address = SCE_GS_TEX1_1;
 
         /* 64 sprites: ST, RGBAQ, XYZ2 x 2 */
@@ -226,7 +227,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     mendererTexturePacket.state[5].address = SCE_GS_TEXFLUSH;
     mendererTexturePacket.state[6].value = NaGifPacketWrapper::EncodeRegister(zbuf);
     mendererTexturePacket.state[6].address = SCE_GS_ZBUF_1;
-    mendererTexturePacket.state[7].value = SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1);
+    mendererTexturePacket.state[7].value = PR_TEST_Z_ONLY;
     mendererTexturePacket.state[7].address = SCE_GS_TEST_1;
     mendererTexturePacket.state[8].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 0, 0);
     mendererTexturePacket.state[8].address = SCE_GS_PRIM;

@@ -12,6 +12,7 @@
 #include "spram.h"
 #include "utility.h"
 #include "noodlepacket.h"
+#include "gsstate.h"
 
 #include <eeregs.h>
 #include <math.h>
@@ -57,14 +58,14 @@ static PrNoodleStripPacket noodleStripDmaPacket = {
     { SCE_GS_SET_TRXREG(SCREEN_WIDTH, SCREEN_FIELD_HEIGHT), SCE_GS_TRXREG },
     { SCE_GS_SET_TRXDIR(2), SCE_GS_TRXDIR },
     { 0, SCE_GS_FRAME_2 },
-    { SCE_GS_SET_XYOFFSET(0x8000, 0x8000), SCE_GS_XYOFFSET_2 },
-    { SCE_GS_SET_SCISSOR(0, 639, 0, 223), SCE_GS_SCISSOR_2 },
+    { SCE_GS_SET_XYOFFSET(2048 << 4, 2048 << 4), SCE_GS_XYOFFSET_2 },
+    { SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH - 1, 0, SCREEN_FIELD_HEIGHT - 1), SCE_GS_SCISSOR_2 },
     { 0, SCE_GS_RGBAQ },
     { 0, SCE_GS_TEX0_2 },
-    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { PR_TEX1_BILINEAR, SCE_GS_TEX1_2 },
     { SCE_GS_SET_COLCLAMP(1), SCE_GS_COLCLAMP },
-    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80), SCE_GS_ALPHA_2 },
-    { SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { PR_ALPHA_BLEND, SCE_GS_ALPHA_2 },
+    { PR_TEST_ALPHA_NONZERO(SCE_GS_ZALWAYS), SCE_GS_TEST_2 },
     { 0, SCE_GS_TEXFLUSH },
 };
 
@@ -118,7 +119,7 @@ void StartNoodleRotation();
 void PushNoodleColor(u_long *rgbaq);
 
 void InitializeNoodleStripRendering(u_int tbp, u_int fbp, u_int tw, u_int th) {
-    noodleStripDmaPacket.frame.value = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
+    noodleStripDmaPacket.frame.value = PR_FRAME_CT32(fbp);
     noodleStripDmaPacket.texture.value = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
 }
 
@@ -281,7 +282,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
 
         PrNoodleStripHeader *header = reinterpret_cast<PrNoodleStripHeader*>(buf);
         *header = noodleStripHeaderPacket;
-        header->clamp = SCE_GS_SET_CLAMP(2, 2, 0, 255, next * 16, ((block + 2) * 16) - 1);
+        header->clamp = SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_CLAMP, /*WMT*/SCE_GS_REGION_CLAMP, 0, 255, next * 16, ((block + 2) * 16) - 1);
         PrSendMfifo(&header->dma);
 
         u_long v0 = (u_long)(next * 256) << 16;

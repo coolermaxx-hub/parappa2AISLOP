@@ -11,6 +11,7 @@
 #include "utility.h"
 #include "noodlepacket.h"
 #include "vu1/vucommon.h"
+#include "gsstate.h"
 
 #include <eekernel.h>
 #include <libdma.h>
@@ -33,7 +34,7 @@ static PrNoodleAlphaGsPacket alphaModulationGsPacket = {
     { 3, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_FRAME_1 },
     { 0, SCE_GS_XYOFFSET_1 },
-    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_1 },
+    { PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS), SCE_GS_TEST_1 },
 };
 
 // Draws the modulated buffer back to the frame as a region-clamped sprite.
@@ -42,8 +43,8 @@ static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
     { 12, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_FRAME_1 },
     { 0, SCE_GS_TEX0_1 },
-    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_1 },
-    { SCE_GS_SET_CLAMP(2, 2, 0, 23, 0, 15), SCE_GS_CLAMP_1 },
+    { PR_TEX1_BILINEAR, SCE_GS_TEX1_1 },
+    { SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_CLAMP, /*WMT*/SCE_GS_REGION_CLAMP, 0, 23, 0, 15), SCE_GS_CLAMP_1 },
     { 0, SCE_GS_TEXFLUSH },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 1, 0, 0), SCE_GS_PRIM },
     { SCE_GS_SET_UV(0, 0), SCE_GS_UV },
@@ -91,7 +92,7 @@ void PrInitializeAlphaModulation() {
     u_long th = PrGetBitSize(224);
     u_long zbp = prRenderStuff.m_zbuf.ZBP;
 
-    alphaModulationGsPacket.frame.value = SCE_GS_SET_FRAME(zbp, 10, 0, 0);
+    alphaModulationGsPacket.frame.value = PR_FRAME_CT32(zbp);
     alphaModulationFramePacket.texture.value = SCE_GS_SET_TEX0(zbp * 32, 10, SCE_GS_PSMCT32, tw, th, 1, 1, 0, 0, 0, 0, 0);
     alphaModulationDmaPacket.microprogram.p[0] = SCE_VIF1_SET_MSCAL(PrGetMendererDrawMeshAddress(), 0);
 }
@@ -122,8 +123,9 @@ void PrCreateAlphaModulation(float alpha) {
 
     alphaModulationPacket.fade = prMendererFade * 128.0f;
 
-    u_long frame = SCE_GS_SET_FRAME(prMendererDrawFbp, 10, 0, 0);
+    u_long frame = PR_FRAME_CT32(prMendererDrawFbp);
     alphaModulationFramePacket.frame.value = frame;
+    /* FBMSK masks the RGB bits, so the masked frame writes alpha only. */
     alphaModulationFramePacket.maskedFrame.value = frame | SCE_GS_SET_FRAME(0, 0, 0, 0xFFFFFF);
 
     FlushCache(WRITEBACK_DCACHE);
@@ -157,12 +159,13 @@ void PrBlendNoodleImage(bool clear) {
     packet.texture.address = SCE_GS_TEX0_1;
     packet.textureFilter.value = 0;
     packet.textureFilter.address = SCE_GS_TEX1_1;
-    packet.clamp.value = SCE_GS_SET_CLAMP(1, 1, 0, 0, 0, 0);
+    packet.clamp.value = SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_CLAMP, /*WMT*/SCE_GS_CLAMP, 0, 0, 0, 0);
     packet.clamp.address = SCE_GS_CLAMP_1;
-    packet.test.value = SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1);
+    packet.test.value = PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS);
     packet.test.address = SCE_GS_TEST_1;
-    packet.alpha.value = clear ? SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x40)
-                               : SCE_GS_SET_ALPHA(0, 1, 1, 1, 0);
+    /* Clearing mixes the work buffer in at a fixed 50%; otherwise it is blended by the destination alpha. */
+    packet.alpha.value = clear ? PR_ALPHA_FIXED(0x40)
+                               : SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AD, SCE_GS_ALPHA_CD, 0);
     packet.alpha.address = SCE_GS_ALPHA_1;
     packet.primitive.value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 1, 0, 1, 0, 0);
     packet.primitive.address = SCE_GS_PRIM;

@@ -2,23 +2,7 @@
 
 #include "dma.h"
 
-#include <libgraph.h>
-
-/* Draw only pixels with alpha above zero; depth test always passes, or Z >= buffer. */
-#define PR_TEST_ALPHA_NONZERO(ztst) \
-    SCE_GS_SET_TEST(/*ATE*/1, /*ATST*/SCE_GS_ALPHA_GREATER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP, \
-                    /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/(ztst))
-
-/* Every pixel fails the alpha test and writes Z only. */
-#define PR_TEST_Z_ONLY \
-    SCE_GS_SET_TEST(/*ATE*/1, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_ZB_ONLY, \
-                    /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/SCE_GS_ZALWAYS)
-
-/* (Cs - Cd) * As + Cd. */
-#define PR_ALPHA_BLEND SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 128)
-
-/* Bilinear filtering with a fixed LOD (LCM = 1, K = 0). */
-#define PR_TEX1_LINEAR SCE_GS_SET_TEX1(/*LCM*/1, /*MXL*/0, /*MMAG*/SCE_GS_LINEAR, /*MMIN*/SCE_GS_LINEAR, /*MTBA*/0, /*L*/0, /*K*/0)
+#include "gsstate.h"
 
 static bool gifRegisterModeInitialized = false;
 static PrDmaStripForSetGifRegister setGifRegisterMode[6];
@@ -67,7 +51,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
 
             strip.Append(SCE_GS_TEST_1, PR_TEST_ALPHA_NONZERO(SCE_GS_ZALWAYS));
             strip.Append(SCE_GS_ALPHA_1, PR_ALPHA_BLEND);
-            strip.Append(SCE_GS_TEX1_1, PR_TEX1_LINEAR);
+            strip.Append(SCE_GS_TEX1_1, PR_TEX1_BILINEAR_LOD0);
             strip.Append(SCE_GS_ZBUF_1, GS_REG_WORD(zbuf));
             strip.Append(SCE_GS_FBA_1, SCE_GS_SET_FBA_1(0));
             break;
@@ -76,7 +60,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
 
             strip.Append(SCE_GS_TEST_1, PR_TEST_ALPHA_NONZERO(SCE_GS_ZGEQUAL));
             strip.Append(SCE_GS_ALPHA_1, PR_ALPHA_BLEND);
-            strip.Append(SCE_GS_TEX1_1, PR_TEX1_LINEAR);
+            strip.Append(SCE_GS_TEX1_1, PR_TEX1_BILINEAR_LOD0);
             strip.Append(SCE_GS_ZBUF_1, GS_REG_WORD(zbuf));
             strip.Append(SCE_GS_FBA_1, SCE_GS_SET_FBA_1(0));
             break;
@@ -117,7 +101,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0));
             strip.Append(SCE_GS_TEST_1, PR_TEST_ALPHA_NONZERO(SCE_GS_ZGEQUAL));
             strip.Append(SCE_GS_ALPHA_1, PR_ALPHA_BLEND);
-            strip.Append(SCE_GS_TEX1_1, PR_TEX1_LINEAR);
+            strip.Append(SCE_GS_TEX1_1, PR_TEX1_BILINEAR_LOD0);
             break;
         case eGifRegisterMode_PreScene:
             zbuf.ZMSK = 0;

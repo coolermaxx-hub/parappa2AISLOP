@@ -8,6 +8,7 @@
 #include "spram.h"
 #include "mfifo.h"
 #include "eecore.h"
+#include "gsstate.h"
 
 /* data */
 // Decoded from the original 14-quadword DMA payload (13 A+D registers).
@@ -36,12 +37,12 @@ PrEECoreInitializationPacket initEECoreDmaPacket = {
     { 13, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
     { 0, SCE_GS_FRAME_2 },
     { 0, SCE_GS_ZBUF_2 },
-    { SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
-    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80), SCE_GS_ALPHA_2 },
-    { SCE_GS_SET_TEX1(1, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { PR_TEST_ALPHA_NONZERO(SCE_GS_ZGEQUAL), SCE_GS_TEST_2 },
+    { PR_ALPHA_BLEND, SCE_GS_ALPHA_2 },
+    { PR_TEX1_BILINEAR_LOD0, SCE_GS_TEX1_2 },
     { 0, SCE_GS_FBA_2 },
     { 1, SCE_GS_PRMODECONT },
-    { SCE_GS_SET_TEXA(0, 0, 0x80), SCE_GS_TEXA },
+    { SCE_GS_SET_TEXA(/*TA0*/0, /*AEM*/0, /*TA1*/0x80), SCE_GS_TEXA },
     { 1, SCE_GS_COLCLAMP },
     { 0, SCE_GS_PABE },
     { 0, SCE_GS_XYOFFSET_2 },

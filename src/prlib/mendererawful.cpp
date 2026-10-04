@@ -12,6 +12,7 @@
 #include "noodlepacket.h"
 
 #include "nalib/namatrix.h"
+#include "gsstate.h"
 
 #include <eekernel.h>
 #include <eetypes.h>
@@ -23,8 +24,8 @@
 /* data */
 static PrFadeFramePacket mendererFadeData = {
     { 6, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
-    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_1 },
-    { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0), SCE_GS_ALPHA_1 },
+    { PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS), SCE_GS_TEST_1 },
+    { SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0), SCE_GS_ALPHA_1 },
     { 0, SCE_GS_RGBAQ },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0), SCE_GS_PRIM },
     { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
@@ -34,11 +35,11 @@ static PrFadeFramePacket mendererFadeData = {
 static PrAwfulBackgroundPacket awfulBackgroundPacket = {
     { 23, 1, 0, 0, 0, 0, 0, 1, SCE_GIF_PACKED_AD },
     { 0, SCE_GS_TEXFLUSH },
-    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS), SCE_GS_TEST_2 },
     { 0, SCE_GS_ZBUF_2 },
     { 0, SCE_GS_ALPHA_2 },
     { 0, SCE_GS_TEX0_2 },
-    { SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0), SCE_GS_TEX1_2 },
+    { PR_TEX1_BILINEAR, SCE_GS_TEX1_2 },
     { 0, SCE_GS_CLAMP_2 },
     { SCE_GS_SET_RGBAQ(0xFF, 0xFF, 0xFF, 0x80, 0), SCE_GS_RGBAQ },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 1, 0), SCE_GS_PRIM },
@@ -48,12 +49,12 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x8700, 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 } },
     },
-    { SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1), SCE_GS_TEST_2 },
+    { PR_TEST_Z_ONLY, SCE_GS_TEST_2 },
     { 0, SCE_GS_ZBUF_2 },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 1, 0), SCE_GS_PRIM },
     { SCE_GS_SET_XYZ(GS_X_COORD(256), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
     { SCE_GS_SET_XYZ(0x8D00, 0x7B00, 0), SCE_GS_XYZ2 },
-    { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
+    { PR_TEST_NO_ALPHA(SCE_GS_ZGEQUAL), SCE_GS_TEST_2 },
 };
 
 float awfulAngle = 0.0f;
@@ -163,13 +164,13 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
 
     pic->GsTex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMT4, (u_int)PrGetBitSize(256), (u_int)PrGetBitSize(256),
                                   1, 1, cbp, SCE_GS_PSMCT16, 0, 0, 1);
-    pic->GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0);
+    pic->GsTex1 = PR_TEX1_BILINEAR;
     pic->GsRegs = 0x800000;
     pic->GsTexClut = 0;
     Tim2LoadPicture(pic);
 
     awfulBackgroundPacket.texture.value = pic->GsTex0;
-    awfulBackgroundPacket.alpha.value = SCE_GS_SET_ALPHA(0, 1, 2, 1, (u_int)(prMendererFade * 128.0f));
+    awfulBackgroundPacket.alpha.value = PR_ALPHA_FIXED((u_int)(prMendererFade * 128.0f));
 
     float angle = -awfulAngle;
     float c = cosf(angle);

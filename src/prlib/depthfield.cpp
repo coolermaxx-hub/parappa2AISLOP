@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "spram.h"
 #include "vram.h"
+#include "gsstate.h"
 
 #include <eeregs.h>
 #include <libdma.h>
@@ -81,7 +82,7 @@ void PrSceneObject::ApplyDepthOfField() {
         packet.AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 1, 2);
         PrAddDrawAreaDefinition(&packet, src, false, false, 0);
         PrAddTextureAreaDefinition(&packet, work, false);
-        packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x60));
+        packet.AddGsAD(SCE_GS_ALPHA_1, PR_ALPHA_FIXED(0x60));
         PrAddSpriteDefinition(&packet, src, work, true);
 
         if (first) {
@@ -98,7 +99,7 @@ void PrSceneObject::ApplyDepthOfField() {
     packet.AddGsRegister(SCE_GS_SCISSOR_1, env->scissor1);
     packet.AddGsRegister(SCE_GS_XYOFFSET_1, this->m_xyoffset);
     packet.AddGsRegister(SCE_GS_TEST_1, env->test1);
-    packet.AddGsAD(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0x80));
+    packet.AddGsAD(SCE_GS_ALPHA_1, PR_ALPHA_BLEND);
     packet.CloseGifTag();
     sceGifPkTerminate(&packet);
 
