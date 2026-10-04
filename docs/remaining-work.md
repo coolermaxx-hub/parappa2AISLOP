@@ -88,6 +88,8 @@ register struct as one 64-bit GIF A+D value.
 
 ## Known byte differences from readability changes
 
+The full per-unit table is in [binary-differences.md](binary-differences.md).
+
 - `PrFloatRandom` (src/prlib/random.cpp) is a plain rejection-sampling
   do-while. The original needed a backward `goto` to match. Behaviour is
   identical (reroll while `value / RAND_MAX >= 1.0f`); only the block layout
