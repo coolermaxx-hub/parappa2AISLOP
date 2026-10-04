@@ -148,12 +148,12 @@ u_int PrSceneObject::GetDepthLevel() const {
 }
 
 void PrSceneObject::PreprocessModel() {
-    PrModelObject *sp = NULL;
+    PrModelObject *background_list = NULL; /* sorted by m_sortOrder, ascending */
     PrModelObject *model = m_model_set.m_head;
 
     PrModelObject *model_list = NULL;
     PrModelObject *screen_list = NULL;
-    PrModelObject *t1 = NULL;
+    PrModelObject *prescene_list = NULL;
 
     while (model != NULL) {
         SpmFileHeader *spm = model->m_spm_image;
@@ -162,18 +162,18 @@ void PrSceneObject::PreprocessModel() {
             model->m_list.next = screen_list;
             screen_list = model;
         } else if (spm->m_flags & eSpmFileBackgroundLayer) {
-            PrModelObject *a1 = sp;
-            PrModelObject **a3 = &sp;
-            u_int t0_1 = spm->m_sortOrder;
-            while (a1 != NULL && a1->m_spm_image->m_sortOrder < t0_1) {
-                a3 = (PrModelObject**)a1;
-                a1 = *a3;
+            PrModelObject *cursor = background_list;
+            PrModelObject **link = &background_list;
+            u_int sortOrder = spm->m_sortOrder;
+            while (cursor != NULL && cursor->m_spm_image->m_sortOrder < sortOrder) {
+                link = &cursor->m_list.next;
+                cursor = *link;
             }
-            model->m_list.next = a1;
-            *a3 = model;
+            model->m_list.next = cursor;
+            *link = model;
         } else if (spm->m_flags & eSpmFilePreSceneLayer) {
-            model->m_list.next = t1;
-            t1 = model;
+            model->m_list.next = prescene_list;
+            prescene_list = model;
         } else {
             model->m_list.next = model_list;
             model_list = model;
@@ -191,38 +191,38 @@ void PrSceneObject::PreprocessModel() {
         this->m_normalModelList = screen_list;
     }
 
-    if (t1 != NULL) {
-        this->m_flag400ModelList = t1;
+    if (prescene_list != NULL) {
+        this->m_flag400ModelList = prescene_list;
     } else {
         this->m_flag400ModelList = this->m_normalModelList;
     }
 
-    PrModelObject *v1 = sp;
-    if (v1 != NULL) {
-        head = v1;
-        while (sp != NULL) {
-            PrModelObject *v0;
-            sp = v1->m_list.next;
-            v1->m_list.prev = tail;
-            tail = v1;
-            v0 = sp;
-            v1 = v0;
+    PrModelObject *node = background_list;
+    if (node != NULL) {
+        head = node;
+        while (background_list != NULL) {
+            PrModelObject *next;
+            background_list = node->m_list.next;
+            node->m_list.prev = tail;
+            tail = node;
+            next = background_list;
+            node = next;
         }
     }
 
-    if (t1 != NULL) {
+    if (prescene_list != NULL) {
         if (head == NULL) {
-            head = t1;
+            head = prescene_list;
         } else {
-            tail->m_list.next = t1;
+            tail->m_list.next = prescene_list;
         }
 
         do {
-            PrModelObject *model = t1;
-            t1 = t1->m_list.next;
+            PrModelObject *model = prescene_list;
+            prescene_list = prescene_list->m_list.next;
             model->m_list.prev = tail;
             tail = model;
-        } while (t1 != NULL);
+        } while (prescene_list != NULL);
     }
 
     if (model_list != NULL) {
