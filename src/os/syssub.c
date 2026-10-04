@@ -517,7 +517,7 @@ void ChangeDrawArea2(sceGsDrawEnv1 *env_pp) {
 
 void ClearFrameBufferGifTag(sceGsFrame *draw_pp, sceGifPacket *gifpk_pp, u_char r, u_char g, u_char b, u_char a) {
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_1, *(u_long*)draw_pp);
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_1, GS_REG_WORD(*draw_pp));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_COLOR_ONLY);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, a, 0));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH, 0, SCREEN_FIELD_HEIGHT));

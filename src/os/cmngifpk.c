@@ -144,7 +144,7 @@ void CmnGifADPacketMake(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkOpenGifTag(gifP_pp, GIF_TAG_QWORD(giftag));
 
     if (gsframe_pp) {
-        sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_1, *(u_long*)gsframe_pp);
+        sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_1, GS_REG_WORD(*gsframe_pp));
     }
 
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEXFLUSH, 0);
@@ -165,7 +165,7 @@ void CmnGifADPacketMake2(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkOpenGifTag(gifP_pp, GIF_TAG_QWORD(giftag));
 
     if (gsframe_pp) {
-        sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_2, *(u_long*)gsframe_pp);
+        sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_2, GS_REG_WORD(*gsframe_pp));
     }
 
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEXFLUSH, 0);

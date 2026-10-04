@@ -2776,7 +2776,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 64));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, *(u_long*)use_pp);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, GS_REG_WORD(*use_pp));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
@@ -2785,7 +2785,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, *(u_long*)draw_pp);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, GS_REG_WORD(*draw_pp));
 
     UG_NoodlesDisp(ndl_pp, use_pp, &gifpk, frame);
 
