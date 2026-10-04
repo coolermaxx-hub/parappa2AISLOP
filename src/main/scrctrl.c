@@ -939,27 +939,30 @@ static void ScrLincChangTbl(int line) {
     DrawCtrlTblChange(GetDrawLine(line));
 }
 
+/* Set on a line number while the line is drawn from a reference time (scrRefLineTime). */
+#define SCR_LINE_REF_MODE 0x8000
+
 static void ScrLincChangTblRef(int line, int ck_time) {
-    scrDrawLine |= 0x8000;
-    scrMbarLine |= 0x8000;
+    scrDrawLine |= SCR_LINE_REF_MODE;
+    scrMbarLine |= SCR_LINE_REF_MODE;
     scrRefLineTime = ck_time;
 
     DrawCtrlTblChange(GetDrawLine(line));
 }
 
 void ScrLineSafeRefMode(void) {
-    if (scrDrawLine & 0x8000) {
-        scrDrawLine &= ~0x8000;
+    if (scrDrawLine & SCR_LINE_REF_MODE) {
+        scrDrawLine &= ~SCR_LINE_REF_MODE;
         DrawCtrlTblChange(GetDrawLine(scrDrawLine));
     }
 
-    if (scrMbarLine & 0x8000) {
-        scrMbarLine &= ~0x8000;
+    if (scrMbarLine & SCR_LINE_REF_MODE) {
+        scrMbarLine &= ~SCR_LINE_REF_MODE;
     }
 }
 
 int ScrDrawTimeGet(int line) {
-    if (line & 0x8000) {
+    if (line & SCR_LINE_REF_MODE) {
         return scrRefLineTime;
     }
 
@@ -967,7 +970,7 @@ int ScrDrawTimeGet(int line) {
 }
 
 int ScrDrawTimeGetFrame(int line) {
-    if (line & 0x8000) {
+    if (line & SCR_LINE_REF_MODE) {
         return (scrRefLineTime * 3600.0f + GetLineTempo(line) * 96.0f * 0.5f) / (GetLineTempo(line) * 96.0f);
     }
 
