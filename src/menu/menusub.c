@@ -1657,6 +1657,14 @@ static int   _MapGetMovableDir(MAPPOS *mpw);
 /* static */ int   McErrorMess(int err);
 static void  McInitFlow(void);
 /* static */ int   McStartCheckFlow(int flg);
+/* McUserCheckFlow check types: which operation the card check prepares for. */
+enum {
+    MCCHECK_BROWSE = 0, /* list the saved users only */
+    MCCHECK_LOAD = 1,
+    MCCHECK_SAVE = 2,
+    MCCHECK_BOTH = 3
+};
+
 /* static */ int   McUserCheckFlow(int type, int mode, int *bError);
 /* Results of McUserSaveFlow / McUserLoadFlow. */
 enum {
@@ -4092,7 +4100,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         state = 0x2010;
     case 0x2010:
         chkMode = (saveSel != 1) ? 2 : 1;
-        ret = McUserCheckFlow(2, chkMode, NULL);
+        ret = McUserCheckFlow(MCCHECK_SAVE, chkMode, NULL);
         if (ret < 0) {
             break;
         }
@@ -4441,10 +4449,10 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         if (MapCHall.curPos == 0) {
             curTag = 0;
             chkMode = 1;
-            chkType = 3;
+            chkType = MCCHECK_BOTH;
         } else {
             curTag = 0;
-            chkType = 1;
+            chkType = MCCHECK_LOAD;
             chkMode = 2;
         }
 
@@ -4475,10 +4483,10 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     case 0x2000:
         if (MapCHall.curPos == 0) {
             chkMode = 1;
-            chkType = 3;
+            chkType = MCCHECK_BOTH;
         } else {
             chkMode = 2;
-            chkType = 1;
+            chkType = MCCHECK_LOAD;
         }
 
         isError = 0;
@@ -5385,7 +5393,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         UCheckSaveError = 0;
         isRun = -2;
         UCheckLoadError = 0;
-        if (type == 0) {
+        if (type == MCCHECK_BROWSE) {
             flg = P3MC_GetUserStart(mode, UserLst, 0);
         } else {
             flg = P3MC_GetUserStart(mode, UserLst, 1);
@@ -5433,7 +5441,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         if (--waitTime > 0) {
             break;
         }
-        if (type == 0 && errorNo == 0) {
+        if (type == MCCHECK_BROWSE && errorNo == 0) {
             if (P3MC_CheckBrokenUser(UserLst, mode) != 0) {
                 errorNo = 80;
             }
@@ -5443,17 +5451,17 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case 0x150:
         UCheckSaveError = 0;
         UCheckLoadError = 0;
-        if ((type & 2) || type == 0) {
+        if ((type & MCCHECK_SAVE) || type == MCCHECK_BROWSE) {
             if (errorNo == 2) {
                 errorNo = 0;
                 UCheckLoadError = 4;
             }
-            if (type == 0 && (errorNo == 3 || errorNo == 4 || errorNo == 5)) {
+            if (type == MCCHECK_BROWSE && (errorNo == 3 || errorNo == 4 || errorNo == 5)) {
                 memset(UserLst, 0, sizeof(*UserLst));
                 errorNo = 0;
             }
         }
-        if ((type & 2) && errorNo == 4) {
+        if ((type & MCCHECK_SAVE) && errorNo == 4) {
             errorNo = 0;
             UCheckLoadError = 4;
             if (P3MC_CheckIsNewSave(mode) == 0) {
@@ -5465,13 +5473,13 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             }
         }
         if (errorNo == 0) {
-            if (type == 2) {
+            if (type == MCCHECK_SAVE) {
                 errorNo = UCheckSaveError;
             }
-            if (type == 1) {
+            if (type == MCCHECK_LOAD) {
                 errorNo = UCheckLoadError;
             }
-            if (type == 3) {
+            if (type == MCCHECK_BOTH) {
                 UCheckSaveError = 0;
             }
             if (errorNo == 0) {
@@ -5480,7 +5488,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             }
         }
         if (errorNo == 1) {
-            if (type == 0) {
+            if (type == MCCHECK_BROWSE) {
                 errorNo = 70;
             } else {
                 errorNo = 12;
@@ -5524,7 +5532,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             }
             subStatus = 0;
         } else {
-            if (errorNo == 3 && type == 2) {
+            if (errorNo == 3 && type == MCCHECK_SAVE) {
                 if (mode == 2) {
                     errorNo = 60;
                 } else {
@@ -5540,7 +5548,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0xf0f0;
         break;
     case 0xf0f0:
-        if (type == 0 && (errorNo == 70 || errorNo == 80)) {
+        if (type == MCCHECK_BROWSE && (errorNo == 70 || errorNo == 80)) {
             if (errorNo == 70) {
                 memset(UserLst, 0, sizeof(*UserLst));
             }
@@ -6767,7 +6775,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         McInitFlow();
         break;
     case 0x5010:
-        ret = McUserCheckFlow(0, 3, NULL);
+        ret = McUserCheckFlow(MCCHECK_BROWSE, 3, NULL);
         if (ret < 0) {
             break;
         }
