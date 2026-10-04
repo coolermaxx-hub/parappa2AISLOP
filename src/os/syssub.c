@@ -68,7 +68,7 @@ void GPadSysRead(void) {
         case scePadStateFindCTP1:
         case scePadStateStable:
             switch (sysP_pp->phase) {
-            case 0: /* Initial phase */
+            case PAD_PHASE_DETECT: /* Initial phase */
                 id = scePadInfoMode(i, 0, InfoModeCurID, 0);
                 exid = scePadInfoMode(i, 0, InfoModeCurExID, 0);
 
@@ -83,10 +83,10 @@ void GPadSysRead(void) {
 
                     switch (id) {
                     case 4: /* Standard */
-                        sysP_pp->phase = 40;
+                        sysP_pp->phase = PAD_PHASE_STD_QUERY;
                         break;
                     case 7: /* Analog */
-                        sysP_pp->phase = 70;
+                        sysP_pp->phase = PAD_PHASE_ANA_QUERY;
                         break;
                     default:
                         WorkClear(sysP_pp, sizeof(*sysP_pp));
@@ -95,20 +95,20 @@ void GPadSysRead(void) {
                 }
 
                 break;
-            case 40: /* Initial standard pad phase */
+            case PAD_PHASE_STD_QUERY: /* Initial standard pad phase */
                 if (scePadInfoMode(i, 0, InfoModeIdTable, -1) == 0) {
                     /* Go to read phase if no modes */
-                    sysP_pp->phase = 99;
+                    sysP_pp->phase = PAD_PHASE_READ;
                     break;
                 }
                 sysP_pp->phase++;
-            case 41: /* Standard mode switch phase */
+            case PAD_PHASE_STD_SET_MODE: /* Standard mode switch phase */
                 /* Try to switch to analog(?) mode */
                 if (scePadSetMainMode(i, 0, 1, 3) == 1) {
                     sysP_pp->phase++;
                 }
                 break;
-            case 42:
+            case PAD_PHASE_STD_WAIT_MODE:
                 if (scePadGetReqState(i, 0) == scePadReqStateFaild) {
                     /* Switch failed, go back and keep trying. */
                     sysP_pp->phase--;
@@ -118,13 +118,13 @@ void GPadSysRead(void) {
                      * Switch successful, go back to the initial phase
                      * to setup analog mode.
                      */
-                    sysP_pp->phase = 0;
+                    sysP_pp->phase = PAD_PHASE_DETECT;
                 }
                 break;
-            case 70: /* Initial analog phase */
+            case PAD_PHASE_ANA_QUERY: /* Initial analog phase */
                 /* Get the number of actuators */
                 if (!scePadInfoAct(i, 0, -1, 0)) {
-                    sysP_pp->phase = 99;
+                    sysP_pp->phase = PAD_PHASE_READ;
                     break;
                 }
                 /* Try to switch to analog(?) mode */
@@ -133,33 +133,33 @@ void GPadSysRead(void) {
                     break;
                 }
                 break;
-            case 72:
+            case PAD_PHASE_ANA_QUERY_PRESS:
                 if (scePadInfoPressMode(i, 0) == 1) {
-                    sysP_pp->phase = 76;
+                    sysP_pp->phase = PAD_PHASE_ANA_SET_PRESS;
                 } else {
-                    sysP_pp->phase = 80;
+                    sysP_pp->phase = PAD_PHASE_ACT_ALIGN;
                 }
                 break;
-            case 76:
+            case PAD_PHASE_ANA_SET_PRESS:
                 if (scePadEnterPressMode(i, 0) == 1) {
                     sysP_pp->phase++;
                 }
                 break;
-            case 71:
-            case 77:
+            case PAD_PHASE_ANA_WAIT_MODE:
+            case PAD_PHASE_ANA_WAIT_PRESS:
                 if (scePadGetReqState(i, 0) == scePadReqStateFaild) {
                     /* Switch failed, go back and keep trying. */
                     sysP_pp->phase--;
                 }
                 if (scePadGetReqState(i, 0) == scePadReqStateComplete) {
                     /* Switch succesful, go to actuator setup phase */
-                    sysP_pp->phase = 80;
+                    sysP_pp->phase = PAD_PHASE_ACT_ALIGN;
                 }
                 break;
-            case 80: /* Analog actuator setup phase */
+            case PAD_PHASE_ACT_ALIGN: /* Analog actuator setup phase */
                 /* Get the number of actuators */
                 if (scePadInfoAct(i, 0, -1, 0) == 0) {
-                    sysP_pp->phase = 99;
+                    sysP_pp->phase = PAD_PHASE_READ;
                 }
 
                 /*
@@ -183,14 +183,14 @@ void GPadSysRead(void) {
                 
                 sysP_pp->phase++;
                 break;
-            case 81:
+            case PAD_PHASE_ACT_WAIT:
                 if (scePadGetReqState(i, 0) == scePadReqStateFaild) {
                     /* scePadSetActAlign failed. Try again. */
                     sysP_pp->phase--;
                 }
                 if (scePadGetReqState(i, 0) == scePadReqStateComplete) {
                     /* scePadSetActAlign succeeded, go to read phase. */
-                    sysP_pp->phase = 99;
+                    sysP_pp->phase = PAD_PHASE_READ;
                 }
                 break;
             default: /* Read phase (default/99) */

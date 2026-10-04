@@ -8,6 +8,22 @@
 #include <libgraph.h>
 #include <libgifpk.h>
 
+/* Steps of the per-port pad setup state machine in GPadSysRead (PAD_SYSD::phase). */
+enum {
+    PAD_PHASE_DETECT = 0,        /* read the pad id and pick a setup path */
+    PAD_PHASE_STD_QUERY = 40,    /* standard pad: ask for the available modes */
+    PAD_PHASE_STD_SET_MODE = 41, /* standard pad: request the mode switch */
+    PAD_PHASE_STD_WAIT_MODE = 42,
+    PAD_PHASE_ANA_QUERY = 70,    /* analog pad: ask for the actuator count, then switch mode */
+    PAD_PHASE_ANA_WAIT_MODE = 71,
+    PAD_PHASE_ANA_QUERY_PRESS = 72,
+    PAD_PHASE_ANA_SET_PRESS = 76, /* request pressure-sensitive mode */
+    PAD_PHASE_ANA_WAIT_PRESS = 77,
+    PAD_PHASE_ACT_ALIGN = 80,    /* actuator alignment request */
+    PAD_PHASE_ACT_WAIT = 81,
+    PAD_PHASE_READ = 99          /* setup finished: read buttons and drive actuators */
+};
+
 typedef enum {
     PAD_ENUM_NONE = 0, /* None */
     PAD_ENUM_NEG = 32, /* NeGcon controller */
