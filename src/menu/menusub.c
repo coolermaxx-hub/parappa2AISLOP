@@ -1665,6 +1665,22 @@ enum {
     MCCHECK_BOTH = 3
 };
 
+/* States of McUserCheckFlow (subStatus); it finishes through the MCUSER_EXIT_* states. */
+enum {
+    MCUCHK_START = 0,               /* start listing the saved users */
+    MCUCHK_SCAN = 0x100,
+    MCUCHK_SHOW_SCANNING = 0x102,   /* the scan takes a while: show the "checking" message */
+    MCUCHK_SCAN_WAIT = 0x103,
+    MCUCHK_MIN_WAIT = 0x104,        /* keep the message up for at least 90 frames */
+    MCUCHK_RESULT = 0x150,
+    MCUCHK_ERROR = 0x160,
+    MCUCHK_ERROR_MES = 0x165,
+    MCUCHK_ERROR_WAIT = 0x166,
+    MCUCHK_CARD_CHANGED = 0xe000,
+    MCUCHK_CARD_CHANGED_WAIT = 0xee10,
+    MCUCHK_FINISH = 0xf0f0          /* pick the exit after an error */
+};
+
 /* static */ int   McUserCheckFlow(int type, int mode, int *bError);
 /* Results of McUserSaveFlow / McUserLoadFlow. */
 enum {
@@ -5410,7 +5426,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     int flg;
 
     switch (subStatus) {
-    case 0:
+    case MCUCHK_START:
         UCheckSaveError = 0;
         isRun = -2;
         UCheckLoadError = 0;
@@ -5420,44 +5436,44 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             flg = P3MC_GetUserStart(mode, UserLst, 1);
         }
         if (flg != 0) {
-            subStatus = 0x100;
+            subStatus = MCUCHK_SCAN;
         } else {
             subStatus = MCUSER_EXIT_DONE;
         }
         break;
-    case 0x100:
+    case MCUCHK_SCAN:
         isRun = -2;
         ret = P3MC_GetUserCheck();
         errorNo = 0;
         if (ret < 0) {
             if (ret == -1) {
                 isRun = -1;
-                subStatus = 0x102;
+                subStatus = MCUCHK_SHOW_SCANNING;
             }
         } else {
             errorNo = ret;
-            subStatus = 0x150;
+            subStatus = MCUCHK_RESULT;
         }
         break;
-    case 0x102:
+    case MCUCHK_SHOW_SCANNING:
         isRun = -1;
         waitTime = 90;
         TsMCAMes_SetMes(MCMES(0, 3));
         if (errorNo == 0) {
-            subStatus = 0x103;
+            subStatus = MCUCHK_SCAN_WAIT;
         } else {
-            subStatus = 0x104;
+            subStatus = MCUCHK_MIN_WAIT;
         }
         break;
-    case 0x103:
+    case MCUCHK_SCAN_WAIT:
         isRun = -1;
         waitTime--;
         errorNo = P3MC_GetUserCheck();
         if (errorNo >= 0) {
-            subStatus = 0x104;
+            subStatus = MCUCHK_MIN_WAIT;
         }
         break;
-    case 0x104:
+    case MCUCHK_MIN_WAIT:
         isRun = -1;
         if (--waitTime > 0) {
             break;
@@ -5467,9 +5483,9 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 errorNo = 80;
             }
         }
-        subStatus = 0x150;
+        subStatus = MCUCHK_RESULT;
         break;
-    case 0x150:
+    case MCUCHK_RESULT:
         UCheckSaveError = 0;
         UCheckLoadError = 0;
         if ((type & MCCHECK_SAVE) || type == MCCHECK_BROWSE) {
@@ -5516,42 +5532,42 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             }
         }
         if (errorNo == P3MC_RES_NO_CARD) {
-            subStatus = 0xe000;
+            subStatus = MCUCHK_CARD_CHANGED;
         } else {
-            subStatus = 0x160;
+            subStatus = MCUCHK_ERROR;
         }
         if (errorNo == 4 && mode == P3MC_MODE_REPLAY) {
             errorNo = 40;
         }
         break;
-    case 0x160:
+    case MCUCHK_ERROR:
         TsMCAMes_SetMes(-1);
         if (isRun == -1 && bError != NULL) {
             *bError = 1;
         }
-        subStatus = 0x165;
-    case 0x165:
+        subStatus = MCUCHK_ERROR_MES;
+    case MCUCHK_ERROR_MES:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
-            subStatus = 0xe000;
+            subStatus = MCUCHK_CARD_CHANGED;
             break;
         }
         if (McErrorMess(errorNo) < 0) {
             break;
         }
-        subStatus = 0x166;
-    case 0x166:
+        subStatus = MCUCHK_ERROR_WAIT;
+    case MCUCHK_ERROR_WAIT:
         if (P3MC_CheckChange() >= 0) {
-            subStatus = 0xf0f0;
+            subStatus = MCUCHK_FINISH;
         }
         break;
-    case 0xe000:
+    case MCUCHK_CARD_CHANGED:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
             if (isRun == -1 && bError != NULL) {
                 *bError = 2;
             }
-            subStatus = 0;
+            subStatus = MCUCHK_START;
         } else {
             if (errorNo == 3 && type == MCCHECK_SAVE) {
                 if (mode == P3MC_MODE_REPLAY) {
@@ -5561,14 +5577,14 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 }
             }
             if (McErrorMess(errorNo) >= 0) {
-                subStatus = 0xee10;
+                subStatus = MCUCHK_CARD_CHANGED_WAIT;
             }
         }
         break;
-    case 0xee10:
-        subStatus = 0xf0f0;
+    case MCUCHK_CARD_CHANGED_WAIT:
+        subStatus = MCUCHK_FINISH;
         break;
-    case 0xf0f0:
+    case MCUCHK_FINISH:
         if (type == MCCHECK_BROWSE && (errorNo == 70 || errorNo == 80)) {
             if (errorNo == 70) {
                 memset(UserLst, 0, sizeof(*UserLst));
