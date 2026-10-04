@@ -64,15 +64,18 @@ void PrRenderStuff::Cleanup() {
     m_scene = NULL;
 }
 
+/* ZBUF.PSM is a 4-bit field holding the low bits of the SCE_GS_PSMZ* format. */
+#define ZBUF_PSM(psm) ((psm) & 0xf)
+
 u_int PrRenderStuff::GetZbufBits(void) const {
     switch (m_zbuf.PSM) {
-    case 0:  /* PSMZ32 */
+    case ZBUF_PSM(SCE_GS_PSMZ32):
         return 32;
-    case 1:  /* PSMZ24 */
+    case ZBUF_PSM(SCE_GS_PSMZ24):
         return 24;
-    case 2:  /* PSMZ16 */
+    case ZBUF_PSM(SCE_GS_PSMZ16):
         return 16;
-    case 10: /* PSMZ16S */
+    case ZBUF_PSM(SCE_GS_PSMZ16S):
         return 16;
     default:
         break;

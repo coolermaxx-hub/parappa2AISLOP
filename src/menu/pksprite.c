@@ -13,8 +13,8 @@
 #define PK_REG_XYZF2(slot) ((u_long)4 << ((slot) * 4))
 
 static sceGsScissor _PkDefSCISSOR PR_ALIGNED(16) = {
-    .SCAX0 = 0, .SCAX1 = 639,
-    .SCAY0 = 0, .SCAY1 = 223,
+    .SCAX0 = 0, .SCAX1 = SCREEN_WIDTH - 1,
+    .SCAY0 = 0, .SCAY1 = SCREEN_FIELD_HEIGHT - 1,
 };
 
 static sceGsZbuf _PkDefZBUFFER PR_ALIGNED(16) = {

@@ -11,8 +11,21 @@
 static sceGsStoreImage gs_simage;
 static sceGsLoadImage gs_loadimg;
 
-#define WV_SCREEN_W (640)
-#define WV_SCREEN_H (224)
+/* TEX0 that samples a frame buffer as a 1024x256 CT32 texture; the 640x224 field sits in its top-left corner. */
+#define FRAME_TEX0(frame, tcc, tfx) \
+    SCE_GS_SET_TEX0(/*TBP0*/(frame)->FBP << 5, /*TBW*/(frame)->FBW, /*PSM*/SCE_GS_PSMCT32, /*TW*/10, /*TH*/8, \
+                    /*TCC*/(tcc), /*TFX*/(tfx), /*CBP*/0, /*CPSM*/0, /*CSM*/0, /*CSA*/0, /*CLD*/0)
+
+/* Texel coordinate of the field's bottom-right corner, in 12.4 fixed point. */
+#define FIELD_UV_MAX SCE_GS_SET_UV(SCREEN_WIDTH << 4, SCREEN_FIELD_HEIGHT << 4)
+
+/* Depth test that always passes with no alpha test, used by the full-screen copies. */
+#define FX_TEST_NO_ALPHA \
+    SCE_GS_SET_TEST(/*ATE*/FALSE, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP, \
+                    /*DATE*/FALSE, /*DATM*/0, /*ZTE*/TRUE, /*ZTST*/SCE_GS_DEPTH_ALWAYS)
+
+/* Standard blend: (Cs - Cd) * As + Cd. */
+#define FX_ALPHA_BLEND SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0)
 
 void CG_WaveInit(WAVE_STR *wstr) {
     wstr->currentAng = 0.0f;
@@ -31,8 +44,8 @@ void CG_WaveInitEasy(WAVE_STR *wstr, short x, short y, short w, short h, WMODE_E
         wstr->addW = 0;
         wstr->addH = 1;
 
-        wstr->u = x + ((WV_SCREEN_W / 2) - 2048);
-        wstr->v = y + ((WV_SCREEN_H / 2) - 2047);
+        wstr->u = x + ((SCREEN_WIDTH / 2) - 2048);
+        wstr->v = y + ((SCREEN_FIELD_HEIGHT / 2) - 2047);
 
         wstr->addU = 0;
         wstr->addV = 1;
@@ -44,8 +57,8 @@ void CG_WaveInitEasy(WAVE_STR *wstr, short x, short y, short w, short h, WMODE_E
         wstr->addW = 1;
         wstr->addH = 0;
 
-        wstr->u = x + ((WV_SCREEN_W / 2) - 2047);
-        wstr->v = y + ((WV_SCREEN_H / 2) - 2048);
+        wstr->u = x + ((SCREEN_WIDTH / 2) - 2047);
+        wstr->v = y + ((SCREEN_FIELD_HEIGHT / 2) - 2048);
 
         wstr->addU = 1;
         wstr->addV = 0;
@@ -64,11 +77,12 @@ void UG_WaveDisp(WAVE_STR *wstr, sceGsFrame *frame_pp, sceGifPacket *wavePkSpr) 
 
     sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(wavePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0));
-    sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, 1));
-    sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(frame_pp->FBP << 5, frame_pp->FBW, 640, 0, 8, 0, 0, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEST_1, FX_TEST_NO_ALPHA);
+    sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEX0_1, FRAME_TEX0(frame_pp, 0, SCE_GS_MODULATE));
     sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEX1_1, 0);
-    sceGifPkAddGsAD(wavePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 1, 1, 0, 0));
-    sceGifPkAddGsAD(wavePkSpr, SCE_GS_PRMODECONT, 1);
+    sceGifPkAddGsAD(wavePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/FALSE,
+                                                            /*AA1*/TRUE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
+    sceGifPkAddGsAD(wavePkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
 
     tmpAngle = wstr->currentAng;
 
@@ -126,14 +140,12 @@ void UG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, sceGifPacket *alpPkSpr) {
                                                                /*FIX*/plh_pp->alp));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_CLAMP, /*WMT*/SCE_GS_REGION_CLAMP,
-                                                               /*MINU*/0, /*MAXU*/(640-1), /*MINV*/0, /*MAXV*/(224-1)));
+                                                               /*MINU*/0, /*MAXU*/SCREEN_WIDTH - 1, /*MINV*/0, /*MAXV*/SCREEN_FIELD_HEIGHT - 1));
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_COLCLAMP, SCE_GS_SET_COLCLAMP(1));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_PABE, SCE_GS_SET_PABE(FALSE));
 
-    sceGifPkAddGsAD(alpPkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(/*TBP0*/frame_pp->FBP << 5, /*FBW*/frame_pp->FBW, /*PSM*/SCE_GS_PSMCT32,
-                                                             /*TW*/10, /*TH*/8, /*TCC*/0, /*TFX*/SCE_GS_MODULATE,
-                                                             /*CBP*/0, /*CPSM*/0, /*CSM*/0, /*CSA*/0, /*CLD*/0));
+    sceGifPkAddGsAD(alpPkSpr, SCE_GS_TEX0_1, FRAME_TEX0(frame_pp, 0, SCE_GS_MODULATE));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_LINEAR, /*MMIN*/SCE_GS_LINEAR,
                                                              /*MTBA*/0, /*L*/0, /*K*/0));
@@ -149,8 +161,8 @@ void UG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, sceGifPacket *alpPkSpr) {
     for (i = 0; i < 4; i++) {
         short ofs_tbl[4][2] = {
             { 0,   0   },
-            { 640, 0   },
-            { 0,   224 },
+            { SCREEN_WIDTH, 0 },
+            { 0, SCREEN_FIELD_HEIGHT },
             { SCREEN_WIDTH, SCREEN_FIELD_HEIGHT }
         };
         int   tmp0, tmp1;
@@ -179,23 +191,27 @@ void CG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, int pri) {
     CmnGifCloseCmnPk(&alpPkSpr, pri);
 }
 
-/* TODO: Use the GS macros */
 void UG_MozaikuDisp(MOZAIKU_STR *moz_pp, sceGsFrame *frame_pp, sceGifPacket *mozPkSpr) {
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRMODECONT, 1);
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, 1));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEST_1, FX_TEST_NO_ALPHA);
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, GS_Q_ONE));
 
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(15, 0, moz_pp->umsk & 0x3ff, moz_pp->ufix & 0x3ff, moz_pp->vmsk & 0x3ff, moz_pp->vfix & 0x3ff));
+    /* Region repeat masks and fixes the texel coordinates, which snaps them into mosaic blocks. */
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_REPEAT, /*WMT*/SCE_GS_REGION_REPEAT,
+                                                               /*UMSK*/moz_pp->umsk & 0x3ff, /*UFIX*/moz_pp->ufix & 0x3ff,
+                                                               /*VMSK*/moz_pp->vmsk & 0x3ff, /*VFIX*/moz_pp->vfix & 0x3ff));
 
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_COLCLAMP, 0);
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PABE, 0);
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_COLCLAMP, SCE_GS_SET_COLCLAMP(0));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PABE, SCE_GS_SET_PABE(FALSE));
 
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(frame_pp->FBP << 5, frame_pp->FBW, 0, 10, 8, 0, 0, 0, 0, 0, 0, 0));
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, 0, 0, 0, 0, 0));
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEX0_1, FRAME_TEX0(frame_pp, 0, SCE_GS_MODULATE));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_NEAREST, /*MMIN*/SCE_GS_NEAREST,
+                                                             /*MTBA*/0, /*L*/0, /*K*/0));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/FALSE,
+                                                           /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
 
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, SCE_GS_SET_UV(0x2800, 0xe00));
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, FIELD_UV_MAX);
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0));
 
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
@@ -213,34 +229,39 @@ void CG_MozaikuDisp(MOZAIKU_STR *moz_pp, sceGsFrame *frame_pp, int pri) {
     CmnGifCloseCmnPk(&mozPkSpr, pri);
 }
 
-/* TODO: Use the GS macros */
 void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *texFr_pp) {
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, 1);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(1, 1, 0, 0, 0, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, 1);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, 0);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, FX_ALPHA_BLEND);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_CLAMP, /*WMT*/SCE_GS_CLAMP, 0, 0, 0, 0));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, SCE_GS_SET_COLCLAMP(1));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, SCE_GS_SET_PABE(FALSE));
 
     if (texFr_pp == NULL) {
-        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
+        /* Every pixel fails the alpha test and keeps only its colour write, so Z is left untouched. */
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(/*ATE*/TRUE, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_FB_ONLY,
+                                                                  /*DATE*/FALSE, /*DATM*/0, /*ZTE*/TRUE, /*ZTST*/SCE_GS_DEPTH_ALWAYS));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(fade_pp->r, fade_pp->g, fade_pp->b, fade_pp->alp, 0));
-        sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0));
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/FALSE, /*FGE*/FALSE, /*ABE*/TRUE,
+                                                                /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
         return;
     }
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 1));
+    /* Skip texels whose alpha is zero. */
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(/*ATE*/TRUE, /*ATST*/SCE_GS_ALPHA_GREATER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP,
+                                                              /*DATE*/FALSE, /*DATM*/0, /*ZTE*/TRUE, /*ZTST*/SCE_GS_DEPTH_ALWAYS));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, fade_pp->alp, 0));
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(texFr_pp->FBP << 5, texFr_pp->FBW, 0, 10, 8, 0, 1, 0, 0, 0, 0, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, FRAME_TEX0(texFr_pp, 0, SCE_GS_DECAL));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/TRUE,
+                                                            /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
 
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0x2800, 0xe00));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, FIELD_UV_MAX);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 }
 
@@ -248,37 +269,44 @@ void UG_FadeDisp2(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *t
     int xp, yp;
 
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, 1);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(0, 0, 0, SCREEN_WIDTH - 1, 0, SCREEN_FIELD_HEIGHT - 1));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, 1);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, 0);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, FX_ALPHA_BLEND);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REPEAT, /*WMT*/SCE_GS_REPEAT,
+                                                                0, SCREEN_WIDTH - 1, 0, SCREEN_FIELD_HEIGHT - 1));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, SCE_GS_SET_COLCLAMP(1));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, SCE_GS_SET_PABE(FALSE));
 
     if (texFr_pp == NULL) {
-        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
+        /* Every pixel fails the alpha test and keeps only its colour write, so Z is left untouched. */
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(/*ATE*/TRUE, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_FB_ONLY,
+                                                                  /*DATE*/FALSE, /*DATM*/0, /*ZTE*/TRUE, /*ZTST*/SCE_GS_DEPTH_ALWAYS));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(fade_pp->r, fade_pp->g, fade_pp->b, fade_pp->alp, 0));
-        sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 0, 0, 1, 0, 1, 0, 0));
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/FALSE, /*FGE*/FALSE, /*ABE*/TRUE,
+                                                                /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
         return;
     }
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
+    /* Skip texels whose alpha is zero. */
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(/*ATE*/TRUE, /*ATST*/SCE_GS_ALPHA_GREATER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP,
+                                                              /*DATE*/FALSE, /*DATM*/0, /*ZTE*/TRUE, /*ZTST*/SCE_GS_DEPTH_ALWAYS));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, fade_pp->alp, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(texFr_pp->FBP << 5, texFr_pp->FBW, 0, 10, 8, 1, 0, 0, 0, 0, 0, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, FRAME_TEX0(texFr_pp, 1, SCE_GS_MODULATE));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/TRUE,
+                                                            /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
 
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
 
-    xp = (scale * 640.0f);
-    yp = (scale * 224.0f);
+    xp = (scale * SCREEN_WIDTH);
+    yp = (scale * SCREEN_FIELD_HEIGHT);
 
     xp /= 2;
     yp /= 2;
     
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((2048 - xp) << 4, (2048 - yp) << 4, 1));
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0x2800, 0xe00));
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, FIELD_UV_MAX);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((xp + 2048) << 4, (yp + 2048) << 4, 1));
 }
 
@@ -302,8 +330,8 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
 
     for (i = 0; i <= ndl_pp->cntW; i++) {
         for (j = 0; j <= ndl_pp->cntH; j++, tmp_pp++) {
-            tmp_pp->u = (i * 640) / ndl_pp->cntW;
-            tmp_pp->v = (j * 224) / ndl_pp->cntH;
+            tmp_pp->u = (i * SCREEN_WIDTH) / ndl_pp->cntW;
+            tmp_pp->v = (j * SCREEN_FIELD_HEIGHT) / ndl_pp->cntH;
             tmp_pp->u = tmp_pp->u << 4;
             tmp_pp->v = tmp_pp->v << 4;
 
@@ -318,8 +346,7 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
         }
     }
 
-    sceGifPkAddGsAD(ndlPkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(frame_pp->FBP << 5, frame_pp->FBW, SCE_GS_PSMCT32, 10/*1024*/, 8/*256*/, 1/*RGBA*/, SCE_GS_MODULATE,
-                                                             NULL, 0, 0, 0, 0));
+    sceGifPkAddGsAD(ndlPkSpr, SCE_GS_TEX0_1, FRAME_TEX0(frame_pp, 1, SCE_GS_MODULATE));
 
     sceGifPkAddGsAD(ndlPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, SCE_GS_FALSE/*MTBA*/, 0, 0));
 
