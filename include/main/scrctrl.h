@@ -90,6 +90,10 @@ typedef enum {
     KcR2 = 2
 } KEY_CODE_ENUM;
 
+/* Extra bits a replayed tap carries beside its KEY_CODE_ENUM button. */
+#define KC_FLAG_HOLD  0x2000 /* tap was a held note */
+#define KC_FLAG_RESET 0x8000 /* tap restarted the sequence */
+
 typedef enum {
     SCRRJ_TITLE_JUMP = 0,
     SCRRJ_TITLE_START = 1,

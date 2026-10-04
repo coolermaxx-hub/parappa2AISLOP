@@ -1,5 +1,7 @@
 #include "main/mcctrl.h"
 
+#include "main/scrctrl.h"
+
 #include "os/system.h"
 
 #include <string.h>
@@ -300,10 +302,10 @@ u_short mccReqTapGet(u_int time, u_int useLine, u_int *time_pp, PLAYER_ENUM ply)
     ret = GetIndex2KeyCode(mcrd_pp->padId);
 
     if (mcrd_pp->holdT) {
-        ret |= 0x2000;
+        ret |= KC_FLAG_HOLD;
     }
     if (mcrd_pp->resT) {
-        ret |= 0x8000;
+        ret |= KC_FLAG_RESET;
     }
 
     *time_pp = mcrd_pp->timeP;
