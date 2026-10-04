@@ -3940,7 +3940,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     *(USER_NAME*)UserWork->name = *(USER_NAME*)pP3GameState->pLog->name;
     UserWork->name[11] = 0;
 
-    if (mode == 2) {
+    if (mode == P3MC_MODE_REPLAY) {
         *(USER_NAME*)UserWork->name1 = *(USER_NAME*)pP3GameState->pLog->name1;
         UserWork->name1[11] = 0;
 
@@ -3992,7 +3992,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     UserWork->fileNo = 0;
-    if (UserWork->mode == 1) {
+    if (UserWork->mode == P3MC_MODE_LOG) {
         int mapNo = TsMENU_GetMapNo(NULL) - 1;
         if (mapNo <= 0) {
             mapNo = 0;
@@ -4025,7 +4025,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     *(USER_NAME*)pP3GameState->pLog->name = *(USER_NAME*)UserWork->name;
     pP3GameState->pLog->name[11] = 0;
 
-    if (UserWork->mode == 2) {
+    if (UserWork->mode == P3MC_MODE_REPLAY) {
         *(USER_NAME*)pP3GameState->pLog->name1 = *(USER_NAME*)UserWork->name1;
         pP3GameState->pLog->name1[11] = 0;
 
@@ -4035,7 +4035,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         }
     }
 
-    if (UserWork->mode == 1) {
+    if (UserWork->mode == P3MC_MODE_LOG) {
         TsSetRankingName(pCStageRank, pP3GameState->pLog->name);
     } else {
         TsSetRankingName(pCStageRank, pP3GameState->pLog->name1);
@@ -4043,7 +4043,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
     TsSetRanking2UData(UserWork, pCStageRank);
 
-    if (UserWork->mode == 1) {
+    if (UserWork->mode == P3MC_MODE_LOG) {
         CurFileInfo.logFileNo = UserWork->fileNo;
         CurFileInfo.logDate = UserWork->date;
     } else {
@@ -4099,7 +4099,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         McInitFlow();
         state = 0x2010;
     case 0x2010:
-        chkMode = (saveSel != 1) ? 2 : 1;
+        chkMode = (saveSel != 1) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
         ret = McUserCheckFlow(MCCHECK_SAVE, chkMode, NULL);
         if (ret < 0) {
             break;
@@ -4117,7 +4117,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         break;
     case 0x2020:
-        chkMode = (saveSel != 1) ? 2 : 1;
+        chkMode = (saveSel != 1) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
         TsMakeUserWork(chkMode);
         state = 0x2030;
     case 0x2030:
@@ -4448,12 +4448,12 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     case 0x1010:
         if (MapCHall.curPos == 0) {
             curTag = 0;
-            chkMode = 1;
+            chkMode = P3MC_MODE_LOG;
             chkType = MCCHECK_BOTH;
         } else {
             curTag = 0;
             chkType = MCCHECK_LOAD;
-            chkMode = 2;
+            chkMode = P3MC_MODE_REPLAY;
         }
 
         ret = McUserCheckFlow(chkType, chkMode, 0);
@@ -4482,10 +4482,10 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case 0x2000:
         if (MapCHall.curPos == 0) {
-            chkMode = 1;
+            chkMode = P3MC_MODE_LOG;
             chkType = MCCHECK_BOTH;
         } else {
-            chkMode = 2;
+            chkMode = P3MC_MODE_REPLAY;
             chkType = MCCHECK_LOAD;
         }
 
@@ -4597,9 +4597,9 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case 0x2030:
         if (MapCHall.curPos == 0) {
-            chkMode = 1;
+            chkMode = P3MC_MODE_LOG;
         } else {
-            chkMode = 2;
+            chkMode = P3MC_MODE_REPLAY;
         }
 
         ret = McUserLoadFlow(TsUserList_GetCurFileNo(&bBroken), chkMode, bBroken);
@@ -5465,7 +5465,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             errorNo = 0;
             UCheckLoadError = 4;
             if (P3MC_CheckIsNewSave(mode) == 0) {
-                if (mode == 2) {
+                if (mode == P3MC_MODE_REPLAY) {
                     UCheckSaveError = 15;
                 } else {
                     UCheckSaveError = 7;
@@ -5499,7 +5499,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         } else {
             subStatus = 0x160;
         }
-        if (errorNo == 4 && mode == 2) {
+        if (errorNo == 4 && mode == P3MC_MODE_REPLAY) {
             errorNo = 40;
         }
         break;
@@ -5533,7 +5533,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             subStatus = 0;
         } else {
             if (errorNo == 3 && type == MCCHECK_SAVE) {
-                if (mode == 2) {
+                if (mode == P3MC_MODE_REPLAY) {
                     errorNo = 60;
                 } else {
                     errorNo = 50;
@@ -5642,7 +5642,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 subStatus = 0x1000;
                 break;
             case P3MC_RES_NO_CARD:
-                if (puser->mode == 2) {
+                if (puser->mode == P3MC_MODE_REPLAY) {
                     errorNo = 60;
                 } else {
                     errorNo = 50;
@@ -5653,7 +5653,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 errorNo = 1;
                 break;
             case P3MC_RES_NO_SPACE:
-                if (puser->mode == 2) {
+                if (puser->mode == P3MC_MODE_REPLAY) {
                     errorNo = 15;
                 } else {
                     errorNo = 7;
@@ -5704,7 +5704,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             subStatus = MCUSER_EXIT_CARD_CHANGED;
             break;
         default:
-            if (puser->mode == 2) {
+            if (puser->mode == P3MC_MODE_REPLAY) {
                 errorNo = 60;
             } else {
                 errorNo = 50;
@@ -6775,7 +6775,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         McInitFlow();
         break;
     case 0x5010:
-        ret = McUserCheckFlow(MCCHECK_BROWSE, 3, NULL);
+        ret = McUserCheckFlow(MCCHECK_BROWSE, P3MC_MODE_ALL, NULL);
         if (ret < 0) {
             break;
         }
@@ -8838,7 +8838,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     pfw->dispColor = ptbl->dispColor;
     pfw->nTag = no;
 
-    if (pfw->dataMode == 1) {
+    if (pfw->dataMode == P3MC_MODE_LOG) {
         pfw->curFileDate = CurFileInfo.logDate;
         if (!pfw->isSave) {
             fileNo = CurFileInfo.logFileNo;
@@ -9167,7 +9167,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         state = 0x4005;
         /* fallthrough */
     case 0x4005:
-        errNo = (pfw->dataMode == 2) ? 15 : 7;
+        errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? 15 : 7;
         if (McErrorMess(errNo) >= 0) {
             state = 0x3000;
         }
@@ -9193,13 +9193,13 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->isNameIn = 1;
         pfw->wuser->fileNo = TsUserList_GetCurFileNo(NULL);
 
-        if (pfw->dataMode == 1) {
+        if (pfw->dataMode == P3MC_MODE_LOG) {
             TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name);
         } else {
             TsNAMEINBox_Flow(1, &pfw->nameinw[0], (u_int)pfw->wuser->name1);
         }
 
-        if (pfw->dataMode == 1) {
+        if (pfw->dataMode == P3MC_MODE_LOG) {
             pfw->nameinw[0].dispType = 0;
         } else if (pfw->gameMode == 0) {
             pfw->nameinw[0].dispType = 0;
@@ -9220,7 +9220,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         pfw->nameinw[0].isCan = 1;
         ret2 = 1;
         ret = TsNAMEINBox_Flow(0, &pfw->nameinw[0], tpad);
-        if (pfw->gameMode == 1 && pfw->dataMode != 1) {
+        if (pfw->gameMode == 1 && pfw->dataMode != P3MC_MODE_LOG) {
             pfw->nameinw[1].isCan = 1;
             ret2 = TsNAMEINBox_Flow(0, &pfw->nameinw[1], tpad2);
         }
@@ -9253,7 +9253,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         }
         err = 3;
         if (pfw->isSave) {
-            err = (pfw->dataMode == 2) ? 60 : 50;
+            err = (pfw->dataMode == P3MC_MODE_REPLAY) ? 60 : 50;
         }
         if (McErrorMess(err) >= 0) {
             state = 0xee10;
@@ -9508,7 +9508,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
         return;
     }
 
-    if (user->mode == 2) {
+    if (user->mode == P3MC_MODE_REPLAY) {
         if (user->isVs) {
             spr->rgba0 = MN_COLOR_NEUTRAL;
             TsPatPut(pk, spr, &VS_MARK, px, py);
@@ -9576,7 +9576,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 
     ps = &strpos[4];
     if (!(pflg & 2)) {
-        if (user->mode == 1) {
+        if (user->mode == P3MC_MODE_LOG) {
             NameSpaceCut(buf, user->name);
         } else {
             NameSpaceCut(buf, user->name1);
@@ -9584,7 +9584,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
         MENUFontPutL(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
     }
 
-    if (user->mode == 2) {
+    if (user->mode == P3MC_MODE_REPLAY) {
         sprintf(buf, "%06d", user->score);
         ps = &strpos[5];
         MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);

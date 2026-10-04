@@ -38,6 +38,13 @@ typedef struct { // 0x8
 /* Word 0 (year:month:day) or 1 (hour:minute:second:pad) of a timestamp */
 #define P3MC_DATE_WORD(date, i) (((const u_int *)(date))[i])
 
+/* Kinds of save file (USER_DATA::mode). Used as a bit mask where several kinds are listed. */
+enum {
+    P3MC_MODE_LOG = 1,    /* the player's save ("LOGnnn" directories) */
+    P3MC_MODE_REPLAY = 2, /* a stage replay ("REPnnn" directories) */
+    P3MC_MODE_ALL = 3
+};
+
 typedef struct { // 0x2664
     /* 0x0000 */ char name[12];
     /* 0x000c */ char name1[12];

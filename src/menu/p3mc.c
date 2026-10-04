@@ -115,10 +115,10 @@ static int P3MC_GetIconSize(int mode) {
     int isize;
 
     switch (mode) {
-    case 2:
+    case P3MC_MODE_REPLAY:
         isize = 0x1e360;
         break;
-    case 1:
+    case P3MC_MODE_LOG:
     default:
         isize = 0x1ccb0;
         break;
@@ -130,7 +130,7 @@ static int P3MC_GetIconSize(int mode) {
 static void* P3MC_GetIconPtr(int mode, int stageNo) {
     int fn;
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         switch (stageNo) {
         case 1:
             fn = 0x161;
@@ -189,21 +189,21 @@ static char* _P3MC_GetFilePath(int mode, int fileNo) {
     addName = &filePath[12];
 
     switch (mode) {
-    case 1:
+    case P3MC_MODE_LOG:
         if (fileNo < 0) {
             strcpy(addName, "LOG???");
         } else {
             sprintf(addName, "LOG%03d", fileNo);
         }
         break;
-    case 2:
+    case P3MC_MODE_REPLAY:
         if (fileNo < 0) {
             strcpy(addName, "REP???");
         } else {
             sprintf(addName, "REP%03d", fileNo);
         }
         break;
-    case 3:
+    case P3MC_MODE_ALL:
     default:
         strcpy(addName, "??????");
         break;
@@ -307,7 +307,7 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
 
     _P3MC_EUC2SJIS(tname, "ＰＡＲＡＰＰＡ２");
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         sprintf(tmps, "/SYS-%02d", fileNo + 1);
     } else {
         sprintf(tmps, "/REP-%02d", fileNo + 1);
@@ -318,7 +318,7 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
     s = strlen(tname);
 
     switch (mode) {
-    case 2:
+    case P3MC_MODE_REPLAY:
         if (!isVs) {
             sprintf(tmps, "%s-ST%1d", name, stageNo);
         } else {
@@ -327,7 +327,7 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
         break;
 
     default:
-    case 1:
+    case P3MC_MODE_LOG:
         if (roundNo == 0) {
             sprintf(tmps, "%s(ST%1d)", name, stageNo);
         } else {
@@ -346,7 +346,7 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
 
     memc_setSaveTitle(tname, s);
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         iconNo = ParaCol + 1;
 
         if (iconNo > 4) {
@@ -545,11 +545,11 @@ void P3MC_SetCheckSaveSize(int mode, int fsize, int csize) {
     int asize = _P3MC_GetSaveDataSize(csize);
 
     switch (mode) {
-    case 1:
+    case P3MC_MODE_LOG:
         NeedSize[0] = fsize;
         UChkSize[0] = asize;
         break;
-    case 2:
+    case P3MC_MODE_REPLAY:
         NeedSize[1] = fsize;
         UChkSize[1] = asize;
         break;
@@ -842,9 +842,9 @@ int P3MC_GetUserStart(int mode, P3MC_USRLST *pUsrLst, int bFirst) {
         pWork->bFirst = bFirst;
         pWork->curState = 0;
 
-        if (mode & 1) {
+        if (mode & P3MC_MODE_LOG) {
             pWork->curMode = 1;
-        } else if (mode & 2) {
+        } else if (mode & P3MC_MODE_REPLAY) {
             pWork->curMode = 2;
         } else {
             printf("P3MC_GetUser Error Mode is unknown!\n");
@@ -915,7 +915,7 @@ int P3MC_GetUserCheck(void) {
 
     if (pcw->curState == 1) {
         flgl = 0;
-        if (pcw->curUserMode & 1) {
+        if (pcw->curUserMode & P3MC_MODE_LOG) {
             for (i = 0; i < 80; i++) {
                 if (McLogFileFlg[i]) {
                     flgl |= 1;
@@ -928,7 +928,7 @@ int P3MC_GetUserCheck(void) {
         }
 
         flgr = 0;
-        if (pcw->curUserMode & 2) {
+        if (pcw->curUserMode & P3MC_MODE_REPLAY) {
             for (i = 0; i < 80; i++) {
                 if (McReplayFileFlg[i]) {
                     flgr |= 1;
@@ -977,10 +977,10 @@ int P3MC_GetUserCheck(void) {
             while (pcw->curFno < 80) {
                 isLoad = 0;
                 switch (pcw->curMode) {
-                case 1:
+                case P3MC_MODE_LOG:
                     isLoad = pUserLst->logPage_flg;
                     break;
-                case 2:
+                case P3MC_MODE_REPLAY:
                     isLoad = pUserLst->repPage_flg;
                     break;
                 }
@@ -989,11 +989,11 @@ int P3MC_GetUserCheck(void) {
                     flg = 0;
                     chksize = 0;
                     switch (pcw->curMode) {
-                    case 1:
+                    case P3MC_MODE_LOG:
                         chksize = UChkSize[0];
                         flg = McLogFileFlg[pcw->curFno];
                         break;
-                    case 2:
+                    case P3MC_MODE_REPLAY:
                         chksize = UChkSize[1];
                         flg = McReplayFileFlg[pcw->curFno];
                         break;
@@ -1019,10 +1019,10 @@ int P3MC_GetUserCheck(void) {
             }
 
             switch (pcw->curMode) {
-            case 1:
+            case P3MC_MODE_LOG:
                 pUserLst->logPage_flg = 1;
                 break;
-            case 2:
+            case P3MC_MODE_REPLAY:
                 pUserLst->repPage_flg = 1;
                 break;
             }
@@ -1041,10 +1041,10 @@ int P3MC_GetUserCheck(void) {
             if (pcw->curFno > 0) {
                 flg = 0;
                 if (pUserLst->nGetUser) {
-                    if (pcw->curUserMode & 1) {
+                    if (pcw->curUserMode & P3MC_MODE_LOG) {
                         flg = (pUserLst->nLogGet != 0);
                     }
-                    if (pcw->curUserMode & 2) {
+                    if (pcw->curUserMode & P3MC_MODE_REPLAY) {
                         if (pUserLst->nRepGet) {
                             flg = 1;
                         }
@@ -1067,7 +1067,7 @@ void P3MC_AddUser(P3MC_USRLST *pUser, int mode, USER_DATA *puser) {
     }
 
     switch (mode) {
-    case 1:
+    case P3MC_MODE_LOG:
         pUser->plog_user[pUser->nLogGet] = newUser;
         pUser->nLogGet++;
         if (pUser->nLogGet > 0x4f) {
@@ -1075,7 +1075,7 @@ void P3MC_AddUser(P3MC_USRLST *pUser, int mode, USER_DATA *puser) {
             pUser->nLogGet = 0x4f;
         }
         break;
-    case 2:
+    case P3MC_MODE_REPLAY:
         pUser->prep_user[pUser->nRepGet] = newUser;
         pUser->nRepGet++;
         if (pUser->nRepGet > 0x4f) {
@@ -1106,7 +1106,7 @@ static void _P3MC_AddUserBroken(P3MC_USRLST *pUser, int mode, int fno) {
     }
 
     switch (mode) {
-    case 1:
+    case P3MC_MODE_LOG:
         pUser->plog_user[pUser->nLogGet] = newUser;
         pUser->nLogGet++;
         if (pUser->nLogGet > 0x4f) {
@@ -1114,7 +1114,7 @@ static void _P3MC_AddUserBroken(P3MC_USRLST *pUser, int mode, int fno) {
             pUser->nLogGet = 0x4f;
         }
         break;
-    case 2:
+    case P3MC_MODE_REPLAY:
         pUser->prep_user[pUser->nRepGet] = newUser;
         pUser->nRepGet++;
         if (pUser->nRepGet > 0x4f) {
@@ -1135,7 +1135,7 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave) {
     USER_DATA **pmuser;
     u_char      map[80];
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         pmuser = pUser->plog_user;
         nmuser = pUser->nLogGet;
     } else {
@@ -1176,7 +1176,7 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave) {
         pSort = &pUser->pUserTbl[0];
     }
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         nSort = pUser->nLogGet;
         memcpy(pSort, pUser->plog_user, nSort * sizeof(USER_DATA*));
     } else {
@@ -1211,7 +1211,7 @@ int P3MC_CheckBrokenUser(P3MC_USRLST *pUser, int mode) {
     int i;
     int nBrk = 0;
 
-    if (mode & 1) {
+    if (mode & P3MC_MODE_LOG) {
         pmuser = pUser->plog_user;
         nmuser = pUser->nLogGet;
 
@@ -1222,7 +1222,7 @@ int P3MC_CheckBrokenUser(P3MC_USRLST *pUser, int mode) {
         }
     }
 
-    if (mode & 2) {
+    if (mode & P3MC_MODE_REPLAY) {
         pmuser = pUser->prep_user;
         nmuser = pUser->nRepGet;
 
@@ -1596,9 +1596,9 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     roundNo = ((USER_HEADER *)pData)->user.roundNo;
     fileNo = ((USER_HEADER *)pData)->user.fileNo;
     isVs = ((USER_HEADER *)pData)->user.isVs;
-    name = (mode == 1) ? ((USER_HEADER *)pData)->user.name : ((USER_HEADER *)pData)->user.name1;
+    name = (mode == P3MC_MODE_LOG) ? ((USER_HEADER *)pData)->user.name : ((USER_HEADER *)pData)->user.name1;
 
-    if (mode == 1) {
+    if (mode == P3MC_MODE_LOG) {
         pLog = pdhdl->pData;
         ParaCol = pLog->nRound;
         if (ParaCol < 0) {
@@ -1622,7 +1622,7 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     P3MC_Work.prg = 0;
     pw->data_no = fileNo;
     pw->data_mode = mode;
-    pw->data_stage = (mode == 1) ? 0 : stageNo;
+    pw->data_stage = (mode == P3MC_MODE_LOG) ? 0 : stageNo;
     pw->prgflag = flg;
     pw->dhdl = pdhdl;
     pw->dstat = 0;
