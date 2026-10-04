@@ -113,6 +113,11 @@ already-differing functions were checked for identical assembly). Covered:
   flags), GIF register pass modes (`PrSetGifRegisterMode`), the title stage check
   (`PR_STAGE_TITLE`) and object magic values.
 - Pad setup phases and terminal types (`syssub`), button masks (`SCE_PAD*`).
+- Every file of the ELF's built-in `common.ipk` (`CMNF_FILE_ENUM` in
+  `main/cmnfile.h`), named from the model and animation names the files carry,
+  or from their use (the wipe's sound bank and subtitle glyphs, meter palettes,
+  hook marks); SPU volumes (`SPU_VOLUME_MAX`, `SPU_VOLUME_LR`) and the wipe's
+  TapCtrl bank and voice.
 - The memory card layer: `P3MC_SAVE_*` / `P3MC_LOAD_*` sequencer states,
   `P3MC_RES_*` results, `P3MC_FLAG_*`, save kinds (`P3MC_MODE_LOG/REPLAY`),
   file check results, `MEMC_ERR_*` codes at every call site, and the menu-side
