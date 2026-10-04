@@ -578,8 +578,7 @@ float* bra_ret_GetNext(PR_MODELHANDLE model) {
 }
 
 void XAnimationLinkOption(PR_MODELHANDLE model, PR_ANIMATIONHANDLE animation, int first, int blumove, float time) {
-    PR_ANIMATIONHANDLE  anim_tmp;
-    float              *tmp_dat;
+    PR_ANIMATIONHANDLE anim_tmp;
 
     if (blumove == BLMV_MOVE) {
         first = FALSE;
@@ -627,6 +626,8 @@ void XAnimationLinkOption(PR_MODELHANDLE model, PR_ANIMATIONHANDLE animation, in
 
         PrLinkAnimation(model, animation);
     } else {
+        float *tmp_dat;
+
         switch (blumove) {
         case BLMV_NONE:
             break;
@@ -752,10 +753,8 @@ void BallThrowTarget(void *mdlh, OBJBTHROW_TYPE thtype, int targetframe) {
 
 void BallThrowPoll(void) {
     int          i, j;
+    BTHROW_STR  *bts_pp;
     sceGifPacket gifP;
-    TIM2INFO     info;
-    int          w, h;
-    int          px, py;
 
     for (i = 0; i < PR_ARRAYSIZE(bthrow_ctrl); i++) {
         if (bthrow_ctrl[i].frame == 0) {
@@ -770,7 +769,7 @@ void BallThrowPoll(void) {
             }
 
             if (bthrow_ctrl[i].bthrow_str_cnt != 0) {
-                BTHROW_STR *bts_pp = bthrow_ctrl[i].bthrow_str;
+                bts_pp = bthrow_ctrl[i].bthrow_str;
 
                 CmnGifADPacketMake(&gifP, DrawGetFrameP(DNUM_DRAW));
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
@@ -779,10 +778,13 @@ void BallThrowPoll(void) {
 
                 for (j = 0; j < bthrow_ctrl[i].bthrow_str_cnt; j++, bts_pp++) {
                     if (bts_pp->use & 1) {
-                        float *pos_pp = PrGetModelScreenPosition(bts_pp->homingpp);
+                        /* The target follows its model on screen. */
+                        {
+                            float *pos_pp = PrGetModelScreenPosition(bts_pp->homingpp);
 
-                        bthrow_ctrl[i].targetX = pos_pp[0];
-                        bthrow_ctrl[i].targetY = pos_pp[1] + -16.0f;
+                            bthrow_ctrl[i].targetX = pos_pp[0];
+                            bthrow_ctrl[i].targetY = pos_pp[1] + -16.0f;
+                        }
 
                         if (bts_pp->use & 2) {
                             float *pos_pp;
@@ -799,56 +801,68 @@ void BallThrowPoll(void) {
                                 bts_pp->xp = bthrow_ctrl[i].targetX;
                                 bts_pp->yp = bthrow_ctrl[i].targetY;
                             }
-                        } else if (global_data.play_step == PSTEP_VS) {
-                            if (bts_pp->endTime < 12) {
-                                if (bts_pp->endTime == 0) {
-                                    bts_pp->use = 0;
-                                }
-                                if (bts_pp->endTime == 11) {
+                        } else {
+                            float tmp; /* frames left until the ball arrives */
+
+                            if (global_data.play_step == PSTEP_VS) {
+                                if (bts_pp->endTime < 12) {
+                                    if (bts_pp->endTime == 0) {
+                                        bts_pp->use = 0;
+                                    }
+                                    if (bts_pp->endTime == 11) {
+                                        bts_pp->xp = bthrow_ctrl[i].targetX;
+                                        bts_pp->yp = bthrow_ctrl[i].targetY;
+                                    }
+
+                                    bts_pp->tim2_dat_pp = vs06BomAdr(i, bts_pp->endTime);
+                                } else if (bts_pp->endTime != 12) {
+                                    tmp = bts_pp->endTime - 12;
+                                    bts_pp->xp += (bthrow_ctrl[i].targetX - bts_pp->xp) / tmp;
+                                    bts_pp->yp += (bthrow_ctrl[i].targetY - bts_pp->yp) / tmp;
+                                } else {
                                     bts_pp->xp = bthrow_ctrl[i].targetX;
                                     bts_pp->yp = bthrow_ctrl[i].targetY;
                                 }
-
-                                bts_pp->tim2_dat_pp = vs06BomAdr(i, bts_pp->endTime);
-                            } else if (bts_pp->endTime != 12) {
-                                bts_pp->xp += (bthrow_ctrl[i].targetX - bts_pp->xp) / (bts_pp->endTime - 12);
-                                bts_pp->yp += (bthrow_ctrl[i].targetY - bts_pp->yp) / (bts_pp->endTime - 12);
-                            } else {
+                            } else if (bts_pp->endTime == 0) {
+                                bts_pp->use = 0;
                                 bts_pp->xp = bthrow_ctrl[i].targetX;
                                 bts_pp->yp = bthrow_ctrl[i].targetY;
+                            } else {
+                                tmp = bts_pp->endTime;
+                                bts_pp->xp += (bthrow_ctrl[i].targetX - bts_pp->xp) / tmp;
+                                bts_pp->yp += (bthrow_ctrl[i].targetY - bts_pp->yp) / tmp;
                             }
-                        } else if (bts_pp->endTime == 0) {
-                            bts_pp->use = 0;
-                            bts_pp->xp = bthrow_ctrl[i].targetX;
-                            bts_pp->yp = bthrow_ctrl[i].targetY;
-                        } else  {
-                            bts_pp->xp += (bthrow_ctrl[i].targetX - bts_pp->xp) / bts_pp->endTime;
-                            bts_pp->yp += (bthrow_ctrl[i].targetY - bts_pp->yp) / bts_pp->endTime;
                         }
 
-                        GetTim2Info(bts_pp->tim2_dat_pp, &info, 1);
+                        {
+                            TIM2INFO info;
+                            int      w, h;
+                            int      px, py;
 
-                        w = info.picturH->ImageWidth * 16;
-                        h = info.picturH->ImageHeight * 16;
+                            GetTim2Info(bts_pp->tim2_dat_pp, &info, 1);
 
-                        sceGifPkAddGsAD(&gifP, SCE_GS_TEX0_1, info.picturH->GsTex0);
-                        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
+                            w = info.picturH->ImageWidth * 16;
+                            h = info.picturH->ImageHeight * 16;
 
-                        px = ((int)(bts_pp->xp * 16.0f) - (w) + GS_X_COORD(0));
-                        py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + GS_Y_COORD(0));
+                            sceGifPkAddGsAD(&gifP, SCE_GS_TEX0_1, info.picturH->GsTex0);
+                            sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
-                        sceGifPkAddGsAD(&gifP, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
+                            px = ((int)(bts_pp->xp * 16.0f) - (w) + GS_X_COORD(0));
+                            py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + GS_Y_COORD(0));
 
-                        px &= 0xffff;
-                        py &= 0xffff;
+                            sceGifPkAddGsAD(&gifP, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
 
-                        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(px, py, 0));
+                            px &= 0xffff;
+                            py &= 0xffff;
 
-                        px += w * 2;
-                        py += h;
+                            sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(px, py, 0));
 
-                        sceGifPkAddGsAD(&gifP, SCE_GS_UV, SCE_GS_SET_UV(w, h));
-                        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(px, py, 0));
+                            px += w * 2;
+                            py += h;
+
+                            sceGifPkAddGsAD(&gifP, SCE_GS_UV, SCE_GS_SET_UV(w, h));
+                            sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(px, py, 0));
+                        }
 
                         if (bts_pp->use != 0) {
                             bts_pp->endTime--;
@@ -1249,7 +1263,6 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
     OBJSTR    *objstr_pp;
     OBJCTRL   *objctrl_pp, *objctrl_end_pp;
     OBJACTPRG *objactprg_pp;
-    OBJACTPRG *objactprg_tmp_pp;
     int        i, first_f, tmp_time, endflag, ret;
 
     first_f = FALSE;
@@ -1309,6 +1322,8 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
     }
 
     while (objctrl_pp < objctrl_end_pp) {
+        OBJACTPRG *objactprg_tmp_pp;
+
         if (objctrl_pp->frame <= tmp_time) {
             switch (objctrl_pp->objctrl_type) {
             case OCTRL_ANI:
@@ -1378,12 +1393,16 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 }
 
                 if (objctrl_pp->status & OCTRL_STAT_LOOP) {
-                    objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+                    int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+
+                    objactprg_tmp_pp->now_time %= haba;
                     if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                         octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                     }
                 } else {
-                    if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time) {
+                    int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+
+                    if (objactprg_tmp_pp->now_time > haba) {
                         objactprg_tmp_pp->job_type = OCTRL_NON;
                     }
                 }
@@ -1430,12 +1449,16 @@ static int DrawObjStrDisp(SCENE_OBJDATA *scn_pp, int num, u_int time, int sw) {
                 }
 
                 if (objctrl_pp->status & OCTRL_STAT_LOOP) {
-                    objactprg_tmp_pp->now_time %= objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+                    int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+
+                    objactprg_tmp_pp->now_time %= haba;
                     if (objctrl_pp->status & OCTRL_STAT_SAVE_TIME) {
                         octst_time[objctrl_pp->dat[4]] = objactprg_tmp_pp->now_time;
                     }
                 } else {
-                    if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time) {
+                    int haba = objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time;
+
+                    if (objactprg_tmp_pp->now_time > haba) {
                         objactprg_tmp_pp->job_type = OCTRL_NON;
                     }
                 }
@@ -1522,7 +1545,6 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
     OBJSTR    *objstr_pp;
     OBJCTRL   *objctrl_pp, *objctrl_end_pp;
     OBJACTPRG *objactprg_pp, *objactprg_org_pp;
-    OBJACTPRG *objactprg_tmp_pp, *objactprg_tmp_org_pp;
     int        i, first_f, tmp_time, endflag, ret, check_pos;
 
     first_f = FALSE;
@@ -1606,6 +1628,8 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
     tmp_time = objstr_pp->PRtime;
 
     while (objctrl_pp < objctrl_end_pp) {
+        OBJACTPRG *objactprg_tmp_pp, *objactprg_tmp_org_pp;
+
         switch (objctrl_pp->objctrl_type) {
         case OCTRL_ANI:
         case OCTRL_MDL:
@@ -1708,9 +1732,10 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
                     }
 
                     if (objstr_pp->PRpress == NULL) {
-                        int haba = (objctrl_pp->frame + objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time);
-                        if (tmp_time < haba) {
-                            objstr_pp->PRtime = haba;
+                        int tmpX = (objctrl_pp->frame + objactprg_tmp_pp->end_time - objactprg_tmp_pp->start_time);
+
+                        if (tmp_time < tmpX) {
+                            objstr_pp->PRtime = tmpX;
                             tmp_time = objstr_pp->PRtime;
                         }
 
@@ -1769,8 +1794,7 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
                 posAniOtherKill(objactprg_pp, scn_pp->objactprg_ctrl.num, objctrl_pp->dat[1], objctrl_pp->dat[0]);
             }
             break;
-        case OCTRL_CL2: {
-            int tmpX;
+        case OCTRL_CL2:
             objactprg_tmp_pp = &objactprg_pp[objctrl_pp->dat[0]];
             objactprg_tmp_pp->main_num = objctrl_pp->dat[0];
             objactprg_tmp_pp->sub_num = objctrl_pp->dat[1];
@@ -1782,18 +1806,15 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
 
             objactprg_tmp_pp->now_time = tmp_time - objctrl_pp->frame;
 
-
             objactprg_tmp_pp->job_type = objctrl_pp->objctrl_type;
             objactprg_tmp_pp->status = objctrl_pp->status;
-            
+
             objactprg_tmp_pp->start_time = 0;
-            tmpX = objctrl_pp->dat[2];
-            objactprg_tmp_pp->end_time = tmpX;
-            if (objactprg_tmp_pp->now_time > tmpX) {
+            objactprg_tmp_pp->end_time = objctrl_pp->dat[2];
+            if (objactprg_tmp_pp->now_time > objactprg_tmp_pp->end_time) {
                 objactprg_tmp_pp->job_type = OCTRL_NON;
             }
             break;
-        }
         case OCTRL_NEXT:
         case OCTRL_LOOP:
             endflag = TRUE;
@@ -2040,99 +2061,102 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
 }
 
 void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
-    OBJACTPRG      *cam_pp[OBJACTPRG_MAX];
-    OBJACTPRG      *org_pp;
-    OBJACTPRG      *prg_pp;
-    int             i, j, set_f, chg_f;
-    int             first, blumove;
+    OBJACTPRG      *oct_org_pp, *oct_now_pp;
+    OBJACTPRG      *oct_cam_pp[OBJACTPRG_MAX];
+    int             i, j, use_f;
     OBJACTPRG_CTRL *ctrl_pp = &scene_pp->objactprg_ctrl;
 
     for (i = OBJACTPRG_MAX - 1; i >= 0; i--) {
-        cam_pp[i] = NULL;
+        oct_cam_pp[i] = NULL;
     }
 
-    org_pp = ctrl_pp->objactprg[OBJACTPRG_ORG];
+    oct_org_pp = ctrl_pp->objactprg[OBJACTPRG_ORG];
 
     for (i = 0; i < ctrl_pp->num; i++) {
-        set_f = FALSE;
+        use_f = FALSE;
 
         for (j = OBJACTPRG_TAP; j > OBJACTPRG_ORG; j--) {
-            prg_pp = ctrl_pp->objactprg[j];
+            oct_now_pp = ctrl_pp->objactprg[j];
 
-            if (prg_pp[i].job_type == OCTRL_NON) {
+            if (oct_now_pp[i].job_type == OCTRL_NON) {
                 continue;
             }
-            if (prg_pp[i].status & OCTRL_STAT_DISABLED) {
+            if (oct_now_pp[i].status & OCTRL_STAT_DISABLED) {
                 continue;
             }
 
-            switch (prg_pp[i].job_type) {
-            case OCTRL_ANI:
-                blumove = 0;
-                if (prg_pp[i].status & OCTRL_STAT_MOVE) {
-                    blumove = 2;
+            switch (oct_now_pp[i].job_type) {
+            case OCTRL_ANI: {
+                int first_f, brff;
+
+                brff = 0;
+                if (oct_now_pp[i].status & OCTRL_STAT_MOVE) {
+                    brff = 2;
                 }
-                if (prg_pp[i].status & OCTRL_STAT_BLUR) {
-                    blumove = 1;
+                if (oct_now_pp[i].status & OCTRL_STAT_BLUR) {
+                    brff = 1;
                 }
-                if (prg_pp[i].status & OCTRL_STAT_BLUR2) {
-                    blumove = 3;
+                if (oct_now_pp[i].status & OCTRL_STAT_BLUR2) {
+                    brff = 3;
                 }
 
-                first = prg_pp[i].first_flag;
-                if (org_pp[i].job_type == OCTRL_NON) {
-                    first = 1;
+                first_f = oct_now_pp[i].first_flag;
+                if (oct_org_pp[i].job_type == OCTRL_NON) {
+                    first_f = 1;
                 }
 
-                PrSetModelDisturbance(scene_pp->objdat_pp[i].handle, prg_pp[i].focal_lng);
-                XAnimationLinkOption(scene_pp->objdat_pp[i].handle, scene_pp->objdat_pp[prg_pp[i].sub_num].handle,
-                                     first, blumove, prg_pp[i].now_time + prg_pp[i].start_time);
-                set_f = TRUE;
-                org_pp[i] = prg_pp[i];
+                PrSetModelDisturbance(scene_pp->objdat_pp[i].handle, oct_now_pp[i].focal_lng);
+                XAnimationLinkOption(scene_pp->objdat_pp[i].handle, scene_pp->objdat_pp[oct_now_pp[i].sub_num].handle,
+                                     first_f, brff, oct_now_pp[i].now_time + oct_now_pp[i].start_time);
+                use_f = TRUE;
+                oct_org_pp[i] = oct_now_pp[i];
                 break;
+            }
             case OCTRL_ANIPOS:
-                XAnimationPositionLink(scene_pp->objdat_pp[prg_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle,
-                                       prg_pp[i].now_time + prg_pp[i].start_time);
-                set_f = TRUE;
+                XAnimationPositionLink(scene_pp->objdat_pp[oct_now_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle,
+                                       oct_now_pp[i].now_time + oct_now_pp[i].start_time);
+                use_f = TRUE;
                 break;
             case OCTRL_MDL:
-                set_f = TRUE;
-                if (org_pp[i].job_type == OCTRL_NON) {
+                use_f = TRUE;
+                if (oct_org_pp[i].job_type == OCTRL_NON) {
                     PrShowModel(scene_pp->objdat_pp[i].handle, NULL);
-                    org_pp[i] = prg_pp[i];
+                    oct_org_pp[i] = oct_now_pp[i];
                 }
                 break;
             case OCTRL_CAM:
-                cam_pp[j] = &prg_pp[i];
+                oct_cam_pp[j] = &oct_now_pp[i];
                 break;
-            case OCTRL_TM2:
-                chg_f = TRUE;
-                if (org_pp[i].job_type != OCTRL_NON) {
-                    chg_f = FALSE;
+            case OCTRL_TM2: {
+                int yaru_flag = TRUE;
+
+                if (oct_org_pp[i].job_type != OCTRL_NON) {
+                    yaru_flag = FALSE;
                 }
-                if (org_pp[i].sub_num != prg_pp[i].sub_num) {
-                    chg_f = TRUE;
+                if (oct_org_pp[i].sub_num != oct_now_pp[i].sub_num) {
+                    yaru_flag = TRUE;
                 }
-                if (chg_f) {
-                    set_f = TRUE;
-                    Tim2TransX(scene_pp->objdat_pp[i].handle, prg_pp[i].sub_num);
-                    org_pp[i] = prg_pp[i];
+                if (yaru_flag) {
+                    use_f = TRUE;
+                    Tim2TransX(scene_pp->objdat_pp[i].handle, oct_now_pp[i].sub_num);
+                    oct_org_pp[i] = oct_now_pp[i];
                 }
                 break;
+            }
             case OCTRL_CL2:
-                Cl2MixTrans(prg_pp[i].now_time, prg_pp[i].end_time, scene_pp->objdat_pp[i].handle,
-                            scene_pp->objdat_pp[prg_pp[i].sub_num].handle);
-                org_pp[i] = prg_pp[i];
+                Cl2MixTrans(oct_now_pp[i].now_time, oct_now_pp[i].end_time, scene_pp->objdat_pp[i].handle,
+                            scene_pp->objdat_pp[oct_now_pp[i].sub_num].handle);
+                oct_org_pp[i] = oct_now_pp[i];
                 break;
             }
 
-            if (set_f) {
+            if (use_f) {
                 break;
             }
         }
 
-        if (!set_f) {
-            switch (org_pp[i].job_type) {
+        if (!use_f) {
+            switch (oct_org_pp[i].job_type) {
             case OCTRL_ANI:
                 PrResetPosture(scene_pp->objdat_pp[i].handle);
                 PrSetTransactionBlendRatio(scene_pp->objdat_pp[i].handle, -1.0f);
@@ -2144,30 +2168,29 @@ void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
                 PrHideModel(scene_pp->objdat_pp[i].handle);
                 break;
             case OCTRL_ANIPOS:
-                XAnimationPositionUnLink(scene_pp->objdat_pp[org_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle);
+                XAnimationPositionUnLink(scene_pp->objdat_pp[oct_org_pp[i].sub_num].handle, scene_pp->objdat_pp[i].handle);
                 break;
             }
 
-            org_pp[i].job_type = OCTRL_NON;
+            oct_org_pp[i].job_type = OCTRL_NON;
         }
     }
 
     for (j = OBJACTPRG_MAX - 1; j >= 0; j--) {
-        if (cam_pp[j] != NULL) {
-            PrSelectCamera(scene_pp->objdat_pp[cam_pp[j]->main_num].handle, scene_pp->handle);
-            PrAnimateSceneCamera(scene_pp->handle, (float)(cam_pp[j]->now_time + cam_pp[j]->start_time) + 0.0f);
-            PrSetDepthOfField(scene_pp->handle, cam_pp[j]->focal_lng, cam_pp[j]->defocus_lng);
-            camOtherKill(org_pp, ctrl_pp->num, cam_pp[j]->main_num);
-            org_pp[cam_pp[j]->main_num] = *cam_pp[j];
+        if (oct_cam_pp[j] != NULL) {
+            PrSelectCamera(scene_pp->objdat_pp[oct_cam_pp[j]->main_num].handle, scene_pp->handle);
+            PrAnimateSceneCamera(scene_pp->handle, (float)(oct_cam_pp[j]->now_time + oct_cam_pp[j]->start_time) + 0.0f);
+            PrSetDepthOfField(scene_pp->handle, oct_cam_pp[j]->focal_lng, oct_cam_pp[j]->defocus_lng);
+            camOtherKill(oct_org_pp, ctrl_pp->num, oct_cam_pp[j]->main_num);
+            oct_org_pp[oct_cam_pp[j]->main_num] = *oct_cam_pp[j];
             break;
         }
     }
 }
 
 void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
-    int        i, max_num;
+    int        max_num, i;
     OBJACTPRG *objactprg_pp;
-    u_int      time_tmp;
 
     max_num      = sod_pp->objactprg_ctrl.num;
     objactprg_pp = sod_pp->objactprg_ctrl.objactprg[OBJACTPRG_TAP];
@@ -2179,7 +2202,7 @@ void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
             objactprg_pp->now_time++;
 
             if (objactprg_pp->job_type == OCTRL_ANI || objactprg_pp->job_type == OCTRL_CAM) {
-                time_tmp = (objactprg_pp->end_time - objactprg_pp->start_time) + 1;
+                u_int time_tmp = (objactprg_pp->end_time - objactprg_pp->start_time) + 1;
 
                 if (objactprg_pp->status & OCTRL_STAT_LOOP) {
                     objactprg_pp->now_time %= time_tmp;
@@ -2195,11 +2218,13 @@ void DrawObjStrTapTimeNext(SCENE_OBJDATA *sod_pp) {
 
 void DrawObjTapCtrl(SCENE_OBJDATA *sod_pp, DR_TAP_REQ *tap_pp, int tap_num) {
     int i;
-    int max_num;
 
-    max_num = sod_pp->objactprg_ctrl.num;
+    {
+        /* Stop every tap program; the requests below restart the ones that apply. */
+        int max_num = sod_pp->objactprg_ctrl.num;
 
-    WorkClear(sod_pp->objactprg_ctrl.objactprg[OBJACTPRG_TAP], max_num * sizeof(OBJACTPRG));
+        WorkClear(sod_pp->objactprg_ctrl.objactprg[OBJACTPRG_TAP], max_num * sizeof(OBJACTPRG));
+    }
 
     for (i = 0; i < tap_num; i++) {
         if (tap_pp[i].tap_id == DR_TAP_ID_ALL || sod_pp->tap_id == tap_pp[i].tap_id) {
@@ -2284,9 +2309,6 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
     float        current_ang;
     float        ck_pos;
     int          cnt_size;
-    float        adj_pos;
-    float        treat_pos;
-    int          tmp_x, tmp_y, tmp_w, tmp_h;
     DOUBLE_PARA *dpara_pp = (DOUBLE_PARA*)para_pp; /* note: not in STABS. */
 
     if (first_f == DRPRGF_INIT) {
@@ -2317,8 +2339,14 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
     }
 
     for (i = 0; i < cnt_size; i++) {
+        float adj_pos;
+        float treat_pos;
+        float lng_size;
+        int   tmp_x, tmp_y, tmp_w, tmp_h;
+
         tmp_x = 0;
-        treat_pos = ck_pos + sinf(current_ang) * dpara_pp->move_size;
+        lng_size = sinf(current_ang) * dpara_pp->move_size;
+        treat_pos = ck_pos + lng_size;
         tmp_y = 0;
         tmp_w = 0;
         tmp_h = 0;
@@ -2534,10 +2562,9 @@ int DrawAlphaBlendDisp(void *para_pp, int frame, int first_f, int useDisp, int d
 }
 
 int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
-    sceGsFrame          *use_pp;
-    sceGsFrame          *draw_pp;
-    sceGifPacket         gifpk;
-    sceGsFrame           maskedFrame;
+    sceGsFrame   *use_pp;
+    sceGsFrame   *draw_pp;
+    sceGifPacket  gifpk;
 
     if (first_f == DRPRGF_INIT) {
         return 0;
@@ -2551,9 +2578,13 @@ int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
-    /* The original builds a masked copy of the draw frame that is never submitted. */
-    maskedFrame = *draw_pp;
-    maskedFrame.FBMSK = 0x1f1f1f1f;
+    {
+        /* A masked copy of the draw frame that is never submitted. */
+        sceGsFrame sceGsFrameTmp;
+
+        sceGsFrameTmp = *draw_pp;
+        sceGsFrameTmp.FBMSK = 0x1f1f1f1f;
+    }
 
     UG_MozaikuDisp(para_pp, use_pp, &gifpk);
     CmnGifADPacketMakeTrans(&gifpk);
@@ -2563,11 +2594,6 @@ int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
 int DrawFadeDisp(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     sceGsFrame    *draw_pp, *use_pp;
     sceGifPacket   gifpk;
-    int            alp;
-    int            i;
-    int            stp, endp;
-    int            lngT, lngN;
-    FADE_MAKE_STR  fade_make_str;
     FADE_STR      *fade_pp = (FADE_STR*)para_pp; /* note: not in STABS. */
 
     if (first_f == DRPRGF_INIT) {
@@ -2585,45 +2611,60 @@ int DrawFadeDisp(void *para_pp, int frame, int first_f, int useDisp, int drDisp)
         sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, GS_REG_WORD(DrawGetDrawEnvP(DNUM_VRAM2)->xyoffset1));
     }
 
-    stp = 0;
-    endp = -1;
+    {
+        int alp;
 
-    for (i = 0; i < fade_pp->fade_data_size; i++) {
-        if (fade_pp->fade_data_pp[i].frame == frame) {
-            stp = i;
-            endp = i;
-            break;
+        /* Interpolate the fade level between the keys around this frame. */
+        {
+            int i;
+            int stp, endp;
+            int lngT, lngN;
+
+            stp = 0;
+            endp = -1;
+
+            for (i = 0; i < fade_pp->fade_data_size; i++) {
+                if (fade_pp->fade_data_pp[i].frame == frame) {
+                    stp = i;
+                    endp = i;
+                    break;
+                }
+
+                if (fade_pp->fade_data_pp[i].frame < frame) {
+                    stp = i;
+                }
+
+                if (fade_pp->fade_data_pp[i].frame > frame) {
+                    endp = i;
+                    break;
+                }
+            }
+
+            if (endp == -1) {
+                endp = stp;
+            }
+
+            lngT = fade_pp->fade_data_pp[endp].frame - fade_pp->fade_data_pp[stp].frame;
+            lngN = frame - fade_pp->fade_data_pp[stp].frame;
+
+            if (lngT == 0) {
+                alp = fade_pp->fade_data_pp[stp].alp;
+            } else {
+                alp = fade_pp->fade_data_pp[endp].alp - fade_pp->fade_data_pp[stp].alp;
+                alp = ((alp * lngN) / lngT) + fade_pp->fade_data_pp[stp].alp;
+            }
         }
 
-        if (fade_pp->fade_data_pp[i].frame < frame) {
-            stp = i;
+        {
+            FADE_MAKE_STR fade_make_str;
+
+            fade_make_str.r = fade_pp->r;
+            fade_make_str.g = fade_pp->g;
+            fade_make_str.b = fade_pp->b;
+            fade_make_str.alp = alp;
+            UG_FadeDisp(&fade_make_str, &gifpk, use_pp);
         }
-
-        if (fade_pp->fade_data_pp[i].frame > frame) {
-            endp = i;
-            break;
-        }
     }
-
-    if (endp == -1) {
-        endp = stp;
-    }
-
-    lngT = fade_pp->fade_data_pp[endp].frame - fade_pp->fade_data_pp[stp].frame;
-    lngN = frame - fade_pp->fade_data_pp[stp].frame;
-
-    if (lngT == 0) {
-        alp = fade_pp->fade_data_pp[stp].alp;
-    } else {
-        alp = fade_pp->fade_data_pp[endp].alp - fade_pp->fade_data_pp[stp].alp;
-        alp = ((alp * lngN) / lngT) + fade_pp->fade_data_pp[stp].alp;
-    }
-
-    fade_make_str.r = fade_pp->r;
-    fade_make_str.g = fade_pp->g;
-    fade_make_str.b = fade_pp->b;
-    fade_make_str.alp = alp;
-    UG_FadeDisp(&fade_make_str, &gifpk, use_pp);
 
     CmnGifADPacketMakeTrans(&gifpk);
     return 0;
@@ -2633,9 +2674,6 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
     sceGifPacket    gifpk;
     sceGsFrame     *use_pp, *draw_pp;
     int             r_tmp, g_tmp, b_tmp, a_tmp;
-    int             i, stp, endp;
-    int             lngT, lngN;
-    int             useTbp;
     ALP_INDEX8_STR *alp_pp = (ALP_INDEX8_STR*)para_pp; /* note: not in STABS. */
 
     if (first_f == DRPRGF_INIT) {
@@ -2648,59 +2686,69 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
     use_pp = DrawGetFrameP(useDisp);
     draw_pp = DrawGetFrameP(drDisp);
 
-    stp = 0;
-    endp = -1;
+    {
+        int i, stp, endp;
+        int lngT, lngN;
 
-    for (i = 0; i < alp_pp->alp8_size; i++) {
-        if (alp_pp->alp8_pp[i].frame == frame) {
-            stp = i;
-            endp = i;
-            break;
+        stp = 0;
+        endp = -1;
+
+        for (i = 0; i < alp_pp->alp8_size; i++) {
+            if (alp_pp->alp8_pp[i].frame == frame) {
+                stp = i;
+                endp = i;
+                break;
+            }
+
+            if (alp_pp->alp8_pp[i].frame < frame) {
+                stp = i;
+            }
+
+            if (alp_pp->alp8_pp[i].frame > frame) {
+                endp = i;
+                break;
+            }
         }
 
-        if (alp_pp->alp8_pp[i].frame < frame) {
-            stp = i;
+        if (endp == -1) {
+            endp = stp;
         }
 
-        if (alp_pp->alp8_pp[i].frame > frame) {
-            endp = i;
-            break;
+        lngT = alp_pp->alp8_pp[endp].frame - alp_pp->alp8_pp[stp].frame;
+        lngN = frame - alp_pp->alp8_pp[stp].frame;
+
+        if (lngT == 0) {
+            r_tmp = alp_pp->alp8_pp[stp].r;
+            g_tmp = alp_pp->alp8_pp[stp].g;
+            b_tmp = alp_pp->alp8_pp[stp].b;
+            a_tmp = alp_pp->alp8_pp[stp].alp;
+        } else {
+            r_tmp = alp_pp->alp8_pp[endp].r - alp_pp->alp8_pp[stp].r;
+            r_tmp = ((r_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].r;
+
+            g_tmp = alp_pp->alp8_pp[endp].g - alp_pp->alp8_pp[stp].g;
+            g_tmp = ((g_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].g;
+
+            b_tmp = alp_pp->alp8_pp[endp].b - alp_pp->alp8_pp[stp].b;
+            b_tmp = ((b_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].b;
+
+            a_tmp = alp_pp->alp8_pp[endp].alp - alp_pp->alp8_pp[stp].alp;
+            a_tmp = ((a_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].alp;
+        }
+
+        /* Write the key's 8-bit image into the alpha byte (PSMT8H) of the frame read from. */
+        {
+            int useTbp;
+
+            if (use_pp != NULL) {
+                useTbp = DrawGetFbpPos(useDisp) << 5;
+            } else {
+                useTbp = DrawGetFbpPos(drDisp) << 5;
+            }
+
+            Tim2Trans_TBP_MODE(GetIntAdrsCurrent(alp_pp->alp8_pp[stp].tim2num), useTbp, SCE_GS_PSMT8H);
         }
     }
-
-    if (endp == -1) {
-        endp = stp;
-    }
-
-    lngT = alp_pp->alp8_pp[endp].frame - alp_pp->alp8_pp[stp].frame;
-    lngN = frame - alp_pp->alp8_pp[stp].frame;
-
-    if (lngT == 0) {
-        r_tmp = alp_pp->alp8_pp[stp].r;
-        g_tmp = alp_pp->alp8_pp[stp].g;
-        b_tmp = alp_pp->alp8_pp[stp].b;
-        a_tmp = alp_pp->alp8_pp[stp].alp;
-    } else {
-        r_tmp = alp_pp->alp8_pp[endp].r - alp_pp->alp8_pp[stp].r;
-        r_tmp = ((r_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].r;
-
-        g_tmp = alp_pp->alp8_pp[endp].g - alp_pp->alp8_pp[stp].g;
-        g_tmp = ((g_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].g;
-
-        b_tmp = alp_pp->alp8_pp[endp].b - alp_pp->alp8_pp[stp].b;
-        b_tmp = ((b_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].b;
-
-        a_tmp = alp_pp->alp8_pp[endp].alp - alp_pp->alp8_pp[stp].alp;
-        a_tmp = ((a_tmp * lngN) / lngT) + alp_pp->alp8_pp[stp].alp;
-    }
-
-    if (use_pp != NULL) {
-        useTbp = DrawGetFbpPos(useDisp) << 5;
-    } else {
-        useTbp = DrawGetFbpPos(drDisp) << 5;
-    }
-
-    Tim2Trans_TBP_MODE(GetIntAdrsCurrent(alp_pp->alp8_pp[stp].tim2num), useTbp, SCE_GS_PSMT8H);
 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
@@ -2884,6 +2932,8 @@ static int drawDrDispCheck(int drD) {
 static int DrawScenectrlReq(SCENECTRL *scenectrl_pp, u_int time) {
     int ontime_flag;
     int ret;
+    int use_num;
+    int dr_num;
 
     ret = 0;
 
@@ -2897,8 +2947,8 @@ static int DrawScenectrlReq(SCENECTRL *scenectrl_pp, u_int time) {
     }
 
     if (ontime_flag) {
-        int use_num = drawUseDispCheck(scenectrl_pp->useDisp);
-        int dr_num = drawDrDispCheck(scenectrl_pp->drDisp);
+        use_num = drawUseDispCheck(scenectrl_pp->useDisp);
+        dr_num  = drawDrDispCheck(scenectrl_pp->drDisp);
 
         switch (dr_num) {
         case DNUM_VRAM2:
@@ -3014,8 +3064,6 @@ static float mendRatioTitleGet(int frame, int dera_f) {
     int           stp, endp;
     MENTITLE_DAT *men_pp, *men_mot_pp;
     int           sizeMen;
-    int           lntT, nowT;
-    float         per, retT;
 
     stp = 0;
     endp = -1;
@@ -3052,9 +3100,11 @@ static float mendRatioTitleGet(int frame, int dera_f) {
     }
 
     if (endp == stp) {
-        retT = men_mot_pp[stp].ratio;
-        return retT;
+        return men_mot_pp[stp].ratio;
     } else {
+        int   lntT, nowT;
+        float per, retT;
+
         lntT = men_mot_pp[endp].frame;
         nowT = frame - men_mot_pp[stp].frame;
         retT = men_mot_pp[endp].ratio - men_mot_pp[stp].ratio;
@@ -3201,8 +3251,7 @@ static void DrawCtrlMain(void *x) {
     SCENESTR  *scenestr_pp;
     SCENECTRL *scenectrl_pp;
     int        scene_req_flag;
-    SCENECTRL *scenectrl_tmp;
-    
+
     BallThrowInit();
     MozaikuPollSceneInit();
 
@@ -3260,9 +3309,14 @@ static void DrawCtrlMain(void *x) {
             outsideDrawSceneReq(DrawVramClear, 229, DNUM_NON, DNUM_ZBUFF, &vclr_black);
         }
 
-        while ((scenectrl_tmp = getOutsideCtrlScene(drawCurrentTime)) != NULL) {
-            check_scenectrl[check_cnt] = scenectrl_tmp;
-            check_cnt++;
+        /* Then the scenes requested from outside the score. */
+        {
+            SCENECTRL *scenectrl_tmp;
+
+            while ((scenectrl_tmp = getOutsideCtrlScene(drawCurrentTime)) != NULL) {
+                check_scenectrl[check_cnt] = scenectrl_tmp;
+                check_cnt++;
+            }
         }
 
         for (i = 0; i < check_cnt - 1; i++) {
@@ -3377,13 +3431,13 @@ static void DrawSceneStrReset(SCENESTR *scstr_pp) {
 }
 
 void resetDrawSceneObjData(SCENESTR *scstr_pp) {
-    int            i;
-    SCENE_OBJDATA *sod_pp;
+    int i;
 
     for (i = 0; i < scstr_pp->scenectrl_num; i++) {
         if (scstr_pp->scenectrl_pp[i].prg_pp != NULL &&
             scstr_pp->scenectrl_pp[i].prg_pp == DrawSceneObjData) {
-            sod_pp = scstr_pp->scenectrl_pp[i].param_pp;
+            SCENE_OBJDATA *sod_pp = scstr_pp->scenectrl_pp[i].param_pp;
+
             sod_pp->handle = NULL;
         }
     }
@@ -3830,7 +3884,6 @@ static void DrawCtrlMainDebug(void *x) {
     u_short paddata;
     int     sel_pos;
     int     i;
-    char    msg_buff[32];
 
     sel_pos = 0;
 
@@ -3880,6 +3933,8 @@ static void DrawCtrlMainDebug(void *x) {
 
                 DbgMsgPrint(draw_dbg_str[i].dbgmsg, 0x6ea, 0x79c + (i*0x14));
                 if (draw_dbg_str[i].msg_pp != NULL) {
+                    char msg_buff[32];
+
                     draw_dbg_str[i].msg_pp(msg_buff);
                     DbgMsgPrint(msg_buff, 0x866, 0x79c + (i*0x14));
                 }
