@@ -99,7 +99,7 @@ int CmnGifOpenCmnPk(sceGifPacket *gifpk_pp) {
     sceGifPkOpenGifTag(gifpk_pp, *(u_long128*)giftag);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEX1_1, 0);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
@@ -148,7 +148,7 @@ void CmnGifADPacketMake(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
 
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEX1_1, 0);
-    sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_1, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
     sceGifPkAddGsAD(gifP_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
@@ -169,7 +169,7 @@ void CmnGifADPacketMake2(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
 
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEX1_2, 0);
-    sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_2, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_2, GS_TEST_OFF);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_2, 0);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));

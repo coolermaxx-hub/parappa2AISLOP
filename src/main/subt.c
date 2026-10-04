@@ -267,9 +267,9 @@ void SubtClear(void) {
 
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0));
-    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
+    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_PRMODECONT, 1);
-    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
+    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
 
     subtSetNum = 0;
 }
@@ -399,7 +399,7 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
         for (j = 0; j < subt_code[i].cnt; j++) {
             MCODE_DAT *mcode_pp = mcode_dat_pp[k++];
 
-            sceGifPkAddGsAD(&subtPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+            sceGifPkAddGsAD(&subtPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
             sceGifPkAddGsAD(&subtPkSpr, SCE_GS_UV,
                 SCE_GS_SET_UV(mcode_pp->u << 4, mcode_pp->v << 4));

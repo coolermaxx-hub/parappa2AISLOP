@@ -1,5 +1,6 @@
 #include "dbug/dbgmsg.h"
 
+#include "os/cmngifpk.h"
 #include "os/tim2.h"
 
 #include <libdma.h>
@@ -53,12 +54,12 @@ void DbgMsgClear(void) {
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEX1_1, tinfo.picturH->GsTex1);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXCLUT, tinfo.picturH->GsTexClut);
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
     sceGifPkAddGsAD(&gifPacket, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, 0x3f800000));
     sceGifPkAddGsAD(&gifPacket, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
 }
 
@@ -156,12 +157,12 @@ void DbgMsgClearUserPkt(sceGifPacket *usrPacket_pp) {
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
 
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEXCLUT, tinfo.picturH->GsTexClut);
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, 0x3f800000));
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
 }
 

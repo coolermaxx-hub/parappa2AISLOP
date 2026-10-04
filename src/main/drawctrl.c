@@ -764,8 +764,8 @@ void BallThrowPoll(void) {
 
                 CmnGifADPacketMake(&gifP, DrawGetFrameP(DNUM_DRAW));
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
-                sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
-                sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
+                sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
+                sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
 
                 for (j = 0; j < bthrow_ctrl[i].bthrow_str_cnt; j++, bts_pp++) {
                     if (bts_pp->use & 1) {
@@ -822,7 +822,7 @@ void BallThrowPoll(void) {
                         h = info.picturH->ImageHeight * 16;
 
                         sceGifPkAddGsAD(&gifP, SCE_GS_TEX0_1, info.picturH->GsTex0);
-                        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+                        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
                         px = ((int)(bts_pp->xp * 16.0f) - (w) + GS_X_COORD(0));
                         py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + GS_Y_COORD(0));
@@ -2293,9 +2293,9 @@ int DrawDoubleDispIn(void *para_pp, int frame, int first_f, int useDisp, int drD
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, GS_FRAME_TEX0(use_pp, 0, SCE_GS_MODULATE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, GS_TEST_OFF);
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 
     current_ang = dpara_pp->next_time_ang * frame;
     ck_pos = dpara_pp->pos_start + dpara_pp->pos_add * frame;
@@ -2403,7 +2403,7 @@ int DrawVramClear(void *para_pp, int frame, int first_f, int useDisp, int drDisp
 
     CmnGifADPacketMake2(&gifpk, DrawGetFrameP(drDisp));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_2, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_2, GS_TEST_COLOR_ONLY);
     sceGifPkAddGsAD(&gifpk, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(vclr_para_pp->r, vclr_para_pp->g, vclr_para_pp->b, vclr_para_pp->a, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH, 0, SCREEN_FIELD_HEIGHT));
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
@@ -2443,9 +2443,9 @@ int DrawMoveDispIn(void *para_pp, int frame, int first_f, int useDisp, int drDis
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, GS_FRAME_TEX0(use_pp, 0, SCE_GS_MODULATE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_FALSE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_KEEP, SCE_GS_FALSE, 0, SCE_GS_TRUE, SCE_GS_DEPTH_ALWAYS));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, GS_TEST_OFF);
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 
     stp = 0;
     endp = -1;
@@ -2710,7 +2710,7 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM,
         (use_pp != NULL)
-        ? SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0)
+        ? GS_PRIM_TEX_SPRITE(TRUE)
         : SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0)
     );
 
@@ -2774,7 +2774,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 64));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, SCE_GS_TRUE, SCE_GS_FALSE, SCE_GS_TRUE, SCE_GS_FALSE, 1, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, *(u_long*)use_pp);
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(0, 0));

@@ -4829,7 +4829,7 @@ static void bnNumberDisp(sceGifPacket *gif_pp, long score, short x, short y, int
 
     sceGifPkAddGsAD(gif_pp, SCE_GS_TEX0_1, bn_num_type_pp->tim2_dat_pp->GsTex0);
     sceGifPkAddGsAD(gif_pp, SCE_GS_TEX1_1, bn_num_type_pp->tim2_dat_pp->GsTex1);
-    sceGifPkAddGsAD(gif_pp, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
+    sceGifPkAddGsAD(gif_pp, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 
     for (i = 0; i < keta; i++) {
         tmp = i + 1;
@@ -4867,9 +4867,9 @@ static void bonusScoreDraw(void) {
     CmnGifADPacketMake(&bn_gif, NULL);
 
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, 1));
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(1, 1, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
 
@@ -4918,15 +4918,15 @@ static void LessonRoundDisp(SCRRJ_LESSON_ROUND_ENUM type) {
     ChangeDrawAreaSetGifTag(DrawGetDrawEnvP(DNUM_DRAW), &gifpk);
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(1, 1, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
     sceGifPkAddGsAD(&gifpk, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, tim2_dat_pp->GsTex0);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, tim2_dat_pp->GsTex1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
     for (i = 0; i < 2; i++) {
         set_lero_gifset(&gifpk, &lero_tim2_pt[lero_pos_str[type][i].tim2_num], lero_pos_str[type][i].posx, lero_pos_str[type][i].posy);

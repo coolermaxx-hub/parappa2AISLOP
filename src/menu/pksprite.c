@@ -1,5 +1,7 @@
 #include "menu/pksprite.h"
 
+#include "os/cmngifpk.h"
+
 #include <eestruct.h>
 #include <malloc.h>
 #include <stdio.h>
@@ -588,8 +590,8 @@ void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     PkDefReg_Add(pk);
     PkPABE_Add(pk, 0);
     PkFBA_Add(pk, 0);
-    PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
-    PkTEST_Add(pk, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1));
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
+    PkTEST_Add(pk, GS_TEST_OFF);
     PkCLAMP_Add(pk, SCE_GS_SET_CLAMP(0, 0, 0, 0, 0, 0));
     PkCCLAMP_Add(pk, SCE_GS_SET_COLCLAMP(1));
     PkDefSCISSOR_Add(pk);
@@ -603,7 +605,7 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0);
+    sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
     if (flg & PKSPR_UV_RECT) {
@@ -673,7 +675,7 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0);
+    sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
     if (flg & PKSPR_UV_RECT) {
@@ -743,7 +745,7 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0);
+    sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
     if (flg & PKSPR_UV_RECT) {

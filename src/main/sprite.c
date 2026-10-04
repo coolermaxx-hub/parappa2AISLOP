@@ -30,9 +30,9 @@ void SprClear(void) {
     sceGifPkOpenGifTag(&gifPkSpr, *(u_long128*)giftag);
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0));
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(1, 1, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_CLAMP_1, GS_CLAMP_EDGES);
 
     sprSetNum = 0;
 }
@@ -82,7 +82,7 @@ void SprDatPrint(SPR_DAT *spr_pp) {
 }
 
 void SprDisp(SPR_PRIM *prm_pp) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 0, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_UV, SCE_GS_SET_UV((prm_pp->u + 1) << 4, (prm_pp->v + 1) << 4));
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2((prm_pp->x << 4) - (((prm_pp->w * prm_pp->scalex) / 2) >> 4),
@@ -96,7 +96,7 @@ void SprDisp(SPR_PRIM *prm_pp) {
 }
 
 void SprDispAlp(SPR_PRIM *prm_pp) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_UV, SCE_GS_SET_UV((prm_pp->u + 1) << 4, (prm_pp->v + 1) << 4));
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2((prm_pp->x << 4) - (((prm_pp->w * prm_pp->scalex) / 2) >> 4),
@@ -123,14 +123,14 @@ void SprDispZcheck(void) {
 
 void SprDispAcheck(int flg) {
     if (flg) {
-        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS)); // GREATER ATST register
+        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO); // GREATER ATST register
     } else {
         sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 3, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS)); // LEQUAL ATST register
     }
 }
 
 void SprDispAlphaSet(void) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
 }
 
 void SprBox(SPR_PRIM *prm_pp) {

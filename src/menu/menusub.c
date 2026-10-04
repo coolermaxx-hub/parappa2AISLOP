@@ -2214,7 +2214,7 @@ static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
 
     sceGifPkAddGsAD(pgifpk, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(pgifpk, SCE_GS_FBA_1, 0);
-    sceGifPkAddGsAD(pgifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1));
+    sceGifPkAddGsAD(pgifpk, SCE_GS_TEST_1, GS_TEST_OFF);
 
     sceGifPkCloseGifTag(pgifpk);
     return pgifpk->pCurrent;
@@ -10192,7 +10192,7 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     PkSprPkt_SetDrawEnv(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
     PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
 
-    PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 }
 
 void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy) {
