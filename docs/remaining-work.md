@@ -99,15 +99,29 @@ register struct as one 64-bit GIF A+D value.
 
 ## Data sections still in asm
 
-Typed C already: `mbar`, `p3mc`, `memc`, `subt`, `drawctrl`, `menusub`,
-`menufont`, `mntm2hed`, `menu_mdl` and `stdat` (data, sdata and the file-name
-strings, which are now ordinary literals). Each was checked section by section
-against the original object: contents are identical apart from relocation words
-and trailing alignment pad. Still asm (`asm/data/...`): `sdk/libgcc` (compiler
-runtime tables) and `common_ipk` (a binary archive, kept as a data asset). The
-sbss/bss/lit4 segments and the `*_tmp_NNN` function statics in `menusub.c` and
-`mbar.c` are also still asm-backed. The rodata blobs that remain `INCLUDE_RODATA`
-are listed by `grep -rn INCLUDE_RODATA src`.
+Everything the project's own source defines is now typed C: `.data`, `.sdata`,
+`.sbss`, `.bss` and `.rodata` of every `main`, `menu`, `os`, `dbug`, `prlib`
+and `nalib` object. Each conversion was checked against the original layout
+(symbol order and addresses, and byte contents apart from relocation words).
+The asm objects that remain are not project source:
+
+- `sdk/*`: the vendor library data and `libgcc` runtime tables.
+- `common_ipk`: a binary archive kept as a data asset.
+- `gcc_except_table.rodata`: compiler-generated C++ exception tables.
+- `299300.sdata`: a pointer to `__main` from the C++ runtime start-up.
+- `prlib` `lit4`: float literals, handled by `tools/buildtools/lit4fix.py`.
+
+Padding that no source construct explains is an explicit slinky `pad` entry
+rather than a placeholder variable: 8 bytes after the `drawctrl` `.sdata`,
+16 bytes in `.data` where the `napacket` object used to be, and 0xAA0 bytes of
+`.bss` after `os/tim2` (the original `tim2` bss is 2720 bytes larger than its
+five statics; the contents are unknown).
+
+The `spadata` template layout is deliberate: `SpaTrack` accessors are defined
+once in `spadata.cpp` so that only that unit owns their function-local statics,
+as in the original image. Matrix spline interpolation is the generic template
+and the vector and float versions are specializations, which reproduces the
+original `.bss` order.
 
 `stdat_dat_*` overlay pointers (event, scene and subtitle records inside the
 stage overlays) are written as fixed addresses because those objects live in
