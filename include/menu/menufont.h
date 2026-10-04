@@ -62,6 +62,15 @@ typedef struct { // 0x10
     /* 0xc */ u_int pad;
 } MNFONT_INFO;
 
+/* Text placement flags (the flg argument): (x, y) is the text's left, centre or
+ * right edge, and its top, middle or bottom. Zero places it from the top left. */
+#define MNFONT_HALIGN_MASK   0xf
+#define MNFONT_HALIGN_CENTER 1
+#define MNFONT_HALIGN_RIGHT  2
+#define MNFONT_VALIGN_MASK   0xf00
+#define MNFONT_VALIGN_MIDDLE 0x100
+#define MNFONT_VALIGN_BOTTOM 0x200
+
 void MenuFont_ASC2EUC(char *des, char *src);
 
 void MENUSubtSetKanji(void *kanji_data_top);

@@ -7530,13 +7530,13 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
             col = GetDToneColor(str->abgr & 0xffffff, str->abgr, ton);
 
             sprintf(buf, "%d", i + 1);
-            MENUFontPutR(pk, spr, px + str[0].x, x, col, 0x100, buf, 1.0f);
+            MENUFontPutR(pk, spr, px + str[0].x, x, col, MNFONT_VALIGN_MIDDLE, buf, 1.0f);
 
             sprintf(buf, "%d", pRanking[i].score);
-            MENUFontPutR(pk, spr, px + str[1].x, py + str[1].y, col, 0x102, buf, 1.0f);
+            MENUFontPutR(pk, spr, px + str[1].x, py + str[1].y, col, MNFONT_VALIGN_MIDDLE | MNFONT_HALIGN_RIGHT, buf, 1.0f);
 
             sprintf(buf, "%s", pRanking[i].name);
-            MENUFontPutR(pk, spr, px + str[2].x, py + str[2].y, col, 0x100, buf, 1.1f);
+            MENUFontPutR(pk, spr, px + str[2].x, py + str[2].y, col, MNFONT_VALIGN_MIDDLE, buf, 1.1f);
         }
     }
 
@@ -9901,10 +9901,10 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     sprintf(buf, "%d", pfw->curuser + pfw->curPageTop + 1);
     ps = PAGENO_StrCOD;
-    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
+    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, buf);
     ps++;
     sprintf(buf, "%d", pfw->userMax);
-    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, 0x201, buf);
+    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, buf);
 
     if (pfw->sline == 0.0f) {
         isScroll = 0;
@@ -10109,7 +10109,7 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
         strcpy(sbuf, " STAGE?");
     }
     psps = pstrTop;
-    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
 
     if (user->flg != P3MC_USER_BROKEN && user->date.year != 0) {
         u_int month = user->date.month;
@@ -10119,21 +10119,21 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
         }
         sprintf(sbuf, "%02x.%s.%04x", user->date.day, _MONTH_STR[month], user->date.year);
         psps = &pstrTop[1];
-        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
 
         sprintf(sbuf, "%02x:%02x", user->date.hour, user->date.minute);
         psps = &pstrTop[2];
-        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
     } else {
         psps = &pstrTop[1];
-        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, "--.---.----");
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, "--.---.----");
         psps = &pstrTop[2];
-        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, "--:--");
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, "--:--");
     }
 
     sprintf(sbuf, "%02d", user->fileNo + 1);
     psps = &pstrTop[3];
-    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
 
     psps = &pstrTop[4];
     if (!(pflg & 2)) {
@@ -10142,24 +10142,24 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
         } else {
             NameSpaceCut(sbuf, user->name1);
         }
-        MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+        MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
     }
 
     if (user->mode == P3MC_MODE_REPLAY) {
         sprintf(sbuf, "%06d", user->score);
         psps = &pstrTop[5];
-        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
 
         if (user->isVs) {
             psps = &pstrTop[6];
             if (!(pflg & 4)) {
                 NameSpaceCut(sbuf, user->name2);
-                MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+                MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
             }
 
             sprintf(sbuf, "%06d", user->score2);
             psps = &pstrTop[7];
-            MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+            MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
         }
     }
 }
@@ -10520,7 +10520,7 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
         code   = pfw->curnchr[i];
         str[0] = UserName_CharSet[code >> USERNAME_CHAR_SET_SHIFT].ptbl[code & USERNAME_CHAR_INDEX_MASK];
         str[1] = 0;
-        MENUFontPutL(pk, spr, x, y, col, 1, str);
+        MENUFontPutL(pk, spr, x, y, col, MNFONT_HALIGN_CENTER, str);
         x += 20;
     }
 
@@ -10653,7 +10653,7 @@ void _PkMCMsgPut(SPR_PKT pk, SPR_PRM *spr, int id, int x, int y, u_int abgr) {
         flg = LANG_JAPANESE;
     }
 
-    MENUSubtPut(pk, spr, x, y, abgr, 1, MenuMsgGetMessageMc(id, flg), flg);
+    MENUSubtPut(pk, spr, x, y, abgr, MNFONT_HALIGN_CENTER, MenuMsgGetMessageMc(id, flg), flg);
 }
 
 int _PkMCMsgGetLine(int id) {
@@ -10677,7 +10677,7 @@ void _PkSubMsgPut(SPR_PKT pk, SPR_PRM *spr, int id, int x, int y, u_int abgr) {
         flg = LANG_JAPANESE;
     }
 
-    MENUSubtPut(pk, spr, x, y, abgr, 1, MenuMsgGetMessageSub(id, flg), flg);
+    MENUSubtPut(pk, spr, x, y, abgr, MNFONT_HALIGN_CENTER, MenuMsgGetMessageSub(id, flg), flg);
 }
 
 void TsMenu_CleanVram(int nFrm) {

@@ -377,14 +377,6 @@ static int _AnimeFontFlg;
 static MCODE_STR *kanji_pp;
 
 static MCODE_CHAR mcode_dat_pp[512];
-/* Subtitle placement flags (low nibble: horizontal anchor, 0xf00: vertical anchor). */
-#define MNFONT_HALIGN_MASK   0xf
-#define MNFONT_HALIGN_CENTER 1
-#define MNFONT_HALIGN_RIGHT  2
-#define MNFONT_VALIGN_MASK   0xf00
-#define MNFONT_VALIGN_MIDDLE 0x100
-#define MNFONT_VALIGN_BOTTOM 0x200
-
 static MNFONT_INFO MnSubtFontInfo[3];
 
 static void _PKFontPut(SPR_PKT pk, SPR_PRM *spr, SUBT_CODE *psubt, int line_num, int xp, int yp, int pflg, int hsize, float rtx, float rty);
