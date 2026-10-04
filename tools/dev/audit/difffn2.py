@@ -16,7 +16,12 @@ def norm(lines):
         if l.startswith('R_MIPS'):
             # normalize previous instruction's immediate
             if out: out[-1]=re.sub(r'(-?\d+)\(([a-z0-9]+)\)$',r'IMM(\2)',out[-1]) if re.search(r'\(\w+\)$',out[-1]) else re.sub(r',(-?\d+|0x[0-9a-f]+)$',',IMM',out[-1])
-            out.append('RELOC')
+            m=re.match(r'R_MIPS_26\s+(\S+)',l)
+            if m and out and re.match(r'(j|jal)\t',out[-1]):
+                out[-1]=out[-1].split('\t')[0]+'\tTARGET'
+                out.append('RELOC' if m.group(1).startswith('.') else 'RELOC:'+re.sub(r'\+0x[0-9a-f]+$','',m.group(1)))
+            else:
+                out.append('RELOC')
         else: out.append(l)
     return out
 for f in sys.argv[1:]:
