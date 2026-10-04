@@ -1023,7 +1023,7 @@ static void MbarCl1CharSet(int col_num, int moto_num) {
     *mbcd_col->tim2_dat_pp = *mbcd_mot->tim2_dat_pp;
 
     MotGsTex0.CBP = ColGsTex0.CBP;
-    mbcd_col->tim2_dat_pp->GsTex0 = *(u_long*)&MotGsTex0;
+    mbcd_col->tim2_dat_pp->GsTex0 = GS_REG_WORD(MotGsTex0);
 }
 
 static void MbarCharSetSub(void) {

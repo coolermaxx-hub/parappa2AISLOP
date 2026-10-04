@@ -2572,7 +2572,7 @@ int DrawFadeDisp(void *para_pp, int frame, int first_f, int useDisp, int drDisp)
     CmnGifADPacketMake(&gifpk, draw_pp);
 
     if (drDisp == DNUM_DRAW && useDisp == DNUM_VRAM2) {
-        sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, *(u_long*)&DrawGetDrawEnvP(DNUM_VRAM2)->xyoffset1);
+        sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, GS_REG_WORD(DrawGetDrawEnvP(DNUM_VRAM2)->xyoffset1));
     }
 
     stp = 0;

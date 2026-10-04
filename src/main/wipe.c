@@ -811,9 +811,9 @@ static void WipeParaInDisp(void *x) {
         wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
 
         CmnGifADPacketMake(&gifP, &wipe_draw_env.frame1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_FRAME_1, *(u_long*)&wipe_draw_env.frame1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_XYOFFSET_1, *(u_long*)&wipe_draw_env.xyoffset1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_SCISSOR_1, *(u_long*)&wipe_draw_env.scissor1);
+        sceGifPkAddGsAD(&gifP, SCE_GS_FRAME_1, GS_REG_WORD(wipe_draw_env.frame1));
+        sceGifPkAddGsAD(&gifP, SCE_GS_XYOFFSET_1, GS_REG_WORD(wipe_draw_env.xyoffset1));
+        sceGifPkAddGsAD(&gifP, SCE_GS_SCISSOR_1, GS_REG_WORD(wipe_draw_env.scissor1));
         sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, GS_TEST_COLOR_ONLY);
         sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
         sceGifPkAddGsAD(&gifP, SCE_GS_RGBAQ, 0);

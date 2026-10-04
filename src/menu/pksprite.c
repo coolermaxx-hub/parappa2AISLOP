@@ -219,7 +219,7 @@ void PkDefSCISSOR_Add(SPR_PKT pkt) {
 
     ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
     ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = *(u_long*)&_PkDefSCISSOR;
+    ((u_long*)*pk)[2] = GS_REG_WORD(_PkDefSCISSOR);
     ((u_long*)*pk)[3] = SCE_GS_SCISSOR_1;
 
     *pkt = (u_long128*)pk + 2;
@@ -495,10 +495,10 @@ void PkSprPkt_SetDrawEnv(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
 
     ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
 
-    ((u_long*)*pk)[4] = *(u_long*)&pdenv->frame1;
+    ((u_long*)*pk)[4] = GS_REG_WORD(pdenv->frame1);
     ((u_long*)*pk)[5] = SCE_GS_FRAME_1;
 
-    ((u_long*)*pk)[6] = *(u_long*)&pdenv->zbuf1;
+    ((u_long*)*pk)[6] = GS_REG_WORD(pdenv->zbuf1);
     ((u_long*)*pk)[7] = SCE_GS_ZBUF_1;
 
     *pkt = (u_long128*)pk + 4;
@@ -524,7 +524,7 @@ void PkZBUFMask_Add(SPR_PKT pkt, int bMsk) {
 
     ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 1);
     ((u_long*)*pk)[1] = SCE_GIF_PACKED_AD;
-    ((u_long*)*pk)[2] = *(u_long*)&_PkDefZBUFFER;
+    ((u_long*)*pk)[2] = GS_REG_WORD(_PkDefZBUFFER);
     ((u_long*)*pk)[3] = SCE_GS_ZBUF_1;
 
     *pkt = (u_long128*)pk + 2;

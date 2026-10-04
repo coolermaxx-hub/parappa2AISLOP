@@ -461,12 +461,12 @@ void ChangeDrawArea(sceGsDrawEnv1 *env_pp) {
     sceGifPkCnt(&gifpk, 0, 0, 0);
 
     sceGifPkOpenGifTag(&gifpk, *(u_long128*)giftag);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, *(u_long*)&env_pp->frame1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, *(u_long*)&env_pp->frame1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, *(u_long*)&env_pp->xyoffset1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, *(u_long*)&env_pp->xyoffset1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_1, *(u_long*)&env_pp->scissor1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, *(u_long*)&env_pp->scissor1);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, GS_REG_WORD(env_pp->frame1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, GS_REG_WORD(env_pp->frame1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, GS_REG_WORD(env_pp->xyoffset1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, GS_REG_WORD(env_pp->xyoffset1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_1, GS_REG_WORD(env_pp->scissor1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, GS_REG_WORD(env_pp->scissor1));
     sceGifPkCloseGifTag(&gifpk);
 
     sceGifPkEnd(&gifpk, 0, 0, 0);
@@ -481,12 +481,12 @@ void ChangeDrawArea(sceGsDrawEnv1 *env_pp) {
 }
 
 void ChangeDrawAreaSetGifTag(sceGsDrawEnv1 *env_pp, sceGifPacket *gifpk_pp) {
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_1, *(u_long*)&env_pp->frame1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_2, *(u_long*)&env_pp->frame1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, *(u_long*)&env_pp->xyoffset1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_2, *(u_long*)&env_pp->xyoffset1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_1, *(u_long*)&env_pp->scissor1);
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_2, *(u_long*)&env_pp->scissor1);
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_1, GS_REG_WORD(env_pp->frame1));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_2, GS_REG_WORD(env_pp->frame1));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, GS_REG_WORD(env_pp->xyoffset1));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_2, GS_REG_WORD(env_pp->xyoffset1));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_1, GS_REG_WORD(env_pp->scissor1));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_2, GS_REG_WORD(env_pp->scissor1));
 }
 
 void ChangeDrawArea2(sceGsDrawEnv1 *env_pp) {
@@ -499,9 +499,9 @@ void ChangeDrawArea2(sceGsDrawEnv1 *env_pp) {
     sceGifPkCnt(&gifpk, 0, 0, 0);
 
     sceGifPkOpenGifTag(&gifpk, *(u_long128*)giftag);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, *(u_long*)&env_pp->frame1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, *(u_long*)&env_pp->xyoffset1);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, *(u_long*)&env_pp->scissor1);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, GS_REG_WORD(env_pp->frame1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, GS_REG_WORD(env_pp->xyoffset1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, GS_REG_WORD(env_pp->scissor1));
     sceGifPkCloseGifTag(&gifpk);
 
     sceGifPkEnd(&gifpk, 0, 0, 0);
