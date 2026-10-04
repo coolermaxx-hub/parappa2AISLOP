@@ -366,6 +366,21 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
     memc_setSaveIcon(2, NULL, 0);
 }
 
+/* _P3MC_file_chk: how one file on the card compares with what the game expects. */
+enum {
+    P3MC_FILE_DAMAGED = -2, /* present but the wrong size or still open */
+    P3MC_FILE_MISSING = -1,
+    P3MC_FILE_OK = 0
+};
+
+/* _P3MC_mainfile_chk: state of the whole save (system, icon and data files). */
+enum {
+    P3MC_MAIN_INCOMPLETE = -3, /* data file missing while the rest is intact */
+    P3MC_MAIN_DAMAGED = -2,
+    P3MC_MAIN_MISSING = -1,
+    P3MC_MAIN_OK = 0
+};
+
 static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
     int   n;
     int   max;
@@ -380,25 +395,25 @@ static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
     }
 
     if (no > 0) {
-        return -1;
+        return P3MC_MAIN_MISSING;
     }
 
-    flg = _P3MC_file_chk(memc_getfilename(-1), 0x3c4, need);
-    if (flg == -2) {
+    flg = _P3MC_file_chk(memc_getfilename(MEMC_FILE_ICON), sizeof(sceMcIconSys), need);
+    if (flg == P3MC_FILE_DAMAGED) {
         flg = 0;
     }
 
-    name = memc_getfilename(-2);
+    name = memc_getfilename(MEMC_FILE_ICON1);
     if (name != NULL) {
         flg1 = (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0);
     }
-    name = memc_getfilename(-3);
+    name = memc_getfilename(MEMC_FILE_ICON2);
     if (name != NULL) {
         if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
             flg1 = 1;
         }
     }
-    name = memc_getfilename(-4);
+    name = memc_getfilename(MEMC_FILE_ICON3);
     if (name != NULL) {
         if (_P3MC_file_chk(name, P3MC_GetIconSize(mode), need) != 0) {
             flg1 = 1;
@@ -418,18 +433,18 @@ static int _P3MC_mainfile_chk(int no, int data_csize, int mode, int *need) {
 
     for (n = no; n < max; n++) {
         flg = _P3MC_file_chk(memc_getfilename(n), data_csize, need);
-        if (flg == -2) {
-            return -2;
+        if (flg == P3MC_FILE_DAMAGED) {
+            return P3MC_MAIN_DAMAGED;
         }
-        if (flg == -1 && isSave) {
-            return -3;
+        if (flg == P3MC_FILE_MISSING && isSave) {
+            return P3MC_MAIN_INCOMPLETE;
         }
-        if (flg == 0 && !isSave) {
-            return -1;
+        if (flg == P3MC_FILE_OK && !isSave) {
+            return P3MC_MAIN_MISSING;
         }
     }
 
-    return isSave ? 0 : -1;
+    return isSave ? P3MC_MAIN_OK : P3MC_MAIN_MISSING;
 }
 
 static int _P3MC_file_chk(char *name, int size, int *need) {
@@ -443,7 +458,7 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
     flg = FALSE;
 
     if (name == NULL) {
-        return -1;
+        return P3MC_FILE_MISSING;
     }
 
     for (i = 0; pTblDir[i].EntryName[0] != '\0'; i++) {
@@ -475,7 +490,7 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
                 }
             }
 
-            return -2;
+            return P3MC_FILE_DAMAGED;
         }
     }
 
@@ -483,10 +498,10 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
         if (need != NULL) {
             *need += (size + 1023) / 1024;
         }
-        return -1;
+        return P3MC_FILE_MISSING;
     }
 
-    return 0;
+    return P3MC_FILE_OK;
 }
 
 int P3MC_InitReady(void) {
@@ -510,7 +525,7 @@ int P3MC_InitReady(void) {
     memc_port_info(0, &mcmenu_info);
 
     re = memc_manager(0);
-    if (re == 0x10 || re == 0x6 || re == 0x30) {
+    if (re == MEMC_ERR_BUSY || re == MEMC_ERR_SWAP || re == MEMC_ERR_SWAP_UNFORMATTED) {
         P3MC_CheckChangeClear();
         return -1;
     }
@@ -1369,7 +1384,7 @@ int P3MC_OpeningCheck(void) {
         if (!isErr) {
             int need = 0;
 
-            if (_P3MC_mainfile_chk(-1, UChkSize[0], 1, &need) == -3) {
+            if (_P3MC_mainfile_chk(-1, UChkSize[0], 1, &need) == P3MC_MAIN_INCOMPLETE) {
                 isErr = TRUE;
             } else {
                 isErr = (mcmenu_info.free < need);
@@ -1796,7 +1811,7 @@ static u_short _P3MC_proc(u_short prg) {
             if (mcmenu_info.flag & MCMC_FLAG_PS2) {
                 /* note: variable not in STABS info. */
                 int chk = _P3MC_mainfile_chk(-1, pw->dhdl->datasize, pw->data_mode, NULL);
-                if (chk >= -1 && chk <= 0) {
+                if (chk >= P3MC_MAIN_MISSING && chk <= P3MC_MAIN_OK) {
                     re = P3MC_LOAD_READ;
                 } else {
                     re = P3MC_LOAD_BAD_DATA;
