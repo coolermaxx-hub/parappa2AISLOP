@@ -47,6 +47,37 @@ static int memc_manager_save(int result);
 static int memc_manager_overwrite(int result);
 static int memc_manager_chk(int mode);
 
+/* Copies file no's path into pmw->filename, or empties it when the file has none. */
+#define MEMC_SET_FILENAME(pmw, no)                 \
+    {                                              \
+        char *tmpp = memc_getfilepath(no);         \
+                                                   \
+        if (tmpp != NULL) {                        \
+            strcpy((pmw)->filename, tmpp);         \
+        } else {                                   \
+            (pmw)->filename[0] = '\0';             \
+        }                                          \
+    }
+
+/* Clusters (1 KiB) the system files need: the icons, one directory cluster
+ * for every two of the nfile entries the save writes besides the icons, and 3. */
+#define MEMC_SET_SYSFILE_SIZE(pmw, nfile)                          \
+    {                                                              \
+        int n = (nfile);                                           \
+        int isize = ((pmw)->iconSize1 + 1023) / 1024;              \
+                                                                   \
+        if (memc_getfilename(MEMC_FILE_ICON2) != NULL) {           \
+            isize += ((pmw)->iconSize2 + 1023) / 1024;             \
+            n++;                                                   \
+        }                                                          \
+        if (memc_getfilename(MEMC_FILE_ICON3) != NULL) {           \
+            isize += ((pmw)->iconSize3 + 1023) / 1024;             \
+            n++;                                                   \
+        }                                                          \
+                                                                   \
+        (pmw)->sysFileSize = isize + ((n + 1) / 2) + 3;            \
+    }
+
 void memc_init(void) {
     sceMcInit();
     memset(&memc_stat, 0, sizeof(memc_stat));
@@ -70,15 +101,15 @@ void memc_setSaveTitle(char *title, int nLFPos) {
 }
 
 void memc_setIconSysHed(void *pIhData, int IhSize) {
-    int nLF;
+    int nLf;
 
     if (!pIhData || IhSize <= 0) {
         return;
     }
 
-    nLF = memc_iconsys.OffsLF;
+    nLf = memc_iconsys.OffsLF;
     memcpy(&memc_iconsys, pIhData, IhSize);
-    memc_iconsys.OffsLF = nLF;
+    memc_iconsys.OffsLF = nLf;
 }
 
 void memc_setSaveIcon(int no, void *pIconData, int nIconSize) {
@@ -124,7 +155,7 @@ void memc_setSaveIcon(int no, void *pIconData, int nIconSize) {
 
 char* memc_getfilename(int no) {
     char       *fbody;
-    static char tmps0[64];
+    static char tmps[64];
 
     switch (no) {
     case MEMC_FILE_ICON:
@@ -151,8 +182,8 @@ char* memc_getfilename(int no) {
         if (no == 0) {
             fbody = memc_stat.saveDir;
         } else {
-            sprintf(tmps0, "SAVE%03d", no);
-            fbody = tmps0;
+            sprintf(tmps, "SAVE%03d", no);
+            fbody = tmps;
         }
 
         break;
@@ -162,17 +193,17 @@ char* memc_getfilename(int no) {
 }
 
 char* memc_getfilepath(int no) {
-    static char tmps1[130];
+    static char tmps[130];
     char       *fbody;
 
     fbody = memc_getfilename(no);
     if (fbody == NULL) {
         return NULL;
     } else {
-        strcpy(tmps1, memc_stat.saveDir);
-        strcat(tmps1, "/");
-        strcat(tmps1, fbody);
-        fbody = tmps1;
+        strcpy(tmps, memc_stat.saveDir);
+        strcat(tmps, "/");
+        strcat(tmps, fbody);
+        fbody = tmps;
     }
 
     return fbody;
@@ -291,7 +322,6 @@ int memc_port_info(int port, MEMC_INFO *info) {
 int memc_del_file(int port, int no) {
     int        re;
     MEMC_STAT *pmw = &memc_stat;
-    char      *tmpp;
 
     pmw->cmd = sceMcFuncNoDelete;
     pmw->retry = 0;
@@ -299,12 +329,7 @@ int memc_del_file(int port, int no) {
     pmw->port = port;
     pmw->fileNo = no;
 
-    tmpp = memc_getfilepath(no);
-    if (tmpp != NULL) {
-        strcpy(pmw->filename, tmpp);
-    } else {
-        pmw->filename[0] = '\0';
-    }
+    MEMC_SET_FILENAME(pmw, no);
 
     re = sceMcDelete(pmw->port, pmw->slot, pmw->filename);
     if (re == sceMcResSucceed) {
@@ -317,7 +342,6 @@ int memc_del_file(int port, int no) {
 int memc_load_file(int port, int no, char *buf, int size) {
     int        re;
     MEMC_STAT *pmw = &memc_stat;
-    char      *tmpp;
 
     pmw->port        = port;
     pmw->buf         = buf;
@@ -327,12 +351,7 @@ int memc_load_file(int port, int no, char *buf, int size) {
     pmw->isSyncClose = FALSE;
     pmw->fileNo      = no;
 
-    tmpp = memc_getfilepath(no);
-    if (tmpp != NULL) {
-        strcpy(pmw->filename, tmpp);
-    } else {
-        pmw->filename[0] = '\0';
-    }
+    MEMC_SET_FILENAME(pmw, no);
 
     re = sceMcGetInfo(pmw->port, pmw->slot, &pmw->type, &pmw->free, &pmw->format);
     if (re == sceMcResSucceed) {
@@ -346,7 +365,6 @@ int memc_load_file(int port, int no, char *buf, int size) {
 
 int memc_loadFirst(int port, int no, char *buf, int size) {
     MEMC_STAT *pmw = &memc_stat;
-    char      *tmpp;
 
     pmw->port        = port;
     pmw->buf         = buf;
@@ -356,12 +374,7 @@ int memc_loadFirst(int port, int no, char *buf, int size) {
     pmw->isSyncClose = TRUE;
     pmw->fileNo      = no;
 
-    tmpp = memc_getfilepath(no);
-    if (tmpp != NULL) {
-        strcpy(pmw->filename, tmpp);
-    } else {
-        pmw->filename[0] = '\0';
-    }
+    MEMC_SET_FILENAME(pmw, no);
 
     if (!memc_mansub_Open(pmw->filename, SCE_RDONLY)) {
         pmw->func = MEMC_FUNC_LOADFILE;
@@ -373,11 +386,7 @@ int memc_loadFirst(int port, int no, char *buf, int size) {
 
 int memc_save_file(int port, int no, char* buf, int size, int bSysRW) {
     int        re;
-    int        n;
-    int        isize;
-
     MEMC_STAT *pmw;
-    char      *tmpp;
 
     pmw = &memc_stat;
 
@@ -392,26 +401,9 @@ int memc_save_file(int port, int no, char* buf, int size, int bSysRW) {
     pmw->bChkSys = bSysRW;
     pmw->fileNo  = no;
 
-    tmpp = memc_getfilepath(no);
-    if (tmpp != NULL) {
-        strcpy(pmw->filename, tmpp);
-    } else {
-        pmw->filename[0] = '\0';
-    }
+    MEMC_SET_FILENAME(pmw, no);
 
-    n = 3;
-    isize = (pmw->iconSize1 + 1023) / 1024;
-
-    if (memc_getfilename(MEMC_FILE_ICON2) != NULL) {
-        isize += (pmw->iconSize2 + 1023) / 1024;
-        n++;
-    }
-    if (memc_getfilename(MEMC_FILE_ICON3) != NULL) {
-        isize += (pmw->iconSize3 + 1023) / 1024;
-        n++;
-    }
-
-    pmw->sysFileSize = isize + ((n + 1) / 2) + 3;
+    MEMC_SET_SYSFILE_SIZE(pmw, 3);
 
     re = sceMcGetInfo(pmw->port, pmw->slot, &pmw->type, &pmw->free, &pmw->format);
     if (re == sceMcResSucceed) {
@@ -434,24 +426,10 @@ int memc_seeksave_file(int port, int no, char *buf, int size, int seek, int size
 }
 
 int memc_save_overwrite(void) {
-    int        re;
-    int        n;
-    int        isize;
     MEMC_STAT *pmw = &memc_stat;
+    int        re;
 
-    n = 2;
-    isize = (pmw->iconSize1 + 1023) / 1024;
-
-    if (memc_getfilename(MEMC_FILE_ICON2) != NULL) {
-        isize += (pmw->iconSize2 + 1023) / 1024;
-        n++;
-    }
-    if (memc_getfilename(MEMC_FILE_ICON3) != NULL) {
-        isize += (pmw->iconSize3 + 1023) / 1024;
-        n++;
-    }
-
-    pmw->sysFileSize = isize + ((n + 1) / 2) + 3;
+    MEMC_SET_SYSFILE_SIZE(pmw, 2);
 
     re = sceMcGetInfo(pmw->port, pmw->slot, &pmw->type, &pmw->free, &pmw->format);
     if (re == sceMcResSucceed) {
@@ -650,7 +628,6 @@ static int memcsub_fileChk(sceMcTblGetDir *dir, unsigned char *name, int max) {
 static int memc_mansub_GetInfo(int result) {
     MEMC_INFO *info;
     MEMC_STAT *pmw = &memc_stat;
-    int        re;
 
     switch (pmw->cmd) {
     case sceMcFuncNoFileInfo:
@@ -661,13 +638,8 @@ static int memc_mansub_GetInfo(int result) {
             if (result < 0) {
                 pmw->func = MEMC_FUNC_IDLE;
 
-                if (result != sceMcResNoFormat) {
-                    re = result;
-                } else {
-                    re = MEMC_RES_SWAPPED_UNFORMATTED;
-                }
-
-                return memc_mansub_ErrChk(re);
+                /* An unformatted card at this point was swapped in. */
+                return memc_mansub_ErrChk((result != sceMcResNoFormat) ? result : MEMC_RES_SWAPPED_UNFORMATTED);
             } else {
                 if (!pmw->format) {
                     pmw->func = MEMC_FUNC_IDLE;
@@ -1110,16 +1082,15 @@ static int memc_manager_save(int result) {
 
 static int memc_manager_overwrite(int result) {
     MEMC_STAT *pmw = &memc_stat;
-    int        size, need;
-    char      *fname;
-    int        func;
 
     if (pmw->cmd != sceMcFuncNoFileInfo) {
         return MEMC_ERR_BUSY;
     }
 
     if ((result = memc_mansub_ErrChk(result)) == 0) {
-        func = MEMC_FUNC_SAVEFILE;
+        int size, need;
+        int func = MEMC_FUNC_SAVEFILE;
+
         size = memc_SaveFileClust() + pmw->sysFileSize;
         need = size - pmw->oldOWClust;
 
@@ -1128,17 +1099,22 @@ static int memc_manager_overwrite(int result) {
             return MEMC_ERR_FULL;
         }
 
-        if (pmw->bChkSys ||
-            memc_searchDirTbl(memc_getfilename(MEMC_FILE_ICON),  pmw->curDir, 0, TRUE, sizeof(sceMcIconSys), NULL) == NULL ||
-            memc_searchDirTbl(memc_getfilename(MEMC_FILE_ICON1), pmw->curDir, 0, TRUE, pmw->iconSize1,       NULL) == NULL ||
-            ((fname = memc_getfilename(MEMC_FILE_ICON2)) != NULL &&
-                memc_searchDirTbl(fname, pmw->curDir, 0, TRUE, pmw->iconSize2, NULL) == NULL) ||
-            ((fname = memc_getfilename(MEMC_FILE_ICON3)) != NULL &&
-                memc_searchDirTbl(fname, pmw->curDir, 0, TRUE, pmw->iconSize3, NULL) == NULL)) {
-            pmw->func = MEMC_FUNC_SAVEFILE;
-            pmw->stat |= (MEMC_STAT_SYS | MEMC_STAT_ICON);
-            memc_mansub_Open(memc_getfilepath(MEMC_FILE_ICON), SCE_CREAT | SCE_WRONLY);
-            return MEMC_ERR_BUSY;
+        /* Rewrite the system files too when asked to, or when any is missing or the wrong size. */
+        {
+            char *fname;
+
+            if (pmw->bChkSys ||
+                memc_searchDirTbl(memc_getfilename(MEMC_FILE_ICON),  pmw->curDir, 0, TRUE, sizeof(sceMcIconSys), NULL) == NULL ||
+                memc_searchDirTbl(memc_getfilename(MEMC_FILE_ICON1), pmw->curDir, 0, TRUE, pmw->iconSize1,       NULL) == NULL ||
+                ((fname = memc_getfilename(MEMC_FILE_ICON2)) != NULL &&
+                    memc_searchDirTbl(fname, pmw->curDir, 0, TRUE, pmw->iconSize2, NULL) == NULL) ||
+                ((fname = memc_getfilename(MEMC_FILE_ICON3)) != NULL &&
+                    memc_searchDirTbl(fname, pmw->curDir, 0, TRUE, pmw->iconSize3, NULL) == NULL)) {
+                pmw->func = MEMC_FUNC_SAVEFILE;
+                pmw->stat |= (MEMC_STAT_SYS | MEMC_STAT_ICON);
+                memc_mansub_Open(memc_getfilepath(MEMC_FILE_ICON), SCE_CREAT | SCE_WRONLY);
+                return MEMC_ERR_BUSY;
+            }
         }
 
         if (memc_mansub_Open(pmw->filename, SCE_CREAT | SCE_WRONLY) == 1) {
