@@ -305,7 +305,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
                 screen[k] = matrix * position[k];
             }
 
-            packet->primitive = 0x35C;
+            packet->primitive = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 1, 1, 0, 1, 0, 1, 1, 0);
             PushNoodleColor(&packet->color);
             for (int k = 0; k < 4; k++) {
                 const u_long textureV = k < 2 ? v0 : v1;

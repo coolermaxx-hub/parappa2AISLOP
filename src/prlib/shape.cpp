@@ -82,14 +82,14 @@ void SpmShapeNode::RenderShapeNode(PrModelObject *model) {
     }
 
     if (this->m_context1Packets[0] != NULL) {
-        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_context1Packets[0] | 0x30000000);
+        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(this->m_context1Packets[0]);
         packet->m_matrix = this->m_worldMatrix;
         packet->m_disturbance = prSpramData->m_disturbance;
         prRenderStuff.RenderNodeEECore((PrVuNodeHeaderDmaPacket*)PR_DECACHE(packet));
     }
 
     if (this->m_context1Packets[1] != NULL) {
-        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)((u_int)this->m_context1Packets[1] | 0x30000000);
+        PrVuNodeHeaderDmaPacket *packet = (PrVuNodeHeaderDmaPacket*)PR_UNCACHEDACCEL(this->m_context1Packets[1]);
         packet->m_matrix = this->m_worldMatrix;
         packet->m_disturbance = prSpramData->m_disturbance;
         u_int arg = this->m_sortGroup;

@@ -233,7 +233,7 @@ void PrRenderStuff::RenderNodeEECore(PrVuNodeHeaderDmaPacket *packet) {
         : : "r"(&context.screenMatrix), "r"(&context.clipMatrix), "r"(&packet->m_eeDepthBias)
         : "memory");
 
-    packet = reinterpret_cast<PrVuNodeHeaderDmaPacket*>(reinterpret_cast<u_int>(packet) & 0x0fffffff);
+    packet = static_cast<PrVuNodeHeaderDmaPacket*>(PR_DECACHE(packet));
     PrVuDataChunkPacketHeader *chunk = reinterpret_cast<PrVuDataChunkPacketHeader*>(packet + 1);
     while (chunk != NULL) {
         RenderChunkEECore(chunk, packet->m_disturbance);
