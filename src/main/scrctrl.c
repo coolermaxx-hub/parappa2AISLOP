@@ -4732,21 +4732,21 @@ static void bonusGameCtrl(int time) {
 
     {
         int         i;
-        BNG_KOTAMA *bng_kotama_pp = bng_str.bng_kotama;
+        BNG_KOTAMA *kotama_pp = bng_str.bng_kotama;
 
-        for (i = 0; i < 4; i++, bng_kotama_pp++) {
-            bng_kotama_pp->wait_time++;
+        for (i = 0; i < 4; i++, kotama_pp++) {
+            kotama_pp->wait_time++;
 
-            switch (bng_kotama_pp->bng_kotama_act_enum) {
+            switch (kotama_pp->bng_kotama_act_enum) {
             case BNGKA_NOTHING:
                 bonusGameKoamaReq(i, BNGAKE_5_TOP);
-                bng_kotama_pp->wait_time = 0;
-                bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
+                kotama_pp->wait_time = 0;
+                kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
                 break;
             case BNGKA_LIFT: {
                 int randam_num;
 
-                if (bng_kotama_pp->wait_time == 1) {
+                if (kotama_pp->wait_time == 1) {
                     randam_num = (rand() % 130);
                     randam_num -= bng_str.renzoku_cnt;
 
@@ -4756,41 +4756,41 @@ static void bonusGameCtrl(int time) {
 
                     randam_num += 10;
 
-                    bng_kotama_pp->wait_next_time = randam_num;
+                    kotama_pp->wait_next_time = randam_num;
                 } else {
-                    randam_num = bng_kotama_pp->wait_next_time;
+                    randam_num = kotama_pp->wait_next_time;
                 }
 
-                if (bng_kotama_pp->wait_time > randam_num) {
+                if (kotama_pp->wait_time > randam_num) {
                     if ((rand() % 2) != 0) {
                         bonusGameKoamaReq(i, mochimono_ofs);
-                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
+                        kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
                     } else {
                         bonusGameKoamaReq(i, BNGAKE_2_TOP);
-                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
+                        kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
                     }
 
-                    bng_kotama_pp->wait_time = 0;
+                    kotama_pp->wait_time = 0;
                 }
 
                 break;
             }
             case BNGKA_LIFT_NG:
-                if (bng_kotama_pp->wait_time >= 24) {
-                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    bng_kotama_pp->wait_time = 0;
+                if (kotama_pp->wait_time >= 24) {
+                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_BLOW:
-                if (bng_kotama_pp->wait_time >= 180) {
-                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    bng_kotama_pp->wait_time = 0;
+                if (kotama_pp->wait_time >= 180) {
+                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_BREAK:
-                if (bng_kotama_pp->wait_time >= 36) {
-                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    bng_kotama_pp->wait_time = 0;
+                if (kotama_pp->wait_time >= 36) {
+                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_LIFTED:

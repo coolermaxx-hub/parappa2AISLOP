@@ -423,3 +423,15 @@ Original quirks, kept as they are:
   bank 0 (`menudata.c`), so the bank checks in `MenuVoicePlayVol` never skip a
   voice. `TsBGMLoadCheck` is therefore always false and the deferred start in
   `TsBGMPlay` (`wtLoad`) never runs.
+
+## Screen noodle warp grid (2026-10-04)
+
+`UG_NoodlesDisp` (`src/main/effect.c`, matching C) builds a grid of
+(cntW + 1) x (cntH + 1) vertices stored column by column, cntH + 1 per column,
+then draws one triangle strip per column pair. The strip loop steps through the
+grid by `cntW + 1` per column instead of `cntH + 1`. With a square grid this is
+the same thing; with cntW != cntH the strips pick the wrong vertices, and with
+cntW > cntH the last strip reads past the allocation. The counts come from the
+scene data (`NOODLES_STR` passed through `drawctrl.c`); whether any shipped
+scene uses a non-square grid has not been checked. A port should keep the
+square-grid behaviour and guard the other case rather than copy the overrun.
