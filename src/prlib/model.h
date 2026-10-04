@@ -137,7 +137,7 @@ public:
     SpmContourIndex *m_contourIndices;
     PrVuNodeHeaderDmaPacket *m_contourPacket;
     PR_PADDING(unk1A8, 0x8);
-    // m_flags selects cluster (0x10) or shape (0x20) payloads.
+    // m_flags selects cluster or shape payloads (eSpmClusterPayload, eSpmShapePayload).
     union {
         SpmClusterData m_cluster;
         SpmShapeData m_shape;
@@ -145,11 +145,42 @@ public:
     u_int m_reserved1BC;
 };
 
+// SpmNode::m_flags.
 enum SpmFlags {
-    eSpmIsScreenModel = 0x80,
+    eSpmIdentityLocalMatrix = 0x1,
+    eSpmClusterPayload = 0x10,
+    eSpmShapePayload = 0x20,
+    eSpmContourNode = 0x40,
+    eSpmDeformPayloadMask = 0xff0,
+    eSpmSkinned = 0x1000,
+    eSpmContext2 = 0x2000, // Drawn by RenderContext2Node, skipped by context 1.
     eSpmVisible = 0x4000,
+    eSpmBillboard = 0x8000,
     eSpmDefaultHidden = 0x20000,
     eSpmAnimatedVisibility = 0x40000,
+    eSpmDrawnInAwful = 0x400000, // Still drawn while the noodle background is up.
+};
+
+// SpmFileHeader::m_flags.
+enum SpmFileFlags {
+    eSpmFileRelocated = 0x1,
+    eSpmFileNoContext2Nodes = 0x8,
+    eSpmFileNoContext1Nodes = 0x10,
+    eSpmFileClusterModel = 0x20,
+    eSpmFileHasTransitions = 0x40, // Keeps posture storage for blending.
+    eSpmFileScreenModel = 0x80,
+    eSpmFileDrawnInAwful = 0x100,
+    eSpmFileBackgroundLayer = 0x200,
+    eSpmFilePreSceneLayer = 0x400,
+};
+
+// PrModelObject::m_flags.
+enum PrModelFlags {
+    ePrModelEnabled = 0x1,
+    ePrModelContourSaved = 0x2,
+    ePrModelBlendingPosture = 0x4,
+    ePrModelOwnsWeights = 0x8,
+    ePrModelOwnsMatrices = 0x10,
 };
 
 class SpmFileHeader {

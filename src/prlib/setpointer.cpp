@@ -10,7 +10,7 @@
 #include "spadata.h"
 
 void SpmFileHeader::ChangePointer() {
-    if (m_flags & 0x1) {
+    if (m_flags & eSpmFileRelocated) {
         return;
     }
 
@@ -23,7 +23,7 @@ void SpmFileHeader::ChangePointer() {
 
     /* Change node pointers starting from the root. */
     (*m_nodes)->ChangePointer(this, NULL);
-    m_flags |= 0x1;
+    m_flags |= eSpmFileRelocated;
 }
 
 void SpmNode::ChangePointer(SpmFileHeader *file, SpmNode *parent) {
@@ -47,12 +47,12 @@ void SpmNode::ChangePointer(SpmFileHeader *file, SpmNode *parent) {
         }
     }
 
-    if (m_flags & 0xff0) {
+    if (m_flags & eSpmDeformPayloadMask) {
         this->m_positionTargets = file->CalculatePointer<SpmPositionTargets>(this->m_positionTargets);
-        if (m_flags & 0x10) {
+        if (m_flags & eSpmClusterPayload) {
             m_cluster.influences = file->CalculatePointer<SpmClusterInfluences>(m_cluster.influences);
             m_cluster.positions = file->CalculatePointer<NaVECTOR<float, 4> >(m_cluster.positions);
-        } else if (m_flags & 0x20) {
+        } else if (m_flags & eSpmShapePayload) {
             m_shape.basePositions = file->CalculatePointer<NaVECTOR<float, 4> >(m_shape.basePositions);
         }
 
@@ -72,7 +72,7 @@ void SpmNode::ChangePointer(SpmFileHeader *file, SpmNode *parent) {
 }
 
 void SpaFileHeader::ChangePointer() {
-    if (m_flags & 0x1) {
+    if (m_flags & eSpaFileRelocated) {
         return;
     }
 
@@ -88,7 +88,7 @@ void SpaFileHeader::ChangePointer() {
         }
     }
 
-    m_flags |= 0x1;
+    m_flags |= eSpaFileRelocated;
 }
 
 void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
@@ -151,7 +151,7 @@ void SpaNodeAnimation::ChangePointer(SpaFileHeader *animation) {
 }
 
 void SpcFileHeader::ChangePointer() {
-    if (m_flags & 0x1) {
+    if (m_flags & eSpcFileRelocated) {
         return;
     }
 
@@ -177,7 +177,7 @@ void SpcFileHeader::ChangePointer() {
         this->m_fieldOfViewTrack->ChangePointer();
     }
 
-    if (m_flags & 0x8) {
+    if (m_flags & eSpcFileHasFocusTracks) {
         m_focal_len_track = CalculatePointer<SpaTrack<float> >(m_focal_len_track);
         if (m_focal_len_track != NULL) {
             m_focal_len_track->ChangePointer();
@@ -189,5 +189,5 @@ void SpcFileHeader::ChangePointer() {
         }
     }
 
-    m_flags |= 1;
+    m_flags |= eSpcFileRelocated;
 }

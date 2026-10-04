@@ -13,6 +13,12 @@
 #define SPC_MAGIC   (0x09463AD8)
 #define SPC_VERSION (1)
 
+// SpcFileHeader::m_flags.
+enum SpcFileFlags {
+    eSpcFileRelocated = 0x1,
+    eSpcFileHasFocusTracks = 0x8, // Focal and defocus length tracks are present.
+};
+
 class SpcFileHeader {
 public:
     void Initialize();

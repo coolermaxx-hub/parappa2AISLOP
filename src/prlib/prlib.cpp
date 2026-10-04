@@ -310,7 +310,7 @@ void PrSetAppropriateDefaultCamera(PrSceneObject *scene) {
 
 PR_EXTERN
 void PrShowModel(PrModelObject *model, NaMATRIX<float, 4, 4> *position) {
-    model->m_flags |= 1;
+    model->m_flags |= ePrModelEnabled;
     if (position != NULL) {
         model->m_matrix = *position;
     } else {
@@ -320,7 +320,7 @@ void PrShowModel(PrModelObject *model, NaMATRIX<float, 4, 4> *position) {
 
 PR_EXTERN
 NaMATRIX<float, 4, 4>* PrGetModelMatrix(PrModelObject *model) {
-    if ((model->m_flags & 1) == 0) {
+    if ((model->m_flags & ePrModelEnabled) == 0) {
         return NULL;
     }
     return &model->m_matrix;
@@ -328,7 +328,7 @@ NaMATRIX<float, 4, 4>* PrGetModelMatrix(PrModelObject *model) {
 
 PR_EXTERN
 void PrHideModel(PrModelObject *model) {
-    model->m_flags &= ~1;
+    model->m_flags &= ~ePrModelEnabled;
 }
 
 PR_EXTERN
@@ -509,9 +509,9 @@ void PrSetModelVisibility(PrModelObject *model, u_int node_idx, bool visible) {
 
     SpmNode *node = model->m_spm_image->m_nodes[node_idx];
     if (visible) {
-        node->m_flags &= ~0x20000;
+        node->m_flags &= ~eSpmDefaultHidden;
     } else {
-        node->m_flags |= 0x20000;
+        node->m_flags |= eSpmDefaultHidden;
     }
 }
 

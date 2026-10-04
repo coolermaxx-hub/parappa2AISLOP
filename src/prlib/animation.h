@@ -14,6 +14,11 @@
 class SpmNode;
 class SpaNodeAnimation;
 
+// SpaFileHeader::m_flags.
+enum SpaFileFlags {
+    eSpaFileRelocated = 0x1,
+};
+
 class SpaFileHeader {
 public:
     u_int m_magic;

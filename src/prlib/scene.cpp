@@ -77,15 +77,15 @@ void PrSceneObject::SetAppropriateDefaultCamera() {
     }
 
     for (PrModelObject *model = m_model_set.m_head; model != NULL; model = model->m_list.next) {
-        if (!(model->m_flags & 0x1)) {
+        if (!(model->m_flags & ePrModelEnabled)) {
             continue;
         }
 
         u_short flags = model->m_spm_image->m_flags;
-        if (flags & 0x80) {
+        if (flags & eSpmFileScreenModel) {
             continue;
         }
-        if (flags & 0x200) {
+        if (flags & eSpmFileBackgroundLayer) {
             continue;
         }
 
@@ -118,7 +118,7 @@ void PrSceneObject::SetAppropriateDefaultCamera() {
 
 float PrSceneObject::GetFocalLength() const {
     SpcFileHeader *camera = m_camera;
-    if (camera == NULL || !(camera->m_flags & 0x8) ) {
+    if (camera == NULL || !(camera->m_flags & eSpcFileHasFocusTracks) ) {
         return m_default_focal_len;
     } else {
         float focal_length = *camera->m_focal_len_track->GetValue(m_camera_time);
@@ -131,7 +131,7 @@ float PrSceneObject::GetFocalLength() const {
 
 float PrSceneObject::GetDefocusLength() const {
     SpcFileHeader *camera = m_camera;
-    if (camera == NULL || !(camera->m_flags & 0x8)) {
+    if (camera == NULL || !(camera->m_flags & eSpcFileHasFocusTracks)) {
         return m_default_defocus_len;
     } else {
         return *camera->m_defocus_len_track->GetValue(m_camera_time);
@@ -140,7 +140,7 @@ float PrSceneObject::GetDefocusLength() const {
 
 u_int PrSceneObject::GetDepthLevel() const {
     SpcFileHeader *camera = m_camera;
-    if (camera == NULL || !(camera->m_flags & 0x8)) {
+    if (camera == NULL || !(camera->m_flags & eSpcFileHasFocusTracks)) {
         return m_default_depth_level;
     } else {
         return camera->m_depth_level;
@@ -158,10 +158,10 @@ void PrSceneObject::PreprocessModel() {
     while (model != NULL) {
         SpmFileHeader *spm = model->m_spm_image;
         PrModelObject *next = model->m_list.next;
-        if (spm->m_flags & eSpmIsScreenModel) {
+        if (spm->m_flags & eSpmFileScreenModel) {
             model->m_list.next = screen_list;
             screen_list = model;
-        } else if (spm->m_flags & 0x200) {
+        } else if (spm->m_flags & eSpmFileBackgroundLayer) {
             PrModelObject *a1 = sp;
             PrModelObject **a3 = &sp;
             u_int t0_1 = spm->m_sortOrder;
@@ -171,7 +171,7 @@ void PrSceneObject::PreprocessModel() {
             }
             model->m_list.next = a1;
             *a3 = model;
-        } else if (spm->m_flags & 0x400) {
+        } else if (spm->m_flags & eSpmFilePreSceneLayer) {
             model->m_list.next = t1;
             t1 = model;
         } else {

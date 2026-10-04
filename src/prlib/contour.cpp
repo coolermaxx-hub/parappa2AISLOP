@@ -14,13 +14,13 @@ void PrModelObject::SaveContour() {
     u_int node_num = spm->m_node_num;
     for (int i = 0; i < node_num; i++) {
         SpmNode *node = spm->m_nodes[i];
-        if (node->m_flags & 0x40) {
+        if (node->m_flags & eSpmContourNode) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(node);
             complex->SaveContour(this);
         }
     }
 
-    m_flags |= 2;
+    m_flags |= ePrModelContourSaved;
 }
 
 void SpmComplexNode::SaveContour(PrModelObject *model) {
@@ -45,11 +45,11 @@ void SpmComplexNode::SaveContour(PrModelObject *model) {
 }
 
 void PrModelObject::ResetContour() {
-    m_flags &= ~2;
+    m_flags &= ~ePrModelContourSaved;
 }
 
 void SpmComplexNode::RenderContour(PrModelObject *model) {
-    if (!(model->m_flags & 2) ||
+    if (!(model->m_flags & ePrModelContourSaved) ||
         (model->m_contour_blur_alpha[0] == 0.0f && model->m_contour_blur_alpha[1] == 0.0f)) {
         return;
     }

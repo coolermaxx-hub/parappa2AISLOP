@@ -88,11 +88,11 @@ PrModelObject::~PrModelObject() {
     delete unk88;
     delete unk8C;
 
-    if ((m_flags & 0x8) && m_postureWeights[0] != NULL) {
+    if ((m_flags & ePrModelOwnsWeights) && m_postureWeights[0] != NULL) {
         delete[] m_postureWeights[0];
     }
 
-    if ((m_flags & 0x10) && m_postureMatrices[0] != NULL) {
+    if ((m_flags & ePrModelOwnsMatrices) && m_postureMatrices[0] != NULL) {
         delete[] m_postureMatrices[0];
     }
 }
@@ -101,13 +101,13 @@ void PrModelObject::Initialize() {
     SpmFileHeader *spm = m_spm_image;
     spm->ChangePointer();
 
-    if (spm->m_flags & 0x40) {
+    if (spm->m_flags & eSpmFileHasTransitions) {
         u_int node_num = spm->m_node_num;
         if (node_num != 0) {
             NaMATRIX<float, 4, 4> *matrix = (NaMATRIX<float, 4, 4>*)AllocateFromWorkArea(node_num * sizeof(NaMATRIX<float, 4, 4>) * 2);
             if (matrix == NULL) {
                 m_postureMatrices[0] = new NaMATRIX<float, 4, 4>[node_num * 2];
-                m_flags |= 0x10;
+                m_flags |= ePrModelOwnsMatrices;
             } else {
                 m_postureMatrices[0] = matrix;
             }
@@ -118,7 +118,7 @@ void PrModelObject::Initialize() {
                 float *weight = (float*)AllocateFromWorkArea(weight_num * sizeof(float) * 2);
                 if (weight == NULL) {
                     m_postureWeights[0] = new float[weight_num * 2];
-                    m_flags |= 0x8;
+                    m_flags |= ePrModelOwnsWeights;
                 } else {
                     m_postureWeights[0] = weight;
                 }
@@ -127,7 +127,7 @@ void PrModelObject::Initialize() {
         }
     }
 
-    m_flags &= ~0x4;
+    m_flags &= ~ePrModelBlendingPosture;
 }
 
 void PrModelObject::LinkAnimation(SpaFileHeader *animation) {

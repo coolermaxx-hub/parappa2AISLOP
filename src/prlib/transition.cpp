@@ -4,24 +4,24 @@
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 
 void PrModelObject::SavePosture() {
-    if (!(m_spm_image->m_flags & 0x40)) {
+    if (!(m_spm_image->m_flags & eSpmFileHasTransitions)) {
         return;
     }
 
     if (m_rendered_once) {
         m_active_transition = 1 - m_active_transition;
-        m_flags |= 4;
+        m_flags |= ePrModelBlendingPosture;
     }
 }
 
 void PrModelObject::ResetPosture() {
-    m_flags &= ~4;
+    m_flags &= ~ePrModelBlendingPosture;
 }
 
 void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& mtx) {
     float ratio = prSpramData->m_model_transaction_blend_ratio;
 
-    if (!(model->m_flags & 0x4)) {
+    if (!(model->m_flags & ePrModelBlendingPosture)) {
         return;
     }
 
@@ -32,7 +32,7 @@ void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>&
 float SpmShapeNode::BlendTransactionWeight(PrModelObject *model, float weight, u_int index) {
     float ratio = prSpramData->m_model_transaction_blend_ratio;
 
-    if (!(model->m_flags & 0x4)) {
+    if (!(model->m_flags & ePrModelBlendingPosture)) {
         return weight;
     }
 

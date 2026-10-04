@@ -55,7 +55,7 @@ void PrSceneObject::Render() {
     AwfulStatus = awful;
     PrModelObject *model = m_model_set.m_head;
     for (; model != NULL; model = model->m_list.next) {
-        if ((model->m_flags & 1) && (!awful || (model->m_spm_image->m_flags & 0x100))) {
+        if ((model->m_flags & ePrModelEnabled) && (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful))) {
             prSpramData->InitializeModel(model);
             model->CalculateCurrentMatrix();
         }
@@ -76,11 +76,11 @@ void PrSceneObject::Render() {
 
     model = m_model_set.m_head;
     if (model != NULL) {
-        if (model->m_spm_image->m_flags & 0x200) {
+        if (model->m_spm_image->m_flags & eSpmFileBackgroundLayer) {
             prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk4)->m_tag);
             do {
-                if (model->m_flags & 1) {
-                    if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                if (model->m_flags & ePrModelEnabled) {
+                    if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
                         prSpramData->InitializeModel(model);
                         model->RenderBackgroundScreenModel();
                     }
@@ -89,11 +89,11 @@ void PrSceneObject::Render() {
             } while (model != m_flag400ModelList);
         }
 
-        if (model != NULL && (model->m_spm_image->m_flags & 0x400)) {
+        if (model != NULL && (model->m_spm_image->m_flags & eSpmFilePreSceneLayer)) {
             prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk5)->m_tag);
             do {
-                if (model->m_flags & 1) {
-                    if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+                if (model->m_flags & ePrModelEnabled) {
+                    if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
                         prSpramData->InitializeModel(model);
                         model->RenderContext1Model();
                     }
@@ -105,8 +105,8 @@ void PrSceneObject::Render() {
 
     prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk0)->m_tag);
     for (; model != m_screen_model_list; model = model->m_list.next) {
-        if (model->m_flags & 1) {
-            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+        if (model->m_flags & ePrModelEnabled) {
+            if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
                 prSpramData->InitializeModel(model);
                 model->RenderContext1Model();
             }
@@ -114,8 +114,8 @@ void PrSceneObject::Render() {
     }
 
     for (model = m_normalModelList; model != m_screen_model_list; model = model->m_list.next) {
-        if (model->m_flags & 1) {
-            if (!awful || (model->m_spm_image->m_flags & 0x100)) {
+        if (model->m_flags & ePrModelEnabled) {
+            if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
                 prSpramData->InitializeModel(model);
                 model->RenderContext2Model();
             }
@@ -160,7 +160,7 @@ void PrSceneObject::PrepareScreenModelRender() {
     prRenderStuff.AppendDmaTag(&strip->m_tag);
 
     for (PrModelObject *model = m_screen_model_list; model != NULL; model = model->m_list.next) {
-        if (model->m_flags & 1) {
+        if (model->m_flags & ePrModelEnabled) {
             prSpramData->InitializeModel(model);
             model->RenderScreenModelNode();
         }
@@ -193,7 +193,7 @@ void PrModelObject::CalculateCurrentMatrix() {
     }
 
     if (animation != NULL) {
-        if (spm->m_flags & 0x20) {
+        if (spm->m_flags & eSpmFileClusterModel) {
             spm->CalculateClusterMatrixAnimation(this, *mtx);
 
             NaVECTOR<float, 4> v;
@@ -213,7 +213,7 @@ void PrModelObject::CalculateCurrentMatrix() {
         } else {
             spm->CalculateCurrentMatrixAnimation(this, *mtx);
         }
-    } else if (spm->m_flags & 0x20) {
+    } else if (spm->m_flags & eSpmFileClusterModel) {
         spm->CalculateClusterMatrix(this, *mtx);
     } else {
         spm->CalculateCurrentMatrix(this, *mtx);
@@ -233,12 +233,12 @@ void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 
     PrSPRAM_DATA *spram = prSpramData;
     const float time = spram->m_animation_time;
     SpaFileHeader *animation = spram->m_animation;
-    const bool parentVisible = m_parent == NULL || (m_parent->m_flags & 0x4000);
+    const bool parentVisible = m_parent == NULL || (m_parent->m_flags & eSpmVisible);
     if (!parentVisible || !animation->IsNodeVisible(this, time)) {
-        m_flags &= ~0x4000;
+        m_flags &= ~eSpmVisible;
         return;
     }
-    m_flags |= 0x4000;
+    m_flags |= eSpmVisible;
 
     SpaNodeAnimation *nodeAnimation = animation->m_nodes[m_animationIndex];
     if (nodeAnimation == NULL) {
@@ -267,7 +267,7 @@ void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 
         const NaMATRIX<float, 4, 4> local = *nodeAnimation->GetMatrix(time);
         m_worldMatrix = parentMatrix * local;
     }
-    if (m_flags & 0x8000) ApplyBillboardMatrix();
+    if (m_flags & eSpmBillboard) ApplyBillboardMatrix();
 }
 
 void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
@@ -281,7 +281,7 @@ void SpmFileHeader::CalculateCurrentMatrixAnimation(PrModelObject *model, const 
 void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
     node->ComposeGlobalMatrix(model, arg1);
-    if (node->m_flags & 0x1000) {
+    if (node->m_flags & eSpmSkinned) {
         const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
         node->m_skinningMatrix = node->m_worldMatrix * b;
     }
@@ -289,7 +289,7 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
         node->ComposeGlobalMatrix(model, node->m_parent->m_worldMatrix);
-        if (node->m_flags & 0x1000) {
+        if (node->m_flags & eSpmSkinned) {
             const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
             node->m_skinningMatrix = node->m_worldMatrix * b;
         }
@@ -299,7 +299,7 @@ void SpmFileHeader::CalculateClusterMatrix(PrModelObject *model, const NaMATRIX<
 void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *node = m_nodes[0];
     node->ComposeAnimatedMatrix(model, arg1);
-    if (node->m_flags & 0x1000) {
+    if (node->m_flags & eSpmSkinned) {
         const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
         node->m_skinningMatrix = node->m_worldMatrix * b;
     }
@@ -307,7 +307,7 @@ void SpmFileHeader::CalculateClusterMatrixAnimation(PrModelObject *model, const 
     for (u_int i = 1; i < m_node_num; i++) {
         node = m_nodes[i];
         node->ComposeAnimatedMatrix(model, node->m_parent->m_worldMatrix);
-        if (node->m_flags & 0x1000) {
+        if (node->m_flags & eSpmSkinned) {
             const NaMATRIX<float, 4, 4>& b = node->m_bindCorrectionMatrix;
             node->m_skinningMatrix = node->m_worldMatrix * b;
         }
@@ -320,7 +320,7 @@ void PrModelObject::RenderContext1Model() {
 }
 
 void SpmFileHeader::RenderContext1Model(PrModelObject *model) {
-    if (m_flags & 0x10) {
+    if (m_flags & eSpmFileNoContext1Nodes) {
         return;
     }
 
@@ -359,11 +359,11 @@ void SpmNode::ModifySimpleDmaPacket(PrVuNodeHeaderDmaPacket *packet) {
 void SpmNode::RenderContext1Node(PrModelObject *model) {
     prRenderStuff.m_statistics.node_num++;
 
-    if (this->m_flags & 0x2000) {
+    if (this->m_flags & eSpmContext2) {
         return;
     }
 
-    if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
+    if ((this->m_flags & eSpmVisible) && (!AwfulStatus || (this->m_flags & eSpmDrawnInAwful))) {
         PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[0];
         if (packet != NULL) {
             prRenderStuff.m_statistics.opaque_context1_node_num++;
@@ -413,7 +413,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
             prRenderStuff.AppendTransmitDmaTag(&packet->m_tag, this->m_sortGroup, f12);
         }
 
-        if (this->m_flags & 0x40) {
+        if (this->m_flags & eSpmContourNode) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
@@ -434,7 +434,7 @@ void SpmFileHeader::RenderScreenModelNode() {
 void SpmNode::RenderScreenModelNode() {
     prRenderStuff.m_statistics.node_num++;
 
-    if (!(m_flags & 0x4000)) {
+    if (!(m_flags & eSpmVisible)) {
         return;
     }
 
@@ -487,7 +487,7 @@ void SpmFileHeader::RenderBackgroundScreenModel() {
 void SpmNode::RenderBackgroundScreenModel() {
     prRenderStuff.m_statistics.node_num++;
 
-    if ((m_flags & 0x4000) && (!AwfulStatus || (m_flags & 0x400000))) {
+    if ((m_flags & eSpmVisible) && (!AwfulStatus || (m_flags & eSpmDrawnInAwful))) {
         for (u_int i = 0; i < 2; i++) {
             PrVuNodeHeaderDmaPacket *packet = this->m_context1Packets[i];
             if (packet != NULL) {
@@ -514,7 +514,7 @@ void PrModelObject::RenderContext2Model() {
 }
 
 void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
-    if (m_flags & 0x8) {
+    if (m_flags & eSpmFileNoContext2Nodes) {
         return;
     }
 
@@ -524,17 +524,17 @@ void SpmFileHeader::RenderContext2Model(PrModelObject *model) {
 }
 
 void SpmNode::RenderContext2Node(PrModelObject *model) {
-    if (!(this->m_flags & 0x2000)) {
+    if (!(this->m_flags & eSpmContext2)) {
         return;
     }
 
-    if ((this->m_flags & 0x4000) && (!AwfulStatus || (this->m_flags & 0x400000))) {
+    if ((this->m_flags & eSpmVisible) && (!AwfulStatus || (this->m_flags & eSpmDrawnInAwful))) {
         prRenderStuff.m_statistics.opaque_context2_node_num++;
 
-        if (this->m_flags & 0x10) {
+        if (this->m_flags & eSpmClusterPayload) {
             SpmClusterGeometryNode *cluster = reinterpret_cast<SpmClusterGeometryNode*>(this);
             cluster->RenderClusterNode(model);
-        } else if (this->m_flags & 0x20) {
+        } else if (this->m_flags & eSpmShapePayload) {
             SpmShapeNode *shape = static_cast<SpmShapeNode*>(this);
             shape->RenderShapeNode(model);
         } else {
@@ -570,7 +570,7 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
             }
         }
 
-        if (this->m_flags & 0x40) {
+        if (this->m_flags & eSpmContourNode) {
             SpmComplexNode *complex = static_cast<SpmComplexNode*>(this);
             complex->RenderContour(model);
         }
@@ -581,18 +581,18 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
 void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     SpmNode *parent = this->m_parent;
 
-    if (parent != NULL && !(parent->m_flags & 0x4000)) {
-        m_flags &= ~0x4000;
+    if (parent != NULL && !(parent->m_flags & eSpmVisible)) {
+        m_flags &= ~eSpmVisible;
     } else {
-        bool visible = !(m_flags & 0x20000);
+        bool visible = !(m_flags & eSpmDefaultHidden);
         if (visible) {
-            m_flags |= 0x4000;
+            m_flags |= eSpmVisible;
         } else {
-            m_flags &= ~0x4000;
+            m_flags &= ~eSpmVisible;
         }
     }
 
-    if (m_flags & 0x4000) {
+    if (m_flags & eSpmVisible) {
         ComposeGlobalMatrixWithoutVisibility(model, arg1);
     }
 }
@@ -601,7 +601,7 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
 void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     if (model->m_postureMatrices[0] != NULL) {
         PrSPRAM_DATA *spram;
-        if (m_flags & 0x1) {
+        if (m_flags & eSpmIdentityLocalMatrix) {
             spram = prSpramData;
             spram->m_nodeMatrix = NaMATRIX<float, 4, 4>::IDENT;
         } else {
@@ -617,13 +617,13 @@ void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const N
         this->m_worldMatrix = arg1 * spram->m_nodeMatrix;
         int idx = this->m_animationIndex;
         model->m_postureMatrices[model->m_active_transition][idx] = spram->m_nodeMatrix;
-    } else if (m_flags & 0x1) {
+    } else if (m_flags & eSpmIdentityLocalMatrix) {
         this->m_worldMatrix = arg1;
     } else {
         this->m_worldMatrix = arg1 * this->m_localMatrix;
     }
 
-    if (m_flags & 0x8000) {
+    if (m_flags & eSpmBillboard) {
         ApplyBillboardMatrix();
     }
 }
