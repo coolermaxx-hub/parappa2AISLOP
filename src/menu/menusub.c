@@ -1675,6 +1675,27 @@ enum {
     MCFLOW_CARD_CHANGED = 4  /* card was swapped: restart the card check */
 };
 
+/* States of McUserSaveFlow / McUserLoadFlow (subStatus). */
+enum {
+    MCUSER_START = 0,                /* wait for the card check, build the data work */
+    MCUSER_BEGIN_IO = 0x100,         /* start the save or load */
+    MCUSER_ASK_FORMAT = 0x1000,      /* save: card unformatted, ask to format */
+    MCUSER_ASK_FORMAT_WAIT = 0x1010,
+    MCUSER_FORMAT_ACCEPTED = 0x1020,
+    MCUSER_SAVE_WITH_FORMAT = 0x1030,
+    MCUSER_POLL = 0x2000,            /* poll P3MC_SaveCheck / P3MC_LoadCheck */
+    MCUSER_LOAD_MIN_WAIT = 0x2002,   /* load: keep the message up for at least 90 frames */
+    MCUSER_RESULT = 0x2010,
+    MCUSER_SUCCESS = 0x2100,
+    MCUSER_SAVE_SUCCESS_MES = 0x21f0,
+    MCUSER_LOAD_SUCCESS_MES = 0x2f00,
+    MCUSER_ERROR = 0x2200,
+    MCUSER_ERROR_MES = 0x2201,
+    MCUSER_ERROR_WAIT = 0x2202,
+    MCUSER_CARD_CHANGED = 0xe000,
+    MCUSER_CARD_CHANGED_WAIT = 0xee10
+};
+
 /* Exit states of the user save/load flows, each returning its MCFLOW_* result. */
 enum {
     MCUSER_EXIT_DONE = 0xf000,
@@ -5576,7 +5597,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 
 /* static */ int McUserSaveFlow(USER_DATA *puser) {
     switch (subStatus) {
-    case 0:
+    case MCUSER_START:
         ret = P3MC_CheckChange();
         if (ret < 0) {
             break;
@@ -5585,44 +5606,44 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         pGameData = P3MC_MakeDataWork(_P3DATA_SIZE(puser->mode), puser);
         TsSetSaveData(pGameData, puser->mode, puser);
         if (ret != 0) {
-            subStatus = 0x2010;
+            subStatus = MCUSER_RESULT;
             break;
         }
-        subStatus = 0x100;
-    case 0x100:
+        subStatus = MCUSER_BEGIN_IO;
+    case MCUSER_BEGIN_IO:
         P3MC_SaveUser(pGameData, P3MC_FLAG_OVERWRITE | P3MC_FLAG_WRITE_SYSTEM);
-        subStatus = 0x2000;
+        subStatus = MCUSER_POLL;
         break;
-    case 0x1000:
+    case MCUSER_ASK_FORMAT:
         TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 16));
-        subStatus = 0x1010;
-    case 0x1010:
+        subStatus = MCUSER_ASK_FORMAT_WAIT;
+    case MCUSER_ASK_FORMAT_WAIT:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
             TsMCAMes_SetMes(-1);
-            subStatus = 0xe000;
+            subStatus = MCUSER_CARD_CHANGED;
             break;
         }
         ret = TsMCAMes_GetSelect();
         if (ret != 0) {
             if (ret == 1) {
-                subStatus = 0x1020;
+                subStatus = MCUSER_FORMAT_ACCEPTED;
             } else {
                 subStatus = MCUSER_EXIT_FAILED;
             }
         }
         break;
-    case 0x1020:
+    case MCUSER_FORMAT_ACCEPTED:
         if (P3MC_CheckChange() < 0) {
             break;
         }
         TsMCAMes_SetMes(-1);
-        subStatus = 0x1030;
-    case 0x1030:
+        subStatus = MCUSER_SAVE_WITH_FORMAT;
+    case MCUSER_SAVE_WITH_FORMAT:
         P3MC_SaveUser(pGameData, P3MC_FLAG_OVERWRITE | P3MC_FLAG_FORMAT);
-        subStatus = 0x2000;
+        subStatus = MCUSER_POLL;
         break;
-    case 0x2000:
+    case MCUSER_POLL:
         ret = P3MC_SaveCheck();
         if (ret == P3MC_RES_ACCESSING) {
             TsMCAMes_SetMes(MCMES(0, 19));
@@ -5633,13 +5654,13 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         if (ret < 0) {
             break;
         }
-        subStatus = 0x2010;
-    case 0x2010:
+        subStatus = MCUSER_RESULT;
+    case MCUSER_RESULT:
         if (ret != 0) {
             errorNo = 0;
             switch (ret) {
             case P3MC_RES_NEED_FORMAT:
-                subStatus = 0x1000;
+                subStatus = MCUSER_ASK_FORMAT;
                 break;
             case P3MC_RES_NO_CARD:
                 if (puser->mode == P3MC_MODE_REPLAY) {
@@ -5664,43 +5685,43 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 break;
             }
             if (errorNo != 0) {
-                subStatus = 0x2200;
+                subStatus = MCUSER_ERROR;
             }
             break;
         }
-        subStatus = 0x2100;
-    case 0x2100:
+        subStatus = MCUSER_SUCCESS;
+    case MCUSER_SUCCESS:
         *puser = pGameData->pHead->user;
-        subStatus = 0x21f0;
+        subStatus = MCUSER_SAVE_SUCCESS_MES;
         TsMCAMes_SetMes(-1);
-    case 0x21f0:
+    case MCUSER_SAVE_SUCCESS_MES:
         if (McErrorMess(200) >= 0) {
             subStatus = MCUSER_EXIT_DONE;
         }
         break;
-    case 0x2200:
+    case MCUSER_ERROR:
         TsMCAMes_SetMes(-1);
-        subStatus = 0x2201;
-    case 0x2201:
+        subStatus = MCUSER_ERROR_MES;
+    case MCUSER_ERROR_MES:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
-            subStatus = 0xe000;
+            subStatus = MCUSER_CARD_CHANGED;
             break;
         }
         if (McErrorMess(errorNo) < 0) {
             break;
         }
-        subStatus = 0x2202;
-    case 0x2202:
+        subStatus = MCUSER_ERROR_WAIT;
+    case MCUSER_ERROR_WAIT:
         if (P3MC_CheckChange() >= 0) {
             subStatus = MCUSER_EXIT_FAILED;
         }
         break;
-    case 0xe000:
+    case MCUSER_CARD_CHANGED:
         ret = P3MC_CheckChange();
         switch (ret) {
-        case 0:
-        case 5:
+        case P3MC_RES_OK:
+        case P3MC_RES_CARD_SWAPPED:
             subStatus = MCUSER_EXIT_CARD_CHANGED;
             break;
         default:
@@ -5712,11 +5733,11 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             if (McErrorMess(errorNo) < 0) {
                 break;
             }
-            subStatus = 0xee10;
+            subStatus = MCUSER_CARD_CHANGED_WAIT;
             break;
         }
         break;
-    case 0xee10:
+    case MCUSER_CARD_CHANGED_WAIT:
         if (P3MC_CheckChange() >= 0) {
             subStatus = MCUSER_EXIT_FAILED;
         }
@@ -5743,7 +5764,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 
 /* static */ int McUserLoadFlow(int fileNo, int mode, int bBroken) {
     switch (subStatus) {
-    case 0:
+    case MCUSER_START:
         ret = P3MC_CheckChange();
         if (ret < 0) {
             break;
@@ -5751,34 +5772,34 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
 
         pGameData = P3MC_MakeDataWork(_P3DATA_SIZE(mode), NULL);
         if (ret != 0) {
-            subStatus = 0x2010;
+            subStatus = MCUSER_RESULT;
             break;
         }
         if (bBroken) {
-            ret = 6;
-            subStatus = 0x2010;
+            ret = P3MC_RES_BAD_DATA;
+            subStatus = MCUSER_RESULT;
             break;
         }
-        subStatus = 0x100;
-    case 0x100:
+        subStatus = MCUSER_BEGIN_IO;
+    case MCUSER_BEGIN_IO:
         waitTime = 90;
         TsMCAMes_SetMes(MCMES(0, 7));
         P3MC_LoadUser(mode, fileNo, pGameData, 0);
-        subStatus = 0x2000;
+        subStatus = MCUSER_POLL;
         break;
-    case 0x2000:
+    case MCUSER_POLL:
         waitTime--;
         ret = P3MC_LoadCheck();
         if (ret >= 0) {
-            subStatus = 0x2002;
+            subStatus = MCUSER_LOAD_MIN_WAIT;
         }
         break;
-    case 0x2002:
+    case MCUSER_LOAD_MIN_WAIT:
         if (--waitTime > 0) {
             break;
         }
-        subStatus = 0x2010;
-    case 0x2010:
+        subStatus = MCUSER_RESULT;
+    case MCUSER_RESULT:
         if (ret != 0) {
             errorNo = 0;
             switch (ret) {
@@ -5792,57 +5813,57 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 break;
             }
             if (errorNo != 0) {
-                subStatus = 0x2200;
+                subStatus = MCUSER_ERROR;
             }
             break;
         }
-        subStatus = 0x2100;
-    case 0x2100:
+        subStatus = MCUSER_SUCCESS;
+    case MCUSER_SUCCESS:
         TsRestoreSaveData(pGameData, mode);
-        subStatus = 0x2f00;
+        subStatus = MCUSER_LOAD_SUCCESS_MES;
         TsMCAMes_SetMes(-1);
-    case 0x2f00:
+    case MCUSER_LOAD_SUCCESS_MES:
         if (McErrorMess(100) >= 0) {
             subStatus = MCUSER_EXIT_DONE;
         }
         break;
-    case 0x2200:
+    case MCUSER_ERROR:
         TsMCAMes_SetMes(-1);
-        subStatus = 0x2201;
-    case 0x2201:
+        subStatus = MCUSER_ERROR_MES;
+    case MCUSER_ERROR_MES:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_NO_CARD || ret == P3MC_RES_CARD_SWAPPED) {
-            subStatus = 0xe000;
+            subStatus = MCUSER_CARD_CHANGED;
             break;
         }
         if (McErrorMess(errorNo) < 0) {
             break;
         }
-        subStatus = 0x2202;
-    case 0x2202:
+        subStatus = MCUSER_ERROR_WAIT;
+    case MCUSER_ERROR_WAIT:
         if (P3MC_CheckChange() < 0) {
             break;
         }
-        if (errorNo == 6 && bBroken) {
+        if (errorNo == P3MC_RES_BAD_DATA && bBroken) {
             subStatus = MCUSER_EXIT_BROKEN;
         } else {
             subStatus = MCUSER_EXIT_FAILED;
         }
         break;
-    case 0xe000:
+    case MCUSER_CARD_CHANGED:
         ret = P3MC_CheckChange();
         if (ret == P3MC_RES_OK || ret == P3MC_RES_CARD_SWAPPED) {
             subStatus = MCUSER_EXIT_CARD_CHANGED;
         } else if (McErrorMess(errorNo) >= 0) {
-            subStatus = 0xee10;
+            subStatus = MCUSER_CARD_CHANGED_WAIT;
         }
         break;
-    case 0xee10:
+    case MCUSER_CARD_CHANGED_WAIT:
         if (P3MC_CheckChange() < 0) {
             break;
         }
         TsMCAMes_SetMes(-1);
-        if (errorNo == 6 && bBroken) {
+        if (errorNo == P3MC_RES_BAD_DATA && bBroken) {
             subStatus = MCUSER_EXIT_BROKEN;
         } else {
             subStatus = MCUSER_EXIT_FAILED;
