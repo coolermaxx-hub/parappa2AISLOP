@@ -738,26 +738,26 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
     int fileNo;
 
     re = memc_manager(1);
-    if (re == 0x10) {
-        return -1;
+    if (re == MEMC_ERR_BUSY) {
+        return P3MC_RES_BUSY;
     }
 
     err = 0;
 
     switch (re) {
-    case 0x01:
-    case 0x06:
-    case 0x30:
-        err = -1;
+    case MEMC_ERR_FILE_INVALID:
+    case MEMC_ERR_SWAP:
+    case MEMC_ERR_SWAP_UNFORMATTED:
+        err = P3MC_RES_BUSY;
         break;
-    case 0x02:
+    case MEMC_ERR_INVALID:
         P3MC_CheckChangeClear();
-        err = 3;
+        err = P3MC_RES_NO_CARD;
         break;
-    case 0x03:
-        err = 2;
+    case MEMC_ERR_UNFORMATTED:
+        err = P3MC_RES_UNFORMATTED;
         break;
-    case 0x00:
+    case MEMC_OK:
         FreeSizeFlg = _P3MC_freesize_chk();
         break;
     default:
@@ -779,7 +779,7 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
 
         if (mcmenu_info.flag != 2) {
             portCheckFlg = 0;
-            return 3;
+            return P3MC_RES_NO_CARD;
         }
 
         if (memc_getChangeState() != 0) {
@@ -788,7 +788,7 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
 
         if (isFileFlgCash != 0) {
             portCheckFlg = 0;
-            return 0;
+            return P3MC_RES_OK;
         }
 
         isFileFlgCash = 0;
@@ -820,10 +820,10 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
         }
 
         portCheckFlg = 0;
-        return 0;
+        return P3MC_RES_OK;
     }
 
-    return -1;
+    return P3MC_RES_BUSY;
 }
 
 int P3MC_GetUserStart(int mode, P3MC_USRLST *pUsrLst, int bFirst) {
@@ -889,10 +889,10 @@ int P3MC_GetUserCheck(void) {
     if (pcw->curState == 0) {
         re = _P3MC_MemcCheck(pcw->curUserMode, pcw->dirTable);
         if (re < 0) {
-            return -2;
+            return P3MC_RES_ACCESSING;
         }
-        if (re == 3) {
-            return 3;
+        if (re == P3MC_RES_NO_CARD) {
+            return P3MC_RES_NO_CARD;
         }
 
         if (memc_getChangeState()) {
@@ -909,7 +909,7 @@ int P3MC_GetUserCheck(void) {
         P3MC_CheckChangeClear();
         pcw->curState = 1;
         if (ischg) {
-            return -1;
+            return P3MC_RES_BUSY;
         }
     }
 
@@ -941,33 +941,33 @@ int P3MC_GetUserCheck(void) {
         }
 
         if (!(flgl | flgr)) {
-            return 4;
+            return P3MC_RES_NO_SAVE_DATA;
         }
 
         pcw->curState = 2;
-        return -2;
+        return P3MC_RES_ACCESSING;
     }
 
     while (1) {
         if (pcw->curFno > 0 && pcw->curFno <= 80) {
             re = _P3MC_loadCheck(pw, 0);
             if (re < 0) {
-                return -1;
+                return P3MC_RES_BUSY;
             }
 
-            if (re == 1 || re == 2 || re == 3 || re == 5) {
+            if (re == P3MC_RES_FILE_ERROR || re == P3MC_RES_UNFORMATTED || re == P3MC_RES_NO_CARD || re == P3MC_RES_CARD_SWAPPED) {
                 if (pcw->curFno != 1) {
-                    re = 1;
+                    re = P3MC_RES_FILE_ERROR;
                 }
-                if (re == 2) {
-                    re = 4;
+                if (re == P3MC_RES_UNFORMATTED) {
+                    re = P3MC_RES_NO_SAVE_DATA;
                 }
                 return re;
             }
 
-            if (re == 0) {
+            if (re == P3MC_RES_OK) {
                 P3MC_AddUser(pUserLst, pcw->curMode, &((USER_HEADER *)pcw->UserHeadTmp)->user);
-            } else if (re == 6 || re == 4 || re == 11) {
+            } else if (re == P3MC_RES_BAD_DATA || re == P3MC_RES_NO_SAVE_DATA || re == P3MC_RES_NO_FILE) {
                 _P3MC_AddUserBroken(pUserLst, pcw->curMode, pcw->curFno - 1);
             }
         }
@@ -1050,7 +1050,7 @@ int P3MC_GetUserCheck(void) {
                         }
                     }
                 }
-                return flg ? 0 : 4;
+                return flg ? P3MC_RES_OK : P3MC_RES_NO_SAVE_DATA;
             }
         }
     }
