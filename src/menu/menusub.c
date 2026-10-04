@@ -1658,6 +1658,23 @@ static int   _MapGetMovableDir(MAPPOS *mpw);
 static void  McInitFlow(void);
 /* static */ int   McStartCheckFlow(int flg);
 /* static */ int   McUserCheckFlow(int type, int mode, int *bError);
+/* Results of McUserSaveFlow / McUserLoadFlow. */
+enum {
+    MCFLOW_RUNNING = -1,
+    MCFLOW_DONE = 0,
+    MCFLOW_BROKEN = 1,       /* the file on the card is damaged */
+    MCFLOW_FAILED = 2,       /* the error was already shown to the player */
+    MCFLOW_CARD_CHANGED = 4  /* card was swapped: restart the card check */
+};
+
+/* Exit states of the user save/load flows, each returning its MCFLOW_* result. */
+enum {
+    MCUSER_EXIT_DONE = 0xf000,
+    MCUSER_EXIT_BROKEN = 0xf001,
+    MCUSER_EXIT_FAILED = 0xf002,
+    MCUSER_EXIT_CARD_CHANGED = 0xf004
+};
+
 /* static */ int   McUserSaveFlow(USER_DATA *puser);
 /* static */ int   McUserLoadFlow(int fileNo, int mode, int bBroken);
 static void  TsMCAMes_Init(void);
@@ -4148,13 +4165,13 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
         if (ret != 0) {
-            if (ret == 1) {
+            if (ret == MCFLOW_BROKEN) {
                 state = 0x2020;
             }
-            if (ret == 2) {
+            if (ret == MCFLOW_FAILED) {
                 state = 0x5000;
             }
-            if (ret == 4) {
+            if (ret == MCFLOW_CARD_CHANGED) {
                 state = 0x2200;
             }
             break;
@@ -4584,13 +4601,13 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
         waitTime = 0;
         if (ret != 0) {
-            if (ret == 1) {
+            if (ret == MCFLOW_BROKEN) {
                 state = 0x2028;
             }
-            if (ret == 2) {
+            if (ret == MCFLOW_FAILED) {
                 state = 0x2050;
             }
-            if (ret != 4) {
+            if (ret != MCFLOW_CARD_CHANGED) {
                 return 0;
             }
             McInitFlow();
@@ -4623,13 +4640,13 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             return 0;
         }
         if (ret != 0) {
-            if (ret == 1) {
+            if (ret == MCFLOW_BROKEN) {
                 state = 0x2020;
             }
-            if (ret == 2) {
+            if (ret == MCFLOW_FAILED) {
                 state = 0x2900;
             }
-            if (ret == 4) {
+            if (ret == MCFLOW_CARD_CHANGED) {
                 McInitFlow();
                 state = 0x2000;
                 break;
@@ -5583,7 +5600,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             if (ret == 1) {
                 subStatus = 0x1020;
             } else {
-                subStatus = 0xf002;
+                subStatus = MCUSER_EXIT_FAILED;
             }
         }
         break;
@@ -5650,7 +5667,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         TsMCAMes_SetMes(-1);
     case 0x21f0:
         if (McErrorMess(200) >= 0) {
-            subStatus = 0xf000;
+            subStatus = MCUSER_EXIT_DONE;
         }
         break;
     case 0x2200:
@@ -5668,7 +5685,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x2202;
     case 0x2202:
         if (P3MC_CheckChange() >= 0) {
-            subStatus = 0xf002;
+            subStatus = MCUSER_EXIT_FAILED;
         }
         break;
     case 0xe000:
@@ -5676,7 +5693,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         switch (ret) {
         case 0:
         case 5:
-            subStatus = 0xf004;
+            subStatus = MCUSER_EXIT_CARD_CHANGED;
             break;
         default:
             if (puser->mode == 2) {
@@ -5693,27 +5710,27 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         break;
     case 0xee10:
         if (P3MC_CheckChange() >= 0) {
-            subStatus = 0xf002;
+            subStatus = MCUSER_EXIT_FAILED;
         }
         break;
-    case 0xf000:
+    case MCUSER_EXIT_DONE:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 0;
-    case 0xf001:
+        return MCFLOW_DONE;
+    case MCUSER_EXIT_BROKEN:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 1;
-    case 0xf002:
+        return MCFLOW_BROKEN;
+    case MCUSER_EXIT_FAILED:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 2;
-    case 0xf004:
+        return MCFLOW_FAILED;
+    case MCUSER_EXIT_CARD_CHANGED:
         P3MC_DeleteDataWork(pGameData);
-        return 4;
+        return MCFLOW_CARD_CHANGED;
     }
 
-    return -1;
+    return MCFLOW_RUNNING;
 }
 
 /* static */ int McUserLoadFlow(int fileNo, int mode, int bBroken) {
@@ -5778,7 +5795,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         TsMCAMes_SetMes(-1);
     case 0x2f00:
         if (McErrorMess(100) >= 0) {
-            subStatus = 0xf000;
+            subStatus = MCUSER_EXIT_DONE;
         }
         break;
     case 0x2200:
@@ -5799,15 +5816,15 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             break;
         }
         if (errorNo == 6 && bBroken) {
-            subStatus = 0xf001;
+            subStatus = MCUSER_EXIT_BROKEN;
         } else {
-            subStatus = 0xf002;
+            subStatus = MCUSER_EXIT_FAILED;
         }
         break;
     case 0xe000:
         ret = P3MC_CheckChange();
         if (ret == 0 || ret == 5) {
-            subStatus = 0xf004;
+            subStatus = MCUSER_EXIT_CARD_CHANGED;
         } else if (McErrorMess(errorNo) >= 0) {
             subStatus = 0xee10;
         }
@@ -5818,29 +5835,29 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         TsMCAMes_SetMes(-1);
         if (errorNo == 6 && bBroken) {
-            subStatus = 0xf001;
+            subStatus = MCUSER_EXIT_BROKEN;
         } else {
-            subStatus = 0xf002;
+            subStatus = MCUSER_EXIT_FAILED;
         }
         break;
-    case 0xf000:
+    case MCUSER_EXIT_DONE:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 0;
-    case 0xf001:
+        return MCFLOW_DONE;
+    case MCUSER_EXIT_BROKEN:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 1;
-    case 0xf002:
+        return MCFLOW_BROKEN;
+    case MCUSER_EXIT_FAILED:
         P3MC_DeleteDataWork(pGameData);
         TsMCAMes_SetMes(-1);
-        return 2;
-    case 0xf004:
+        return MCFLOW_FAILED;
+    case MCUSER_EXIT_CARD_CHANGED:
         P3MC_DeleteDataWork(pGameData);
-        return 4;
+        return MCFLOW_CARD_CHANGED;
     }
 
-    return -1;
+    return MCFLOW_RUNNING;
 }
 
 static void TsMCAMes_Init(void) {
