@@ -121,6 +121,12 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   copies it to the next report and `padActClear` zeroes it afterwards, so a
   rumble lasts for the frames it is re-requested.
 
+- One gameplay read of the sticks exists: `SpHatChangeSub` (`src/main/main.c`)
+  samples **pad 0 only** and, from round 4 on, picks the hat variant from
+  `ana[0..1]` (below 0x40 or at/above 0xC0 on either axis, checked in the order
+  Y-low, X-high, Y-high, X-low). A port with more than one local player must still
+  take this from player 1, and netplay must send the two axis bytes with the mask.
+
 Because `GPadRead` runs once per frame in `osFunc` and edge detection is a
 pure function of consecutive frames, a port can replace this layer with
 `{held mask per frame}` and recompute `one`/`off` itself. A rollback netcode
