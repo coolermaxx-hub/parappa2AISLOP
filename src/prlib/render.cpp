@@ -229,7 +229,9 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
     }
 }
 
-void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
+// Inline: the original image has no out-of-line copy, only the bodies inlined
+// into the two *MatrixAnimation functions below.
+inline void SpmNode::ComposeAnimatedMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     PrSPRAM_DATA *spram = prSpramData;
     const float time = spram->m_animation_time;
     SpaFileHeader *animation = spram->m_animation;
