@@ -4,7 +4,7 @@ Function-level differences between this tree and the original-compiler objects (
 Each difference comes from a function that never matched as C (the `main-rom-matching` branch keeps its original asm), or from replacing compiler steering, alias casts and weak template copies with typed C/C++. None is a behaviour change by intent, but the original instruction order is not kept.
 Causes marked *inferred* were read from the source change, not traced instruction by instruction. A unit marked *not yet classified* is an open audit item.
 
-Total: 95 functions differ, 32 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
+Total: 94 functions differ, 32 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
 
 | Unit | Differing functions | Original symbols not reproduced | Cause |
 | --- | --- | --- | --- |
@@ -15,7 +15,7 @@ Total: 95 functions differ, 32 original symbols have no counterpart (mostly orph
 | `menu/menusub.c.o` | 15 | 0 | Eleven functions were reconstructed from asm and never matched without compiler steering; `main-rom-matching` keeps their original asm under `NON_MATCHING` (TsRestoreSaveData, TsRanking_Set, TsPopMenu_Flow, TsPopMenu_Draw, TsPopMenCus_Draw, TsSaveMenu_Draw, TSJukeCDObj_Draw, TsCmnCell_CusorDraw, TsUserList_SetCurTag, TsUserList_Flow, TsNAMEINBox_Draw). TsBGMStop lost a one-pass do-while (tail-call layout only), TsGetTm2Tex and TsGetTm2HedTex read TEX0 fields through `sceGsTex0` (see remaining-work.md), and TsHosiPut differs only by a trailing alignment nop. |
 | `main/wipe.c.o` | 1 | 0 | WipeParaOutDisp: loop-alignment asm removed (see remaining-work.md). |
 | `main/drawctrl.c.o` | 4 | 0 | DrawMozaikuDisp uses a typed masked frame and drawDispCheckSub lost a temporary named after a register (see remaining-work.md). Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (DrawObjStrDisp, DrawObjPrReq: register allocation). |
-| `main/scrctrl.c.o` | 2 | 0 | ScrExamSetCheck: gotos replaced by structured control flow; the replay score buffer is declared in its own block, as the original debug info shows, which changes the stack frame layout. subjobEvent: the reverse-playback job no longer reuses a temporary the original never had, which moves registers. |
+| `main/scrctrl.c.o` | 1 | 0 | ScrExamSetCheck: gotos replaced by structured control flow; the replay score buffer is declared in its own block, as the original debug info shows, which changes the stack frame layout. |
 | `main/mbar.c.o` | 1 | 0 | MbarGetDispPosY picks the row offset with a plain conditional instead of a register-named temporary and an off-by-one constant (see remaining-work.md). |
 | `prlib/scene.cpp.o` | 2 | 2 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (the constructor and SetAppropriateDefaultCamera). The missing symbols are the original's per-file weak copies of nalib templates, which this build does not reproduce; every file calls the one shared template (NaVECTOR<float, 4>::Set and the 4-argument constructor). |
 | `prlib/setpointer.cpp.o` | 2 | 0 | Both functions inline `SpaTrack<T>::ChangePointer`, which finds the time table with one stride expression instead of a branch per interpolation kind; SpaNodeAnimation::ChangePointer also binds its tables through `BindInlineTables`. |
