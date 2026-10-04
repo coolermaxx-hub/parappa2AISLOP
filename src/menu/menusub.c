@@ -1715,6 +1715,9 @@ static int TsGetMenuPadIsRepeat(int no, int npad) {
     return (menuPadState[no][npad].state >= 2);
 }
 
+/* Ids with this bit set index VSNDSEQ_Tbl (a scripted sequence) instead of TsVoiceTbl. */
+#define TSSND_SEQ_FLAG 0x8000
+
 static void TSSNDPLAY(int n) {
     TSVOICE_TBL *ptap;
     TSSND_CHAN  *pchan;
@@ -1722,8 +1725,8 @@ static void TSSNDPLAY(int n) {
     TSVSNDSEQ   *pSeq;
 
     if (n >= 0) {
-        if (n & 0x8000) {
-            pSeq  = &VSNDSEQ_Tbl[n & ~0x8000];
+        if (n & TSSND_SEQ_FLAG) {
+            pSeq  = &VSNDSEQ_Tbl[n & ~TSSND_SEQ_FLAG];
             pchan = &TsSndChan[pSeq->chanNo];
 
             bMsk = pchan->bMsk;
@@ -4236,7 +4239,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             MpCityHallCharPosSet(0);
             fphs_pos = 0;
             MpCityHallFPHSSoundMask(0);
-            TSSNDPLAY(0x8001);
+            TSSNDPLAY(TSSND_SEQ_FLAG | 1);
             return 0;
         case 1:
             MNScene_DispSw(&MNS_StageMap, 0);
@@ -4774,7 +4777,7 @@ static void MpCityHallFPHSSoundMask(int flg) {
     if (pos == fpos) {
         if (!TsAnimeWait_withKeySkip(0, &MNS_CityHall, 0, 6)) {
             if (TSSND_CHANISSTOP(3)) {
-                TSSNDPLAY(0x8002);
+                TSSNDPLAY(TSSND_SEQ_FLAG | 2);
             }
         }
         return fpos;
@@ -4878,7 +4881,7 @@ static void MpCityHallFPHOK(int flg) {
     }
 
     MNScene_SetAnimeBankEnd(&MNS_CityHall, AnmBit);
-    TSSNDPLAY(0x8002);
+    TSSNDPLAY(TSSND_SEQ_FLAG | 2);
 }
 
 static int MpPopMenu_Flow(int flg, u_int tpad) {
