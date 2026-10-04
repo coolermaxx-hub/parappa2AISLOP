@@ -945,50 +945,50 @@ static MCDATA_TBL McVoiceTbl[23] = {
     { MCMES(0, 7), 39 },
     { MCMES(0, 19), 17 },
     { MCMES(0, 17), 14 },
-    { MCMES(12, 10), 41 },
-    { MCMES(12, 21), 19 },
-    { MCMES(12, 24), 55 },
-    { MCMES(12, 23), 54 },
-    { MCMES(2, 2), 20 },
-    { MCMES(2, 11), 20 },
-    { MCMES(2, 12), 20 },
-    { MCMES(2, 13), 21 },
-    { MCMES(2, 14), 21 },
-    { MCMES(2, 4), 23 },
-    { MCMES(16, 22), TSSND_SEQ_FLAG | 0 },
-    { MCMES(2, 5), 35 },
-    { MCMES(2, 6), 36 },
-    { MCMES(2, 8), 40 },
-    { MCMES(2, 9), 40 },
-    { MCMES(16, 15), 16 },
-    { MCMES(16, 16), 13 },
-    { MCMES(2, 18), 15 },
-    { MCMES(2, 20), 18 },
+    { MCMES(MCMES_KIND_TIMED, 10), 41 },
+    { MCMES(MCMES_KIND_TIMED, 21), 19 },
+    { MCMES(MCMES_KIND_TIMED, 24), 55 },
+    { MCMES(MCMES_KIND_TIMED, 23), 54 },
+    { MCMES(MCMES_KIND_CANCEL, 2), 20 },
+    { MCMES(MCMES_KIND_CANCEL, 11), 20 },
+    { MCMES(MCMES_KIND_CANCEL, 12), 20 },
+    { MCMES(MCMES_KIND_CANCEL, 13), 21 },
+    { MCMES(MCMES_KIND_CANCEL, 14), 21 },
+    { MCMES(MCMES_KIND_CANCEL, 4), 23 },
+    { MCMES(MCMES_KIND_CONFIRM, 22), TSSND_SEQ_FLAG | 0 },
+    { MCMES(MCMES_KIND_CANCEL, 5), 35 },
+    { MCMES(MCMES_KIND_CANCEL, 6), 36 },
+    { MCMES(MCMES_KIND_CANCEL, 8), 40 },
+    { MCMES(MCMES_KIND_CANCEL, 9), 40 },
+    { MCMES(MCMES_KIND_CONFIRM, 15), 16 },
+    { MCMES(MCMES_KIND_CONFIRM, 16), 13 },
+    { MCMES(MCMES_KIND_CANCEL, 18), 15 },
+    { MCMES(MCMES_KIND_CANCEL, 20), 18 },
 };
 static MCDATA_TBL McFaceTbl[23] = {
     { MCMES(0, 3), 3 },
     { MCMES(0, 7), 3 },
     { MCMES(0, 19), 3 },
     { MCMES(0, 17), 3 },
-    { MCMES(12, 10), 4 },
-    { MCMES(12, 21), 4 },
-    { MCMES(12, 24), 2 },
-    { MCMES(12, 23), 2 },
-    { MCMES(2, 2), 2 },
-    { MCMES(2, 11), 2 },
-    { MCMES(2, 12), 2 },
-    { MCMES(2, 13), 2 },
-    { MCMES(2, 14), 2 },
-    { MCMES(2, 4), 2 },
-    { MCMES(16, 22), 1 },
-    { MCMES(2, 5), 1 },
-    { MCMES(2, 6), 1 },
-    { MCMES(2, 8), 2 },
-    { MCMES(2, 9), 2 },
-    { MCMES(16, 15), 1 },
-    { MCMES(16, 16), 1 },
-    { MCMES(2, 18), 2 },
-    { MCMES(2, 20), 2 },
+    { MCMES(MCMES_KIND_TIMED, 10), 4 },
+    { MCMES(MCMES_KIND_TIMED, 21), 4 },
+    { MCMES(MCMES_KIND_TIMED, 24), 2 },
+    { MCMES(MCMES_KIND_TIMED, 23), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 2), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 11), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 12), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 13), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 14), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 4), 2 },
+    { MCMES(MCMES_KIND_CONFIRM, 22), 1 },
+    { MCMES(MCMES_KIND_CANCEL, 5), 1 },
+    { MCMES(MCMES_KIND_CANCEL, 6), 1 },
+    { MCMES(MCMES_KIND_CANCEL, 8), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 9), 2 },
+    { MCMES(MCMES_KIND_CONFIRM, 15), 1 },
+    { MCMES(MCMES_KIND_CONFIRM, 16), 1 },
+    { MCMES(MCMES_KIND_CANCEL, 18), 2 },
+    { MCMES(MCMES_KIND_CANCEL, 20), 2 },
 };
 static int UserList_Sw = 0;
 static int OptionList_Sw = 0;
@@ -3440,10 +3440,10 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
                 switch (ret) {
                 case 1:
-                    TsMCAMes_SetMes(MCMES(1, 1) | MCMES_NOPLATE | MCMES_COLOR);
+                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 1) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 case 2:
-                    TsMCAMes_SetMes(MCMES(1, 0) | MCMES_NOPLATE | MCMES_COLOR);
+                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 0) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 }
             }
@@ -5564,7 +5564,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x2000;
         break;
     case 0x1000:
-        TsMCAMes_SetMes(MCMES(16, 16));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 16));
         subStatus = 0x1010;
     case 0x1010:
         ret = P3MC_CheckChange();
@@ -5848,7 +5848,7 @@ static int TsMCAMes_GetSelect(void) {
 
     if (pmesw->mesflg < 0) {
         return 1;
-    } else if (pmesw->mesflg & 0xff000000) {
+    } else if (pmesw->mesflg & MCMES_KIND_MASK) {
         return pmesw->selflg;
     }
 
@@ -5970,27 +5970,27 @@ static void TsMCAMes_Flow(u_int tpad) {
         }
     }
 
-    if (pmesw->mesflg >= 0 && (pmesw->mesflg & 0xff000000)) {
-        if (pmesw->mesflg & 0xc000000) {
+    if (pmesw->mesflg >= 0 && (pmesw->mesflg & MCMES_KIND_MASK)) {
+        if (pmesw->mesflg & ((MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK) << 24)) {
             if (!TSSND_CHANISSTOP(1)) {
                 pmesw->seltim++;
                 return;
             }
         }
 
-        if (pmesw->mesflg & 0x2000000) {
+        if (pmesw->mesflg & (MCMES_BIT_CANCEL << 24)) {
             isCAN = TRUE;
         } else {
             isCAN = FALSE;
         }
     
-        if (pmesw->mesflg & 0x1000000) {
+        if (pmesw->mesflg & (MCMES_BIT_OK << 24)) {
             isOK = TRUE;
         } else {
             isOK = FALSE;
         }
         
-        if (pmesw->mesflg & 0x14000000) {
+        if (pmesw->mesflg & ((MCMES_BIT_CONFIRM | MCMES_BIT_CANCEL_OK) << 24)) {
             isOK = TRUE;
             isCAN = TRUE;
         }
@@ -6002,14 +6002,14 @@ static void TsMCAMes_Flow(u_int tpad) {
     
         if (isCAN && (tpad & SCE_PADRdown)) {
             pmesw->selflg = 2;
-            if (pmesw->mesflg & 0x4000000) {
+            if (pmesw->mesflg & (MCMES_BIT_CANCEL_OK << 24)) {
                 TSSNDPLAY(6);
             } else {
                 TSSNDPLAY(9);
             }
         }
     
-        if (pmesw->mesflg & 0xc000000) {
+        if (pmesw->mesflg & ((MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK) << 24)) {
             pmesw->seltim++;
             if (pmesw->seltim >= 0x79) {
                 pmesw->selflg = 1;
@@ -9114,7 +9114,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         break;
     case 0x5000:
         state = 0x5010;
-        TsMCAMes_SetMes(MCMES(16, 22));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 22));
         /* fallthrough */
     case 0x5010:
         ret = TsMCAMes_GetSelect();
@@ -9149,7 +9149,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             break;
         }
         state = 0x4015;
-        TsMCAMes_SetMes(MCMES(16, 15));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 15));
         /* fallthrough */
     case 0x4015:
         ret = TsMCAMes_GetSelect();

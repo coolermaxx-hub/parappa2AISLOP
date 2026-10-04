@@ -168,6 +168,17 @@ typedef struct { // 0x8
 
 /* Memory card message number: low 16 bits select the text, the top byte is a kind
  * (non-zero kinds are selectable), and two flag bits change how it is shown. */
+/* Message kinds (top byte of the message number). Each set bit enables behaviour in TsMCAMes_Flow. */
+#define MCMES_BIT_OK         0x01 /* confirm button accepted */
+#define MCMES_BIT_CANCEL     0x02 /* cancel button accepted */
+#define MCMES_BIT_CANCEL_OK  0x04 /* accepts both buttons, cancel plays the confirm sound */
+#define MCMES_BIT_TIMED      0x08 /* dismisses itself after 0x79 frames, waits for the voice to stop */
+#define MCMES_BIT_CONFIRM    0x10 /* accepts both buttons */
+#define MCMES_KIND_OK        MCMES_BIT_OK
+#define MCMES_KIND_CANCEL    MCMES_BIT_CANCEL
+#define MCMES_KIND_TIMED     (MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK)
+#define MCMES_KIND_CONFIRM   MCMES_BIT_CONFIRM
+#define MCMES_KIND_MASK      0xff000000
 #define MCMES(kind, id)  (((kind) << 24) | (id))
 #define MCMES_NOPLATE    0x10000 /* no back plate and no button prompt */
 #define MCMES_COLOR      0x20000 /* alternate text colour */
