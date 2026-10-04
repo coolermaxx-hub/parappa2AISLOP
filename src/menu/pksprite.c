@@ -81,41 +81,33 @@ static u_int* _tsWorkInit(TS_WORKMEM *emem, u_int *buf, u_int size) {
 }
 
 u_long128* TsInitUPacket(TsUSERPKT *pk, u_long128 *buf, u_int size) {
-    u_int      top;
-    TsUSERPKT *p;
-    u_int      b0, b1;
+    u_int top;
 
     memset(pk, 0, sizeof(*pk));
-    p = pk;
 
-    top = (u_int)_tsWorkInit(&p->mem, (u_int*)buf, size);
-    if (top == NULL) {
+    top = (u_int)_tsWorkInit(&pk->mem, (u_int*)buf, size);
+    if (top == 0) {
         return NULL;
     }
 
-    p->size = size / 16;
+    pk->size = size / 16;
 
-    p->pkt[0].PaketTop = top;
-    p->pkt[1].PaketTop = top;
+    pk->pkt[0].PaketTop = top;
+    pk->pkt[1].PaketTop = top;
 
-    b0 = b1 = PR_UNCACHED(p->pkt[p->idx].PaketTop);
-
-    p->ptop = b0;
-    p->btop = b1;
+    pk->btop = pk->ptop = PR_UNCACHED(pk->pkt[pk->idx].PaketTop);
     return (u_long128*)top;
 }
 
 void TsEndUPacket(TsUSERPKT *pk) {
-    TsUSERPKT *p = pk;
+    _tsWorkEnd(&pk->mem);
 
-    _tsWorkEnd(&p->mem);
+    pk->pkt[0].PaketTop = NULL;
+    pk->pkt[1].PaketTop = NULL;
 
-    p->pkt[0].PaketTop = NULL;
-    p->pkt[1].PaketTop = NULL;
-
-    p->size = 0;
-    p->btop = NULL;
-    p->ptop = NULL;
+    pk->size = 0;
+    pk->btop = NULL;
+    pk->ptop = NULL;
 }
 
 void TsDrawUPacket(TsUSERPKT *up) {
@@ -540,14 +532,15 @@ void PkZBUFMask_Add(SPR_PKT pkt, int bMsk) {
 void PkSprPkt_SetTexVram(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     PK_AD_PACKET *pk;
     int           x, y, w, h;
-    int           fbp, fbw, psm; /* note: variables not in STABS. */
+    int           tbp, tbw, psm;
 
     if (pdenv == NULL) {
         return;
     }
 
-    fbp = pdenv->frame1.FBP;
-    fbw = pdenv->frame1.FBW;
+    /* The frame buffer, as a texture (TBP counts 64-word blocks, FBP 2048-word pages). */
+    tbp = pdenv->frame1.FBP << 5;
+    tbw = pdenv->frame1.FBW;
     psm = pdenv->frame1.PSM;
 
     x = pdenv->scissor1.SCAX0;
@@ -568,7 +561,7 @@ void PkSprPkt_SetTexVram(SPR_PKT pkt, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     /* texflush doesn't use the data. */
     pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
 
-    pk->ad[1].DATA = SCE_GS_SET_TEX0(fbp << 5, fbw, psm, 10/*1024*/, 10/*1024*/, 1, 0, 0, 0, 0, 0, 0);
+    pk->ad[1].DATA = SCE_GS_SET_TEX0(tbp, tbw, psm, 10/*1024*/, 10/*1024*/, 1, 0, 0, 0, 0, 0, 0);
     pk->ad[1].ADDR = SCE_GS_TEX0_1;
 
     *pkt = (u_long128*)&pk->ad[2];
@@ -1519,13 +1512,12 @@ void PkMesh_SetXYWH(PKMESH *mesh, float px0, float py0, float sw, float sh) {
     PKMSPT *pt;
     int     x, y;
     float   fmw, fmh;
-    float   py;
 
     pt = mesh->pmspt;
 
     mesh->px = px0;
     mesh->py = py0;
-    
+
     mesh->sw = sw;
     mesh->sh = sh;
 
@@ -1533,7 +1525,7 @@ void PkMesh_SetXYWH(PKMESH *mesh, float px0, float py0, float sw, float sh) {
     fmh = 1.0f / mesh->mh;
 
     for (y = 0; y < (mesh->mh + 1); y++) {
-        py = py0 + (y * sh * fmh);
+        float py = py0 + (y * sh * fmh);
 
         for (x = 0; x < (mesh->mw + 1); x++, pt++) {
             pt->x = px0 + (x * sw * fmw);
@@ -1548,7 +1540,6 @@ void PkMesh_SetUVWH(PKMESH *mesh, float ux0, float uy0, float uw, float uh) {
     PKMSPT *pt;
     int     x, y;
     float   fmw, fmh;
-    int     uy;
 
     pt = mesh->pmspt;
 
@@ -1556,7 +1547,7 @@ void PkMesh_SetUVWH(PKMESH *mesh, float ux0, float uy0, float uw, float uh) {
     fmh = 1.0f / mesh->mh;
 
     for (y = 0; y < (mesh->mh + 1); y++) {
-        uy = uy0 + (y * uh * fmh);
+        int uy = uy0 + (y * uh * fmh);
 
         for (x = 0; x < (mesh->mw + 1); x++, pt++) {
             pt->u = ux0 + (x * uw * fmw);
@@ -1568,13 +1559,13 @@ void PkMesh_SetUVWH(PKMESH *mesh, float ux0, float uy0, float uw, float uh) {
 void PkCMesh_Add(SPR_PKT pk, SPR_PRM *spr, PKMESH *mesh) {
     int     cidx, lidx;
     int     x, y;
-    PKMSPT *pt;
 
     cidx = 0;
     lidx = mesh->mw + 1;
 
     for (y = 0; y < mesh->mh; y++) {
-        pt = &mesh->pmspt[cidx];
+        PKMSPT *pt = &mesh->pmspt[cidx];
+
 
         for (x = 0; x < mesh->mw; x++, pt++) {
             spr->px0 = pt[0].x + pt[0].ofsx;
@@ -1599,13 +1590,13 @@ void PkCMesh_Add(SPR_PKT pk, SPR_PRM *spr, PKMESH *mesh) {
 void PkFTMesh_Add(SPR_PKT pk, SPR_PRM *spr, PKMESH *mesh) {
     int     cidx, lidx;
     int     x, y;
-    PKMSPT *pt;
 
     cidx = 0;
     lidx = mesh->mw + 1;
 
     for (y = 0; y < mesh->mh; y++) {
-        pt = &mesh->pmspt[cidx];
+        PKMSPT *pt = &mesh->pmspt[cidx];
+
 
         for (x = 0; x < mesh->mw; x++, pt++) {
             spr->ux  = pt[0].u;
