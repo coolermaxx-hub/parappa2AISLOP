@@ -1,5 +1,6 @@
 #include "menu/pksprite.h"
 
+#include <eestruct.h>
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -593,7 +594,7 @@ void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
 void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x6400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
@@ -663,7 +664,7 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x6400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
@@ -733,7 +734,7 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagTF *sp = (SprTagTF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x6400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x434310;
 
     sp->prim = SCE_GS_SET_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
@@ -803,7 +804,7 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCF *sp = (SprTagCF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x4400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 4);
     ((u_long*)sp->GifCord)[1] = 0x4410;
 
     sp->prim = 0x146;
@@ -850,7 +851,7 @@ void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCG *sp = (SprTagCG*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x9400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 9);
     ((u_long*)sp->GifCord)[1] = 0x414141410;
 
     sp->prim = 0x14c;
@@ -981,7 +982,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 
     _pkVU0RotMatrixZ(ppspr->rot);
 
-    ((u_long*)sp->GifCord)[0] = 0xa400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 10);
     ((u_long*)sp->GifCord)[1] = 0x4343434310;
 
     sp->prim = 0x154;
@@ -1105,7 +1106,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLF *sp = (SprTagLF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x4400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 4);
     ((u_long*)sp->GifCord)[1] = 0x4410;
 
     if (flg & 0x4) {
@@ -1167,10 +1168,10 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLSF *sp = (SprTagLSF*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x2400000000000001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 0, 0, 0, 1, 2);
     ((u_long*)sp->GifCord)[1] = 0x10;
 
-    ((u_long*)sp->GifCord2)[0] = 0x1000000000008001;
+    ((u_long*)sp->GifCord2)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 0, 1);
     ((u_long*)sp->GifCord2)[1] = 0xe;
 
     if (flg & 0x4) {
@@ -1216,7 +1217,7 @@ void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkCLineS_AddNext(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagLSFN *sp = (SprTagLSFN*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x2400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 2);
     ((u_long*)sp->GifCord)[1] = 0x41;
 
     sp->rgba = ppspr->rgba0;
@@ -1254,7 +1255,7 @@ void PkCLineS_AddNext(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCFR *sp = (SprTagCFR*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x5400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 5);
     ((u_long*)sp->GifCord)[1] = 0x44410;
 
     sp->prim = 0x143;
@@ -1311,7 +1312,7 @@ void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
 void PkPolyF4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCFR *sp = (SprTagCFR*)*pk;
 
-    ((u_long*)sp->GifCord)[0] = 0x6400000000008001;
+    ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 6);
     ((u_long*)sp->GifCord)[1] = 0x444410;
 
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 0, 0, 1, 0, 1, 0, 0);
