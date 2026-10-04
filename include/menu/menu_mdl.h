@@ -6,6 +6,9 @@
 #include <eetypes.h>
 #include <libgraph.h>
 
+/* A scene's models, by file number in the current package (GetIntAdrsCurrent):
+ * the model, then its motion and position animations. Zero ends each list, and
+ * a zero fn_mdl ends the table. */
 typedef struct { // 0x3c
     /* 0x00 */ int fn_mdl;
     /* 0x04 */ u_short fn_anmm[10];
@@ -14,7 +17,7 @@ typedef struct { // 0x3c
 
 typedef struct { // 0x8
     /* 0x0 */ MN_MDLTBL *pmtbl;
-    /* 0x4 */ int *pctbl;
+    /* 0x4 */ int *pctbl; /* camera file numbers, ended by zero */
 } MN_SCENETBL;
 
 /* MNANM_COBJ::cflg: the low byte selects the model (or camera) the entry drives,
@@ -34,6 +37,15 @@ typedef struct { // 0x4
     /* 0x2 */ u_short no;
 } MNANM_COBJ;
 
+/* MNANM_TBL::kind: how the bank's timer runs. A negative etime never ends. */
+#define MNANM_PLAY_ONCE      0 /* stime to etime, then hold there */
+#define MNANM_PLAY_LOOP      1 /* stime to etime, then back to stime */
+#define MNANM_PLAY_MUSIC     2 /* follow the music timer, wrapped at etime */
+
+/* One entry starts timer bank aTimNo at stime, advancing aSpeed per frame,
+ * and runs the commands in anmCobj (up to six, ended by a zero cflg). For
+ * the first two kinds, reaching etime starts the anime queued for the bank
+ * with MNScene_ContinueAnime. */
 typedef struct { // 0x20
     /* 0x00 */ u_char kind;
     /* 0x01 */ u_char aTimNo;
