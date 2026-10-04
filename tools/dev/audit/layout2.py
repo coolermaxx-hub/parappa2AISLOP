@@ -6,7 +6,7 @@ def ld(f):
         p=l.split()
         if len(p)==3 and p[1] in 'dDbBsSrRgG' : d.setdefault(p[2],int(p[0],16))
     return d
-old=ld('/home/claude/parappadev/parappa2/expected2/build/SCPS_150.17.elf'); new=ld('/home/claude/parappadev/parappa2/build/SCPS_150.17.elf')
+old=ld('expected2/build/SCPS_150.17.elf'); new=ld('build/SCPS_150.17.elf')
 lo,hi=int(sys.argv[1],16),int(sys.argv[2],16)
 rows=sorted((old[n],new[n]-old[n],n) for n in old if n in new and lo<=old[n]<hi)
 prev=None

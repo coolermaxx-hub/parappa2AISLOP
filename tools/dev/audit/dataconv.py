@@ -1,5 +1,6 @@
 import re,struct,sys,os,glob
-ROOT='/home/claude/parappadev/parappa2'
+import os
+ROOT=os.getcwd()
 # ---------- C type model ----------
 BASIC={'char':(1,True),'u_char':(1,False),'unsigned char':(1,False),'short':(2,True),'u_short':(2,False),'unsigned short':(2,False),
  'int':(4,True),'u_int':(4,False),'unsigned int':(4,False),'unsigned':(4,False),'long':(8,True),'u_long':(8,False),'float':(4,None),'void':(1,False),'s8':(1,True),'u8':(1,False),'s16':(2,True),'u16':(2,False),'s32':(4,True),'u32':(4,False)}
