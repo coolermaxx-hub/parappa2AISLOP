@@ -252,11 +252,12 @@ static void _P3MC_ASC2SJIS(char *des, char *src) {
 
     char    *des0;
     u_char   c;
-    int      n;
 
     des0 = des;
 
     for (; (c = *src) != '\0'; src++, des += 2) {
+        int n;
+
         if (c <= ' ') {
             n = 0xa1a1; /* Space */
         } else if (c <= '@') {
@@ -296,10 +297,6 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
     char  tname[256];
     int   s;
     char  tmps[30];
-    int   r;
-    int   size;
-    void *ptr;
-    int   iconNo;
 
     if (name == NULL) {
         return;
@@ -331,7 +328,7 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
         if (roundNo == 0) {
             sprintf(tmps, "%s(ST%1d)", name, stageNo);
         } else {
-            r = roundNo + 1;
+            int r = roundNo + 1;
 
             if (r > 99) {
                 r = 99;
@@ -342,28 +339,35 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
         break;
     }
 
-    _P3MC_UserName_ASC2SJIS(tname + s, tmps);
+    {
+        int   size;
+        void *ptr;
+        int   iconNo;
 
-    memc_setSaveTitle(tname, s);
+        _P3MC_UserName_ASC2SJIS(tname + s, tmps);
 
-    if (mode == P3MC_MODE_LOG) {
-        iconNo = ParaCol + 1;
+        memc_setSaveTitle(tname, s);
 
-        if (iconNo > 4) {
-            iconNo = 4;
+        /* A saved game's icon is Parappa in his cap colour, a replay's is the stage. */
+        if (mode == P3MC_MODE_LOG) {
+            iconNo = ParaCol + 1;
+
+            if (iconNo > 4) {
+                iconNo = 4;
+            }
+
+            ptr = MenuDataGetIconSysHed(0, iconNo, &size);
+        } else {
+            iconNo = stageNo;
+            ptr = MenuDataGetIconSysHed(1, iconNo, &size);
         }
 
-        ptr = MenuDataGetIconSysHed(0, iconNo, &size);
-    } else {
-        iconNo = stageNo;
-        ptr = MenuDataGetIconSysHed(1, iconNo, &size);
+        memc_setIconSysHed(ptr, size);
+
+        memc_setSaveIcon(0, P3MC_GetIconPtr(mode, iconNo), P3MC_GetIconSize(mode));
+        memc_setSaveIcon(1, NULL, 0);
+        memc_setSaveIcon(2, NULL, 0);
     }
-
-    memc_setIconSysHed(ptr, size);
-
-    memc_setSaveIcon(0, P3MC_GetIconPtr(mode, iconNo), P3MC_GetIconSize(mode));
-    memc_setSaveIcon(1, NULL, 0);
-    memc_setSaveIcon(2, NULL, 0);
 }
 
 /* _P3MC_file_chk: how one file on the card compares with what the game expects. */
@@ -452,7 +456,6 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
     int             flg;
     int             closeFlagSw;
     sceMcTblGetDir *pTblDir;
-    int             need0;
 
     pTblDir = mcmenu_info.dirfile;
     flg = FALSE;
@@ -474,6 +477,9 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
         }
 
         if (flg) {
+            /* Blocks (1 KiB) the new data needs beyond what the old file already takes. */
+            int need0;
+
             need0 = ((size + 1023) / 1024) - ((pTblDir[i].FileSizeByte + 1023) / 1024);
             if (need0 < 0) {
                 need0 = 0;
@@ -653,11 +659,11 @@ void P3MC_DeleteDataWork(MCRWDATA_HDL *phdl) {
     if (phdl == NULL) {
         return;
     }
-    
+
     if (phdl->pMemTop != NULL) {
         free(phdl->pMemTop);
     }
-    
+
     free(phdl);
 }
 
@@ -665,7 +671,6 @@ MCRWDATA_HDL* P3MC_MakeDataWork(int dsize, USER_DATA *puser) {
     MCRWDATA_HDL *phdl;
     u_char       *pdata;
     int           asize, dsize0;
-    u_char       *data;
 
     phdl = (MCRWDATA_HDL*)malloc(sizeof(MCRWDATA_HDL));
     memset(phdl, 0, sizeof(MCRWDATA_HDL));
@@ -682,14 +687,13 @@ MCRWDATA_HDL* P3MC_MakeDataWork(int dsize, USER_DATA *puser) {
         phdl->datasize = asize;
         phdl->srcsize = dsize;
 
+        /* Header, data, then footer, in one 16-byte aligned block. */
         phdl->pHead = (USER_HEADER*)pdata;
-
-        data = (u_char*)(((USER_HEADER*)pdata) + 1);
-        phdl->pData = data;
-        phdl->pFoot = (USER_FOOTER*)(data + dsize0);
+        phdl->pData = (u_char*)(phdl->pHead + 1);
+        phdl->pFoot = (USER_FOOTER*)(phdl->pData + dsize0);
 
         if (puser != NULL) {
-            ((USER_HEADER*)pdata)->user = *puser;
+            phdl->pHead->user = *puser;
         }
 
         return phdl;
@@ -713,14 +717,14 @@ static int _P3MCStrCmpLen(char *str, char *id, int len) {
 }
 
 static int _P3MCStrNum(char *nstr, int len) {
-    int    i;
-    int    n;
-    u_char c;
+    int i;
+    int n;
 
     n = 0;
 
     for (i = 0; i < len; i++, nstr++) {
-        c = *nstr;
+        u_char c = *nstr;
+
         if (c >= '0' && c <= '9') {
             n = (n * 10) + (c - '0');
         } else {
@@ -734,8 +738,6 @@ static int _P3MCStrNum(char *nstr, int len) {
 static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
     int re;
     int err;
-    int i;
-    int fileNo;
 
     re = memc_manager(MEMC_MODE_ASYNC);
     if (re == MEMC_ERR_BUSY) {
@@ -775,9 +777,10 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
         }
         FreeSizeFlg = 0;
     } else if (portCheckFlg == 1) {
-        int flag = mcmenu_info.flag; /* note: variable not in STABS. */
+        /* The card type; the original keeps it in err. */
+        int flag = mcmenu_info.flag;
 
-        if (mcmenu_info.flag != 2) {
+        if (mcmenu_info.flag != sceMcTypePS2) {
             portCheckFlg = 0;
             return P3MC_RES_NO_CARD;
         }
@@ -800,10 +803,13 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
             portCheckFlg = flag;
         }
     } else if (portCheckFlg == 2) {
+        int i;
+
         for (i = 0; i < P3MC_DIR_ENTRY_MAX; i++) {
             char *name = &pDirTable[i].EntryName[0];
             char *type = &pDirTable[i].EntryName[12];
             char *num = &pDirTable[i].EntryName[15];
+            int   fileNo;
 
             if (name[0] == '\0') {
                 break;
@@ -832,7 +838,7 @@ int P3MC_GetUserStart(int mode, P3MC_USRLST *pUsrLst, int bFirst) {
     if (pUChkWork != NULL) {
         free(pUChkWork);
     }
-    
+
     pWork = memalign(16, sizeof(*pWork));
     pUChkWork = pWork;
 
@@ -873,11 +879,6 @@ int P3MC_GetUserCheck(void) {
     GETUSER_WORK *pcw = pUChkWork;
     P3MC_USRLST  *pUserLst;
     int           ischg = 0;
-    int           i;
-    int           flgl, flgr;
-    int           isLoad;
-    int           flg;
-    int           chksize;
     int           loadPending;
 
     if (pcw == NULL) {
@@ -914,6 +915,9 @@ int P3MC_GetUserCheck(void) {
     }
 
     if (pcw->curState == 1) {
+        int i;
+        int flgl, flgr;
+
         flgl = 0;
         if (pcw->curUserMode & P3MC_MODE_LOG) {
             for (i = 0; i < P3MC_FILE_MAX; i++) {
@@ -975,7 +979,8 @@ int P3MC_GetUserCheck(void) {
         loadPending = 0;
         while (!loadPending) {
             while (pcw->curFno < P3MC_FILE_MAX) {
-                isLoad = 0;
+                int isLoad = 0;
+
                 switch (pcw->curMode) {
                 case P3MC_MODE_LOG:
                     isLoad = pUserLst->logPage_flg;
@@ -986,8 +991,9 @@ int P3MC_GetUserCheck(void) {
                 }
 
                 if (!isLoad) {
-                    flg = 0;
-                    chksize = 0;
+                    int flg = 0;
+                    int chksize = 0;
+
                     switch (pcw->curMode) {
                     case P3MC_MODE_LOG:
                         chksize = UChkSize[0];
@@ -1039,7 +1045,8 @@ int P3MC_GetUserCheck(void) {
             }
 
             if (pcw->curFno > 0) {
-                flg = 0;
+                int flg = 0;
+
                 if (pUserLst->nGetUser) {
                     if (pcw->curUserMode & P3MC_MODE_LOG) {
                         flg = (pUserLst->nLogGet != 0);
@@ -1245,7 +1252,7 @@ void P3MC_OpeningCheckStart(void) {
 
     pWork = memalign(16, sizeof(*pWork));
     pUChkWork = pWork;
-    
+
     P3MC_CheckChangeSet();
     portCheckFlg = 0;
 
@@ -1582,7 +1589,6 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     int         fileNo;
     int         isVs;
     int         ParaCol;
-    P3LOG_VAL  *pLog;
 
     ParaCol = 0;
     pData = pdhdl->pMemTop;
@@ -1595,7 +1601,9 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     name = (mode == P3MC_MODE_LOG) ? ((USER_HEADER *)pData)->user.name : ((USER_HEADER *)pData)->user.name1;
 
     if (mode == P3MC_MODE_LOG) {
-        pLog = pdhdl->pData;
+        /* The icon shows Parappa with the cap colour of the round this save is on. */
+        P3LOG_VAL *pLog = (P3LOG_VAL *)pdhdl->pData;
+
         ParaCol = pLog->nRound;
         if (ParaCol < 0) {
             ParaCol = 0;
@@ -1750,7 +1758,6 @@ static int _P3MC_SaveCheck(P3MC_WORK *pw) {
 static u_short _P3MC_proc(u_short prg) {
     u_short    re;
     P3MC_WORK *pw = &P3MC_Work;
-    int        need;
 
     re = memc_manager(MEMC_MODE_ASYNC);
 
@@ -1779,6 +1786,8 @@ static u_short _P3MC_proc(u_short prg) {
         switch (prg & P3MC_STAGE_MASK) {
         case P3MC_STAGE_SAVE_CHECK:
             if (mcmenu_info.flag & MCMC_FLAG_PS2) {
+                int need;
+
                 if (!_P3MC_mainfile_chk(-1, pw->dhdl->datasize, pw->data_mode, &need)) {
                     re = P3MC_SAVE_CONFIRM_OVERWRITE;
                     break;
