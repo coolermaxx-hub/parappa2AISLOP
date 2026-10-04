@@ -1276,11 +1276,11 @@ int P3MC_OpeningCheck(void) {
     }
 
     if (pcw->curState == 0) {
-        re = _P3MC_MemcCheck(3, pcw->dirTable);
+        re = _P3MC_MemcCheck(P3MC_MODE_ALL, pcw->dirTable);
         if (re < 0) {
-            return -1;
+            return P3MC_RES_BUSY;
         }
-        if (re == 2 || re == 3) {
+        if (re == P3MC_RES_UNFORMATTED || re == P3MC_RES_NO_CARD) {
             return -re;
         }
 
@@ -1346,7 +1346,7 @@ int P3MC_OpeningCheck(void) {
             return 0;
         }
 
-        _P3MC_SetUserDirName(1, fno);
+        _P3MC_SetUserDirName(P3MC_MODE_LOG, fno);
 
         re = memc_port_info(0, &mcmenu_info);
         if (re != 0) {
@@ -1362,20 +1362,20 @@ int P3MC_OpeningCheck(void) {
 
         re = memc_manager(1);
 
-        if (re == 0x10) {
-            return -1;
+        if (re == MEMC_ERR_BUSY) {
+            return P3MC_RES_BUSY;
         }
 
         switch (re) {
-        case 0:
+        case MEMC_OK:
             isErr = FALSE;
             break;
-        case 5:
-        case 17:
+        case MEMC_ERR_FILE_NOT_FOUND:
+        case MEMC_ERR_DIR_NOT_FOUND:
             isErr = TRUE;
             break;
-        case 16: /* note: random case to trigger use of jumptable */
-        case 48:
+        case MEMC_ERR_BUSY: /* note: random case to trigger use of jumptable */
+        case MEMC_ERR_SWAP_UNFORMATTED:
         default:
             pcw->curState = 0;
             return -1;
@@ -1384,7 +1384,7 @@ int P3MC_OpeningCheck(void) {
         if (!isErr) {
             int need = 0;
 
-            if (_P3MC_mainfile_chk(-1, UChkSize[0], 1, &need) == P3MC_MAIN_INCOMPLETE) {
+            if (_P3MC_mainfile_chk(-1, UChkSize[0], P3MC_MODE_LOG, &need) == P3MC_MAIN_INCOMPLETE) {
                 isErr = TRUE;
             } else {
                 isErr = (mcmenu_info.free < need);
