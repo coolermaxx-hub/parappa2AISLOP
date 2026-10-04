@@ -3738,7 +3738,7 @@ static void ddbg_tap_check(void) {
             }
 
             if (req_num >= 0) {
-                DrawTapReqTbl(req_num + (tid << 0x8), PINDEX_NONE, prs_adr);
+                DrawTapReqTbl(req_num + (tid << 8), PINDEX_NONE, prs_adr);
             }
         }
     }

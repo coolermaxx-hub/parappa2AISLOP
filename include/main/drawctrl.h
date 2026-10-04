@@ -203,6 +203,14 @@ typedef struct { // 0x10
 /* tap_id of a request that applies to every scene object */
 #define DR_TAP_ID_ALL 0xfe
 
+/* DrawTapReqTbl request word: tap id in the high byte, request number in the low byte. */
+#define DR_TAP_REQ(id, no) (((id) << 8) | (no))
+
+/* Request numbers the game sends to every object (DR_TAP_ID_ALL). */
+#define DR_TAP_REQ_RANK_DOWN   2 /* the rank got worse at a line change */
+#define DR_TAP_REQ_RANK_UP     3 /* the rank improved (stage 6 also sends it when unchanged) */
+#define DR_TAP_REQ_TITLE_START 4 /* START pressed on the title */
+
 typedef struct { // 0xc
     /* 0x0 */ short tap_id;
     /* 0x2 */ short req_no;

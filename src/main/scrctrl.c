@@ -3577,13 +3577,13 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
             if (global_data.play_step == PSTEP_GAME) {
                 if (rank_moto < rank_saki) {
-                    DrawTapReqTbl(0xfe02, PINDEX_PARA, NULL);
+                    DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_DOWN), PINDEX_PARA, NULL);
                 } else if (rank_moto > rank_saki) {
-                    DrawTapReqTbl(0xfe03, PINDEX_PARA, NULL);
+                    DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_UP), PINDEX_PARA, NULL);
                 } else {
                     /* Stage 6 specific logic */
                     if (global_data.play_stageL == 6) {
-                        DrawTapReqTbl(0xfe03, PINDEX_PARA, NULL);
+                        DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_UP), PINDEX_PARA, NULL);
                     }
                 }
             }
@@ -3753,7 +3753,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
                 if (!titleStartKey) {
                     titleStartKey = TRUE;
                     ScrTapReq(-1, 0, 2);
-                    DrawTapReqTbl(0xfe04, PINDEX_NONE, NULL);
+                    DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_TITLE_START), PINDEX_NONE, NULL);
                 }
             }
 
