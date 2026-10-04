@@ -402,6 +402,11 @@ static u_char *UserName_InitialStr  = (u_char*)"AAAAAAAA";
 static u_char *UserName_InitialStr2 = (u_char*)"        ";
 static u_char UserName_AsciiSetB[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!?&1234567890 ";
 static u_char UserName_AsciiSetS[] = "abcdefghijklmnopqrstuvwxyz.,-:;#$%\"'()- ";
+/* A packed user-name character: character set number in the high bits, index into its table in the low 12. */
+#define USERNAME_CHAR_SET_SHIFT 12
+#define USERNAME_CHAR_INDEX_MASK 0xfff
+#define USERNAME_CHAR(set, idx) ((idx) | ((set) << USERNAME_CHAR_SET_SHIFT))
+
 USERNAME_CSET UserName_CharSet[] = {
     { UserName_AsciiSetB, 41 },
     { UserName_AsciiSetS, 41 },
@@ -9611,7 +9616,7 @@ MAP_TIME MapTime = { 0 };
         if (j >= 2) {
             *pcode = 0x27;
         } else {
-            *pcode = l | (j << 12);
+            *pcode = USERNAME_CHAR(j, l);
         }
 
         name++;
@@ -9623,7 +9628,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     int      i;
 
     for (i = 0; i < PR_ARRAYSIZE(pfw->curnchr); i++, pcode++) {
-        *name++ = UserName_CharSet[(*pcode / 4096)].ptbl[*pcode & 0xfff];
+        *name++ = UserName_CharSet[(*pcode / (1 << USERNAME_CHAR_SET_SHIFT))].ptbl[*pcode & USERNAME_CHAR_INDEX_MASK];
     }
 
     *name = '\0';
@@ -9706,7 +9711,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         if (osel != sel) {
             sel = TSLOOP(sel, 9);
             pfw->curnpos = sel;
-            pfw->curchrmode = pfw->curnchr[sel] >> 12;
+            pfw->curchrmode = pfw->curnchr[sel] >> USERNAME_CHAR_SET_SHIFT;
             TSSNDPLAY(2);
         }
 
@@ -9717,11 +9722,11 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             }
             if (pfw->curchrmode != sel) {
                 pfw->curchrmode = TSLOOP(sel, 2);
-                pfw->curnchr[pfw->curnpos] = (pfw->curnchr[pfw->curnpos] & 0xfff) | (pfw->curchrmode << 12);
+                pfw->curnchr[pfw->curnpos] = USERNAME_CHAR(pfw->curchrmode, pfw->curnchr[pfw->curnpos] & USERNAME_CHAR_INDEX_MASK);
                 TSSNDPLAY(5);
             }
 
-            osel = sel = pfw->curnchr[pfw->curnpos] & 0xfff;
+            osel = sel = pfw->curnchr[pfw->curnpos] & USERNAME_CHAR_INDEX_MASK;
             if (tpad & SCE_PADLup) {
                 sel++;
             }
@@ -9729,7 +9734,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
                 sel--;
             }
             if (osel != sel) {
-                pfw->curnchr[pfw->curnpos] = TSLOOP(sel, UserName_CharSet[pfw->curchrmode].len - 1) | (pfw->curchrmode << 12);
+                pfw->curnchr[pfw->curnpos] = USERNAME_CHAR(pfw->curchrmode, TSLOOP(sel, UserName_CharSet[pfw->curchrmode].len - 1));
                 TSSNDPLAY(5);
             }
         }
@@ -9908,7 +9913,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
 
     for (i = 0; i < 8; i++) {
         code   = pfw->curnchr[i];
-        str[0] = UserName_CharSet[code >> 12].ptbl[code & 0xfff];
+        str[0] = UserName_CharSet[code >> USERNAME_CHAR_SET_SHIFT].ptbl[code & USERNAME_CHAR_INDEX_MASK];
         str[1] = 0;
         MENUFontPutL(pk, spr, x, y, col, 1, str);
         x += 20;
