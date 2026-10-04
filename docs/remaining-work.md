@@ -117,17 +117,20 @@ already-differing functions were checked for identical assembly). Covered:
   (`STDAT_STAGE_*`) and ending/bonus flags (`ENDING_*`).
 
 - Menu flows in `menusub.c`: the shared `MNFLOW_RUN/INIT/END` argument, and
-  named states, entrances and results for the stage map (`TSMAP_*`), city hall
-  (`CHALL_*`, camera `CHCAM_*`), map cursor (`MAPMENU_*`, `MAPSND_*`,
-  `MNMAP_DIR_*`), save (`MPSAVE_*`), pop-up menu (`POPMENU_*`, `POPSEL_*`), boot
-  card check (`MCSTART_*`, `MCCARD_*`) and user list results (`ULIST_*`). Play
-  modes use `PLAY_MODE_*`, the menu entry reason `SEL_MENU_*`, map positions and
-  scripted cursor paths `MAP_POS_*` / `AUTO_MOVE_*`.
+  named states, entrances and results for every flow: stage map (`TSMAP_*`),
+  city hall (`CHALL_*`, camera `CHCAM_*`), map cursor (`MAPMENU_*`, `MAPSND_*`,
+  `MNMAP_DIR_*`), save (`MPSAVE_*`, `SAVEMENU_*`), pop-up menus (`POPMENU_*`,
+  `POPUP_*`, `POPSEL_*`), options (`OPTMENU_*`), juke box (`JUKE_*`, camera
+  `JKCAM_*`), boot card check (`MCSTART_*`, `MCCARD_*`), user list (`ULST_*`,
+  results `ULIST_*`) and name entry (`NAMEIN_*`). Play modes use `PLAY_MODE_*`,
+  the menu entry reason `SEL_MENU_*`, map positions and scripted cursor paths
+  `MAP_POS_*` / `AUTO_MOVE_*`, screen fades `SCFADE_*`, window animations
+  `ANIME_*`. The card error selectors passed to `McErrorMess` are `MCERR_*`,
+  every message id is an `MCA_*` name and every voice a `VSND_*` name.
 
-Still numeric: the internal states of the other menu flows (pop-up, juke box,
-options, save menu, user list, name entry; each function reuses the same numbers
-with its own meaning, so they are named one function at a time), the `errorNo`
-message selectors and table data.
+Port note: `TsNAMEINBox_Flow` receives the edited name's `char*` through its
+`u_int tpad` argument on `MNFLOW_INIT` (original API overloading). A 64-bit port
+has to split that into a separate parameter.
 
 ## Known byte differences from readability changes
 
