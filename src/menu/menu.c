@@ -208,7 +208,7 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
     if (ret == P3MRET_PLAYGAME) {
         pGStatus->endingFlag = P3GameState.endingGame;
     } else {
-        pGStatus->endingFlag = 0;
+        pGStatus->endingFlag = ENDING_NONE;
     }
 
     pGStatus->stClearBit = P3GameState.pLog->clrFlg[0];
@@ -353,7 +353,7 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     if (ret == P3MRET_PLAYGAME) {
         pGStatus->endingFlag = P3GameState.endingGame;
     } else {
-        pGStatus->endingFlag = 0;
+        pGStatus->endingFlag = ENDING_NONE;
     }
 
     pGStatus->stClearBit = P3GameState.pLog->clrFlg[0];

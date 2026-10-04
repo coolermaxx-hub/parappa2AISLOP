@@ -2859,7 +2859,7 @@ static void TsCheckEnding(P3GAMESTATE *pstate) {
     nStage = pstate->nStage - 1;
 
     if (pstate->nMode != 0) {
-        pstate->endingGame = 0;
+        pstate->endingGame = ENDING_NONE;
         return;
     }
 
@@ -2871,20 +2871,20 @@ static void TsCheckEnding(P3GAMESTATE *pstate) {
         }
     }
 
-    pstate->endingGame = 0;
+    pstate->endingGame = ENDING_NONE;
 
     if ((flg % 2) != 0) {
         if (pLog->clrCount[nStage] < (nRound + 1)) {
-            pstate->endingGame = (flg / 2) + 2;
-            if (pstate->endingGame > 4) {
-                pstate->endingGame = 4;
+            pstate->endingGame = (flg / 2) + ENDING_BONUS_1;
+            if (pstate->endingGame > ENDING_BONUS_3) {
+                pstate->endingGame = ENDING_BONUS_3;
             }
         }
     }
 
     if (flg == 7) {
         if (pLog->clrCount[nStage] < (nRound + 1)) {
-            pstate->endingGame = 1;
+            pstate->endingGame = ENDING_MOVIE;
         }
     }
 }

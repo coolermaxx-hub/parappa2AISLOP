@@ -196,6 +196,10 @@ Provenance: direct reading of `src/main/mcctrl.c`, `include/main/mcctrl.h`, `src
 
 **Memory card I/O (`memc.c`, `p3mc.c`).** Plain `sceMcOpen/Read/Write` sequences driven by a small state machine (`pmw->...`), one call per frame, polled with `sceMcSync`. It also writes the icon and `sceMcIconSys` header. Names are converted to Shift-JIS by `setAscii2SjisCode` (`mcctrl.c`), which maps ASCII to full-width codes through `ascii2sjiscng_tbl`. A port should replace the transport (files in a save directory) but keep the `MC_REP_STR` layout, so original saves stay readable.
 
+**Save sequencer states (named 2026-10-04).** `_P3MC_proc` (`p3mc.c`) drives saves and loads through the `P3MC_SAVE_*` / `P3MC_LOAD_*` states listed at the top of the file and maps the card manager's `MEMC_ERR_*` results onto them. The menu sees only the `P3MC_RES_*` codes from `P3MC_SaveCheck` / `P3MC_LoadCheck` (`include/menu/p3mc.h`). A port that replaces the transport keeps that result contract and can drop the state machine.
+
+**Ending and bonus unlocks (`TsCheckEnding`, `menusub.c`).** Only story mode (`nMode == 0`) unlocks anything. After a clear, the game counts the stages whose clear count has reached the current round. If the stage just played was not already cleared at this round, an odd count (1, 3, 5) sets `endingGame` to `ENDING_BONUS_1..3` (capped at 3) and a count of 7 sets `ENDING_MOVIE`. `main.c` then loads the bonus game (`STDAT_STAGE_BONUS`, `bonusType = endingFlag - ENDING_BONUS_1`) or the ending cutscene (`STDAT_STAGE_ENDING`). One-player sessions clear the bonus flags afterwards.
+
 ## Random number generators (2026-10-03)
 
 Provenance: direct reading of `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp`, and a grep of every caller (matching C, unchanged).

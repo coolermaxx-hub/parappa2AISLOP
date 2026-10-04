@@ -258,7 +258,7 @@ static void dummyPlay(int retTitle) {
         if (ret == 1 || ret == 3) {
             u_int clrcnt;
 
-            if (game_status.endingFlag == 1) {
+            if (game_status.endingFlag == ENDING_MOVIE) {
                 while (1) {
                     MtcWait(1);
                     if (pad[0].one & (SCE_PADRup | SCE_PADRright | SCE_PADRdown)) {
@@ -271,7 +271,7 @@ static void dummyPlay(int retTitle) {
                     DbgMsgPrint("ENDING   A or O or X  EXIT", 1800, 1968);
                     DbgMsgFlash();
                 }
-            } else if (game_status.endingFlag == 2 || game_status.endingFlag == 3 || game_status.endingFlag == 4) {
+            } else if (game_status.endingFlag == ENDING_BONUS_1 || game_status.endingFlag == ENDING_BONUS_2 || game_status.endingFlag == ENDING_BONUS_3) {
                 while (1) {
                     MtcWait(1);
                     if (pad[0].one & (SCE_PADRup | SCE_PADRright | SCE_PADRdown)) {
@@ -1143,7 +1143,7 @@ int gamePlayDisp(void) {
                     game_status.stClrCntCool[game_status.play_stageG] = clrcnt;
                 }
 
-                if (game_status.endingFlag == 1) {
+                if (game_status.endingFlag == ENDING_MOVIE) {
                     SpuBankSet();
                     UsrMemClear();
                     WipeInReq();
@@ -1151,12 +1151,12 @@ int gamePlayDisp(void) {
 
                     selPlayDisp(STDAT_STAGE_ENDING, 0, FALSE);
                 } else if (
-                    game_status.endingFlag == 2 ||
-                    game_status.endingFlag == 3 ||
-                    game_status.endingFlag == 4
+                    game_status.endingFlag == ENDING_BONUS_1 ||
+                    game_status.endingFlag == ENDING_BONUS_2 ||
+                    game_status.endingFlag == ENDING_BONUS_3
                 ) {
                     ingame_common_str.SingleScore = gply_pp->score;
-                    ingame_common_str.bonusType   = (game_status.endingFlag - 2);
+                    ingame_common_str.bonusType   = (game_status.endingFlag - ENDING_BONUS_1);
 
                     SpuBankSet();
                     UsrMemClear();
@@ -1461,30 +1461,30 @@ void mainStart(void *xx) {
             }
 
             if (game_status.play_typeG == PLAY_TYPE_ONE) {
-                if (game_status.endingFlag == 2) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_1) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             
-                if (game_status.endingFlag == 3) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_2) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             
-                if (game_status.endingFlag == 4) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_3) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             }
 
             if (game_status.play_table_modeG == PLAY_TABLE_EASY) {
-                if (game_status.endingFlag == 2) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_1) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             
-                if (game_status.endingFlag == 3) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_2) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             
-                if (game_status.endingFlag == 4) {
-                    game_status.endingFlag = 0;
+                if (game_status.endingFlag == ENDING_BONUS_3) {
+                    game_status.endingFlag = ENDING_NONE;
                 }
             }
 

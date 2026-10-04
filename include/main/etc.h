@@ -415,6 +415,15 @@ typedef struct { // 0x338
     /* 0x334 */ PLAY_STEP play_step;
 } GLOBAL_DATA;
 
+/* GAME_STATUS::endingFlag / P3GAMESTATE::endingGame: what plays after a stage clear. */
+enum {
+    ENDING_NONE = 0,
+    ENDING_MOVIE = 1,   /* all seven stages cleared at this round: the ending cutscene */
+    ENDING_BONUS_1 = 2, /* bonus game after 1, 3 or 5 stages cleared */
+    ENDING_BONUS_2 = 3,
+    ENDING_BONUS_3 = 4
+};
+
 typedef enum {
     P3_STAGE_0,
     P3_STAGE_1,
