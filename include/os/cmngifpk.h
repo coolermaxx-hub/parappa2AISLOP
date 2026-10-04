@@ -42,6 +42,12 @@
 /* ALPHA that blends at a fixed opacity, (Cs - Cd) * fix / 128 + Cd. */
 #define GS_ALPHA_FIXED(fix) SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, (fix))
 
+/* CLAMP that repeats both texture axes, the GS default. */
+#define GS_CLAMP_REPEAT SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REPEAT, /*WMT*/SCE_GS_REPEAT, 0, 0, 0, 0)
+
+/* TEXA for 16-bit texels: alpha 0 with STP clear, 0x80 with STP set; black is transparent (AEM). */
+#define GS_TEXA_STP SCE_GS_SET_TEXA(/*TA0*/0, /*AEM*/1, /*TA1*/128)
+
 /* CLAMP that clamps both texture axes at the texture edges. */
 #define GS_CLAMP_EDGES SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_CLAMP, /*WMT*/SCE_GS_CLAMP, 0, 0, 0, 0)
 

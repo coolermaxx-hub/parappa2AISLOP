@@ -96,12 +96,12 @@ int CmnGifOpenCmnPk(sceGifPacket *gifpk_pp) {
 
     sceGifPkRet(gifpk_pp, 0, 0, 0);
 
-    sceGifPkOpenGifTag(gifpk_pp, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(gifpk_pp, GIF_TAG_QWORD(giftag));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEX1_1, 0);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
     return 0;
 }
@@ -140,7 +140,7 @@ void CmnGifADPacketMake(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkReset(gifP_pp);
     sceGifPkCnt(gifP_pp, 0, 0, 0);
 
-    sceGifPkOpenGifTag(gifP_pp, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(gifP_pp, GIF_TAG_QWORD(giftag));
 
     if (gsframe_pp) {
         sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_1, *(u_long*)gsframe_pp);
@@ -150,7 +150,7 @@ void CmnGifADPacketMake(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEX1_1, 0);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
 }
 
@@ -161,7 +161,7 @@ void CmnGifADPacketMake2(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkReset(gifP_pp);
     sceGifPkCnt(gifP_pp, 0, 0, 0);
 
-    sceGifPkOpenGifTag(gifP_pp, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(gifP_pp, GIF_TAG_QWORD(giftag));
 
     if (gsframe_pp) {
         sceGifPkAddGsAD(gifP_pp, SCE_GS_FRAME_2, *(u_long*)gsframe_pp);

@@ -282,7 +282,7 @@ static void PkDefReg_Add(SPR_PKT pkt) {
 
     ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
 
-    ((u_long*)*pk)[4] = SCE_GS_SET_TEXA(0, 1, 128);
+    ((u_long*)*pk)[4] = GS_TEXA_STP;
     ((u_long*)*pk)[5] = SCE_GS_TEXA;
 
     *pkt = (u_long128*)pk + 3;
@@ -592,7 +592,7 @@ void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     PkFBA_Add(pk, 0);
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
     PkTEST_Add(pk, GS_TEST_OFF);
-    PkCLAMP_Add(pk, SCE_GS_SET_CLAMP(0, 0, 0, 0, 0, 0));
+    PkCLAMP_Add(pk, GS_CLAMP_REPEAT);
     PkCCLAMP_Add(pk, SCE_GS_SET_COLCLAMP(1));
     PkDefSCISSOR_Add(pk);
     /* note: undocumented bit on TEX1. useless? */

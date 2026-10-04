@@ -117,7 +117,7 @@ static void CG_WaveDisp(WAVE_STR *wstr, sceGsFrame *frame_pp) {
     sceGifPkReset(&wavePkSpr);
     sceGifPkCnt(&wavePkSpr, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&wavePkSpr, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(&wavePkSpr, GIF_TAG_QWORD(giftag));
 
     UG_WaveDisp(wstr, frame_pp, &wavePkSpr);
     sceGifPkCloseGifTag(&wavePkSpr);

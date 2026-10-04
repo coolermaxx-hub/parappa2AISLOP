@@ -460,7 +460,7 @@ void ChangeDrawArea(sceGsDrawEnv1 *env_pp) {
     sceGifPkReset(&gifpk);
     sceGifPkCnt(&gifpk, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&gifpk, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(&gifpk, GIF_TAG_QWORD(giftag));
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, GS_REG_WORD(env_pp->frame1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, GS_REG_WORD(env_pp->frame1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, GS_REG_WORD(env_pp->xyoffset1));
@@ -498,7 +498,7 @@ void ChangeDrawArea2(sceGsDrawEnv1 *env_pp) {
     sceGifPkReset(&gifpk);
     sceGifPkCnt(&gifpk, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&gifpk, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(&gifpk, GIF_TAG_QWORD(giftag));
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_2, GS_REG_WORD(env_pp->frame1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, GS_REG_WORD(env_pp->xyoffset1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, GS_REG_WORD(env_pp->scissor1));

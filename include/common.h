@@ -55,6 +55,9 @@ typedef float f32;
 /* The opposite view: a stored 64-bit register word as its libgraph struct type. */
 #define GS_REG_VIEW(type, word) (*(type *)&(word))
 
+/* A GIF tag built as two 64-bit words, read as the 128-bit quadword libgifpk takes. */
+#define GIF_TAG_QWORD(words) (*(const u_long128 *)(words))
+
 #define PR_EXTERN extern "C"
 
 #define PR_SIZEOF(x) (int)(sizeof(x))

@@ -27,7 +27,7 @@ void SprClear(void) {
     sceGifPkReset(&gifPkSpr);
     sceGifPkCnt(&gifPkSpr, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&gifPkSpr, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(&gifPkSpr, GIF_TAG_QWORD(giftag));
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0));
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_OFF);
@@ -52,7 +52,7 @@ void SprFlash(void) {
 
     if (sprSetNum != 0) {
         sceGifPkCloseGifTag(&gifPkSpr);
-        sceGifPkOpenGifTag(&gifPkSpr, *(u_long128*)giftag);
+        sceGifPkOpenGifTag(&gifPkSpr, GIF_TAG_QWORD(giftag));
         sceGifPkCloseGifTag(&gifPkSpr);
 
         sceGifPkEnd(&gifPkSpr, 0, 0, 0);

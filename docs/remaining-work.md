@@ -100,9 +100,10 @@ already-differing functions were checked for identical assembly). Covered:
   `GS_ALPHA_FIXED`, `GS_CLAMP_EDGES`, `GS_PRIM_TEX_SPRITE`, `GS_FRAME_TEX0`),
   `GS_TEX1_LINEAR` in `os/tim2.h`, and prlib side in `prlib/gsstate.h`
   (`PR_TEST_*`, `PR_ALPHA_*`, `PR_TEX1_*`, `PR_FRAME_CT32`). TEX0 pixel formats use
-  `SCE_GS_PSM*`, DMA tag ids use `PrDmaTagId`, and every read of a libgraph
-  register struct as its 64-bit word goes through `GS_REG_WORD` in `common.h`,
-  the one place a port has to replace.
+  `SCE_GS_PSM*`, DMA tag ids use `PrDmaTagId`. Every read of a libgraph register
+  struct as its 64-bit word goes through `GS_REG_WORD` in `common.h`, the reverse
+  view through `GS_REG_VIEW`, and two-word GIF tags through `GIF_TAG_QWORD`: the
+  places a port has to replace.
 - prlib flag words (`SpmFlags`, `SpmFileFlags`, `PrModelFlags`, SPA/SPC file
   flags), GIF register pass modes (`PrSetGifRegisterMode`), the title stage check
   (`PR_STAGE_TITLE`) and object magic values.

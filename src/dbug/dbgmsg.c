@@ -47,27 +47,27 @@ void DbgMsgClear(void) {
     sceGifPkReset(&gifPacket);
     sceGifPkCnt(&gifPacket, 0, 0, 0);
 
-    sceGifPkOpenGifTag(&gifPacket, *(u_long128*)&giftag);
+    sceGifPkOpenGifTag(&gifPacket, GIF_TAG_QWORD(giftag));
 
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEX0_1, tinfo.picturH->GsTex0);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEX1_1, tinfo.picturH->GsTex1);
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXCLUT, tinfo.picturH->GsTexClut);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, 0x3f800000));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, GS_Q_ONE));
     sceGifPkAddGsAD(&gifPacket, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(&gifPacket, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_TEXA, GS_TEXA_STP);
 }
 
 void DbgMsgFlash(void) {
     u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, SCE_GIF_PACKED, 1), SCE_GIF_PACKED_AD };
 
     sceGifPkCloseGifTag(&gifPacket);
-    sceGifPkOpenGifTag(&gifPacket, *(u_long128*)&giftag);
+    sceGifPkOpenGifTag(&gifPacket, GIF_TAG_QWORD(giftag));
     sceGifPkCloseGifTag(&gifPacket);
 
     sceGifPkEnd(&gifPacket, 0, 0, 0);
@@ -83,7 +83,7 @@ void DbgMsgSetColor(u_char r, u_char g, u_char b) {
     MSGCOL[1] = g;
     MSGCOL[2] = b;
 
-    sceGifPkAddGsAD(&gifPacket, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, 0x3f800000));
+    sceGifPkAddGsAD(&gifPacket, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, GS_Q_ONE));
 }
 
 void DbgMsgSetSize(u_short sw, u_short sh) {
@@ -154,20 +154,20 @@ void DbgMsgClearUserPkt(sceGifPacket *usrPacket_pp) {
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEX0_1, tinfo.picturH->GsTex0);
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEX1_1, tinfo.picturH->GsTex1);
 
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP_1(0, 0, 0, 0, 0, 0));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
 
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEXCLUT, tinfo.picturH->GsTexClut);
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, 0x3f800000));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(MSGCOL[0], MSGCOL[1], MSGCOL[2], 128, GS_Q_ONE));
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 128));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_TEXA, GS_TEXA_STP);
 }
 
 void DbgMsgSetColorUserPkt(u_char r, u_char g, u_char b, sceGifPacket *usrPacket_pp) {
-    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, 128, 0x3f800000));
+    sceGifPkAddGsAD(usrPacket_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, 128, GS_Q_ONE));
 }
 
 void DbgMsgSetZ(int z) {

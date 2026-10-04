@@ -2235,7 +2235,7 @@ static void TsCmnPkClose(sceGifPacket *pgifpk, void *pk, int pri) {
     u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, 0, 1), 0xe };
 
     pgifpk->pCurrent = pk;
-    sceGifPkOpenGifTag(pgifpk, *(u_long128*)giftag);
+    sceGifPkOpenGifTag(pgifpk, GIF_TAG_QWORD(giftag));
     CmnGifCloseCmnPk(pgifpk, pri);
 }
 
