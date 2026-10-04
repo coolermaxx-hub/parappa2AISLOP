@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* GIF register descriptors for the packed REGS word; four bits each, first register in the low nibble. */
+#define PK_REG_PRIM(slot)  ((u_long)0 << ((slot) * 4))
+#define PK_REG_RGBAQ(slot) ((u_long)1 << ((slot) * 4))
+#define PK_REG_UV(slot)    ((u_long)3 << ((slot) * 4))
+#define PK_REG_XYZF2(slot) ((u_long)4 << ((slot) * 4))
+
 static sceGsScissor _PkDefSCISSOR PR_ALIGNED(16) = {
     .SCAX0 = 0, .SCAX1 = 639,
     .SCAY0 = 0, .SCAY1 = 223,
@@ -852,7 +858,7 @@ void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     SprTagCG *sp = (SprTagCG*)*pk;
 
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 9);
-    ((u_long*)sp->GifCord)[1] = 0x414141410;
+    ((u_long*)sp->GifCord)[1] = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_RGBAQ(3) | PK_REG_XYZF2(4) | PK_REG_RGBAQ(5) | PK_REG_XYZF2(6) | PK_REG_RGBAQ(7) | PK_REG_XYZF2(8);
 
     sp->prim = 0x14c;
     sp->rgba0 = ppspr->rgba0;
@@ -983,7 +989,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     _pkVU0RotMatrixZ(ppspr->rot);
 
     ((u_long*)sp->GifCord)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, 1, 10);
-    ((u_long*)sp->GifCord)[1] = 0x4343434310;
+    ((u_long*)sp->GifCord)[1] = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5) | PK_REG_UV(6) | PK_REG_XYZF2(7) | PK_REG_UV(8) | PK_REG_XYZF2(9);
 
     sp->prim = 0x154;
     sp->rgba = ppspr->rgba0;
