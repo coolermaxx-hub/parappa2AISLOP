@@ -2697,7 +2697,6 @@ void MNScene_Init(MN_SCENE *pshdl, MN_SCENETBL *tbl, int bFocus) {
     MN_MDLTBL *mtbl;
     int       *ctbl;
     int        mn;
-    int        i;
 
     mdl  = pshdl->mdl;
     ctbl = tbl->pctbl;
@@ -2708,11 +2707,10 @@ void MNScene_Init(MN_SCENE *pshdl, MN_SCENETBL *tbl, int bFocus) {
     pshdl->scene = PrInitializeScene(&DBufDc.draw01, NULL, (bFocus) ? FBP_VRAM_DRAW2 : -1);
 
     for (mn = 0; mn < PR_ARRAYSIZE(pshdl->mdl) && mtbl->fn_mdl != 0; mn++, mdl++, mtbl++) {
-        float clear = 0.0f;
+        int i;
 
         mdl->spm = PrInitializeModel(GetIntAdrsCurrent(mtbl->fn_mdl), pshdl->scene);
-        mdl->ablend_speed = clear;
-        mdl->ablend_rate = clear;
+        mdl->ablend_rate = mdl->ablend_speed = 0.0f;
         mdl->bABlend = 0;
 
         for (i = 0; i < PR_ARRAYSIZE(mtbl->fn_anmm) && mtbl->fn_anmm[i] != 0; i++) {
@@ -2754,10 +2752,11 @@ void MNScene_Init(MN_SCENE *pshdl, MN_SCENETBL *tbl, int bFocus) {
 void MNScene_End(MN_SCENE *pshdl) {
     MN_HMDL *mdl;
     int      mn;
-    int      i;
 
     mdl = pshdl->mdl;
     for (mn = 0; mn < pshdl->nmdl; mn++, mdl++) {
+        int i;
+
         if (mdl->spm != NULL) {
             PrCleanupModel(mdl->spm);
         }
@@ -2877,8 +2876,6 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     MNANM_COBJ *acobj;
     int         i;
     u_int       anmBit;
-    int         ano;
-    MN_HMDL    *mdl;
 
     if (anime == NULL) {
         pshdl->anime[no] = NULL;
@@ -2899,7 +2896,10 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     anmBit = PR_BIT(no);
 
     for (i = 0; i < 6 && acobj->cflg != 0; i++, acobj++) {
-        int cflg = acobj->cflg;
+        int      cflg = acobj->cflg;
+        int      ano;
+        MN_HMDL *mdl;
+
         ano = cflg & MNANM_TARGET_MASK;
         switch (cflg & MNANM_KIND_MASK) {
         case MNANM_CAMERA:
@@ -3015,10 +3015,10 @@ void MNScene_ExecAnime(MN_SCENE *pshdl) {
     int        mn;
     int        i;
     int        time;
-    MNANM_TBL *panm;
 
     for (i = 0; i < 10; i++) {
-        panm = pshdl->anime[i];
+        MNANM_TBL *panm = pshdl->anime[i];
+
         if (panm == NULL) {
             continue;
         }
@@ -3057,9 +3057,7 @@ void MNScene_ExecAnime(MN_SCENE *pshdl) {
         }
 
         if (mdl->ablend_rate >= 1.0f) {
-            float clear = 0.0f;
-            mdl->ablend_speed = clear;
-            mdl->ablend_rate = clear;
+            mdl->ablend_rate = mdl->ablend_speed = 0.0f;
             PrResetPosture(mdl->spm);
             mdl->bABlend = 0;
         } else {
@@ -3098,11 +3096,8 @@ void MNScene_CopyState(MN_SCENE *pdhdl, MN_SCENE *pshdl) {
     pdhdl->nmdl = pshdl->nmdl;
 
     for (i = 0; i < pshdl->nmdl; i++, mdl++, smdl++) {
-        f32 clear = 0.0f;
-
         mdl->dspSw = smdl->dspSw;
-        mdl->ablend_speed = clear;
-        mdl->ablend_rate  = clear;
+        mdl->ablend_rate = mdl->ablend_speed = 0.0f;
 
         mdl->MAniNo  = smdl->MAniNo;
         mdl->PAniNo  = smdl->PAniNo;
@@ -3155,11 +3150,8 @@ void MNScene_CopyStateMdl(MN_SCENE *pdhdl, MN_SCENE *pshdl) {
     mdl  = pdhdl->mdl;
     smdl = pshdl->mdl;
     for (i = 0; i < pshdl->nmdl; i++, mdl++, smdl++) {
-        f32 clear = 0.0f;
-
         mdl->dspSw = smdl->dspSw;
-        mdl->ablend_speed = clear;
-        mdl->ablend_rate  = clear;
+        mdl->ablend_rate = mdl->ablend_speed = 0.0f;
 
         mdl->MAniNo  = smdl->MAniNo;
         mdl->PAniNo  = smdl->PAniNo;
@@ -3208,11 +3200,10 @@ void MNScene_SetAnimeSpeed(MN_SCENE *pshdl, int nAnime, int speed) {
 }
 
 void MNScene_SetAnimeEnd(MN_SCENE *pshdl) {
-    int        i;
-    MNANM_TBL *panm;
+    int i;
 
     for (i = 0; i < 10; i++) {
-        panm = pshdl->anime[i];
+        MNANM_TBL *panm = pshdl->anime[i];
 
         if (panm != NULL) {
             if (panm->kind != 1 && panm->kind != 2) {
@@ -3225,7 +3216,6 @@ void MNScene_SetAnimeEnd(MN_SCENE *pshdl) {
 }
 
 void MNScene_SetAnimeBankEnd(MN_SCENE *pshdl, u_int bnk) {
-    int        i;
     MNANM_TBL *panm;
 
     if ((int)bnk >= 0) {
@@ -3237,6 +3227,8 @@ void MNScene_SetAnimeBankEnd(MN_SCENE *pshdl, u_int bnk) {
             }
         }
     } else {
+        int i;
+
         for (i = 0; i < 10; i++, bnk >>= 1) {
             if (!(bnk & 1)) {
                 continue;
@@ -3255,11 +3247,11 @@ void MNScene_SetAnimeBankEnd(MN_SCENE *pshdl, u_int bnk) {
 }
 
 int MNScene_isAnime(MN_SCENE *pshdl, int ltim) {
-    int        i;
-    MNANM_TBL *panm;
+    int i;
 
     for (i = 0; i < 10; i++) {
-        panm = pshdl->anime[i];
+        MNANM_TBL *panm = pshdl->anime[i];
+
         if (panm != NULL) {
             if (panm->kind != 1 && panm->kind != 2) {
                 if (pshdl->time[i] < (panm->etime - ltim)) {
@@ -3273,7 +3265,6 @@ int MNScene_isAnime(MN_SCENE *pshdl, int ltim) {
 }
 
 int MNScene_isAnimeBank(MN_SCENE *pshdl, int ltim, u_int bnk) {
-    int        i;
     MNANM_TBL *panm;
 
     if ((int)bnk >= 0) {
@@ -3286,6 +3277,8 @@ int MNScene_isAnimeBank(MN_SCENE *pshdl, int ltim, u_int bnk) {
             }
         }
     } else {
+        int i;
+
         for (i = 0; i < 10; i++, bnk >>= 1) {
             if (!(bnk & 1)) {
                 continue;
@@ -3421,8 +3414,6 @@ static void MnMoveMode_InitRoot(int movNo) {
 
 static void _MnParMovRoot_GetPos(PRPROOT *prt, float rate, float *pos) {
     PRPOS *ppos;
-    PRPOS *psrc;
-    PRPOS *pdst;
     int    i;
 
     ppos = prt->ppos;
@@ -3435,35 +3426,35 @@ static void _MnParMovRoot_GetPos(PRPROOT *prt, float rate, float *pos) {
     }
 
     if (rate >= 1.0f || i > prt->npos) {
-        psrc = &ppos[prt->npos] - 1;
-        pos[0] = psrc->x;
-        pos[1] = psrc->y;
-        pos[2] = psrc->z;
-        pos[3] = psrc->rly;
-        return;
-    }
-
-    pdst = &ppos[i];
-    psrc = &ppos[i - 1];
-
-    if (pdst->dist == psrc->dist) {
-        rate = 0.0f;
+        /* Past the end of the route: stay on its last point. */
+        pos[0] = ppos[prt->npos - 1].x;
+        pos[1] = ppos[prt->npos - 1].y;
+        pos[2] = ppos[prt->npos - 1].z;
+        pos[3] = ppos[prt->npos - 1].rly;
     } else {
-        rate = (rate - psrc->dist) / (pdst->dist - psrc->dist);
-    }
+        PRPOS *psrc;
+        PRPOS *pdst;
 
-    pos[0] = ((pdst->x - psrc->x) * rate) + psrc->x;
-    pos[1] = ((pdst->y - psrc->y) * rate) + psrc->y;
-    pos[2] = ((pdst->z - psrc->z) * rate) + psrc->z;
-    pos[3] = pdst->rly;
+        pdst = &ppos[i];
+        psrc = &ppos[i - 1];
+
+        if (pdst->dist == psrc->dist) {
+            rate = 0.0f;
+        } else {
+            rate = (rate - psrc->dist) / (pdst->dist - psrc->dist);
+        }
+
+        pos[0] = ((pdst->x - psrc->x) * rate) + psrc->x;
+        pos[1] = ((pdst->y - psrc->y) * rate) + psrc->y;
+        pos[2] = ((pdst->z - psrc->z) * rate) + psrc->z;
+        pos[3] = pdst->rly;
+    }
 }
 
 static void MnMoveModelPosition(void *spm, int movNo, int ttim, int ttim0) {
-    float         rate;
-    float         WRATE;
-    float         fry;
-    sceVu0FVECTOR cpos;
-    sceVu0FMATRIX mt;
+    float rate;
+    float WRATE;
+    float fry;
 
     WRATE = 0.17f;
 
@@ -3471,40 +3462,43 @@ static void MnMoveModelPosition(void *spm, int movNo, int ttim, int ttim0) {
         fry = 1.0f;
     } else {
         fry = (float)ttim / (float)ttim0;
-    }  
-
-    if (spm == NULL) {
-        return;
     }
 
-    rate = sinf(fry * 0.5f * (float)M_PI);
+    if (spm != NULL) {
+        sceVu0FVECTOR cpos;
+        sceVu0FMATRIX mt;
 
-    if (movNo & 0x80) {
-        rate = 1.0f - rate;
-    }
-
-    _MnParMovRoot_GetPos(&PRP_RootTbl[movNo & ~0x80], rate, cpos);
-
-    if (rate == 0.0f || rate == 1.0f) {
-        fry = 0.0f;
-    } else {
-        fry = cpos[3];
+        /* Ease along the route; bit 7 of movNo runs it backwards. */
+        rate = sinf(fry * 0.5f * (float)M_PI);
 
         if (movNo & 0x80) {
-            fry += (float)M_PI;
+            rate = 1.0f - rate;
         }
-        if (fry > (float)M_PI) {
-            fry -= ((float)M_PI * 2.0f);
+
+        _MnParMovRoot_GetPos(&PRP_RootTbl[movNo & ~0x80], rate, cpos);
+
+        /* Face along the route while moving; at either end, face the default way. */
+        if (rate == 0.0f || rate == 1.0f) {
+            fry = 0.0f;
+        } else {
+            fry = cpos[3];
+
+            if (movNo & 0x80) {
+                fry += (float)M_PI;
+            }
+            if (fry > (float)M_PI) {
+                fry -= ((float)M_PI * 2.0f);
+            }
         }
+
+        sceVu0UnitMatrix(mt);
+        sceVu0RotMatrixY(mt, mt, fry);
+
+        mt[3][0] = cpos[0] * WRATE;
+        mt[3][1] = cpos[1] * WRATE;
+        mt[3][2] = cpos[2] * WRATE;
+        mt[3][3] = WRATE;
+
+        PrShowModel(spm, &mt);
     }
-
-    sceVu0UnitMatrix(mt);
-    sceVu0RotMatrixY(mt, mt, fry);
-
-    mt[3][0] = cpos[0] * WRATE;
-    mt[3][1] = cpos[1] * WRATE;
-    mt[3][2] = cpos[2] * WRATE;
-    mt[3][3] = WRATE;
-
-    PrShowModel(spm, &mt);
 }
