@@ -187,7 +187,7 @@ int Tim2SetLoadImageC(TIM2INFO *info_pp, int col_pos, sceGsLoadImage *img_pp, in
     short dpsm;
     short w, h;
 
-    col_type = info_pp->picturH->ClutType & 0x1f;
+    col_type = info_pp->picturH->ClutType & TIM2_CLUT_FORMAT_MASK;
 
     if (col_type != 0) {
         dpsm = tim2ColorTypeTbl[col_type];
@@ -224,10 +224,11 @@ int Tim2Load(TIM2INFO *info_pp, int img_pos, int col_pos) {
     }
 
     /*
-     * Preserve TBP0, CBP, TCC and CLD from TEX0.
+     * Keep the format fields (TBW, PSM, TW, TH, TCC, TFX, CPSM, CSM, CSA), point
+     * TBP0 and CBP at the uploaded image and CLUT, and set TCC and CLD.
      */
-    info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0,       0x3f, 0x3f,           0xf, 0xf, 1, 0x3, 0,       0xf,            0x1, 0x1f, 0);
-    info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(img_pos, 0,    SCE_GS_PSMCT32, 0,   0,   1, 0,   col_pos, SCE_GS_PSMCT32, 0,   0,    1);
+    info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0,       0x3f, 0x3f, 0xf, 0xf, 1, 0x3, 0,       0xf, 0x1, 0x1f, 0);
+    info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(img_pos, 0,    0,    0,   0,   1, 0,   col_pos, 0,   0,   0,    1);
     return 1;
 }
 
@@ -289,28 +290,28 @@ int Tim2LoadSet(TIM2INFO *info_pp) {
 
         switch (i - 1) {
         case 0:
-            dtbp = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBP1;
-            dbw  = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBW1;
+            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP1;
+            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW1;
             break;
         case 1:
-            dtbp = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBP2;
-            dbw  = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBW2;
+            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP2;
+            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW2;
             break;
         case 2:
-            dtbp = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBP3;
-            dbw  = (*(sceGsMiptbp1*)&info_pp->mipmapH->GsMiptbp1).TBW3;
+            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP3;
+            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW3;
             break;
         case 3:
-            dtbp = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBP4;
-            dbw  = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBW4;
+            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP4;
+            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW4;
             break;
         case 4:
-            dtbp = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBP5;
-            dbw  = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBW5;
+            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP5;
+            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW5;
             break;
         default:
-            dtbp = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBP6;
-            dbw  = (*(sceGsMiptbp2*)&info_pp->mipmapH->GsMiptbp2).TBW6;
+            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP6;
+            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW6;
             break;
         }
 
@@ -459,7 +460,7 @@ void Tim2TransColor_TBP(void *adrs, int tbp) {
     int     mode;
     
     GetTim2Info(adrs, &tim2info, 1);
-    col_type = tim2info.picturH->ClutType & 0x1F;
+    col_type = tim2info.picturH->ClutType & TIM2_CLUT_FORMAT_MASK;
     mode = tim2ColorTypeTbl[col_type];
     
     w = 8;

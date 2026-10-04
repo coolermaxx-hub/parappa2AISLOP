@@ -169,7 +169,7 @@ u_int Tim2GetClutColor(TIM2_PICTUREHEADER *ph, int clut, int no) {
         break;
     }
 
-    switch (ph->ClutType & 0x3f) {
+    switch (ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) {
     case TIM2_RGB16:
         r = (u_char)((((pClut[n * 2 + 1] << 8) | pClut[n * 2]) << 3) & 0xf8);
         g = (u_char)((((pClut[n * 2 + 1] << 8) | pClut[n * 2]) >> 2) & 0xf8);
@@ -244,7 +244,7 @@ u_int Tim2SetClutColor(TIM2_PICTUREHEADER *ph, int clut, int no, u_int newcolor)
 
     /* Get color data according to the CLUT pixel format. */
     u_char r, g, b, a;
-    switch (ph->ClutType & 0x3f) {
+    switch (ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) {
     case TIM2_RGB16: /* 16 bits color */
         u_char rr, gg, bb, aa;
         r  = (u_char)((((pClut[n * 2 + 1] << 8) | pClut[n * 2]) << 3) & 0xf8);
@@ -419,7 +419,7 @@ PR_EXTERN
 void Tim2LoadImage(TIM2_PICTUREHEADER *ph) {
     TIM2_MIPMAPHEADER *pm = NULL;
 
-    int psm = ((sceGsTex0*)&ph->GsTex0)->PSM;
+    int psm = GS_REG_VIEW(sceGsTex0, ph->GsTex0).PSM;
     if (ph->MipMapTextures > 1) {
         pm = (TIM2_MIPMAPHEADER*)(ph + 1);
     }
@@ -428,8 +428,8 @@ void Tim2LoadImage(TIM2_PICTUREHEADER *ph) {
         int tbp, tbw;
         if (i == 0) {
             /* Mipmap level 0 */
-            tbp = ((sceGsTex0*)&ph->GsTex0)->TBP0;
-            tbw = ((sceGsTex0*)&ph->GsTex0)->TBW;
+            tbp = GS_REG_VIEW(sceGsTex0, ph->GsTex0).TBP0;
+            tbw = GS_REG_VIEW(sceGsTex0, ph->GsTex0).TBW;
         } else if (i < 4) {
             /* Mipmap levels 1, 2 or 3 */
             tbp = (pm->GsMiptbp1 >> ((i - 1) * 0x14)) & 0x3fff;
@@ -484,11 +484,11 @@ u_int Tim2LoadClut(TIM2_PICTUREHEADER *ph) {
         return ph->ClutType;
     }
 
-    ((sceGsTex0*)&ph->GsTex0)->CSM = 0; /* CLUT storage mode (always CSM1) */
-    ((sceGsTex0*)&ph->GsTex0)->CSA = 0; /* CLUT entry offset (always 0) */
+    GS_REG_VIEW(sceGsTex0, ph->GsTex0).CSM = 0; /* CLUT storage mode (always CSM1) */
+    GS_REG_VIEW(sceGsTex0, ph->GsTex0).CSA = 0; /* CLUT entry offset (always 0) */
     
-    u_int cpsm = ((sceGsTex0*)&ph->GsTex0)->CPSM;
-    u_int cbp  = ((sceGsTex0*)&ph->GsTex0)->CBP;
+    u_int cpsm = GS_REG_VIEW(sceGsTex0, ph->GsTex0).CPSM;
+    u_int cbp  = GS_REG_VIEW(sceGsTex0, ph->GsTex0).CBP;
 
     /* Calculate the top address of the CLUT data */
     u_long128 *pClut = (u_long128*)((char*)ph + ph->HeaderSize + ph->ImageSize);
@@ -536,9 +536,9 @@ u_int Tim2LoadClut(TIM2_PICTUREHEADER *ph) {
                 sceGsExecLoadImage(&li, pClut);
                 sceGsSyncPath(0, 0);
                 
-                if ((ph->ClutType & 0x3f) == TIM2_RGB16) {
+                if ((ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) == TIM2_RGB16) {
                     pClut = (u_long128*)((char*)pClut + 2 * 16); /* 16bit colors */
-                } else if ((ph->ClutType & 0x3f) == TIM2_RGB24) {
+                } else if ((ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) == TIM2_RGB24) {
                     pClut = (u_long128*)((char*)pClut + 3 * 16); /* 24bit colors */
                 } else {
                     pClut = (u_long128*)((char*)pClut + 4 * 16); /* 32bit colors */

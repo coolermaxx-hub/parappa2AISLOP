@@ -12,6 +12,9 @@
 #define TIM2_IDTEX4 (4) // 16 color texture (only used with ImageType)
 #define TIM2_IDTEX8 (5) // 16 color texture (only used with ImageType)
 
+// ClutType bits holding the CLUT format (TIM2_NONE/RGB16/RGB24/RGB32).
+#define PR_TIM2_CLUT_FORMAT_MASK (0x3f)
+
 typedef struct { // 0x10
     /* 0x0 */ char FileId[4];
     /* 0x4 */ u_char FormatVersion;

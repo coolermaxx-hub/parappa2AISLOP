@@ -5,9 +5,9 @@
 
 #include <eetypes.h>
 
-#define PR_TEX0(x) (*(sceGsTex0*)&x->GsTex0)
-#define PR_TEX1(x) (*(sceGsTex1*)&x->GsTex1)
-#define PR_REGS(x) (*(SPR_REGS *)&x->GsRegs)
+#define PR_TEX0(x) GS_REG_VIEW(sceGsTex0, (x)->GsTex0)
+#define PR_TEX1(x) GS_REG_VIEW(sceGsTex1, (x)->GsTex1)
+#define PR_REGS(x) GS_REG_VIEW(SPR_REGS, (x)->GsRegs)
 
 typedef struct { // 0x4
     /* 0x0 */ u_char r;

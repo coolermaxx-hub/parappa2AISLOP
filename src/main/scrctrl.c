@@ -4912,7 +4912,7 @@ static void LessonRoundDisp(SCRRJ_LESSON_ROUND_ENUM type) {
     }
 
     tim2_dat_pp = lessonTim2InfoGet();
-    (*(sceGsTex0*)&tim2_dat_pp->GsTex0).CBP = (*(sceGsTex0*)&lessonCl2InfoGet(type)->GsTex0).CBP;
+    GS_REG_VIEW(sceGsTex0, tim2_dat_pp->GsTex0).CBP = GS_REG_VIEW(sceGsTex0, lessonCl2InfoGet(type)->GsTex0).CBP;
 
     CmnGifOpenCmnPk(&gifpk);
     ChangeDrawAreaSetGifTag(DrawGetDrawEnvP(DNUM_DRAW), &gifpk);

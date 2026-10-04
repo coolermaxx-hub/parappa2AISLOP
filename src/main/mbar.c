@@ -354,7 +354,7 @@ void examCharScaleSet(EX_CHAR_DISP *ecd_pp, float scx, float scy) {
 }
 
 void examCharCltSet(EX_CHAR_DISP *ecd_pp, TIM2_DAT *tim2_dat_pp) {
-    ((sceGsTex0*)&ecd_pp->GsTex0)->CBP = ((sceGsTex0*)&tim2_dat_pp->GsTex0)->CBP;
+    GS_REG_VIEW(sceGsTex0, ecd_pp->GsTex0).CBP = GS_REG_VIEW(sceGsTex0, tim2_dat_pp->GsTex0).CBP;
 }
 
 void examCharPosSet(EX_CHAR_DISP *ecd_pp, int xp, int yp) {
@@ -1017,8 +1017,8 @@ static void MbarCl1CharSet(int col_num, int moto_num) {
     sceGsTex0      ColGsTex0;
     sceGsTex0      MotGsTex0;
 
-    ColGsTex0 = *(sceGsTex0*)&mbcd_col->tim2_dat_pp->GsTex0;
-    MotGsTex0 = *(sceGsTex0*)&mbcd_mot->tim2_dat_pp->GsTex0;
+    ColGsTex0 = GS_REG_VIEW(sceGsTex0, mbcd_col->tim2_dat_pp->GsTex0);
+    MotGsTex0 = GS_REG_VIEW(sceGsTex0, mbcd_mot->tim2_dat_pp->GsTex0);
 
     *mbcd_col->tim2_dat_pp = *mbcd_mot->tim2_dat_pp;
 

@@ -1927,16 +1927,16 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
         trAdrs0 = tim2info0.image_pp;
         trAdrs1 = tim2info1.image_pp;
 
-        trTbp0 = ((sceGsTex0*)&tim2info0.picturH->GsTex0)->TBP0;
-        trTbp1 = ((sceGsTex0*)&tim2info1.picturH->GsTex0)->TBP0;
+        trTbp0 = GS_REG_VIEW(sceGsTex0, tim2info0.picturH->GsTex0).TBP0;
+        trTbp1 = GS_REG_VIEW(sceGsTex0, tim2info1.picturH->GsTex0).TBP0;
 
-        trTbw = ((sceGsTex0*)&tim2info0.picturH->GsTex0)->TBW;
+        trTbw = GS_REG_VIEW(sceGsTex0, tim2info0.picturH->GsTex0).TBW;
     } else {
         trSize0 = tim2info0.picturH->ClutSize;
         trSize1 = tim2info1.picturH->ClutSize;
 
-        trType0 = tim2info0.picturH->ClutType & 0x1f;
-        trType1 = tim2info1.picturH->ClutType & 0x1f;
+        trType0 = tim2info0.picturH->ClutType & TIM2_CLUT_FORMAT_MASK;
+        trType1 = tim2info1.picturH->ClutType & TIM2_CLUT_FORMAT_MASK;
 
         if (tim2info1.picturH->ClutColors > 16) {
             trW = 16;
@@ -1949,8 +1949,8 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
         trAdrs0 = tim2info0.clut_pp;
         trAdrs1 = tim2info1.clut_pp;
 
-        trTbp0 = ((sceGsTex0*)&tim2info0.picturH->GsTex0)->CBP;
-        trTbp1 = ((sceGsTex0*)&tim2info1.picturH->GsTex0)->CBP;
+        trTbp0 = GS_REG_VIEW(sceGsTex0, tim2info0.picturH->GsTex0).CBP;
+        trTbp1 = GS_REG_VIEW(sceGsTex0, tim2info1.picturH->GsTex0).CBP;
 
         trTbw = 1; /* 64px */
     }

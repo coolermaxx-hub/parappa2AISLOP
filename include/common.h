@@ -52,6 +52,9 @@ typedef float f32;
  * GIF A+D write. The one place a port needs to replace with a real conversion. */
 #define GS_REG_WORD(reg) (*(const u64 *)&(reg))
 
+/* The opposite view: a stored 64-bit register word as its libgraph struct type. */
+#define GS_REG_VIEW(type, word) (*(type *)&(word))
+
 #define PR_EXTERN extern "C"
 
 #define PR_SIZEOF(x) (int)(sizeof(x))

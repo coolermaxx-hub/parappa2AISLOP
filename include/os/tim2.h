@@ -15,6 +15,9 @@
 
 #define TIM2(x) ((TIM2_FILEHEADER*)x)
 
+/* Bits of TIM2_PICTUREHEADER::ClutType that hold the CLUT format (TIM2_NONE/RGB16/RGB24/RGB32). */
+#define TIM2_CLUT_FORMAT_MASK 0x1f
+
 /* Texture filter shared by the static sprite tables: bilinear magnify and minify, MTBA set. */
 #define GS_TEX1_LINEAR SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_LINEAR, /*MMIN*/SCE_GS_LINEAR, /*MTBA*/1, /*L*/0, /*K*/0)
 
