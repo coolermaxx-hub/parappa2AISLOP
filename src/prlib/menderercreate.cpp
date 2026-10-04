@@ -112,14 +112,13 @@ void PrSynchronizeMendererParameter(float ratio) {
 void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     u_int zbpBlocks = zbp << 5;
-    u_long dbp = (u_long)tbp << 32;
 
     PrSynchronizeMendererParameter(0.0f);
 
     /* TEX0: TBP0 = tbp, TBW = 4, PSM = CT32, TW/TH, TCC = 1 */
-    u_long tex0 = (u_long)((tbp | 0x10000)) | ((u_long)1 << 34) | ((u_long)tw << 26) | ((u_long)th << 30);
+    u_long tex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
     /* FRAME: FBP = zbp, FBW = 10 */
-    u_long frame = (u_long)(zbp | 0xA0000);
+    u_long frame = SCE_GS_SET_FRAME(zbp, 10, SCE_GS_PSMCT32, 0);
 
     for (u_int i = 0; i < 5; i++) {
         PrNoodleTextureParameters& param = noodleParameter[i];
@@ -213,11 +212,11 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     texTag->NREG = 1;
     texTag->REGS0 = 0xE;
 
-    mendererTexturePacket.state[0].value = (u_long)(zbpBlocks | 0xA0000) | dbp | ((u_long)4 << 48); /* BITBLTBUF */
+    mendererTexturePacket.state[0].value = SCE_GS_SET_BITBLTBUF(zbpBlocks, 10, SCE_GS_PSMCT32, tbp, 4, SCE_GS_PSMCT32);
     mendererTexturePacket.state[0].address = 0x50;
-    mendererTexturePacket.state[1].value = (u_long)16 << 48;                                        /* TRXPOS */
+    mendererTexturePacket.state[1].value = SCE_GS_SET_TRXPOS(0, 0, 0, 16, 0);
     mendererTexturePacket.state[1].address = 0x51;
-    mendererTexturePacket.state[2].value = ((u_long)0x50 << 32) | 0x100;                            /* TRXREG: 256x80 */
+    mendererTexturePacket.state[2].value = SCE_GS_SET_TRXREG(256, 80);
     mendererTexturePacket.state[2].address = 0x52;
     mendererTexturePacket.state[3].value = 2;                                                       /* TRXDIR */
     mendererTexturePacket.state[3].address = 0x53;
@@ -226,9 +225,9 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     mendererTexturePacket.state[5].address = 0x3F;
     mendererTexturePacket.state[6].value = NaGifPacketWrapper::EncodeRegister(zbuf);                                        /* ZBUF_1 */
     mendererTexturePacket.state[6].address = 0x4E;
-    mendererTexturePacket.state[7].value = 0x32001;                                                /* TEST_1 */
+    mendererTexturePacket.state[7].value = SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1);
     mendererTexturePacket.state[7].address = 0x47;
-    mendererTexturePacket.state[8].value = 0x106;                                                  /* PRIM: sprite, FST */
+    mendererTexturePacket.state[8].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 0, 0);
     mendererTexturePacket.state[8].address = 0;
     mendererTexturePacket.state[9].value = 0;                                                      /* XYZ2 */
     mendererTexturePacket.state[9].address = 5;
