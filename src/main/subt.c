@@ -5,6 +5,10 @@
 
 #include "main/etc.h"
 
+/* Shift-JIS full-width '@' (0x8197): like the ASCII '@', it starts a new subtitle line. */
+#define SJIS_FULLWIDTH_AT_HI 0x81
+#define SJIS_FULLWIDTH_AT_LO 0x97
+
 /* Glyph rectangles in the font texture for ASCII 0x20-0xff (adjx/adjy are pen offsets). */
 static MCODE_ASCII mcode_ascii[224] = {
     { 0, 0, 16, 25, 0, 0 }, /* 0x20 ' ' */
@@ -357,7 +361,7 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
                 line_num++;
             } else if (dat0 != ' ') {
                 euc2sjis(&dat0, &dat1);
-                if (dat0 == 0x81 && dat1 == 0x97) {
+                if (dat0 == SJIS_FULLWIDTH_AT_HI && dat1 == SJIS_FULLWIDTH_AT_LO) {
                     line_num++;
                 } else {
                     mcode_dat_pp[cnt_all] = codeKanjiCheck(dat0, dat1);
@@ -491,7 +495,7 @@ int SubtMsgDataKaijyouCnt(u_char *msg_pp, int jap_flag) {
             tmp_pp++;
 
             /* '@' in SJIS - new line */
-            if (dat0 == 0x81 && dat1 == 0x97) {
+            if (dat0 == SJIS_FULLWIDTH_AT_HI && dat1 == SJIS_FULLWIDTH_AT_LO) {
                 ret++;
             }
         }
@@ -530,7 +534,7 @@ u_char* SubtMsgDataPos(u_char *msg_pp, int jap_flag, int pos) {
             euc2sjis(&dat0, &dat1);
 
             /* '@' in SJIS - new line */
-            if (dat0 == 0x81 && dat1 == 0x97) {
+            if (dat0 == SJIS_FULLWIDTH_AT_HI && dat1 == SJIS_FULLWIDTH_AT_LO) {
                 ret++;
             }
 
