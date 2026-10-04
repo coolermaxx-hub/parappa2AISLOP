@@ -55,16 +55,16 @@ static u_int BekiDat(u_int size) {
 
 void VramSave(u_char *fname, int wsize, int hsize, int id) {
     int         fd;
-    u_char      hostPath[64];
+    u_char      fname_tmp[64];
     u_long128  *dst1_pp;
     int         i;
     
-    sprintf(hostPath, "host:%s", fname);
-    printf("vram save [%s]\n", hostPath);
+    sprintf(fname_tmp, "host:%s", fname);
+    printf("vram save [%s]\n", fname_tmp);
 
-    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", hostPath);
+        printf("file open error!![%s]\n", fname_tmp);
         return;
     }
 
@@ -103,23 +103,18 @@ void VramSave(u_char *fname, int wsize, int hsize, int id) {
 }
 
 void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
-    int fd;
-    u_char hostPath[64];
-    
+    int     fd;
+    u_char  fname_tmp[64];
     u_char *dst1_pp;
     u_char *tr_pp;
     u_char *img_pp;
-    u_char *moto_pp;
-    u_char *imgtr_pp;
 
-    int i, j;
-    
-    sprintf(hostPath, "host:%s", fname);
-    printf("vram save BMP [%s]\n", hostPath);
+    sprintf(fname_tmp, "host:%s", fname);
+    printf("vram save BMP [%s]\n", fname_tmp);
 
-    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", hostPath);
+        printf("file open error!![%s]\n", fname_tmp);
         return;
     }
 
@@ -158,16 +153,22 @@ void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
     BMP(tr_pp)->numberOfColors = 0;
     BMP(tr_pp)->colorsImportant = 0;
 
-    img_pp  = BMP(tr_pp)->imageData;
-    moto_pp = dst1_pp;
+    img_pp = BMP(tr_pp)->imageData;
 
-    for (i = 0; i < hsize; i++) {
-        imgtr_pp = img_pp + (hsize - i - 1) * 3 * wsize;
+    /* BMP rows run bottom-up and hold BGR; VRAM rows run top-down and hold RGBA. */
+    {
+        int     i, j;
+        u_char *moto_pp = dst1_pp;
+        u_char *imgtr_pp;
 
-        for (j = 0; j < wsize; j++, moto_pp++, imgtr_pp += 3) {
-            imgtr_pp[2] = *moto_pp++;
-            imgtr_pp[1] = *moto_pp++;
-            imgtr_pp[0] = *moto_pp++;
+        for (i = 0; i < hsize; i++) {
+            imgtr_pp = img_pp + (hsize - i - 1) * 3 * wsize;
+
+            for (j = 0; j < wsize; j++, moto_pp++, imgtr_pp += 3) {
+                imgtr_pp[2] = *moto_pp++;
+                imgtr_pp[1] = *moto_pp++;
+                imgtr_pp[0] = *moto_pp++;
+            }
         }
     }
 
@@ -180,25 +181,18 @@ void VramSaveBMP(u_char *fname, int wsize, int hsize, int id) {
 }
 
 void VramSaveBMPDouble(u_char *fname, int wsize, int hsize, int id) {
-    int    fd;
-    u_char hostPath[64];
-
+    int     fd;
+    u_char  fname_tmp[64];
+    u_char *dst1_pp, *dst2_pp;
     u_char *tr_pp;
+    u_char *img_pp, *img2_pp;
 
-    u_char *dst1_pp,  *dst2_pp;
-    u_char *img_pp,   *img2_pp;
-    u_char *moto_pp,  *moto2_pp;
-    u_char *imgtr_pp, *imgtr2_pp;
+    sprintf(fname_tmp, "host:%s", fname);
+    printf("vram save BMP Double[%s]\n", fname_tmp);
 
-    int i;
-    int j;
-
-    sprintf(hostPath, "host:%s", fname);
-    printf("vram save BMP Double[%s]\n", hostPath);
-
-    fd = sceOpen(hostPath, SCE_CREAT | SCE_TRUNC | SCE_WRONLY);
+    fd = sceOpen(fname_tmp, SCE_CREAT | SCE_TRUNC | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", hostPath);
+        printf("file open error!![%s]\n", fname_tmp);
         return;
     }
 
@@ -254,24 +248,29 @@ void VramSaveBMPDouble(u_char *fname, int wsize, int hsize, int id) {
     BMP(tr_pp)->numberOfColors = 0;
     BMP(tr_pp)->colorsImportant = 0;
 
-    img_pp   = img2_pp = BMP(tr_pp)->imageData;
-    moto_pp  = dst1_pp;
-
+    img_pp = img2_pp = BMP(tr_pp)->imageData;
     img2_pp += wsize * 3;
-    moto2_pp = dst2_pp;
 
-    for (i = 0; i < hsize; i++) {
-        imgtr_pp  = img_pp  + (hsize - i - 1) * (wsize * 3) * 2;
-        imgtr2_pp = img2_pp + (hsize - i - 1) * (wsize * 3) * 2;
+    /* Both frames go into one bottom-up BGR image of twice the height, one line of each in turn. */
+    {
+        int     i, j;
+        u_char *moto_pp  = dst1_pp;
+        u_char *moto2_pp = dst2_pp;
+        u_char *imgtr_pp, *imgtr2_pp;
 
-        for (j = 0; j < wsize; j++, moto_pp++, moto2_pp++, imgtr_pp += 3, imgtr2_pp += 3) {
-            imgtr_pp[2] = *moto_pp++;
-            imgtr_pp[1] = *moto_pp++;
-            imgtr_pp[0] = *moto_pp++;
+        for (i = 0; i < hsize; i++) {
+            imgtr_pp  = img_pp  + (hsize - i - 1) * (wsize * 3) * 2;
+            imgtr2_pp = img2_pp + (hsize - i - 1) * (wsize * 3) * 2;
 
-            imgtr2_pp[2] = *moto2_pp++;
-            imgtr2_pp[1] = *moto2_pp++;
-            imgtr2_pp[0] = *moto2_pp++;
+            for (j = 0; j < wsize; j++, moto_pp++, moto2_pp++, imgtr_pp += 3, imgtr2_pp += 3) {
+                imgtr_pp[2] = *moto_pp++;
+                imgtr_pp[1] = *moto_pp++;
+                imgtr_pp[0] = *moto_pp++;
+
+                imgtr2_pp[2] = *moto2_pp++;
+                imgtr2_pp[1] = *moto2_pp++;
+                imgtr2_pp[0] = *moto2_pp++;
+            }
         }
     }
 
@@ -297,23 +296,17 @@ void VramTmpSave(u_char *save_pp, int wsize, int hsize, int id) {
 }
 
 void VramTmpSaveOutBMP(u_char *fname, int wsize, int hsize, int id, u_char *dst1_pp, u_char *dst2_pp) {
-    int    fd;
-    u_char hostPath[64];
-
+    int     fd;
+    u_char  fname_tmp[64];
     u_char *tr_pp;
+    u_char *img_pp, *img2_pp;
 
-    u_char *img_pp,   *img2_pp;
-    u_char *moto_pp,  *moto2_pp;
-    u_char *imgtr_pp, *imgtr2_pp;
+    sprintf(fname_tmp, "host:%s", fname);
+    printf("vram save BMP Double[%s]\n", fname_tmp);
 
-    int i, j;
-
-    sprintf(hostPath, "host:%s", fname);
-    printf("vram save BMP Double[%s]\n", hostPath);
-
-    fd = sceOpen(hostPath, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
+    fd = sceOpen(fname_tmp, SCE_TRUNC | SCE_CREAT | SCE_WRONLY);
     if (fd < 0) {
-        printf("file open error!![%s]\n", hostPath);
+        printf("file open error!![%s]\n", fname_tmp);
         return;
     }
 
@@ -341,21 +334,26 @@ void VramTmpSaveOutBMP(u_char *fname, int wsize, int hsize, int id, u_char *dst1
     img2_pp  = BMP(tr_pp)->imageData;
     img2_pp  = &img_pp[wsize * 3];
 
-    moto_pp  = dst1_pp;
-    moto2_pp = dst2_pp;
-    
-    for (i = 0; i < hsize; i++) {
-        imgtr_pp  = img_pp  + (hsize - i - 1) * (wsize * 3) * 2;
-        imgtr2_pp = img2_pp + (hsize - i - 1) * (wsize * 3) * 2;
+    /* Both frames go into one bottom-up BGR image of twice the height, one line of each in turn. */
+    {
+        int     i, j;
+        u_char *moto_pp  = dst1_pp;
+        u_char *moto2_pp = dst2_pp;
+        u_char *imgtr_pp, *imgtr2_pp;
 
-        for (j = 0; j < wsize; j++, moto_pp++, moto2_pp++, imgtr_pp += 3, imgtr2_pp += 3) {
-            imgtr_pp[2] = *moto_pp++;
-            imgtr_pp[1] = *moto_pp++;
-            imgtr_pp[0] = *moto_pp++;
+        for (i = 0; i < hsize; i++) {
+            imgtr_pp  = img_pp  + (hsize - i - 1) * (wsize * 3) * 2;
+            imgtr2_pp = img2_pp + (hsize - i - 1) * (wsize * 3) * 2;
 
-            imgtr2_pp[2] = *moto2_pp++;
-            imgtr2_pp[1] = *moto2_pp++;
-            imgtr2_pp[0] = *moto2_pp++;
+            for (j = 0; j < wsize; j++, moto_pp++, moto2_pp++, imgtr_pp += 3, imgtr2_pp += 3) {
+                imgtr_pp[2] = *moto_pp++;
+                imgtr_pp[1] = *moto_pp++;
+                imgtr_pp[0] = *moto_pp++;
+
+                imgtr2_pp[2] = *moto2_pp++;
+                imgtr2_pp[1] = *moto2_pp++;
+                imgtr2_pp[0] = *moto2_pp++;
+            }
         }
     }
 

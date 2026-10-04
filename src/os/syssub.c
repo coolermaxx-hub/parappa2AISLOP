@@ -82,9 +82,9 @@ void GPadExit(void) {
 }
 
 void GPadSysRead(void) {
-    int       i;
     int       state;
-    int       id, exid;
+    int       i;
+    int       id;
     PAD_SYSD *sysP_pp;
 
     sysP_pp = sysPad;
@@ -99,10 +99,12 @@ void GPadSysRead(void) {
             switch (sysP_pp->phase) {
             case PAD_PHASE_DETECT: /* Initial phase */
                 id = scePadInfoMode(i, 0, InfoModeCurID, 0);
-                exid = scePadInfoMode(i, 0, InfoModeCurExID, 0);
+                {
+                    int exid = scePadInfoMode(i, 0, InfoModeCurExID, 0);
 
-                if (exid > 0) {
-                    id = exid;
+                    if (exid > 0) {
+                        id = exid;
+                    }
                 }
 
                 if (id == 0) {
@@ -374,11 +376,11 @@ void padAnaMixPad(PADD *pad_pp) {
 }
 
 void GPadRead(PADD *pad_pp) {
-    int i;
+    PADR_NORMAL *padr;
+    int          i;
 
     for (i = 0; i < PAD_NUM; i++, pad_pp++) {
-        PADR_NORMAL *padr = (PADR_NORMAL*)sysPad[i].rdata;
-
+        padr = (PADR_NORMAL*)sysPad[i].rdata;
         if (padr->connect != 0) {
             /* Pad connection wasn't successful. */
             pad0Clear(pad_pp);

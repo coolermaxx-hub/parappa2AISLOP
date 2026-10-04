@@ -186,8 +186,6 @@ void CdctrlMasterVolSet(u_int vol) {
 
 int CdctrlSerch(FILE_STR *fstr_pp) {
     int ret = 0;
-    int rfd;
-    int readsize;
 
     if (fstr_pp->search) {
         return 1;
@@ -203,6 +201,9 @@ int CdctrlSerch(FILE_STR *fstr_pp) {
         }
     } else {
         /* Search file from PC */
+        int rfd;
+        int readsize;
+
         rfd = sceOpen(fstr_pp->fname, SCE_RDONLY);
         if (rfd < 0) {
             printf("Can\'t open %s\n", fstr_pp->fname);
@@ -485,16 +486,16 @@ void usrMemcpy(void *sakip, void *motop, int size) {
 }
 
 void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
-    u_char *head_read_pp;
     u_int   next_rp;
+    u_char *head_read_pp;
 
     current_intg_adrs = (void*)setbuf;
+    next_rp           = rbuf;
     head_read_pp      = usrMalloc(8192);
-    next_rp           = PACK(rbuf)->head_size;
 
     while (1) {
         /* Copy the INT to our buffer */
-        usrMemcpy(head_read_pp, (void*)rbuf, PACK(rbuf)->head_size);
+        usrMemcpy(head_read_pp, (void*)next_rp, PACK(next_rp)->head_size);
         FlushCache(WRITEBACK_DCACHE);
         
         /* Check if we loaded a valid INT */
@@ -505,14 +506,14 @@ void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
             }
         }
 
-        rbuf += PACK(head_read_pp)->head_size + PACK(head_read_pp)->name_size;
+        next_rp += PACK(head_read_pp)->head_size + PACK(head_read_pp)->name_size;
         FlushCache(WRITEBACK_DCACHE);
 
         /* Check if there's data present */
         if (PACK(head_read_pp)->data_size != 0) {
             /* Decode the data */
-            PackIntDecodeWait((u_char*)rbuf, (u_char*)UsrMemAllocNext(), 230);
-            rbuf += PACK(head_read_pp)->data_size;
+            PackIntDecodeWait((u_char*)next_rp, (u_char*)UsrMemAllocNext(), 230);
+            next_rp += PACK(head_read_pp)->data_size;
         }
 
         FlushCache(WRITEBACK_DCACHE);
@@ -710,18 +711,15 @@ int CdctrlWP2CheckBuffer(void) {
 }
 
 void CdctrlWP2SetVolume(u_short vol) {
-    int volume;
-
     cdctrl_str.volume = vol;
+
+    /* Scale to the 16-bit volume WP2 takes, clamped to 0x7fff, for both channels. */
     vol *= 256;
-    
     if ((short)vol < 0) {
-        volume = 0x7fff;
-    } else {
-        volume = vol;
+        vol = 0x7fff;
     }
 
-    WP2Ctrl(WP2_SETVOLDIRECT, PR_CONCAT(volume, volume));
+    WP2Ctrl(WP2_SETVOLDIRECT, PR_CONCAT(vol, vol));
 }
 
 u_short CdctrlWP2GetVolume(void) {
@@ -801,10 +799,7 @@ long CdctrlWp2CdSample2Frame(long samplecnt) {
 }
 
 void CdctrlXTRset(FILE_STR *fstr_pp, u_int usebuf) {
-    int       i;
-    TRBOX_TR *tb_pp;
-    u_char   *pr_pp;
-    int       seek_pos;
+    int seek_pos;
 
     cdctrl_str.status = 1;
     cdctrl_str.error_status = 0;
@@ -837,26 +832,33 @@ void CdctrlXTRset(FILE_STR *fstr_pp, u_int usebuf) {
     WP2Ctrl(WP2_SETMODE, cdctrl_str.fstr_pp->mchan);
     FlushCache(WRITEBACK_DCACHE);
 
-    tb_pp = STR(usebuf)->trbox_tr;
-    for (i = 0; i < PR_ARRAYSIZE(STR(usebuf)->trbox_tr); i++, tb_pp++) {
-        if (tb_pp->press_size == 0) {
-            continue;
+    /* Read and decode each compressed transfer box into place. */
+    {
+        int       i;
+        TRBOX_TR *tb_pp;
+        u_char   *pr_pp;
+
+        tb_pp = STR(usebuf)->trbox_tr;
+        for (i = 0; i < PR_ARRAYSIZE(STR(usebuf)->trbox_tr); i++, tb_pp++) {
+            if (tb_pp->press_size == 0) {
+                continue;
+            }
+
+            pr_pp = (u_char*)UsrMemEndAlloc(tb_pp->press_size);
+            UsrMemEndFree();
+            FlushCache(WRITEBACK_DCACHE);
+
+            while (!cdctrlReadSub(fstr_pp, tb_pp->read_pos, tb_pp->press_size, (int)pr_pp)) {
+                MtcWait(1);
+            }
+
+            FlushCache(WRITEBACK_DCACHE);
+
+            printf("dec size[%08x]\n", PackIntGetDecodeSize(pr_pp));
+            printf("dec info trpos[%08x] read_pos[%08x] press_size[%08x]\n", tb_pp->trpos, tb_pp->read_pos, tb_pp->press_size);
+
+            PackIntDecodeWait(pr_pp, (u_char*)(tb_pp->trpos + usebuf), 230);
         }
-
-        pr_pp = (u_char*)UsrMemEndAlloc(tb_pp->press_size);
-        UsrMemEndFree();
-        FlushCache(WRITEBACK_DCACHE);
-
-        while (!cdctrlReadSub(fstr_pp, tb_pp->read_pos, tb_pp->press_size, (int)pr_pp)) {
-            MtcWait(1);
-        }
-
-        FlushCache(WRITEBACK_DCACHE);
-
-        printf("dec size[%08x]\n", PackIntGetDecodeSize(pr_pp));
-        printf("dec info trpos[%08x] read_pos[%08x] press_size[%08x]\n", tb_pp->trpos, tb_pp->read_pos, tb_pp->press_size);
-
-        PackIntDecodeWait(pr_pp, (u_char*)(tb_pp->trpos + usebuf), 230);
     }
 
     FlushCache(WRITEBACK_DCACHE);

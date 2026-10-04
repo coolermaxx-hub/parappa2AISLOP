@@ -37,25 +37,30 @@ void CmnGifClear(void) {
 
 void CmnGifFlush(void) {
     sceDmaChan *cmnDmaC;
-    int i, j;
 
     if (cmngif_pri_cnt == 0) {
         return;
     }
 
-    for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) - 1 && cmngif_pri[i].pBase; i++) {
-        for (j = i + 1; j < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[j].pBase; j++) {
-            if (cmngif_pri[i].pri > cmngif_pri[j].pri) {
-                CMNGIF_PRI temp = cmngif_pri[i];
-                cmngif_pri[i] = cmngif_pri[j];
-                cmngif_pri[j] = temp;
+    /* Sort the packets by priority. */
+    {
+        CMNGIF_PRI cmng_tmp;
+        int        i, j;
+
+        for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) - 1 && cmngif_pri[i].pBase; i++) {
+            for (j = i + 1; j < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[j].pBase; j++) {
+                if (cmngif_pri[i].pri > cmngif_pri[j].pri) {
+                    cmng_tmp = cmngif_pri[i];
+                    cmngif_pri[i] = cmngif_pri[j];
+                    cmngif_pri[j] = cmng_tmp;
+                }
             }
         }
     }
 
     {
-        /* A second i, as in the original debug info. */
         int i;
+
         for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[i].pBase; i++) {
             sceGifPkCall(&cmnGifPacket, cmngif_pri[i].pBase, 0, 0, 0);
         }

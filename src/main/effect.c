@@ -52,12 +52,9 @@ void CG_WaveInitEasy(WAVE_STR *wstr, short x, short y, short w, short h, WMODE_E
 }
 
 void UG_WaveDisp(WAVE_STR *wstr, sceGsFrame *frame_pp, sceGifPacket *wavePkSpr) {
-    int i;
-
+    int   i;
     float tmpAngle;
-    int haba_now_u, haba_now_v;
-    int tmp_u, tmp_v;
-    int tmp_x, tmp_y;
+    int   haba_now_u, haba_now_v;
 
     sceGifPkAddGsAD(wavePkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(wavePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 0));
@@ -71,6 +68,9 @@ void UG_WaveDisp(WAVE_STR *wstr, sceGsFrame *frame_pp, sceGifPacket *wavePkSpr) 
     tmpAngle = wstr->currentAng;
 
     for (i = 0; i < wstr->linecnt; i++) {
+        int tmp_u, tmp_v;
+        int tmp_x, tmp_y;
+
         haba_now_u = ((wstr->mvSize * sinf(tmpAngle)) + wstr->mvSize) * 16.0f;
         haba_now_v = haba_now_u;
 
@@ -242,8 +242,6 @@ void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *te
 }
 
 void UG_FadeDisp2(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *texFr_pp, float scale) {
-    int xp, yp;
-
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
@@ -259,26 +257,27 @@ void UG_FadeDisp2(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *t
                                                                 /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
         sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
-        return;
+    } else {
+        int xp, yp;
+
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, fade_pp->alp, 0));
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, GS_FRAME_TEX0(texFr_pp, 1, SCE_GS_MODULATE));
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
+
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
+
+        xp = (scale * SCREEN_WIDTH);
+        yp = (scale * SCREEN_FIELD_HEIGHT);
+
+        xp /= 2;
+        yp /= 2;
+
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((2048 - xp) << 4, (2048 - yp) << 4, 1));
+
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, GS_FIELD_UV_MAX);
+        sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((xp + 2048) << 4, (yp + 2048) << 4, 1));
     }
-
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, fade_pp->alp, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, GS_FRAME_TEX0(texFr_pp, 1, SCE_GS_MODULATE));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
-
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
-
-    xp = (scale * SCREEN_WIDTH);
-    yp = (scale * SCREEN_FIELD_HEIGHT);
-
-    xp /= 2;
-    yp /= 2;
-    
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((2048 - xp) << 4, (2048 - yp) << 4, 1));
-
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, GS_FIELD_UV_MAX);
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ((xp + 2048) << 4, (yp + 2048) << 4, 1));
 }
 
 void CG_FadeDisp(FADE_MAKE_STR *fade_pp, int pri, sceGsFrame *texFr_pp) {
@@ -290,30 +289,33 @@ void CG_FadeDisp(FADE_MAKE_STR *fade_pp, int pri, sceGsFrame *texFr_pp) {
 }
 
 void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndlPkSpr, int time) {
-    int      i, j;
-    int      xx, yy;
     NDL_PRM *ndl_prm_pp;
-    NDL_PRM *tmp_pp;
-    u_int    tbp, tbw;
 
     ndl_prm_pp = usrMalloc((ndl_pp->cntW + 1) * (ndl_pp->cntH + 1) * sizeof(NDL_PRM));
-    tmp_pp     = ndl_prm_pp;
 
-    for (i = 0; i <= ndl_pp->cntW; i++) {
-        for (j = 0; j <= ndl_pp->cntH; j++, tmp_pp++) {
-            tmp_pp->u = (i * SCREEN_WIDTH) / ndl_pp->cntW;
-            tmp_pp->v = (j * SCREEN_FIELD_HEIGHT) / ndl_pp->cntH;
-            tmp_pp->u = tmp_pp->u << 4;
-            tmp_pp->v = tmp_pp->v << 4;
+    /* Build the grid, each vertex displaced by a sine wave. */
+    {
+        int      i, j;
+        NDL_PRM *tmp_pp = ndl_prm_pp;
 
-            tmp_pp->xp = tmp_pp->u + GS_X_COORD(0);
-            tmp_pp->yp = tmp_pp->v + GS_Y_COORD(0);
+        for (i = 0; i <= ndl_pp->cntW; i++) {
+            for (j = 0; j <= ndl_pp->cntH; j++, tmp_pp++) {
+                int xx, yy;
 
-            xx = sinf((time + j) * ((PR_PI*2) / 49)) * ndl_pp->cycle_lng * 10.0f;
-            yy = sinf((time + i) * ((PR_PI*2) / 49)) * ndl_pp->cycle_lng * 10.0f;
+                tmp_pp->u = (i * SCREEN_WIDTH) / ndl_pp->cntW;
+                tmp_pp->v = (j * SCREEN_FIELD_HEIGHT) / ndl_pp->cntH;
+                tmp_pp->u = tmp_pp->u << 4;
+                tmp_pp->v = tmp_pp->v << 4;
 
-            tmp_pp->xp += xx;
-            tmp_pp->yp += yy;
+                tmp_pp->xp = tmp_pp->u + GS_X_COORD(0);
+                tmp_pp->yp = tmp_pp->v + GS_Y_COORD(0);
+
+                xx = sinf((time + j) * ((PR_PI*2) / 49)) * ndl_pp->cycle_lng * 10.0f;
+                yy = sinf((time + i) * ((PR_PI*2) / 49)) * ndl_pp->cycle_lng * 10.0f;
+
+                tmp_pp->xp += xx;
+                tmp_pp->yp += yy;
+            }
         }
     }
 
@@ -336,7 +338,6 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
                                                            SCE_GS_TRUE/*ABE*/, SCE_GS_FALSE/*AA1*/, 1/*FST*/, SCE_GS_PRIM_CTXT1, 0/*FIX*/));
 
     {
-        /* A second i and j, as in the original debug info. */
         int      i, j;
         NDL_PRM *tmp1_pp, *tmp2_pp;
 
@@ -379,8 +380,7 @@ void FD_MonocroDisp(MONOCRO_STR *mono_pp, int tbp, int w, int h) {
     u_char *dat_pp;
     int     i, j, k;
     short   sizew, sizeh;
-    u_short ctmp;
-    
+
     for (i = 0; i < h; i += 32) {
         sizeh = 32;
         if (sizeh > h - i) {
@@ -406,6 +406,8 @@ void FD_MonocroDisp(MONOCRO_STR *mono_pp, int tbp, int w, int h) {
 
             for (k = 0; k < 4096; k++) {
                 u_short mono = (dat_pp[0] + dat_pp[1] + dat_pp[2]);
+                u_short ctmp;
+
                 mono /= 3;
 
                 ctmp = (mono_pp->pR * mono) / 128;

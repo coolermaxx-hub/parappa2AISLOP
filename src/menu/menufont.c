@@ -713,7 +713,6 @@ static void _PADArrow_Put(SPR_PKT pk, SPR_PRM *spr, MCODE_DAT *pfnt, int x, int 
 static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
     int         line_num;
     MCODE_CHAR *ppMcode;
-    u_char      dat0, dat1;
 
     if (*str == '\0') {
         return 0;
@@ -723,6 +722,8 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
     ppMcode = mcode_dat_pp;
 
     while (1) {
+        u_char dat0, dat1;
+
         dat0 = *str++;
 
         if (dat0 == '\0') {
@@ -780,8 +781,6 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
 static int _EGFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code, MCODE_DAT *pfnt_ascii) {
     int         line_num;
     MCODE_CHAR *ppMcode;
-    u_char      c;
-    u_char      dat0, dat1;
 
     if (*str == '\0') {
         return 0;
@@ -791,7 +790,8 @@ static int _EGFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code, MCODE_DAT *pfn
     ppMcode = mcode_dat_pp;
 
     while (1) {
-        c = *str++;
+        u_char c = *str++;
+
 
         if (c == '\0') {
             line_num++;
@@ -806,6 +806,8 @@ static int _EGFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code, MCODE_DAT *pfn
         }
 
         if (_PadFont_SW) {
+            u_char dat0, dat1;
+
             dat0 = c;
             dat1 = *str;
             euc2sjis(&dat0, &dat1);

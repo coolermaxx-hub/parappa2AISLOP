@@ -5,12 +5,14 @@ describes locals that survive optimization, so a variable the optimizer folded a
 counter replaced by a pointer) is missing from both sides and does not show up as a difference.
 That makes this more reliable than reading declarations from the source (stabs_locals.py).
 
-    python3 tools/dev/audit/stabs_scopes.py [function-or-file-substring] [-o] [-v]
+    python3 tools/dev/audit/stabs_scopes.py [function-or-file-substring] [-o] [-s] [-v]
 
 For every function present in both, the locals are printed as a nested list, e.g.
     nStage:r16 { n:r2 } { r:r6 i:r8 }
 where r<N> is a register, s<N> a stack offset, p a parameter and V/S a function-scope static. A
-function is reported when the names in a scope or the nesting differ. With -o, the declaration
+function is reported when the names in a scope or the nesting differ. Scopes without any described
+variable (all of theirs were optimized away) only count with -s; the original has some that cannot
+be traced back to source, such as a block covering a whole function. With -o, the declaration
 order within a scope must match too; with -v, register and stack slots must match as well (they
 differ in functions whose code does not match the original). Run from the repository root after a
 build."""
@@ -157,17 +159,24 @@ def render(scope, slots=True):
     return ' '.join(parts)
 
 
-def shape(scope, ordered):
+def shape(scope, ordered, strict):
     names = [t.split(':')[0] for t in scope[0]]
     if not ordered:
         names = sorted(names)
-    return (tuple(names), tuple(shape(child, ordered) for child in scope[1]))
+    children = []
+    for child in scope[1]:
+        sub = shape(child, ordered, strict)
+        if not strict and not sub[0]:
+            children.extend(sub[1])  # a block that describes nothing: keep only what it holds
+        else:
+            children.append(sub)
+    return (tuple(names), tuple(children))
 
 
 def main():
     flags = {a for a in sys.argv[1:] if a.startswith('-')}
     args = [a for a in sys.argv[1:] if not a.startswith('-')]
-    verbose, ordered = '-v' in flags, '-o' in flags
+    verbose, ordered, strict = '-v' in flags, '-o' in flags, '-s' in flags
     want = args[0] if args else ''
     original = {}
     for fname, entries in original_entries():
@@ -182,7 +191,7 @@ def main():
             if orig is None or (want and want not in func and want not in unit):
                 continue
             ours = tree(tokens)
-            if shape(orig, ordered) != shape(ours, ordered) or (verbose and orig != ours):
+            if shape(orig, ordered, strict) != shape(ours, ordered, strict) or (verbose and orig != ours):
                 differ += 1
                 print('%s %s' % (unit, func))
                 print('  original: ' + render(orig))

@@ -78,21 +78,18 @@ static void setMakingDataCopyCnt(CM_STR *saki_pp, CM_STR *moto_pp, int cnt) {
 static int setMakingDataCOMMAKE_STR(COMMAKE_STR *com_pp, CM_STR *moto_pp) {
     int i;
     int ret;
-    int time;
 
-    ret  = 0;
-    time = 0;
+    ret = 0;
 
+    /* Key slots are 24 ticks (a quarter of a beat) apart. */
     for (i = 0; i < 32; i++, moto_pp++) {
         if (moto_pp->keyId != 0) {
             com_pp->KeyIndex = moto_pp->keyId;
-            com_pp->time = time + moto_pp->timeOfs;
+            com_pp->time = i * 24 + moto_pp->timeOfs;
 
             ret++;
             com_pp++;
         }
-
-        time += 24;
     }
 
     return ret;
@@ -155,8 +152,8 @@ void comMakeSubYure(CM_STR *cms_pp, int cnt, int min, int max) {
 
     for (i = 0; i < cnt; i++, cms_pp++) {
         if (cms_pp->keyId != 0) {
-            rnd_cnt = randMakeMax(max - min);
-            cms_pp->timeOfs += rnd_cnt + min;
+            rnd_cnt = randMakeMax(max - min) + min;
+            cms_pp->timeOfs += rnd_cnt;
         }
     }
 }
@@ -321,7 +318,6 @@ void comMakingNo2(CM_STR_CTRL *cmstr_pp) {
 
 void comMakingNo3(CM_STR_CTRL *cmstr_pp) {
     CM_STR *cm_str_pp;
-    int     mabiki;
 
     setMakingDataCopy(cmstr_pp->cm_str_make, cmstr_pp->cm_str_now);
 
@@ -329,7 +325,8 @@ void comMakingNo3(CM_STR_CTRL *cmstr_pp) {
     if (cm_str_pp != NULL) {
         cm_str_pp->keyId = comMakeSSminCntGet(cmstr_pp->keyCnt_now);
     } else {
-        mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
+        int mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
+
         if (cmstr_pp->keyCnt_now[mabiki] >= 2) {
             comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, 0, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
         }
@@ -390,14 +387,12 @@ void comMakingNo9(CM_STR_CTRL *cmstr_pp) {
 
 void comMakingNo15(CM_STR_CTRL *cmstr_pp) {
     CM_STR *cm_str_pp;
-    int     posss;
-    int     mabiki;
 
     setMakingDataCopy(cmstr_pp->cm_str_make, cmstr_pp->cm_str_now);
 
     cm_str_pp = comMakeSubSpaceSearch(cmstr_pp->cm_str_make, cmstr_pp->maxBox);
     if (cm_str_pp != NULL) {
-        posss = 0;
+        int posss = 0;
 
         cm_str_pp->keyId = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
 
@@ -411,7 +406,8 @@ void comMakingNo15(CM_STR_CTRL *cmstr_pp) {
             cm_str_pp[posss].keyId = comMakeSSminCntGet(cmstr_pp->keyCnt_now);
         }
     } else {
-        mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
+        int mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
+
         if (cmstr_pp->keyCnt_now[mabiki] >= 2) {
             comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, 0, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
         }

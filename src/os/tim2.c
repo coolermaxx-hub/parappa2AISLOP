@@ -36,7 +36,6 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
     int   i;
     void *current_pp;
     int   mm_ofs;
-    int   k_size;
     int   pictures;
 
     for (i = 0; i < maxinfo; i++) {
@@ -91,10 +90,13 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
             current_pp += mm_ofs;
         }
 
-        k_size = info_pp->picturH->HeaderSize - sizeof(TIM2_PICTUREHEADER) - mm_ofs;
-        if (k_size != 0) {
-            info_pp->exH = current_pp;
-            current_pp += k_size;
+        {
+            int k_size = info_pp->picturH->HeaderSize - sizeof(TIM2_PICTUREHEADER) - mm_ofs;
+
+            if (k_size != 0) {
+                info_pp->exH = current_pp;
+                current_pp += k_size;
+            }
         }
 
         if (info_pp->picturH->ImageSize != 0) {
@@ -118,8 +120,10 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
 
             {
                 /* BUG: Can't use PSMCT24 for the CLUT PSM. */
+                int Ct;
                 int ct_tbl[4] = { SCE_GS_PSMCT32, SCE_GS_PSMCT16, SCE_GS_PSMCT24, SCE_GS_PSMCT32 };
-                int Ct = info_pp->picturH->ClutType & 3;
+
+                Ct = info_pp->picturH->ClutType & 3;
 
                 info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0x3fff, 0x3f, 0x3f, 0xf, 0xf, 0x1, 0x3, 0x3fff, 8, 0x1, 0x1f, 0x7);
                 info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(0, 0, 0, 0, 0, 0, 0, 0, ct_tbl[Ct], 0, 0, 0);
@@ -166,7 +170,7 @@ int Tim2SetLoadImageIX(TIM2INFO *info_pp, int img_pos, sceGsLoadImage *img_pp, T
     u_long dbw   = info_pp->picturH->GsTex0;
     short  dpsm;
     short  w, h;
-    int    ofsx, ofsy;
+    short  ofsx, ofsy;
 
     dbw  = PR_TEX0(info_pp->picturH).TBW;
     dpsm = tim2ColorTypeTbl[info_pp->picturH->ImageType];
@@ -251,15 +255,9 @@ int MODE_TR_P(int mode, int ws, int hs) {
 }
 
 int Tim2LoadSet(TIM2INFO *info_pp) {
-    int i;
-    
     static sceGsLoadImage tp;
     u_long img_pos = info_pp->picturH->GsTex0;
     u_long col_pos = img_pos;
-    
-    int ws, hs;
-    int dpsm, dbw, dtbp;
-    int adrs;
 
     col_pos = PR_TEX0(info_pp->picturH).CBP;
     img_pos = PR_TEX0(info_pp->picturH).TBP0;
@@ -276,51 +274,59 @@ int Tim2LoadSet(TIM2INFO *info_pp) {
         sceGsSyncPath(0, 0);
     }
 
-    adrs = (int)info_pp->image_pp;
-    dpsm = tim2ColorTypeTbl[info_pp->picturH->ImageType];
-    ws   = info_pp->picturH->ImageWidth;
-    hs   = info_pp->picturH->ImageHeight;
+    /* Upload the remaining mipmap levels. */
+    {
+        int i;
+        int ws, hs;
+        int dpsm, dbw, dtbp;
+        int adrs;
 
-    for (i = 1; i < info_pp->picturH->MipMapTextures; i++) {
-        adrs += info_pp->mipmapH->Size[i - 1];
-        adrs = PR_ALIGN(adrs, 16);
+        adrs = (int)info_pp->image_pp;
+        dpsm = tim2ColorTypeTbl[info_pp->picturH->ImageType];
+        ws   = info_pp->picturH->ImageWidth;
+        hs   = info_pp->picturH->ImageHeight;
 
-        ws >>= 1;
-        hs >>= 1;
+        for (i = 1; i < info_pp->picturH->MipMapTextures; i++) {
+            adrs += info_pp->mipmapH->Size[i - 1];
+            adrs = PR_ALIGN(adrs, 16);
 
-        switch (i - 1) {
-        case 0:
-            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP1;
-            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW1;
-            break;
-        case 1:
-            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP2;
-            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW2;
-            break;
-        case 2:
-            dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP3;
-            dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW3;
-            break;
-        case 3:
-            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP4;
-            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW4;
-            break;
-        case 4:
-            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP5;
-            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW5;
-            break;
-        default:
-            dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP6;
-            dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW6;
-            break;
+            ws >>= 1;
+            hs >>= 1;
+
+            switch (i - 1) {
+            case 0:
+                dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP1;
+                dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW1;
+                break;
+            case 1:
+                dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP2;
+                dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW2;
+                break;
+            case 2:
+                dtbp = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBP3;
+                dbw  = GS_REG_VIEW(sceGsMiptbp1, info_pp->mipmapH->GsMiptbp1).TBW3;
+                break;
+            case 3:
+                dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP4;
+                dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW4;
+                break;
+            case 4:
+                dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP5;
+                dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW5;
+                break;
+            default:
+                dtbp = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBP6;
+                dbw  = GS_REG_VIEW(sceGsMiptbp2, info_pp->mipmapH->GsMiptbp2).TBW6;
+                break;
+            }
+
+            hs = HsizeAdj(ws, hs, dpsm);
+            sceGsSetDefLoadImage(&tp, dtbp, dbw, dpsm, 0, 0, ws, hs);
+
+            FlushCache(WRITEBACK_DCACHE);
+            sceGsExecLoadImage(&tp, (u_long128*)adrs);
+            sceGsSyncPath(0, 0);
         }
-
-        hs = HsizeAdj(ws, hs, dpsm);
-        sceGsSetDefLoadImage(&tp, dtbp, dbw, dpsm, 0, 0, ws, hs);
-
-        FlushCache(WRITEBACK_DCACHE);
-        sceGsExecLoadImage(&tp, (u_long128*)adrs);
-        sceGsSyncPath(0, 0);
     }
 
     return 1;
@@ -360,10 +366,9 @@ void Tim2Trans(void *adrs) {
 }
 
 int Tim2TransX(void *adrs, int ofs_num) {
-    TIM2INFO  info;
-    TIM2INFO *info_x;
-    int       max_page;
-    int       ret;
+    TIM2INFO info;
+    int      ret;
+    int      max_page;
 
     ret = 0;
 
@@ -373,7 +378,8 @@ int Tim2TransX(void *adrs, int ofs_num) {
         if (ofs_num >= max_page) {
             ret = -1;
         } else {
-            info_x = (TIM2INFO*)malloc(max_page * sizeof(TIM2INFO));
+            TIM2INFO *info_x = (TIM2INFO*)malloc(max_page * sizeof(TIM2INFO));
+
             GetTim2Info(adrs, info_x, max_page);
 
             if (ofs_num != 0) {
@@ -421,7 +427,6 @@ void Tim2Trans_TBP_MODE(void *adrs, int tbp, int mode) {
     short   ofsy = 0;
     u_char *tr_adr;
     int     trans_1size;
-    short   h_tmp;
 
     GetTim2Info(adrs, &tim2info, 1);
 
@@ -433,6 +438,8 @@ void Tim2Trans_TBP_MODE(void *adrs, int tbp, int mode) {
     tr_adr = (char*)tim2info.image_pp;
 
     do {
+        short h_tmp;
+
         if (maxh < h) {
             h_tmp = maxh;
         } else {

@@ -273,47 +273,51 @@ static void LocalBufCopy(int disp) {
 
 int wipeTimeGetInWait(int time, WSHC_ENUM wshc_enum) {
     WIPE_SCRATCH_CTRL *wscc_pp;
-    int maxt;
-    int ret;
-    int i;
-    int stp, endp;
-    int lngT, lngN;
+    int                maxt;
+    int                ret;
 
     wscc_pp = &wipe_scratch_ctrl[wshc_enum];
     maxt = wscc_pp->frt_pp[wscc_pp->frt_size - 1].frame;
     maxt = time % maxt;
 
-    endp = -1;
-    stp  = 0;
+    /* Interpolate linearly between the keys on either side of maxt. */
+    {
+        int i;
+        int stp, endp;
+        int lngT, lngN;
 
-    for (i = 0; i < wscc_pp->frt_size; i++) {
-        if (wscc_pp->frt_pp[i].frame == maxt) {
-            stp = i;
-            endp = i;
-            break;
+        endp = -1;
+        stp  = 0;
+
+        for (i = 0; i < wscc_pp->frt_size; i++) {
+            if (wscc_pp->frt_pp[i].frame == maxt) {
+                stp = i;
+                endp = i;
+                break;
+            }
+
+            if (maxt > wscc_pp->frt_pp[i].frame) {
+                stp = i;
+            }
+
+            if (maxt < wscc_pp->frt_pp[i].frame) {
+                endp = i;
+                break;
+            }
         }
 
-        if (maxt > wscc_pp->frt_pp[i].frame) {
-            stp = i;
+        if (endp == -1) {
+            endp = stp;
         }
 
-        if (maxt < wscc_pp->frt_pp[i].frame) {
-            endp = i;
-            break;
+        lngT = wscc_pp->frt_pp[endp].frame - wscc_pp->frt_pp[stp].frame;
+        lngN = maxt - wscc_pp->frt_pp[stp].frame;
+        if (lngT == 0) {
+            ret = wscc_pp->frt_pp[stp].data;
+        } else {
+            ret = wscc_pp->frt_pp[endp].data - wscc_pp->frt_pp[stp].data;
+            ret = ret * lngN / lngT + wscc_pp->frt_pp[stp].data;
         }
-    }
-
-    if (endp == -1) {
-        endp = stp;
-    }
-
-    lngT = wscc_pp->frt_pp[endp].frame - wscc_pp->frt_pp[stp].frame;
-    lngN = maxt - wscc_pp->frt_pp[stp].frame;
-    if (lngT == 0) {
-        ret = wscc_pp->frt_pp[stp].data;
-    } else {
-        ret = wscc_pp->frt_pp[endp].data - wscc_pp->frt_pp[stp].data;
-        ret = ret * lngN / lngT + wscc_pp->frt_pp[stp].data;
     }
 
     return ret;
@@ -391,7 +395,6 @@ static void lddisp_draw_on(LDMAP_ENUM ldmap_enum) {
 static void WipeLoadInDisp(void *x) {
     int timer;
     int firstf;
-    int ttmp;
 
     firstf = TRUE;
 
@@ -435,7 +438,7 @@ static void WipeLoadInDisp(void *x) {
 
                 TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 67);
             } else {
-                ttmp = (timer - 67) % 135;
+                int ttmp = (timer - 67) % 135;
 
                 if (ttmp == 134 || ttmp == 0) {
                     wipe_end_flag = TRUE;
