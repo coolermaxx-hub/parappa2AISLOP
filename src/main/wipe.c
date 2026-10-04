@@ -205,7 +205,7 @@ static LDMAP ldmap[] = {
     },
 };
 
-extern PR_SCENEHANDLE ldmap_hdl;
+static PR_SCENEHANDLE ldmap_hdl;
 
 extern WIPE_PARA_STR wipe_para_str;
 extern sceGsDrawEnv1 wipe_draw_env;
