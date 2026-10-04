@@ -432,8 +432,6 @@ void MbarNikoSet(int num, int ofs) {
 static void MbarNikoDisp(sceGifPacket *gifpk_pp) {
     int i;
     NIKO_CHAN_STR *niko_pp;
-    TIM2_DAT *tim2_dat_pp;
-    TIM2_DAT *tim2_dat2_pp;
 
     if (niko_chan_str_pp == NULL || niko_chan_str_cnt == 0) {
         return;
@@ -450,6 +448,9 @@ static void MbarNikoDisp(sceGifPacket *gifpk_pp) {
 
     niko_pp = niko_chan_str_pp;
     for (i = 0; i < niko_chan_str_cnt; i++, niko_pp++) {
+        TIM2_DAT *tim2_dat_pp;
+        TIM2_DAT *tim2_dat2_pp;
+
         tim2_dat_pp = NULL;
         tim2_dat2_pp = NULL;
 
@@ -745,9 +746,6 @@ static void ExamDispOn(void) {
     int met_time;
     int i;
     float maxfr;
-    float lev_tmp;
-    u_int perd;
-    u_char *moto_p;
 
     if (exam_disp_cursor_timer < 0) {
         return metFrameInit();
@@ -770,6 +768,8 @@ static void ExamDispOn(void) {
     }
     maxfr = met_time / 30.0f;
     for (i = 0; i < 3; i++) {
+        float lev_tmp;
+
         lev_tmp = examScore2Level(exam_global_ply_current->exam_score[i]);
         if (lev_tmp < 0.0f && lev_tmp < -maxfr) {
             lev_tmp = -maxfr;
@@ -797,6 +797,9 @@ static void ExamDispOn(void) {
     }
     for (i = 0; i < 3; i++) {
         if (exam_global_ply_current_ply[i] != 0) {
+            u_int   perd;
+            u_char *moto_p;
+
             if (exam_global_ply[i]->now_score > 0) {
                 moto_p = scr_tenmetu_col[1];
             } else {
@@ -916,8 +919,7 @@ static void examScoreSet(sceGifPacket *ex_gif_pp) {
 static void examLevelDisp(sceGifPacket *ex_gif_pp) {
     GLOBAL_PLY   *exg_p;
     int           old_fr, targ_fr;
-    EX_CHAR_DISP  ex_ecd;
-    int           plevel, i;
+    int           i;
 
     for (i = 0; i < 4; i++) {
         exg_p = exam_global_ply[i];
@@ -945,12 +947,19 @@ static void examLevelDisp(sceGifPacket *ex_gif_pp) {
         }
     }
 
-    plevel = conditionFramCnt[0] * 96 / 240;
+    /* The gauge shows the first player's condition; 240 frames fill its 96 pixels. */
+    {
+        EX_CHAR_DISP ex_ecd;
+        int          plevel;
 
-    examCharBasic(&ex_ecd, &tim2spr_tbl[28]);
-    examCharUVWHSet(&ex_ecd, plevel, 0, 24, 88);
-    examCharPosSet(&ex_ecd, 616, 136);
-    examCharSet(&ex_ecd, ex_gif_pp);
+        plevel = conditionFramCnt[0];
+        plevel = plevel * 96 / 240;
+
+        examCharBasic(&ex_ecd, &tim2spr_tbl[28]);
+        examCharUVWHSet(&ex_ecd, plevel, 0, 24, 88);
+        examCharPosSet(&ex_ecd, 616, 136);
+        examCharSet(&ex_ecd, ex_gif_pp);
+    }
 }
 
 void ExamDispSet(void) {
@@ -1197,7 +1206,12 @@ static int MbarGetTimeArea2(MBAR_REQ_STR *mr_pp) {
 }
 
 int MbarGetStartTime(MBAR_REQ_STR *mr_pp) {
-    return ((mr_pp->current_time + mr_pp->tapset_pp->taptimeStart - 24) / 96) * 96;
+    int ret;
+
+    /* Start of the bar (96 ticks) that holds the beat before the line's first tap. */
+    ret = mr_pp->current_time + mr_pp->tapset_pp->taptimeStart - 24;
+    ret = (ret / 96) * 96;
+    return ret;
 }
 
 int MbarGetEndTime(MBAR_REQ_STR *mr_pp) {
@@ -1276,10 +1290,8 @@ int MbarFlashMake(MBARR_CHR *mbarr_pp, MBARR_CHR *mbarr_moto_pp, int mbtime, int
 }
 
 void MbarBackSet(MBAR_REQ_STR *mr_pp) {
-    int        i, stt, endt, sttap, curtime;
-    MBARR_CHR  mbarr;
-    MBARR_CHR2 mbarr_chr2;
-    int        sttime, endtime;
+    int       i, stt, endt, sttap, curtime;
+    MBARR_CHR mbarr;
 
     mbarr = (MBARR_CHR) {
         .mbc_enum = MBC_BALL,
@@ -1299,56 +1311,36 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     endt = MbarGetEndTime(mr_pp);
     sttap = MbarGetStartTap(mr_pp);
 
-    if (mr_pp->mbar_req_enum & MBAR_BIT_PARAPPA) {
-        mbarr_chr2.mbc_enum = MBC_GLINE_P;
-    } else {
-        mbarr_chr2.mbc_enum = MBC_GLINE_T;
-    }
+    /* A faint line over the part of the bar that is still to come, split at the row break. */
+    {
+        MBARR_CHR2 mbarr_chr2;
+        int        sttime, endtime;
 
-    endtime = endt - stt - 1;
-    if (curtime < stt) {
-        sttime = 0;
-    } else {
-        sttime = curtime - stt;
-    }
-
-    mbarr_chr2.b = 128;
-    mbarr_chr2.g = 128;
-    mbarr_chr2.r = 128;
-    mbarr_chr2.a = 32;
-    mbarr_chr2.ofsx2 = 0;
-    mbarr_chr2.ofsx = 0;
-    mbarr_chr2.ofsy = -14;
-    mbarr_chr2.ofsy2 = 14;
-    
-    if (sttime < endtime) {
-        mbarr_chr2.xp = MbarGetDispPosX(sttime);
-        mbarr_chr2.yp = MbarGetDispPosY(sttime);
-        mbarr_chr2.xp2 = MbarGetDispPosX(endtime);
-        mbarr_chr2.yp2 = MbarGetDispPosY(endtime);
-
-        if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
-            mbarr_chr2.yp2 += 50;
-            mbarr_chr2.yp += 50;
-        } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
-            mbarr_chr2.yp2 += 25;
-            mbarr_chr2.yp += 25;
+        if (mr_pp->mbar_req_enum & MBAR_BIT_PARAPPA) {
+            mbarr_chr2.mbc_enum = MBC_GLINE_P;
+        } else {
+            mbarr_chr2.mbc_enum = MBC_GLINE_T;
         }
 
-        if (mbarr_chr2.yp != mbarr_chr2.yp2) {
-            mbarr_chr2.xp2 = MbarGetDispPosX(479);
-            mbarr_chr2.yp2 = MbarGetDispPosY(479);
+        endtime = endt - stt - 1;
+        if (curtime < stt) {
+            sttime = 0;
+        } else {
+            sttime = curtime - stt;
+        }
 
-            if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
-                mbarr_chr2.yp2 += 50;
-            } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
-                mbarr_chr2.yp2 += 25;
-            }
+        mbarr_chr2.b = 128;
+        mbarr_chr2.g = 128;
+        mbarr_chr2.r = 128;
+        mbarr_chr2.a = 32;
+        mbarr_chr2.ofsx2 = 0;
+        mbarr_chr2.ofsx = 0;
+        mbarr_chr2.ofsy = -14;
+        mbarr_chr2.ofsy2 = 14;
 
-            MbarCharSet2(&mbarr_chr2);
-
-            mbarr_chr2.xp = MbarGetDispPosX(480);
-            mbarr_chr2.yp = MbarGetDispPosY(480);
+        if (sttime < endtime) {
+            mbarr_chr2.xp = MbarGetDispPosX(sttime);
+            mbarr_chr2.yp = MbarGetDispPosY(sttime);
             mbarr_chr2.xp2 = MbarGetDispPosX(endtime);
             mbarr_chr2.yp2 = MbarGetDispPosY(endtime);
 
@@ -1359,19 +1351,45 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
                 mbarr_chr2.yp2 += 25;
                 mbarr_chr2.yp += 25;
             }
-        }
 
-        MbarCharSet2(&mbarr_chr2);
+            if (mbarr_chr2.yp != mbarr_chr2.yp2) {
+                mbarr_chr2.xp2 = MbarGetDispPosX(479);
+                mbarr_chr2.yp2 = MbarGetDispPosY(479);
+
+                if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
+                    mbarr_chr2.yp2 += 50;
+                } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
+                    mbarr_chr2.yp2 += 25;
+                }
+
+                MbarCharSet2(&mbarr_chr2);
+
+                mbarr_chr2.xp = MbarGetDispPosX(480);
+                mbarr_chr2.yp = MbarGetDispPosY(480);
+                mbarr_chr2.xp2 = MbarGetDispPosX(endtime);
+                mbarr_chr2.yp2 = MbarGetDispPosY(endtime);
+
+                if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
+                    mbarr_chr2.yp2 += 50;
+                    mbarr_chr2.yp += 50;
+                } else if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_MID) {
+                    mbarr_chr2.yp2 += 25;
+                    mbarr_chr2.yp += 25;
+                }
+            }
+
+            MbarCharSet2(&mbarr_chr2);
+        }
     }
 
-    for (endtime = stt + 24; endtime < endt; endtime += 24) {
-        if ((endtime - 24) >= sttap) {
-            sttime = endtime - stt;
-            mbarr.xp = MbarGetDispPosX(sttime);
-            mbarr.yp = MbarGetDispPosY(sttime);
+    /* A ball on every beat from the first tap on, a star on every bar. */
+    for (i = stt + 24; i < endt; i += 24) {
+        if ((i - 24) >= sttap) {
+            mbarr.xp = MbarGetDispPosX(i - stt);
+            mbarr.yp = MbarGetDispPosY(i - stt);
 
             mbarr.mbc_enum = MBC_BALL;
-            if (((endtime / 24) % 4) == 0) {
+            if (((i / 24) % 4) == 0) {
                 mbarr.mbc_enum = MBC_STAR;
             }
 
@@ -1382,7 +1400,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
             }
 
             if (mr_pp->mbar_req_enum & MBAR_BIT_GUIDE_LIGHT) {
-                MbarGuideLightMake(&mbarr, curtime - endtime);
+                MbarGuideLightMake(&mbarr, curtime - i);
             }
 
             MbarCharSet(&mbarr);
@@ -1634,15 +1652,15 @@ void MbarDisp(void) {
 
     MbarGifInit();
 
-    for (i = 0; i < 4u; i++) {
-        for (j = 0; j < PR_ARRAYSIZEU(mbar_req_str); j++) {
-            if (mbar_req_str[j].mbar_req_enum == MBAR_NONE) {
+    for (j = 0; j < 4u; j++) {
+        for (i = 0; i < PR_ARRAYSIZEU(mbar_req_str); i++) {
+            if (mbar_req_str[i].mbar_req_enum == MBAR_NONE) {
                 continue;
             }
-            if (mbar_req_str[j].tapset_pp == NULL || mbar_req_str[j].tapset_pp->coolup == -1) {
+            if (mbar_req_str[i].tapset_pp == NULL || mbar_req_str[i].tapset_pp->coolup == -1) {
                 continue;
             }
-            (*marSetPrgTbl[i])(&mbar_req_str[j]);
+            (*marSetPrgTbl[j])(&mbar_req_str[i]);
         }
     }
 
@@ -1796,8 +1814,8 @@ static void guidisp_init_pr(void) {
     PrSelectCamera(guime_camera_hdl, guime_hdl);
     PrAnimateSceneCamera(guime_hdl, 0.0f);
 
-    for (i = 0; i < 10u; i++) {
-        guim_pp = &guimap[i];
+    guim_pp = guimap;
+    for (i = 0; i < 10u; i++, guim_pp++) {
         guim_pp->spmHdl = PrInitializeModel(cmnfGetFileAdrs(guim_pp->spmmap), guime_hdl);
 
         if (guim_pp->spamap >= 0) {
@@ -1830,9 +1848,8 @@ static void guidisp_draw_quit(int drapP) {
     PrRender(guime_hdl);
     PrWaitRender();
 
-    for (i = 0; i < 10u; i++) {
-        guim_pp = &guimap[i];
-
+    guim_pp = guimap;
+    for (i = 0; i < 10u; i++, guim_pp++) {
         if (guim_pp->spamap >= 0) {
             PrUnlinkAnimation(guim_pp->spmHdl);
             PrCleanupAnimation(guim_pp->spaHdl);
@@ -1842,7 +1859,7 @@ static void guidisp_draw_quit(int drapP) {
             PrUnlinkPositionAnimation(guim_pp->spmHdl);
             PrCleanupAnimation(guim_pp->spaHdlP);
         }
-        
+
         PrCleanupModel(guim_pp->spmHdl);
     }
 
@@ -1919,7 +1936,7 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
         break;
     }
     case PSTEP_VS: {
-        int curnum, clrstg;
+        int curnum;
 
         use_mappp = guimap_vs;
         use_mappp_cnt = 4;
@@ -1935,12 +1952,15 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
         }
         mbar_ctrl_stage_selT = curnum;
 
-        clrstg = clearStageCheck();
-        if (clrstg > P3_STAGE_1) {
-            PrShowModel(guimap[GUIME_HARI_R].spmHdl, NULL);
-        }
-        if (clrstg > P3_STAGE_0) {
-            PrShowModel(guimap[GUIME_HARI_M].spmHdl, NULL);
+        {
+            int clrstg = clearStageCheck();
+
+            if (clrstg > P3_STAGE_1) {
+                PrShowModel(guimap[GUIME_HARI_R].spmHdl, NULL);
+            }
+            if (clrstg > P3_STAGE_0) {
+                PrShowModel(guimap[GUIME_HARI_M].spmHdl, NULL);
+            }
         }
 
         break;
