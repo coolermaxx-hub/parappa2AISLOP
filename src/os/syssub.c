@@ -684,7 +684,7 @@ void usrMallcReport(void) {
 
     for (i = 0; i < PR_ARRAYSIZE(usr_malloc_str); i++) {
         if (usr_malloc_str[i].adrs) {
-            printf(" use  adr[%d] size[%d]\n", usr_malloc_str[i].adrs, usr_malloc_str[i].size);
+            printf(" use  adr[%d] size[%d]\n", (int)usr_malloc_str[i].adrs, usr_malloc_str[i].size);
             cnt++;
         }
     }

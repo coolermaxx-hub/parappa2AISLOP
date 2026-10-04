@@ -446,8 +446,8 @@ void SubtCtrlPrint(JIMAKU_STR *jstr_pp, int line, int time, int lang) {
 }
 
 void SubtTapPrint(u_char *tap_msg_pp, int lang) {
-    /* BUG: should be logical OR instead of bitwise? */
-    if (tap_msg_pp == NULL | *tap_msg_pp == '\0') {
+    /* BUG: a bitwise |, so the string is read even when tap_msg_pp is NULL. */
+    if ((tap_msg_pp == NULL) | (*tap_msg_pp == '\0')) {
         return;
     }
 

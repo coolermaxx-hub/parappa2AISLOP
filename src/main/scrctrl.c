@@ -3341,7 +3341,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         gplay_my    = sindv_pp->global_ply;
                         gplay_enemy = score_indv_str[Pcode2Pindex(scex_pp->vsPlayer)].global_ply;
 
-                        printf("exam vs [%d] index[%d]\n", gplay_enemy, scex_pp->vsPlayer);
+                        printf("exam vs [%d] index[%d]\n", (int)gplay_enemy, scex_pp->vsPlayer);
 
                         tapscode = IndvGetTapSetAdrs(sindv_pp)->tapscode;
                         if (tapscode == TAPSCODE_ANSWER_F) {
