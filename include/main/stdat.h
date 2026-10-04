@@ -25,7 +25,8 @@ typedef struct { // 0xd0
 
 /* Index into stdat_rec (global_data.play_stageL, PrSetStage). */
 typedef enum {
-    STDAT_STAGE_0 = 0, /* stages 0-9 follow in order */
+    STDAT_STAGE_0 = 0, /* stages 0-8 follow in order */
+    STDAT_STAGE_ENDING = 9, /* "STAGE 9": the ending cutscene (XTR) */
     STDAT_STAGE_BONUS = 10,
     STDAT_STAGE_VS1 = 11, /* VS 1-8 reuse the overlays of stages 1-8 */
     STDAT_STAGE_VS8 = 18,

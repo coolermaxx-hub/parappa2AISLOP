@@ -1149,7 +1149,7 @@ int gamePlayDisp(void) {
                     WipeInReq();
                     MtcWait(2);
 
-                    selPlayDisp(9, 0, FALSE);
+                    selPlayDisp(STDAT_STAGE_ENDING, 0, FALSE);
                 } else if (
                     game_status.endingFlag == 2 ||
                     game_status.endingFlag == 3 ||
@@ -1163,7 +1163,7 @@ int gamePlayDisp(void) {
                     WipeInReq();
                     MtcWait(2);
 
-                    selPlayDisp(10, 0, FALSE);
+                    selPlayDisp(STDAT_STAGE_BONUS, 0, FALSE);
 
                     game_status.bonusG = ingame_common_str.BonusScore;
                 }
