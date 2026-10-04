@@ -986,9 +986,6 @@ void DrawObjdatInit(int size, OBJDAT *od_pp, PR_SCENEHANDLE prf) {
     }
 }
 
-// FIXME: Is this necessary?
-const int drawctrl_rodata_padding[] = { 0, 0 };
-
 void DrawObjdatReset(int size, OBJDAT *od_pp) {
     int   i;
     void *tmp_adr;

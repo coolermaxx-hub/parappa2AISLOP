@@ -289,6 +289,8 @@ segments:
       - { path: src/main/scrctrl.c.o }
       - { path: src/main/sprite.c.o }
       - { path: src/main/fadectrl.c.o }
+      # 8 zero bytes after bgcolor_tmp with no symbol, debug info entry or code reference.
+      - { kind: pad, pad_amount: 0x8, section: .data }
       - { path: src/main/subt.c.o }
       - { path: src/main/drawctrl.c.o }
       - { path: src/main/effect.c.o }

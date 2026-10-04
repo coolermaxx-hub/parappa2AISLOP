@@ -3736,7 +3736,6 @@ enum {
 };
 
 static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
-    /* TODO: Fix names once made static. */
     static int state;
     static MAPPOS MapCity;
     int ret;
@@ -4588,7 +4587,6 @@ enum {
 };
 
 static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
-    /* TODO: Fix names once made static. */
     static int state;
     static int waitTime;
     static MAPPOS MapCHall;

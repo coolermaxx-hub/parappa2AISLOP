@@ -7,7 +7,6 @@
 #include <eeregs.h>
 
 static tGS_BGCOLOR bgcolor_tmp[2] = {{}, {255, 255, 255, 0, 0}};
-int _data_pad_fadectrl_[] = { 0 }; /* pad */
 
 static FMODE_CTRL_STR fmode_ctrl_str;
 

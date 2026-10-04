@@ -930,6 +930,3 @@ void CdctrlSndFadeOutWait(int time) {
         MtcWait(1);
     }
 }
-
-/* VRAM 0x00399374 on the NTSC-J proto */
-int _sdata_pad_cdctrl_ = 0;
