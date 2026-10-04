@@ -796,7 +796,6 @@ static void WipeParaInDisp(void *x) {
     TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 0);
 
     while (1) {
-        asm(".align 2"); /* Alignment hack */
         timer = TimeCallbackTimeGetChan(TCBK_CHANNEL_WIPE);
         if (timer > 60) {
             timer = (timer - 60) % 180 + 60;

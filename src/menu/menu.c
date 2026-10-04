@@ -73,7 +73,6 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
     /* a3 7 */ GAME_STATUS *pGStatus;
     /* a0 4 */ int win;
     /* a1 5 */ int lost;
-    register int a1 asm("a1");
 
     MenuDataSndInit();
 
@@ -83,9 +82,6 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
     P3GameState.pGameStatus = menu_str_ptr->game_status_p;
     P3GameState.pReplayArea = menu_str_ptr->mc_rep_str_p;
     P3GameState.endFlg = menu_str_ptr->sel_menu_enum;
-
-    a1 = menu_str_ptr->sel_menu_enum;
-    P3GameState.endFlg = a1;
     
     pGStatus = menu_str_ptr->game_status_p;
 

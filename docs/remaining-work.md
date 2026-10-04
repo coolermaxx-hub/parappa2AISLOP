@@ -90,6 +90,11 @@ register struct as one 64-bit GIF A+D value.
 - `PrSetDebugParamFloat` (src/prlib/prlib.cpp) stores through the `float`
   member of the `PrDebugParam` union instead of reinterpreting the value
   through an `int*`. Same bits; the original code generation is not kept.
+- `WipeParaOutDisp` (src/main/wipe.c) no longer carries an `asm(".align 2")`
+  inside its loop; the original had one extra nop for loop alignment.
+- `MenuCtrl` (src/menu/menu.c) no longer pins a local to `a1` with a
+  register variable; the original used different temporaries for the same
+  stores.
 - `DrawMozaikuDisp` (src/main/drawctrl.c) builds its unused masked frame copy
   as a typed struct instead of a volatile `u_long` store.
 - `_P3MC_ASC2SJIS` (src/menu/p3mc.c) uses typed `u_short` lookup tables
