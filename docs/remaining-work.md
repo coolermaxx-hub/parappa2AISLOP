@@ -25,8 +25,11 @@ cannot prove original behavior or complete understanding of the data formats.
    including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
    frequency groups are now decoded and named; setup arithmetic has independent
    instruction-driven checks.
-4. Audit and explain every remaining binary discrepancy. The main-ROM checksum
-   currently fails. Do not restore compiler steering or change expected hashes.
+4. Audit and explain every remaining binary discrepancy. Every differing unit
+   in [binary-differences.md](binary-differences.md) now has a stated cause;
+   most are functions that never matched as C, and a few causes are inferred
+   from the source change rather than traced. The main-ROM checksum currently
+   fails. Do not restore compiler steering or change expected hashes.
 5. Continue the readability audit of existing source outside the reconstructed
    functions and old hardware interfaces. Copy/assignment now use proper generic
    vector/matrix types, with real EE float4 MMI specializations; small-matrix
