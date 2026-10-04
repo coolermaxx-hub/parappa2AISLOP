@@ -221,7 +221,7 @@ public:
     int *unk64;
     u_int m_node_num;
     u_int m_shapeWeightCount;
-    int unk70;
+    int m_hasContour; // Zero when no node carries contour data; SaveContour skips such models.
     SpmNode **m_nodes;
     int m_sortOrder;
 };

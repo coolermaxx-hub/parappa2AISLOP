@@ -7,7 +7,7 @@ static float contourMaxDepth = 3.4028235e38f;
 
 void PrModelObject::SaveContour() {
     SpmFileHeader *spm = m_spm_image;
-    if (spm->unk70 == 0 || !m_rendered_once) {
+    if (spm->m_hasContour == 0 || !m_rendered_once) {
         return;
     }
 
