@@ -3922,7 +3922,7 @@ static void DrawCtrlMainDebug(void *x) {
             }
 
             DbgMsgClear();
-            DbgMsgSetSize(0x20, 0x10);
+            DbgMsgSetSize(32, 16);
 
             for (i = 0; i < PR_ARRAYSIZEU(draw_dbg_str); i++) {
                 if (i == sel_pos) {
@@ -3931,12 +3931,12 @@ static void DrawCtrlMainDebug(void *x) {
                     DbgMsgSetColor(128, 128, 128);
                 }
 
-                DbgMsgPrint(draw_dbg_str[i].dbgmsg, 0x6ea, 0x79c + (i*0x14));
+                DbgMsgPrint(draw_dbg_str[i].dbgmsg, 1770, 1948 + (i*20));
                 if (draw_dbg_str[i].msg_pp != NULL) {
                     char msg_buff[32];
 
                     draw_dbg_str[i].msg_pp(msg_buff);
-                    DbgMsgPrint(msg_buff, 0x866, 0x79c + (i*0x14));
+                    DbgMsgPrint(msg_buff, 2150, 1948 + (i*20));
                 }
             }
 

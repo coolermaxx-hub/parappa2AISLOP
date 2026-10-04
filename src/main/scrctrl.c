@@ -4315,10 +4315,10 @@ void ScrCtrlMainLoop(void *x) {
                 DbgMsgClear();
                 CmnGifOpenCmnPk(&dbgPk);
                 DbgMsgClearUserPkt(&dbgPk);
-                DbgMsgPrintUserPkt(dbg_tbl_msg[global_data.tapLevel], 0x6c2, 0x79c, &dbgPk);
+                DbgMsgPrintUserPkt(dbg_tbl_msg[global_data.tapLevel], 1730, 1948, &dbgPk);
                 drtime = ScrDrawTimeGet(scrMbarLine);
                 sprintf(timemsg, "%2d.%d.%2d", (drtime / 384) + 1, ((drtime / 96) % 4) + 1, (drtime % 96) + 1);
-                DbgMsgPrintUserPkt(timemsg, 0x6c2, 0x792, &dbgPk);
+                DbgMsgPrintUserPkt(timemsg, 1730, 1938, &dbgPk);
                 CmnGifCloseCmnPk(&dbgPk, 0xf);
             }
         }

@@ -258,7 +258,7 @@ static void dummyPlay(int retTitle) {
 
             DbgMsgSetColor(255, 255, 0);
             sprintf(msg_dat, "1P:%5d    2P:%5d", (int)scoreTmp[0], (int)scoreTmp[1]);
-            DbgMsgPrint(msg_dat, 1770, 0x7fe);
+            DbgMsgPrint(msg_dat, 1770, 2046);
             break;
         case DUMMY_MODE_REPLAY:
             sprintf(msg_dat, "STG:%d MODE:%s TYPE:%s ROUND:%d", mc_rep_str.play_stageS, pmd[mc_rep_str.play_modeS], ptype[mc_rep_str.play_typeS], mc_rep_str.roundS + 1);

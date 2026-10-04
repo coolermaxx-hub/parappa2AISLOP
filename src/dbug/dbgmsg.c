@@ -92,6 +92,8 @@ void DbgMsgSetSize(u_short sw, u_short sh) {
 }
 
 static void msgOutYY(u_char msg, u_short *uv_pp) {
+    /* The original has no return here: a control character still falls through
+     * and draws a glyph from the wrapped index. */
     if (msg < 32) {
         uv_pp[3] = 0;
         uv_pp[2] = 0;
