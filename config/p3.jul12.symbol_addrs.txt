@@ -2955,4 +2955,3 @@ vfiprintf                                                                       
 _vfiprintf_r                                                                        = 0x00177340; // type:func
 _calloc_r                                                                           = 0x00177f10; // type:func
 _fstat_r                                                                            = 0x00177fd0; // type:func
-eeCoreScratchpad                    = 0x003998ec; // size:0x4

@@ -1,8 +1,8 @@
 # Remaining work
 
-The active build has no compiler-generated `INCLUDE_ASM` fallbacks and no
-`NON_MATCHING` switches. The two remaining includes are handwritten vertex
-kernels. See [source-reconstruction.md](source-reconstruction.md) for the current
+The active build has no `INCLUDE_ASM` fallbacks and no `NON_MATCHING`
+switches. The two handwritten vertex kernels are inline VU0 assembly in
+`src/prlib/renderee.cpp`. See [source-reconstruction.md](source-reconstruction.md) for the current
 implementation and validation; the earlier [matrix pass](matrix-reconstruction.md)
 is retained as historical context.
 
@@ -60,6 +60,13 @@ Only verified semantic aliases are used by the mapping tool.
 | --- | ---: | --- |
 | `PrRenderStuff::RenderVertexEECoreBothface` | 42 | Projection, clipping and packed GS output |
 | `PrRenderStuff::RenderVertexEECoreNormal` | 50 | Projection, clipping and strip face rejection |
+
+Both are now written as inline `asm volatile` blocks that take typed pointers
+to the staged input and output vertices (`PrEECoreContext`). The instruction
+words are identical to the original; the compiler adds only the pointer setup
+that the handwritten code did inline, so they are not exact function matches.
+The one instruction the assembler cannot encode (`vclipw`) is emitted as its
+raw word with a comment.
 
 `RenderNodeEECore` and `RenderChunkEECore` were incorrectly listed as intentional
 assembly in the earlier audit. Their compiler-generated orchestration is now C++

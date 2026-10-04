@@ -63,9 +63,116 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     sceDmaSend(chan, &initEECoreDmaPacket);
 }
 
-INCLUDE_ASM("asm/nonmatchings/prlib/renderee", RenderVertexEECoreBothface__13PrRenderStuff);
+static PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
 
-INCLUDE_ASM("asm/nonmatchings/prlib/renderee", RenderVertexEECoreNormal__13PrRenderStuff);
+// The two vertex kernels below are handwritten VU0 macro-mode code. VF1-VF4
+// hold the clip matrix, VF5-VF8 the screen matrix and VF10 the depth bias, all
+// loaded by RenderNodeEECore; VF11 (winding) and VF17/VF19 (previous strip
+// positions) persist between vertices. Each kernel reads the staged input
+// vertex and writes the output vertex in GIF order (texture, color, position).
+// The vertex is flagged "kicked off" (W = 0x8000 via VFTOI15) when it is
+// outside the clip volume, in the flagged clip window, or - for the normal
+// kernel - when it faces away from the camera.
+void PrRenderStuff::RenderVertexEECoreBothface() {
+    PrEECoreContext &context = eeCoreScratchpad->m_eeCore;
+    asm volatile(
+        ".set push\n\t"
+        ".set noreorder\n\t"
+        "lqc2         $vf12, 0x00(%0)\n\t"          /* position */
+        "lqc2         $vf13, 0x10(%0)\n\t"          /* color */
+        "lqc2         $vf14, 0x20(%0)\n\t"          /* texture */
+        "lui          $3, 0x4\n\t"
+        "vmulax.xyzw  ACC, $vf5, $vf12x\n\t"        /* screen = position * screenMatrix */
+        "vmadday.xyzw ACC, $vf6, $vf12y\n\t"
+        "vmaddaz.xyzw ACC, $vf7, $vf12z\n\t"
+        "vmaddw.xyzw  $vf16, $vf8, $vf12w\n\t"
+        "vmulax.xyzw  ACC, $vf1, $vf12x\n\t"        /* clip = position * clipMatrix */
+        "vmadday.xyzw ACC, $vf2, $vf12y\n\t"
+        "vmaddaz.xyzw ACC, $vf3, $vf12z\n\t"
+        "vdiv         Q, $vf0w, $vf16w\n\t"
+        "vmaddw.xyzw  $vf24, $vf4, $vf12w\n\t"
+        "vmuly.xyz    $vf13, $vf13, $vf10y\n\t"
+        "addi         $3, $3, -0x1\n\t"
+        "vsuba.xyzw   ACC, $vf0, $vf0\n\t"
+        ".word        0x4BF8C1FF\n\t"               /* vclipw.xyzw $vf24, $vf24w */
+        "vaddax.z     ACC, $vf0, $vf10x\n\t"
+        "vmaddq.xyzw  $vf16, $vf16, Q\n\t"
+        "vmulq.xyzw   $vf14, $vf14, Q\n\t"
+        "vmtir        $vi6, $vf14w\n\t"
+        "cfc2.ni      $2, $vi18\n\t"
+        "vftoi4.xyzw  $vf16, $vf16\n\t"
+        "and          $2, $2, $3\n\t"
+        "vftoi0.xyzw  $vf13, $vf13\n\t"
+        "bnez         $2, .LEECoreBothfaceKick\n\t"
+        "vnop\n\t"
+        "cfc2.ni      $2, $vi6\n\t"
+        "beqz         $2, .LEECoreBothfaceStore\n\t"
+        "vnop\n"
+".LEECoreBothfaceKick:\n\t"
+        "vftoi15.w    $vf16, $vf0\n\t"
+        "vnop\n"
+".LEECoreBothfaceStore:\n\t"
+        "sqc2         $vf14, 0x00(%1)\n\t"
+        "sqc2         $vf13, 0x10(%1)\n\t"
+        "sqc2         $vf16, 0x20(%1)\n\t"
+        ".set pop"
+        : : "r"(&context.input), "r"(&context.output) : "$2", "$3", "memory");
+}
+
+void PrRenderStuff::RenderVertexEECoreNormal() {
+    PrEECoreContext &context = eeCoreScratchpad->m_eeCore;
+    asm volatile(
+        ".set push\n\t"
+        ".set noreorder\n\t"
+        "lqc2         $vf12, 0x00(%0)\n\t"
+        "lqc2         $vf13, 0x10(%0)\n\t"
+        "lqc2         $vf14, 0x20(%0)\n\t"
+        "lui          $3, 0x4\n\t"
+        "vmulax.xyzw  ACC, $vf5, $vf12x\n\t"
+        "vmadday.xyzw ACC, $vf6, $vf12y\n\t"
+        "vmaddaz.xyzw ACC, $vf7, $vf12z\n\t"
+        "vmaddw.xyzw  $vf16, $vf8, $vf12w\n\t"
+        "vmulax.xyzw  ACC, $vf1, $vf12x\n\t"
+        "vmadday.xyzw ACC, $vf2, $vf12y\n\t"
+        "vmaddaz.xyzw ACC, $vf3, $vf12z\n\t"
+        "vdiv         Q, $vf0w, $vf16w\n\t"
+        "vmaddw.xyzw  $vf24, $vf4, $vf12w\n\t"
+        "vmuly.xyz    $vf13, $vf13, $vf10y\n\t"
+        "addi         $3, $3, -0x1\n\t"
+        "vsuba.xyzw   ACC, $vf0, $vf0\n\t"
+        ".word        0x4BF8C1FF\n\t"               /* vclipw.xyzw $vf24, $vf24w */
+        "vaddax.z     ACC, $vf0, $vf10x\n\t"
+        "vmaddq.xyzw  $vf16, $vf16, Q\n\t"
+        "vmulq.xyzw   $vf14, $vf14, Q\n\t"
+        "vmtir        $vi6, $vf14w\n\t"
+        "cfc2.ni      $2, $vi18\n\t"
+        "vsub.xyzw    $vf18, $vf16, $vf17\n\t"      /* edge from the previous strip position */
+        "vftoi4.xyzw  $vf24, $vf16\n\t"
+        "and          $2, $2, $3\n\t"
+        "vftoi0.xyzw  $vf13, $vf13\n\t"
+        "vopmula.xyz  ACC, $vf18, $vf19\n\t"        /* face normal z from the two strip edges */
+        "vopmsub.xyz  $vf0, $vf19, $vf18\n\t"
+        "bnez         $2, .LEECoreNormalKick\n\t"
+        "cfc2.ni      $2, $vi6\n\t"
+        "bnez         $2, .LEECoreNormalKick\n\t"
+        "vnop\n\t"
+        "vnop\n\t"
+        "cfc2.ni      $2, $vi17\n\t"                /* sign of the face normal (status flag) */
+        "andi         $2, $2, 0x20\n\t"
+        "beqz         $2, .LEECoreNormalStore\n\t"
+        "vnop\n"
+".LEECoreNormalKick:\n\t"
+        "vftoi15.w    $vf24, $vf0\n"
+".LEECoreNormalStore:\n\t"
+        "vmulz.xyzw   $vf19, $vf18, $vf11z\n\t"
+        "vsub.z       $vf11, $vf0, $vf11\n\t"
+        "sqc2         $vf14, 0x00(%1)\n\t"
+        "sqc2         $vf13, 0x10(%1)\n\t"
+        "sqc2         $vf24, 0x20(%1)\n\t"
+        "vmove.xyzw   $vf17, $vf16\n\t"
+        ".set pop"
+        : : "r"(&context.input), "r"(&context.output) : "$2", "$3", "memory");
+}
 
 void PrRenderStuff::RenderVertexEECoreRefmap() {
     /* Empty */
@@ -92,9 +199,6 @@ struct PrEECoreDisturbance {
     float amplitude;
     u_int reservedTail;
 };
-/* sdata */
-PrSPRAM_DATA *eeCoreScratchpad = reinterpret_cast<PrSPRAM_DATA*>(0x70000000);
-/* bss */
 static PrEECoreDisturbance eeCoreDisturbance;
 
 
