@@ -48,6 +48,11 @@ typedef struct { // 0x48
     /* 0x28 */ PLP_OFS uvOfs[4];
 } PLH_STR;
 
+/* GS CLAMP region repeat: each 10-bit texel coordinate is ANDed with the mask
+ * and ORed with the fix. MOZAIKU_MASK(n) snaps it down to a multiple of n (a power
+ * of two), drawing the screen in n-texel mosaic blocks. */
+#define MOZAIKU_MASK(n) (0x3ff & ~((n) - 1))
+
 typedef struct { // 0x10
     /* 0x0 */ int umsk;
     /* 0x4 */ int ufix;
