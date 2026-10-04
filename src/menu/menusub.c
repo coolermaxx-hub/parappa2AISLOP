@@ -1007,7 +1007,7 @@ static USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY = { 1, { 4, 0 } };
 static int POPBtn2Sel[] = { 0, 1, 2, 3, 3, 4 };
 static int POPSel2Btn[] = { 0, 1, 2, 0, 2, 0 };
 static int Pop_CmpMesNo[] = { 22, 25, 23, 26, 27, 0 };
-static int POPSel2BtnDir[] = { 15, 3, 15, 15, 15, 0 };
+static int POPSel2BtnDir[] = { MCODE_ARROW_ALL, MCODE_ARROW_LEFT | MCODE_ARROW_RIGHT, MCODE_ARROW_ALL, MCODE_ARROW_ALL, MCODE_ARROW_ALL, 0 };
 static int SaveMenu_CmpMesNo[] = { 44, 45 };
 typedef struct { // 0x8
     /* 0x0 */ MENU_DISKSND_ENUM bgmNo;
@@ -5229,7 +5229,7 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
                 if (posNo >= mpw->lmtPos) {
                     flg = FALSE;
                 } else {
-                    if (mpos->mapdir[i].mapNo & 0x8000) {
+                    if (mpos->mapdir[i].mapNo & MNMAP_LIMITED) {
                         if (mpw->curPos == (mpw->lmtPos - 1) || posNo == (mpw->lmtPos - 1)) {
                             flg = FALSE;
                         }
@@ -8011,25 +8011,25 @@ static int TsJukeObjAnime2(int isOut) {
     bx = x;
     by = y;
     if (_TsJKMoveCus(&bx, &by, -1, 0, cobj)) {
-        flg |= 1;
+        flg |= MCODE_ARROW_LEFT;
     }
 
     bx = x;
     by = y;
     if (_TsJKMoveCus(&bx, &by, 1, 0, cobj)) {
-        flg |= 2;
+        flg |= MCODE_ARROW_RIGHT;
     }
 
     bx = x;
     by = y;
     if (_TsJKMoveCus(&bx, &by, 0, -1, cobj)) {
-        flg |= 4;
+        flg |= MCODE_ARROW_UP;
     }
 
     bx = x;
     by = y;
     if (_TsJKMoveCus(&bx, &by, 0, 1, cobj)) {
-        flg |= 8;
+        flg |= MCODE_ARROW_DOWN;
     }
 
     MENUSubt_PadFontArrowSet(flg);

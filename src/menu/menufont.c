@@ -240,19 +240,20 @@ static MCODE_ASCII mcode_ascii[] = {
 };
 static MCODE_ASCII mcode_HalfSpace = { 0, 0, 10, 25, 0, 0 };
 static MCODE_KANJI_ANIME PadSymbolFontA[] = {
-    { 39809, 0, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
-    { 32385, 24, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
-    { 41601, 48, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
-    { 41089, 72, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
-    { 43393, 32768, 1, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 43137, 32768, 2, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 43649, 32768, 4, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 43905, 32768, 8, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 31617, 32768, 15, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 25217, 32768, 12, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 33153, 32768, 3, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
-    { 38529, 32768, 16, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0x9b) /* ○ */, 0, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
+    { MCODE_SJIS(0x81, 0x7e) /* × */, 24, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
+    { MCODE_SJIS(0x81, 0xa2) /* △ */, 48, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
+    { MCODE_SJIS(0x81, 0xa0) /* □ */, 72, 0, 24, 24, 0, 0, { 0, 0, 0, 0, 0, 0 } },
+    { MCODE_SJIS(0x81, 0xa9) /* ← */, MCODE_PAD_ARROW, MCODE_ARROW_LEFT, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0xa8) /* → */, MCODE_PAD_ARROW, MCODE_ARROW_RIGHT, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0xaa) /* ↑ */, MCODE_PAD_ARROW, MCODE_ARROW_UP, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0xab) /* ↓ */, MCODE_PAD_ARROW, MCODE_ARROW_DOWN, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0x7b) /* ＋ */, MCODE_PAD_ARROW, MCODE_ARROW_ALL, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0x62) /* ｜ */, MCODE_PAD_ARROW, MCODE_ARROW_UP | MCODE_ARROW_DOWN, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0x81) /* ＝ */, MCODE_PAD_ARROW, MCODE_ARROW_LEFT | MCODE_ARROW_RIGHT, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
+    { MCODE_SJIS(0x81, 0x96) /* ＊ */, MCODE_PAD_ARROW, MCODE_ARROW_LIVE, 40, 32, 0, -4, { 0, 24, 40, 32, 0, -4 } },
 };
+/* D-pad glyph: the base pad, then the lit left, right, up and down arrows. */
 MCODE_DAT ArowPat[] = {
     { 0, 24, 40, 32, 0, -4 },
     { 40, 24, 40, 32, 0, -4 },
@@ -423,17 +424,17 @@ void MENUSubt_PadFontSw(int flg) {
 void MENUSubt_PadFontArrowSet(int flg) {
     _PadArrowState = 0;
 
-    if (flg & 1) {
-        _PadArrowState = 1;
+    if (flg & MCODE_ARROW_LEFT) {
+        _PadArrowState = MCODE_ARROW_LEFT;
     }
-    if (flg & 2) {
-        _PadArrowState |= 2;
+    if (flg & MCODE_ARROW_RIGHT) {
+        _PadArrowState |= MCODE_ARROW_RIGHT;
     }
-    if (flg & 4) {
-        _PadArrowState |= 4;
+    if (flg & MCODE_ARROW_UP) {
+        _PadArrowState |= MCODE_ARROW_UP;
     }
-    if (flg & 8) {
-        _PadArrowState |= 8;
+    if (flg & MCODE_ARROW_DOWN) {
+        _PadArrowState |= MCODE_ARROW_DOWN;
     }
 }
 
@@ -640,7 +641,7 @@ static void _PKFontPut(SPR_PKT pk, SPR_PRM *spr, SUBT_CODE *psubt, int line_num,
             adjx = (pfnt->adjx * rtx) + 0.5f;
             adjy = (pfnt->adjy * rty) + 0.5f;
 
-            if (pfnt->u & 0x8000) {
+            if (pfnt->u & MCODE_PAD_ARROW) {
                 _PADArrow_Put(pk, spr, pfnt, x + adjx, y + adjy);
             } else {
                 spr->ux = pfnt->u;
@@ -667,7 +668,7 @@ static void _PADArrow_Put(SPR_PKT pk, SPR_PRM *spr, MCODE_DAT *pfnt, int x, int 
     int        aflg;
     MCODE_DAT *pat;
 
-    if (pfnt->v & 0x10) {
+    if (pfnt->v & MCODE_ARROW_LIVE) {
         aflg = _PadArrowState;
     } else {
         aflg = pfnt->v;

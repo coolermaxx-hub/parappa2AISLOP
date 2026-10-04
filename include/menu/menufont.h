@@ -25,6 +25,21 @@ typedef struct { // 0x14
     /* 0x0a */ MCODE_DAT apat;
 } MCODE_DAT_ANIME;
 
+/* Glyph code of a two-byte Shift-JIS character, first byte in the low half. */
+#define MCODE_SJIS(b0, b1) ((b0) | ((b1) << 8))
+
+/* MCODE_DAT::u flag marking a d-pad glyph; its v then holds MCODE_ARROW_* bits. */
+#define MCODE_PAD_ARROW 0x8000
+
+/* D-pad arrows lit on a pad glyph, also the MENUSubt_PadFontArrowSet bits. */
+#define MCODE_ARROW_LEFT  1
+#define MCODE_ARROW_RIGHT 2
+#define MCODE_ARROW_UP    4
+#define MCODE_ARROW_DOWN  8
+#define MCODE_ARROW_ALL   (MCODE_ARROW_LEFT | MCODE_ARROW_RIGHT | MCODE_ARROW_UP | MCODE_ARROW_DOWN)
+/* Pad glyph v: light the arrows last set with MENUSubt_PadFontArrowSet. */
+#define MCODE_ARROW_LIVE  0x10
+
 typedef struct { // 0x16
     /* 0x00 */ u_short code;
     /* 0x02 */ u_short u;
