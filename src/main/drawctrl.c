@@ -770,7 +770,7 @@ void BallThrowPoll(void) {
                 BTHROW_STR *bts_pp = bthrow_ctrl[i].bthrow_str;
 
                 CmnGifADPacketMake(&gifP, DrawGetFrameP(DNUM_DRAW));
-                sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, 0x8000008000);
+                sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
                 sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, 0x44);
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
 

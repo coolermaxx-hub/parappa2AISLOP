@@ -145,17 +145,17 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
         packet.state[0].address = 0x4C;                /* FRAME_1 */
         packet.state[1].value = 0;
         packet.state[1].address = 0x18;             /* XYOFFSET_1 */
-        packet.state[2].value = ((u_long)(i * 16 + 15) << 48) | ((u_long)(i * 16) << 32) | 0x27F0000;
+        packet.state[2].value = SCE_GS_SET_SCISSOR(0, 0x27F, i * 16, i * 16 + 15);
         packet.state[2].address = 0x40;              /* SCISSOR_1 */
-        packet.state[3].value = 0x3FE0000080808080;
+        packet.state[3].value = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0x3FE00000);
         packet.state[3].address = 1;                   /* RGBAQ */
-        packet.state[4].value = 0x1E;                     /* sprite, IIP, TME */
+        packet.state[4].value = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 0, 0, 0);
         packet.state[4].address = 0;                    /* PRIM */
-        packet.state[5].value = 0x3C003FC00A;            /* region clamp 256x16 */
+        packet.state[5].value = SCE_GS_SET_CLAMP(2, 2, 0, 255, 0, 15); /* region clamp 256x16 */
         packet.state[5].address = 8;                   /* CLAMP_1 */
         packet.state[6].value = tex0;
         packet.state[6].address = 6;                    /* TEX0_1 */
-        packet.state[7].value = 0x60;                     /* linear mag/min */
+        packet.state[7].value = SCE_GS_SET_TEX1(0, 0, 1, 1, 0, 0, 0); /* linear mag/min */
         packet.state[7].address = 0x14;                 /* TEX1_1 */
 
         /* 64 sprites: ST, RGBAQ, XYZ2 x 2 */

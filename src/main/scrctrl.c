@@ -4864,10 +4864,10 @@ static void bonusScoreDraw(void) {
 
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, 1));
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, 0x8000008000);
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
     sceGifPkAddGsAD(&bn_gif, SCE_GS_CLAMP_1, 5);
     sceGifPkAddGsAD(&bn_gif, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, 0x8000008000);
+    sceGifPkAddGsAD(&bn_gif, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
 
     scr_bn  = ingame_common_str.BonusScore;
     scr_stg = ingame_common_str.SingleScore;
@@ -4915,10 +4915,10 @@ static void LessonRoundDisp(SCRRJ_LESSON_ROUND_ENUM type) {
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, 0x8000008000);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
     sceGifPkAddGsAD(&gifpk, SCE_GS_CLAMP_1, 5);
     sceGifPkAddGsAD(&gifpk, SCE_GS_PABE, 0);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, 0x8000008000);
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
     sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, tim2_dat_pp->GsTex0);
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, tim2_dat_pp->GsTex1);

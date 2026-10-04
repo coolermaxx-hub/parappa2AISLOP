@@ -2160,7 +2160,7 @@ static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
 
 
 static void TsCmnPkClose(sceGifPacket *pgifpk, void *pk, int pri) {
-    u_long giftag[2] = { 0x1000000000008000, 0xe };
+    u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, 0, 1), 0xe };
 
     pgifpk->pCurrent = pk;
     sceGifPkOpenGifTag(pgifpk, *(u_long128*)giftag);
@@ -9344,7 +9344,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             y = 0xf;
         }
 
-        PkALPHA_Add(pk, 0x8000000064);
+        PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x80));
         spr->rgba0 = 0x80808080;
         spr->ux = 0x26;
         spr->uy = 0x43;
