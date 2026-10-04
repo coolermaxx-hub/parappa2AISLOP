@@ -14,7 +14,7 @@ cannot prove original behavior or complete understanding of the data formats.
 1. Validate reconstructed camera/animation/geometry and noodle rendering against
    original PS2 execution. Generic MIPS scalar tests cannot exercise COP2,
    pipeline transfer delays, VU R randomness, DMA ordering or GS drawing.
-2. Decode the chunk's two remaining reserved transport quadwords and
+2. Explain the purpose of the chunk's two reserved transport quadwords and
    remaining reserved/unknown SPM, animation and render fields. The
    [SPM hierarchy and deformation lists](spm-geometry-layout.md) now have
    evidence-backed names and typed variable-length records. The
@@ -22,7 +22,10 @@ cannot prove original behavior or complete understanding of the data formats.
    and named visibility, transform and shape-weight fields. The
    [packet audit](spm-packet-layout.md) identifies the clipping GIF template and
    current/previous contour pairs in 43 built-in models; broader stage asset
-   coverage remains open.
+   coverage remains open. The VIF follow-up verifies that the two zero slots
+   are uploaded but skipped by the traced header consumers; it does not assign
+   them invented semantics. Standalone model audits now validate VIF boundaries
+   and contour source positions, with synthetic reflection/antiline coverage.
 3. Validate the derived [texture wave model](noodle-texture-model.md) on PS2,
    including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
    frequency groups are now decoded and named; setup arithmetic has independent

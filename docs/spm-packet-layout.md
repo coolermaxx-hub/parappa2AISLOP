@@ -62,19 +62,23 @@ With the user's extracted asset available:
 
 ```sh
 python tools/dev/audit/spm_packets.py assets/common_ipk.databin.bin
+python tools/dev/audit/spm_packets.py path/to/model.spm --format spm
 python -m unittest discover -s tests/prlib -p spm_packets.py -v
 python tools/test_matrix_layout.py --compiler /workspace/shared/parappa-env/ee/ee-gcc
 ```
 
-The audit checks archive and DMA bounds, prefix/vertex extents, clipping tags,
-reserved quadwords and contour destinations. It supports the unrelocated
-version-5 primary packet modules observed above; an unsupported module or a
+The audit checks archive, DMA and VIF bounds, prefix/vertex extents, clipping
+tags, reserved quadwords and contour source/destination records. It supports
+unrelocated version-5 normal, both-face, reflection, screen and antiline primary
+packets, plus contour packets. Reflection and antiline currently have synthetic
+test coverage, not real-asset coverage. An unsupported module or a
 nonzero reserved field is an investigation failure, not proof that an asset is
 invalid. Extended contour fields are read only when the contour flag is set:
 simple serialized nodes can be shorter than the full C++ node type.
 
-Five synthetic tests exercise valid records and rejection of truncated chunks,
-wrong contour destinations, unexplained reserved data and truncated archives.
+Fourteen synthetic tests exercise valid records, the supported vertex strides,
+VIF boundaries and commands, source/destination record alignment, reserved data
+and archive truncation.
 The EE scalar test checks the header, prefix stepping and contour pair layout.
 None of these checks executes the GS/VU rendering pipeline. The two zero
 quadwords and other reserved node fields remain open; original PS2 execution
@@ -96,3 +100,53 @@ The full-tree objdiff measurement is recorded in [remaining-work.md](remaining-w
 It includes the earlier readability work fetched from `codex-work`, not only
 this packet-layout change. Both ROMs build, the IOP checksum passes, and the
 main-ROM checksum remains different from the original.
+
+## VIF and reserved-slot trace (2026-10-04)
+
+The follow-up checked all 2807 primary chunks and 10 contour chunks. Each DMA
+tag carries NOP followed by unmasked V4-32 UNPACK at TOPS-relative address zero
+(`0x6cNN8000`). `SendDisplayHeader` sets STCYCL(4,4) and STMOD(0), so each
+uploaded quadword occupies one VU quadword without cycling gaps or addition.
+The uploaded range ends one quadword before the DMA payload ends. That final
+quadword contains MSCNT (`0x17000000`) and three NOPs; it is command data, not
+vertex data. The audit now validates both boundaries independently and treats
+UNPACK NUM=0 as 256 quadwords, as required by VIF.
+
+Tracing the retained microprograms establishes the following accesses:
+
+| Path | Header and prefix accesses |
+| --- | --- |
+| `start_normal`, `start_bothface`, `start_contour`, `start_refmap`, `start_screen`, `start_antiline` | Read metadata at TOP; initialize input cursor to TOP+4; copy one prefix quadword followed by `prefixTripletCount` groups of three |
+| `scissor_initialize` | Read prefix count at TOP, then load clipping tag at TOP+1; copy prefix from TOP+4 |
+| Ordinary output | Begin output at TOP+0xd2, separate from the chunk header |
+
+Thus TOP+2 and TOP+3 are **uploaded but skipped by these header consumers**.
+They are zero in all 2817 audited chunks. No semantic field name is justified
+by these accesses. They remain reserved; this trace does not explain why the
+asset producer allocated them or prove that every possible path leaves them
+unused. In particular, it is not a PS2 execution trace.
+
+The normal/both-face/screen/antiline input strides are three quadwords;
+reflection adds a normal and uses four; contours use two. These values agree
+with `PrGetInputVertexParameterNum` and the VU load sequences. Contour source
+indices now have to select a position in the first non-null primary packet,
+not merely an in-bounds address. All 201 built-in mappings pass this stronger
+check. The source audit does not execute vertex arithmetic or DMA scheduling.
+
+## Stage and execution coverage limits
+
+All 11 supplied `stg*.olm` files were scanned for the unrelocated SPM magic
+(`0a 54 df 18`); none contain it. This does not rule out compressed or externally
+loaded models. The standalone input mode is ready for extracted stage SPMs;
+no additional real stage model coverage is claimed.
+
+The uploaded `SCPS-18002.zip` could not be transferred into this executor:
+the download tool reports that it exceeds its 32 MiB transfer limit. No PCSX2
+executable or captured original-game replay is available in this workspace.
+Consequently animation, contour and noodle rendering comparisons against PS2
+execution remain unperformed. They require accessible extracted stage assets
+and an original/reconstructed execution comparison with the same inputs.
+
+This follow-up changes the audit and documentation only; it changes no runtime
+source or ROM output. The preceding build and objdiff results remain historical
+validation of the runtime source, not evidence of PS2 equivalence.
