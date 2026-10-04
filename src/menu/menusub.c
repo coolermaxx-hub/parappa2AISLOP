@@ -29,6 +29,10 @@
 /* Set on a map direction's destination number when the move is blocked once the map limit is reached. */
 #define MNMAP_LIMITED    0x8000
 
+/* ABGR colours. GS texture modulation treats 0x80 as 1.0, so this is "draw the texture unchanged". */
+#define MN_COLOR_NEUTRAL 0x80808080
+#define MN_COLOR_WHITE   0x80ffffff
+
 static TSREPPAD menuPadState[2][4];
 static TSSND_CHAN TsSndChan[15];
 static BGMSTATE TsBGMState;
@@ -6049,7 +6053,7 @@ static void TsMCAMes_Flow(u_int tpad) {
         y = py + 5;
         spr->zy = 0.5f;
         spr->zx = 1.0f;
-        spr->rgba0 = 0x80808080;
+        spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->ofsy = ofsy - (fLine * 0.5f + 36.0f);
         TsPatPut(pk, spr, &PAT_ALERT_WIN_ABOVE, x, y);
 
@@ -6452,7 +6456,7 @@ void TsPopCusFlow(POPCTIM *pfw) {
         float zrt = sinf(drt * 9.424778f);
         rt3 = sinf(drt * 6.2831855f);
         zrt *= drt * 0.9f * drt + 0.1f;
-        spr->rgba0 = GetDToneColor(0xffffff, 0x80ffffff, rt3 * 256.0f * rt3);
+        spr->rgba0 = GetDToneColor(0xffffff, MN_COLOR_WHITE, rt3 * 256.0f * rt3);
 
         TsPatTexFnc(2);
         TsPatPutMZoom(pk, spr, ppos, px, py, 1.0 - zrt * 0.2, zrt * 0.6 + 1.0, 8, 4, zrt * -0.2, zrt * 0.6);
@@ -6951,14 +6955,14 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     pos = PopRnk_pPos[pfw->nPPosSet].menu;
     py  = pos->y;
     px  = pos->x;
-    spr->rgba0 = GetDToneColor(0x404040, 0x80808080, ton);
+    spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, ton);
 
     if (pfw->urTim) {
         pfw->urTim--;
     }
 
-    hicol = GetDToneColor(0x404040, 0x80ffffff, ton);
-    nmcol = GetDToneColor(0x404040, 0x80808080, ton);
+    hicol = GetDToneColor(0x404040, MN_COLOR_WHITE, ton);
+    nmcol = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, ton);
     TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 0);
     TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 1);
     TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 6);
@@ -7000,7 +7004,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         rt  = 0.0f;
     }
 
-    spr->rgba0 = GetDToneColor(0x20ffffff, 0x80808080, ton);
+    spr->rgba0 = GetDToneColor(0x20ffffff, MN_COLOR_NEUTRAL, ton);
 
     if (pfw->rankFlg == 0) {
         pat  = SIRanking_Pat;
@@ -7031,7 +7035,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         ton = 0;
     }
 
-    spr->rgba0 = GetDToneColor(0x808080, 0x80808080, ton);
+    spr->rgba0 = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
     TsPatPut(pk, spr, &stno[0], px, py);
     TsPatPut(pk, spr, &stno[pfw->rStageNo + 1], px, py);
 
@@ -7140,7 +7144,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
                 if (pfw->isSelLev) {
                     bPut0 = 6;
                     if (i == pfw->selLev) {
-                        spr->rgba0 = GetDToneColor(0x80ffffff, 0x80606060, sinf((MNSceneGetMusicFitTimer() % 30) * 3.1415927f / 30.0f) * 256.0f);
+                        spr->rgba0 = GetDToneColor(MN_COLOR_WHITE, 0x80606060, sinf((MNSceneGetMusicFitTimer() % 30) * 3.1415927f / 30.0f) * 256.0f);
                         pt = &VSComMenuSelH_Pat[i];
                     } else {
                         spr->rgba0 = 0x80707070;
@@ -7305,10 +7309,10 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     spr->zy = 0.5f;
     PkALPHA_Add(pk, 0x44);
 
-    spr->rgba0 = GetDToneColor(0x404040, 0x80808080, arate);
+    spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
     ppat = SAVE_MENU_SELPAT;
-    pfw->cani.habgr = GetDToneColor(0x404040, 0x80ffffff, arate);
-    pfw->cani.nabgr = GetDToneColor(0x404040, 0x80808080, arate);
+    pfw->cani.habgr = GetDToneColor(0x404040, MN_COLOR_WHITE, arate);
+    pfw->cani.nabgr = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
 
     for (i = 0; i < 2; i++, ppat++) {
         bHiLgt = 0;
@@ -8640,10 +8644,10 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
             if (pfw->btnlr[i].tim[l] > 0) {
                 pfw->btnlr[i].tim[l]--;
-                spr->rgba0 = 0x80ffffff;
+                spr->rgba0 = MN_COLOR_WHITE;
                 zr = (float)pfw->btnlr[i].tim[l] * 0.5 * (1.0f / 6.0f) + 1.0;
             } else {
-                spr->rgba0 = 0x80808080;
+                spr->rgba0 = MN_COLOR_NEUTRAL;
                 zr = 1.0f;
             }
 
@@ -8654,7 +8658,7 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
     PkALPHA_Add(pk, 0x44);
     spr->zx = 1.0f;
     spr->zy = 0.5f;
-    spr->rgba0 = 0x80808080;
+    spr->rgba0 = MN_COLOR_NEUTRAL;
 
     pselw = OptionSelTbl;
     for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
@@ -9285,7 +9289,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     spr->zx = 1.0f;
     spr->zy = 0.5f;
     PkALPHA_Add(pk, 0x44);
-    spr->rgba0 = 0x80808080;
+    spr->rgba0 = MN_COLOR_NEUTRAL;
 
     dispColor = pfw->dispColor;
     switch (dispColor) {
@@ -9336,7 +9340,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         }
 
         PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x80));
-        spr->rgba0 = 0x80808080;
+        spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->ux = 0x26;
         spr->uy = 0x43;
         spr->uw = 0x230;
@@ -9356,7 +9360,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         PkALPHA_Add(pk, 0x44);
     }
 
-    spr->rgba0 = 0x80808080;
+    spr->rgba0 = MN_COLOR_NEUTRAL;
 
     n = 5;
     if (isScroll) {
@@ -9469,14 +9473,14 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
     PkALPHA_Add(pk, 0x44);
 
     if (user == NULL || user->flg == 0) {
-        spr->rgba0 = 0x80808080;
+        spr->rgba0 = MN_COLOR_NEUTRAL;
         TsPatPut(pk, spr, (isLog >= 0) ? ((isLog < 2) ? &LG_NEWDATA_MARK : &RP_NEWDATA_MARK) : &RP_NEWDATA_MARK, px, py);
         return;
     }
 
     if (user->mode == 2) {
         if (user->isVs) {
-            spr->rgba0 = 0x80808080;
+            spr->rgba0 = MN_COLOR_NEUTRAL;
             TsPatPut(pk, spr, &VS_MARK, px, py);
 
             switch (user->winner) {
@@ -9849,7 +9853,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         ton = 0x100;
     }
 
-    col = GetDToneColor(0x808080, 0x80808080, ton);
+    col = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
     spr->rgba0 = col;
     PkALPHA_Add(pk, 0x44);
 
@@ -9859,7 +9863,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
 
     rt = sinf((MNSceneGetMusicFitTimer() % 12) / 12.0f * 3.1415927f) * 256.0f;
     if (pfw->onTime) {
-        curcol = GetDToneColor(0x800a6ec8, 0x80ffffff, rt);
+        curcol = GetDToneColor(0x800a6ec8, MN_COLOR_WHITE, rt);
     } else {
         curcol = GetDToneColor(0x803ca0ff, 0x80b4ffff, rt);
     }
@@ -10006,7 +10010,7 @@ static void TsSCFADE_Flow(int flg, int prm) {
     switch (pfw->state) {
     case 5:
     case 6:
-        spr->rgba0 = 0x80808080;
+        spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->zx = spr->zy = 1.0f;
         PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, (pfw->ton * 128) >> 8));
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
