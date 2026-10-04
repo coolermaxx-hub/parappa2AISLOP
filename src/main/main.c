@@ -155,6 +155,21 @@ static void dbg_select_disp(void) {
     MtcWait(1);
 }
 
+/* Debug stand-in for a stage (dummyPlay): which result screen it shows and which button ended it. */
+enum {
+    DUMMY_MODE_TITLE = 0,
+    DUMMY_MODE_REPLAY = 1,
+    DUMMY_MODE_SINGLE = 2,
+    DUMMY_MODE_VS_MAN = 3,
+    DUMMY_MODE_VS_COM = 4
+};
+
+enum {
+    DUMMY_PRESS_CIRCLE = 1,  /* single: GOOD */
+    DUMMY_PRESS_CROSS = 2,   /* NG / exit */
+    DUMMY_PRESS_TRIANGLE = 3 /* single: COOL */
+};
+
 static void dummyPlay(int retTitle) {
     int     mode;
     int     ret = 0;
@@ -170,15 +185,15 @@ static void dummyPlay(int retTitle) {
     u_char msg_dat[80];
 
     if (retTitle != 0) {
-        mode = 0;
+        mode = DUMMY_MODE_TITLE;
     } else if (game_status.demo_flagG == DEMOF_REPLAY) {
-        mode = 1;
+        mode = DUMMY_MODE_REPLAY;
     } else if (game_status.play_modeG == PLAY_MODE_SINGLE) {
-        mode = 2;
+        mode = DUMMY_MODE_SINGLE;
     } else if (game_status.play_modeG == PLAY_MODE_VS_MAN) {
-        mode = 3;
+        mode = DUMMY_MODE_VS_MAN;
     } else {
-        mode = 4;
+        mode = DUMMY_MODE_VS_COM;
     }
 
     game_status.bonusG = 0;
@@ -190,11 +205,11 @@ static void dummyPlay(int retTitle) {
         u_char *ptype[2] = { "NORMAL", "EASY" };
 
         if (pad[0].one & SCE_PADRright) {
-            ret = 1;
+            ret = DUMMY_PRESS_CIRCLE;
         } else if (pad[0].one & SCE_PADRup) {
-            ret = 3;
+            ret = DUMMY_PRESS_TRIANGLE;
         } else if (pad[0].one & SCE_PADRdown) {
-            ret = 2;
+            ret = DUMMY_PRESS_CROSS;
         }
 
         if (ret != 0) {
@@ -209,9 +224,9 @@ static void dummyPlay(int retTitle) {
         DbgMsgPrint(msgDmy[mode], 1780, 1968);
 
         switch (mode) {
-        case 2:
-        case 3:
-        case 4:
+        case DUMMY_MODE_SINGLE:
+        case DUMMY_MODE_VS_MAN:
+        case DUMMY_MODE_VS_COM:
             if (pad[0].shot & SCE_PADL1) {
                 scoreTmp[0] += 10;
             }
@@ -244,7 +259,7 @@ static void dummyPlay(int retTitle) {
             sprintf(msg_dat, "1P:%5d    2P:%5d", (int)scoreTmp[0], (int)scoreTmp[1]);
             DbgMsgPrint(msg_dat, 1770, 0x7fe);
             break;
-        case 1:
+        case DUMMY_MODE_REPLAY:
             sprintf(msg_dat, "STG:%d MODE:%s TYPE:%s ROUND:%d", mc_rep_str.play_stageS, pmd[mc_rep_str.play_modeS], ptype[mc_rep_str.play_typeS], mc_rep_str.roundS + 1);
             DbgMsgPrint(msg_dat, 1770, 2000);
         }
@@ -254,8 +269,8 @@ static void dummyPlay(int retTitle) {
     }
 
     switch (mode) {
-    case 2:
-        if (ret == 1 || ret == 3) {
+    case DUMMY_MODE_SINGLE:
+        if (ret == DUMMY_PRESS_CIRCLE || ret == DUMMY_PRESS_TRIANGLE) {
             u_int clrcnt;
 
             if (game_status.endingFlag == ENDING_MOVIE) {
@@ -294,7 +309,7 @@ static void dummyPlay(int retTitle) {
             mc_rep_str.play_table_modeS = game_status.play_table_modeG;
             mc_rep_str.roundS = game_status.roundG;
             
-            if (ret == 1) {
+            if (ret == DUMMY_PRESS_CIRCLE) {
                 clrcnt = game_status.stClrCntGood[game_status.play_stageG];
                 if (clrcnt != -1) {
                     clrcnt++;
@@ -322,8 +337,8 @@ static void dummyPlay(int retTitle) {
             game_status.scoreG[1] = 0;
         }    
         break;
-    case 4:
-        if (ret == 1 || ret == 3) {
+    case DUMMY_MODE_VS_COM:
+        if (ret == DUMMY_PRESS_CIRCLE || ret == DUMMY_PRESS_TRIANGLE) {
             u_int       clrcnt;
             GLOBAL_PLY *gply_pp;
 
@@ -357,8 +372,8 @@ static void dummyPlay(int retTitle) {
             game_status.scoreG[1] = 0;
         }
         break;
-    case 3:
-        if (ret == 1 || ret == 3) {
+    case DUMMY_MODE_VS_MAN:
+        if (ret == DUMMY_PRESS_CIRCLE || ret == DUMMY_PRESS_TRIANGLE) {
             menu_str.sel_menu_enum = SEL_MENU_SAVE;
 
             game_status.scoreG[0] = scoreTmp[0];
@@ -370,7 +385,7 @@ static void dummyPlay(int retTitle) {
             mc_rep_str.roundS = game_status.roundG;
             mc_rep_str.play_table_modeS = game_status.play_table_modeG;
 
-            if (ret == 1) {
+            if (ret == DUMMY_PRESS_CIRCLE) {
                 GLOBAL_PLY *gply_pp;
                 gply_pp = &global_data.global_ply[0];
                 gply_pp->vsWin = 0;
@@ -396,7 +411,7 @@ static void dummyPlay(int retTitle) {
             game_status.scoreG[1] = 0;
         }
         break;
-    case 1:
+    case DUMMY_MODE_REPLAY:
         menu_str.sel_menu_enum = SEL_MENU_REPLAY;
         break;
     default:
