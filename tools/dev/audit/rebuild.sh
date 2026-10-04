@@ -1,0 +1,1 @@
+cd "$(git rev-parse --show-toplevel)"; source .venv/bin/activate; rm -rf build; python configure.py >/tmp/cfg.log 2>&1; ninja 2>&1 | grep -v "^\[" | grep -i "undefined\|error\|multiple\|FAILED" | head -20; ls build/SCPS_150.17.elf; git checkout -q config/p3.jul12.undefined_funcs_auto.txt config/p3.jul12.undefined_syms_auto.txt
