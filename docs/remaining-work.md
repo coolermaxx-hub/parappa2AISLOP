@@ -82,9 +82,7 @@ word-casts over save timestamps (now `P3MC_DATE`, whose two words are compared
 through `P3MC_DATE_WORD`), the `FILE_DATE` cast struct and the byte-offset cast
 in `TsOption_Flow`. The whole `main/mbar` data section is now typed C in `mbar.c` (texture
 descriptor table with decoded TEX0 fields, GUI maps, niko/hook layouts), with
-byte-identical contents. Still open: the `*_tmp_NNN` externs in `menusub.c` and
-`mbar.c`'s sbss/bss statics (`tp_tmp_72` and friends), which stand for
-file-static variables that still live in splat sections. The remaining
+byte-identical contents. The remaining
 `*(u_long *)&sceGs...` reads in `wipe.c` follow the SDK idiom of submitting a
 register struct as one 64-bit GIF A+D value.
 
