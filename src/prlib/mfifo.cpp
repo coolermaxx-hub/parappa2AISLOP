@@ -13,7 +13,7 @@ char mfifoBase[PR_MFIFOSIZE] __attribute__((section(".mfifo")));
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)EE_SCRATCHPAD_BASE;
 static bool mfifoProcessing = false;
 
-#define PR_ALIGNSPR(addr) ((u_int)addr&0xfff0)
+#define PR_ALIGNSPR(addr) ((u_int)(addr) & 0xfff0)
 
 void PrInitializeMfifo() {
     *D_RBOR = (u_int)mfifoBase;
@@ -77,7 +77,7 @@ void PrStopMfifo() {
 
 void PrWaitMfifo() {
     if (mfifoProcessing) {
-        while (*D8_CHCR & (1<<8)); /*STR*/
+        while (*D8_CHCR & D_CHCR_STR_M);
         while (*D2_TADR != *D8_MADR); /* Wait until the GIF is done */
     }
 }
@@ -86,7 +86,7 @@ void PrSendMfifo(const sceDmaTag *tag) {
     u_int qwc = tag->qwc + 1;
     u_int size = qwc * 16;
 
-    while (*D8_CHCR & (1<<8)); /*STR*/
+    while (*D8_CHCR & D_CHCR_STR_M);
 
     *D8_SADR = PR_ALIGNSPR(tag);
     *D8_QWC = qwc;
@@ -101,7 +101,7 @@ void PrSendMfifo(const sceDmaTag *tag) {
         }
     }
 
-    *(int*)D8_CHCR |= (1<<8); /* STR=1 */
+    *(int*)D8_CHCR |= D_CHCR_STR_M;
 }
 
 u_int PrMfifoUnsentDataSize() {

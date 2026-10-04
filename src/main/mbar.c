@@ -1509,14 +1509,14 @@ static void MbarOthSet(MBAR_REQ_STR *mr_pp) {
                 fl_type = 0;
             } else {
                 if (mr_pp->mbar_req_enum & MBAR_BIT_MEMORY) {
-                    mbarr.mbc_enum = stm_pp->key;
+                    mbarr.mbc_enum = MBC_OTEHON_TOP + (stm_pp->key - KiTR);
                 } else {
-                    mbarr.mbc_enum = stm_pp->key + MBC_SP;
+                    mbarr.mbc_enum = MBC_OTEHON_M_TOP + (stm_pp->key - KiTR);
                 }
 
                 if (mr_pp->mbar_req_enum & MBAR_BIT_OTHER_DIM) {
                     if (!stm_pp->othOn) {
-                        mbarr.mbc_enum = stm_pp->key + MBC_M_SP;
+                        mbarr.mbc_enum = MBC_OTEHON_BW_TOP + (stm_pp->key - KiTR);
                     }
                 }
 

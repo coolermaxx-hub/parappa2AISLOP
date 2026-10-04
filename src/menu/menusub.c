@@ -11043,7 +11043,8 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     bDrawVram = (dispSw ^ 0x1);
     bDrawVram &= 1;
 
-    (u_int)pkt = UPacket->ptop = PR_UNCACHED(UPacket->pkt[UPacket->idx].PaketTop);
+    UPacket->ptop = PR_UNCACHED(UPacket->pkt[UPacket->idx].PaketTop);
+    pkt = (u_long128*)UPacket->ptop;
     PkSprPkt_SetDefault(pk, spr, DrawGetDrawEnvP((bDrawVram) ? DNUM_VRAM2 : DNUM_DRAW));
 
     if (bDrawVram) {

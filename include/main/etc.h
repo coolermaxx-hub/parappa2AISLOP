@@ -491,6 +491,8 @@ typedef struct { // 0xd0
     /* 0xcc */ LEVEL_VS_ENUM level_vs_enumG;
 } GAME_STATUS;
 
+/* Hat picked with the analog stick once round 4 is open (SpHatChangeSub).
+ * HCNG_R1..HCNG_R4 equal TRND_R1..TRND_R4. */
 typedef enum {
     HCNG_AUTO = -1,
     HCNG_R1 = 0,

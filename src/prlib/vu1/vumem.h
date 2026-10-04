@@ -44,7 +44,7 @@
 /* Divides address by 8, for use with MSCAL */
 #define VU_ADDR(x, base) (((int)x - (int)base) >> 3)
 
-typedef struct PrInnerDisplayHeader {
+struct PrInnerDisplayHeader {
     NaMATRIX<float, 4, 4> view_projection_matrix;
     NaMATRIX<float, 4, 4> worldClipMatrix;
     NaMATRIX<float, 4, 4> camera_matrix;
@@ -57,7 +57,7 @@ typedef struct PrInnerDisplayHeader {
     char unk1D0[0xe0];
 };
 
-typedef struct PrDisplayHeader {
+struct PrDisplayHeader {
     sceDmaTag tag;
     u_int stmask[2];
     u_int base;

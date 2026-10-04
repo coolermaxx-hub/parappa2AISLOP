@@ -20,18 +20,18 @@ void SpmShapeNode::AddShapePosition(u_int shapeIndex, float weight) {
         asm volatile("lqc2 $vf17, 0x0(%0)" : : "r"(src) : "memory");
         const u_int targetCount = targets->count;
         src += stride;
-        asm volatile("
-            qmtc2.ni %0, $vf4
-            vmulx.xyz $vf17, $vf17, $vf4x
-        " : : "r"(weight));
+        asm volatile(
+            "qmtc2.ni %0, $vf4             \n\t"
+            "vmulx.xyz $vf17, $vf17, $vf4x \n\t"
+        : : "r"(weight));
 
         for (u_int j = 0; j < targetCount; j++) {
             NaVECTOR<float, 4> *v = &vertices->PositionAtQuadword(targets->quadwordIndices[j]);
-            asm volatile("
-                lqc2 $vf4, 0x0(%0)
-                vadd.xyz $vf4, $vf4, $vf17
-                sqc2 $vf4, 0x0(%0)
-            " : : "r"(v) : "memory");
+            asm volatile(
+                "lqc2 $vf4, 0x0(%0)         \n\t"
+                "vadd.xyz $vf4, $vf4, $vf17 \n\t"
+                "sqc2 $vf4, 0x0(%0)         \n\t"
+            : : "r"(v) : "memory");
         }
         targets = targets->Next();
     }

@@ -143,6 +143,17 @@ Port note: `TsNAMEINBox_Flow` receives the edited name's `char*` through its
 `u_int tpad` argument on `MNFLOW_INIT` (original API overloading). A 64-bit port
 has to split that into a separate parameter.
 
+Modern compilers: every EE C and C++ source now parses with a 64-bit host
+gcc/g++ (`-D__IEEE_LITTLE_ENDIAN -D__R5900__`, plus `-fpermissive` for C++
+pointer casts). The old multi-line asm strings in `nalib/navector.h`,
+`nalib/namatrix.h`, `prlib/spadata.cpp` and `prlib/shape.cpp` became standard
+literals, a cast used as an lvalue in `TsCELBackDraw` became two statements, and
+the nalib static constants use `template <>`. In inline header functions the asm
+text stays one string literal continued with backslash-newline: ee-gcc 2.95
+garbles concatenated asm strings there (`spram.cpp` failed to assemble). The
+pointer-size casts that remain are listed in
+[behavior-notes.md](behavior-notes.md#32-bit-pointer-assumptions-2026-10-04).
+
 ## Known byte differences from readability changes
 
 The full per-unit table is in [binary-differences.md](binary-differences.md).

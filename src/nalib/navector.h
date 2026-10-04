@@ -67,13 +67,13 @@ public:
 
     static NaVECTOR<float, 4> Cross3(const NaVECTOR<float, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
         NaVECTOR<float, 4> result;
-        asm volatile("
-            lqc2         $vf4, 0(%0)
-            lqc2         $vf5, 0(%1)
-            vopmula.xyz  ACC, $vf4, $vf5
-            vopmsub.xyz  $vf6, $vf5, $vf4
-            vsub.w       $vf6, $vf6, $vf6
-            sqc2         $vf6, 0(%2)
+        asm volatile("\n\
+            lqc2         $vf4, 0(%0)\n\
+            lqc2         $vf5, 0(%1)\n\
+            vopmula.xyz  ACC, $vf4, $vf5\n\
+            vopmsub.xyz  $vf6, $vf5, $vf4\n\
+            vsub.w       $vf6, $vf6, $vf6\n\
+            sqc2         $vf6, 0(%2)\n\
         " : : "r"(&lhs), "r"(&rhs), "r"(&result) : "memory");
         return result;
     }
@@ -81,19 +81,19 @@ public:
     static NaVECTOR<float, 4> Normalize3(const NaVECTOR<float, 4>& value) {
         NaVECTOR<float, 4> result;
         // Keep the VU sum and reciprocal order, including singular inputs.
-        asm volatile("
-            lqc2         $vf4, 0(%0)
-            vmul.xyz     $vf5, $vf4, $vf4
-            vaddy.x      $vf5, $vf5, $vf5y
-            vaddz.x      $vf5, $vf5, $vf5z
-            vsqrt        Q, $vf5x
-            vwaitq
-            vaddq.x      $vf5, $vf0, Q
-            vdiv         Q, $vf0w, $vf5x
-            vsub.xyzw    $vf6, $vf0, $vf0
-            vwaitq
-            vmulq.xyz    $vf6, $vf4, Q
-            sqc2         $vf6, 0(%1)
+        asm volatile("\n\
+            lqc2         $vf4, 0(%0)\n\
+            vmul.xyz     $vf5, $vf4, $vf4\n\
+            vaddy.x      $vf5, $vf5, $vf5y\n\
+            vaddz.x      $vf5, $vf5, $vf5z\n\
+            vsqrt        Q, $vf5x\n\
+            vwaitq\n\
+            vaddq.x      $vf5, $vf0, Q\n\
+            vdiv         Q, $vf0w, $vf5x\n\
+            vsub.xyzw    $vf6, $vf0, $vf0\n\
+            vwaitq\n\
+            vmulq.xyz    $vf6, $vf4, Q\n\
+            sqc2         $vf6, 0(%1)\n\
         " : : "r"(&value), "r"(&result) : "memory");
         return result;
     }
@@ -124,13 +124,13 @@ inline NaVECTOR<T, t0>& NaVECTOR<T, t0>::Copy(NaVECTOR<T, t0>& lhs, const NaVECT
 // dimensions use the shared typed implementation, without widening their copy.
 template <>
 inline NaVECTOR<float, 4>& NaVECTOR<float, 4>::Copy(NaVECTOR<float, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
-        asm volatile("
-            lq $6, 0(%1)
-            sq $6, 0(%0)
-        " : : "r"(&lhs), "r"(&rhs)
-        : "$6", "memory");
-        return lhs;
-    }
+    asm volatile("\n\
+        lq $6, 0(%1)\n\
+        sq $6, 0(%0)\n\
+    " : : "r"(&lhs), "r"(&rhs)
+    : "$6", "memory");
+    return lhs;
+}
 
 // Float4 arithmetic keeps the original VU operations and rounding. Other
 // types and dimensions share ordinary typed arithmetic.
@@ -143,16 +143,16 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator*(const T& s) const {
 
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator*(const float& s) const {
-        NaVECTOR<float, 4> ret;
-        asm volatile("
-            lqc2       $vf4, 0x0(%1)
-            mfc1       $8, %2
-            qmtc2.ni   $8, $vf5
-            vmulx.xyzw $vf6, $vf4, $vf5x
-            sqc2       $vf6, 0x0(%0)
-        " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
-        return ret;
-    }
+    NaVECTOR<float, 4> ret;
+    asm volatile("\n\
+        lqc2       $vf4, 0x0(%1)\n\
+        mfc1       $8, %2\n\
+        qmtc2.ni   $8, $vf5\n\
+        vmulx.xyzw $vf6, $vf4, $vf5x\n\
+        sqc2       $vf6, 0x0(%0)\n\
+    " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
+    return ret;
+}
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator+(const NaVECTOR<T, t0>& rhs) const {
@@ -163,15 +163,15 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator+(const NaVECTOR<T, t0>& rhs) co
 
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator+(const NaVECTOR<float, 4>& rhs) const {
-        NaVECTOR<float, 4> ret;
-        asm volatile("
-            lqc2       $vf4, 0x0(%1)
-            lqc2       $vf5, 0x0(%2)
-            vadd.xyzw  $vf6, $vf4, $vf5
-            sqc2       $vf6, 0x0(%0)
-        " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
-        return ret;
-    }
+    NaVECTOR<float, 4> ret;
+    asm volatile("\n\
+        lqc2       $vf4, 0x0(%1)\n\
+        lqc2       $vf5, 0x0(%2)\n\
+        vadd.xyzw  $vf6, $vf4, $vf5\n\
+        sqc2       $vf6, 0x0(%0)\n\
+    " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
+    return ret;
+}
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator-(const NaVECTOR<T, t0>& rhs) const {
@@ -182,15 +182,15 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator-(const NaVECTOR<T, t0>& rhs) co
 
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator-(const NaVECTOR<float, 4>& rhs) const {
-        NaVECTOR<float, 4> ret;
-        asm volatile("
-            lqc2       $vf4, 0x0(%1)
-            lqc2       $vf5, 0x0(%2)
-            vsub.xyzw  $vf6, $vf4, $vf5
-            sqc2       $vf6, 0x0(%0)
-        " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
-        return ret;
-    }
+    NaVECTOR<float, 4> ret;
+    asm volatile("\n\
+        lqc2       $vf4, 0x0(%1)\n\
+        lqc2       $vf5, 0x0(%2)\n\
+        vsub.xyzw  $vf6, $vf4, $vf5\n\
+        sqc2       $vf6, 0x0(%0)\n\
+    " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
+    return ret;
+}
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator/(const T& s) const {
@@ -201,18 +201,18 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator/(const T& s) const {
 
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator/(const float& s) const {
-        NaVECTOR<float, 4> ret;
-        asm volatile("
-            lqc2       $vf4, 0x0(%1)
-            mfc1       $8, %2
-            qmtc2.ni   $8, $vf5
-            vdiv       Q, $vf0w, $vf5x
-            vwaitq
-            vmulq.xyzw $vf4, $vf4, Q
-            sqc2       $vf4, 0x0(%0)
-        " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
-        return ret;
-    }
+    NaVECTOR<float, 4> ret;
+    asm volatile("\n\
+        lqc2       $vf4, 0x0(%1)\n\
+        mfc1       $8, %2\n\
+        qmtc2.ni   $8, $vf5\n\
+        vdiv       Q, $vf0w, $vf5x\n\
+        vwaitq\n\
+        vmulq.xyzw $vf4, $vf4, Q\n\
+        sqc2       $vf4, 0x0(%0)\n\
+    " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
+    return ret;
+}
 
 /* Shared by vector constants and all four-component instances. */
 template <typename T, int t0>

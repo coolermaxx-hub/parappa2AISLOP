@@ -15,7 +15,7 @@ class PrModelObject;
 class PrSceneObject;
 
 #define PR_DECACHE(addr) (void*)((u_int)(addr) & 0x0fffffff)
-#define PR_DMA_SPR_ADDR(addr) (void*)((((u_int)addr) & 0x3fff) | 0x80000000)
+#define PR_DMA_SPR_ADDR(addr) (void*)((((u_int)(addr)) & 0x3fff) | 0x80000000)
 
 typedef struct { // 0x40
     /* 0x00 */ NaVECTOR<float, 4> position;

@@ -458,3 +458,46 @@ cntW > cntH the last strip reads past the allocation. The counts come from the
 scene data (`NOODLES_STR` passed through `drawctrl.c`); whether any shipped
 scene uses a non-square grid has not been checked. A port should keep the
 square-grid behaviour and guard the other case rather than copy the overrun.
+
+## 32-bit pointer assumptions (2026-10-04)
+
+Found by compiling the EE sources with a 64-bit host gcc/g++
+(`-Wint-to-pointer-cast`, `-Wpointer-to-int-cast`, and the `loses precision`
+diagnostics under `-fpermissive`): about 150 sites in C and 110 in prlib C++.
+Every one is fine on the EE, where pointers and `int` are both 32 bits. A
+64-bit port has to deal with each group below; the matching source keeps the
+original types.
+
+- **File formats relocated in place.** Data loaded from disc stores 32-bit
+  offsets that the game adds to the file base and writes back into the same
+  word. `p3StrInitSd` (`usrD`, `dataD`, `adrD`, `ADRD::adrs`),
+  `PackGetAdrs` (`pack.c`), `PACKINT_FILE_STR::adr` (`cdctrl.c`), the TIM2
+  walkers in `src/os/tim2.c`, and prlib's `CalculatePointer` helpers
+  (`model.h`, `animation.h`, `camera.h`) all do this. A port either keeps the
+  game heap inside a 4 GB arena and treats these words as arena offsets, or
+  converts each file into native structs at load time. `CalculatePointer` is
+  the single point to change for SPM/SPA/SPC.
+- **Handles kept in `u_int` fields.** `ADRD::handle` holds model, animation,
+  camera, TIM2 and CL2 pointers; `P3SRT_OD::pad2` (original name) holds the
+  scene handle from `PrInitializeScene`; `SD_FADE::subDadr` and
+  `SD_DISPIN::subDadr` hold pointers into their own records. These need a
+  pointer-sized field, which changes the on-disc layout, so they belong with
+  the load-time conversion above.
+- **EE memory map bits.** `PR_UNCACHED`/`PR_UNCACHEDACCEL` (`common.h`) OR
+  0x20000000/0x30000000 into addresses, `PR_DECACHE` masks them off,
+  `PR_DMA_SPR_ADDR` (`prpriv.h`) makes scratchpad DMA addresses, and
+  `usrmem.c` tracks allocations as `u_int` positions. On a PC these become
+  identity operations and plain pointers.
+- **Addresses passed as `int` arguments.** `WP2Ctrl(WP2_OPENFLOC, (int)name)`
+  and `WP2_SEEKFLOC` (`cdctrl.c`), `cdctrlReadSub`'s buffer, `TapCt` bank
+  transfers (`scrctrl.c`, `wipe.c`, `menudata.c`), `TsNAMEINBox_Flow`'s
+  argument (`menusub.c`) and `UsrMemGetAdr`. These are RPC-style interfaces to
+  the IOP or generic message arguments; the port's replacements should take
+  real pointers.
+- **Packet pointers stored as `u_int`.** `TsUSERPKT::ptop`/`btop`
+  (`pksprite.h`) and the DMA chain builders in `pksprite.c` and prlib hold the
+  current packet position as an integer. They only exist to build GS/DMA
+  packets, which a port's renderer replaces.
+- **Link-time symbols.** `system.c` stores `(int)&_end` and
+  `(int)&_stack_size` in static initialisers, which is only a constant
+  expression on a 32-bit target.

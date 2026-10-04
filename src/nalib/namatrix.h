@@ -74,17 +74,17 @@ public:
     }
 
     static NaVECTOR<float, 4>& Apply(NaVECTOR<float, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
-        asm volatile("
-            lqc2         $vf4, 0x0(%1)
-            lqc2         $vf5, 0x10(%1)
-            lqc2         $vf6, 0x20(%1)
-            lqc2         $vf7, 0x30(%1)
-            lqc2         $vf8, 0x0(%2)
-            vmulax.xyzw  ACC, $vf4, $vf8x
-            vmadday.xyzw ACC, $vf5, $vf8y
-            vmaddaz.xyzw ACC, $vf6, $vf8z
-            vmaddw.xyzw  $vf9, $vf7, $vf8w
-            sqc2         $vf9, 0x0(%0)
+        asm volatile("\n\
+            lqc2         $vf4, 0x0(%1)\n\
+            lqc2         $vf5, 0x10(%1)\n\
+            lqc2         $vf6, 0x20(%1)\n\
+            lqc2         $vf7, 0x30(%1)\n\
+            lqc2         $vf8, 0x0(%2)\n\
+            vmulax.xyzw  ACC, $vf4, $vf8x\n\
+            vmadday.xyzw ACC, $vf5, $vf8y\n\
+            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+            sqc2         $vf9, 0x0(%0)\n\
         " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
         return out;
     }
@@ -113,35 +113,35 @@ public:
     }
 
     static NaMATRIX<float, 4, 4>& Multiply(NaMATRIX<float, 4, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
-        asm volatile("
-            lqc2         $vf4, 0x0(%1)
-            lqc2         $vf5, 0x10(%1)
-            lqc2         $vf6, 0x20(%1)
-            lqc2         $vf7, 0x30(%1)
-            lqc2         $vf8, 0x0(%2)
-            vmulax.xyzw  ACC, $vf4, $vf8x
-            vmadday.xyzw ACC, $vf5, $vf8y
-            vmaddaz.xyzw ACC, $vf6, $vf8z
-            vmaddw.xyzw  $vf9, $vf7, $vf8w
-            sqc2         $vf9, 0x0(%0)
-            lqc2         $vf8, 0x10(%2)
-            vmulax.xyzw  ACC, $vf4, $vf8x
-            vmadday.xyzw ACC, $vf5, $vf8y
-            vmaddaz.xyzw ACC, $vf6, $vf8z
-            vmaddw.xyzw  $vf9, $vf7, $vf8w
-            sqc2         $vf9, 0x10(%0)
-            lqc2         $vf8, 0x20(%2)
-            vmulax.xyzw  ACC, $vf4, $vf8x
-            vmadday.xyzw ACC, $vf5, $vf8y
-            vmaddaz.xyzw ACC, $vf6, $vf8z
-            vmaddw.xyzw  $vf9, $vf7, $vf8w
-            sqc2         $vf9, 0x20(%0)
-            lqc2         $vf8, 0x30(%2)
-            vmulax.xyzw  ACC, $vf4, $vf8x
-            vmadday.xyzw ACC, $vf5, $vf8y
-            vmaddaz.xyzw ACC, $vf6, $vf8z
-            vmaddw.xyzw  $vf9, $vf7, $vf8w
-            sqc2         $vf9, 0x30(%0)
+        asm volatile("\n\
+            lqc2         $vf4, 0x0(%1)\n\
+            lqc2         $vf5, 0x10(%1)\n\
+            lqc2         $vf6, 0x20(%1)\n\
+            lqc2         $vf7, 0x30(%1)\n\
+            lqc2         $vf8, 0x0(%2)\n\
+            vmulax.xyzw  ACC, $vf4, $vf8x\n\
+            vmadday.xyzw ACC, $vf5, $vf8y\n\
+            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+            sqc2         $vf9, 0x0(%0)\n\
+            lqc2         $vf8, 0x10(%2)\n\
+            vmulax.xyzw  ACC, $vf4, $vf8x\n\
+            vmadday.xyzw ACC, $vf5, $vf8y\n\
+            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+            sqc2         $vf9, 0x10(%0)\n\
+            lqc2         $vf8, 0x20(%2)\n\
+            vmulax.xyzw  ACC, $vf4, $vf8x\n\
+            vmadday.xyzw ACC, $vf5, $vf8y\n\
+            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+            sqc2         $vf9, 0x20(%0)\n\
+            lqc2         $vf8, 0x30(%2)\n\
+            vmulax.xyzw  ACC, $vf4, $vf8x\n\
+            vmadday.xyzw ACC, $vf5, $vf8y\n\
+            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+            sqc2         $vf9, 0x30(%0)\n\
         " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
         return out;
     }
@@ -210,15 +210,15 @@ inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Copy(NaMATRIX<T, t0, t1>& lhs, 
 // Keep the original four-quadword MMI transfer for the actual EE 4x4 type.
 template <>
 inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
-    asm volatile("
-        lq $6, 0(%1)
-        lq $7, 0x10(%1)
-        lq $8, 0x20(%1)
-        lq $9, 0x30(%1)
-        sq $6, 0(%0)
-        sq $7, 0x10(%0)
-        sq $8, 0x20(%0)
-        sq $9, 0x30(%0)
+    asm volatile("\n\
+        lq $6, 0(%1)\n\
+        lq $7, 0x10(%1)\n\
+        lq $8, 0x20(%1)\n\
+        lq $9, 0x30(%1)\n\
+        sq $6, 0(%0)\n\
+        sq $7, 0x10(%0)\n\
+        sq $8, 0x20(%0)\n\
+        sq $9, 0x30(%0)\n\
     " : : "r"(&lhs), "r"(&rhs)
     : "$6", "$7", "$8", "$9", "memory");
     return lhs;

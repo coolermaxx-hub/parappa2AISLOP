@@ -107,7 +107,7 @@ TAP_ROUND_ENUM GetHatRound(void) {
     TAP_ROUND_ENUM ret = global_data.roundL;
 
     if (hat_change_enum != HCNG_AUTO) {
-        return hat_change_enum;
+        return (TAP_ROUND_ENUM)hat_change_enum;
     }
 
     return ret;

@@ -225,45 +225,45 @@ NaMATRIX<float, 4, 4>* SpaTransform::GetMatrix(float time) const {
 NaMATRIX<float, 4, 4>* SpaNodeAnimation::GetMatrix(float time) const {
     static NaMATRIX<float, 4, 4> matrix;
 
-    asm volatile("
-        vmove.xyzw $vf16, $vf0
-        vmr32.xyzw $vf15, $vf0
-        vmr32.xyzw $vf14, $vf15
-        vmr32.xyzw $vf13, $vf14
-    ");
+    asm volatile(
+        "vmove.xyzw $vf16, $vf0  \n\t"
+        "vmr32.xyzw $vf15, $vf0  \n\t"
+        "vmr32.xyzw $vf14, $vf15 \n\t"
+        "vmr32.xyzw $vf13, $vf14 \n\t"
+    );
 
     for (u_int i = 0; i < this->m_transformCount; i++) {
         NaMATRIX<float, 4, 4> *m = this->m_transforms[i]->GetMatrix(time);
-        asm volatile("
-            lqc2         $vf4, 0x0(%0)
-            lqc2         $vf5, 0x10(%0)
-            lqc2         $vf6, 0x20(%0)
-            lqc2         $vf7, 0x30(%0)
-            vmulax.xyzw  ACC, $vf4, $vf13x
-            vmadday.xyzw ACC, $vf5, $vf13y
-            vmaddaz.xyzw ACC, $vf6, $vf13z
-            vmaddw.xyzw  $vf13, $vf7, $vf13w
-            vmulax.xyzw  ACC, $vf4, $vf14x
-            vmadday.xyzw ACC, $vf5, $vf14y
-            vmaddaz.xyzw ACC, $vf6, $vf14z
-            vmaddw.xyzw  $vf14, $vf7, $vf14w
-            vmulax.xyzw  ACC, $vf4, $vf15x
-            vmadday.xyzw ACC, $vf5, $vf15y
-            vmaddaz.xyzw ACC, $vf6, $vf15z
-            vmaddw.xyzw  $vf15, $vf7, $vf15w
-            vmulax.xyzw  ACC, $vf4, $vf16x
-            vmadday.xyzw ACC, $vf5, $vf16y
-            vmaddaz.xyzw ACC, $vf6, $vf16z
-            vmaddw.xyzw  $vf16, $vf7, $vf16w
-        " : : "r"(m) : "memory");
+        asm volatile(
+            "lqc2         $vf4, 0x0(%0)       \n\t"
+            "lqc2         $vf5, 0x10(%0)      \n\t"
+            "lqc2         $vf6, 0x20(%0)      \n\t"
+            "lqc2         $vf7, 0x30(%0)      \n\t"
+            "vmulax.xyzw  ACC, $vf4, $vf13x   \n\t"
+            "vmadday.xyzw ACC, $vf5, $vf13y   \n\t"
+            "vmaddaz.xyzw ACC, $vf6, $vf13z   \n\t"
+            "vmaddw.xyzw  $vf13, $vf7, $vf13w \n\t"
+            "vmulax.xyzw  ACC, $vf4, $vf14x   \n\t"
+            "vmadday.xyzw ACC, $vf5, $vf14y   \n\t"
+            "vmaddaz.xyzw ACC, $vf6, $vf14z   \n\t"
+            "vmaddw.xyzw  $vf14, $vf7, $vf14w \n\t"
+            "vmulax.xyzw  ACC, $vf4, $vf15x   \n\t"
+            "vmadday.xyzw ACC, $vf5, $vf15y   \n\t"
+            "vmaddaz.xyzw ACC, $vf6, $vf15z   \n\t"
+            "vmaddw.xyzw  $vf15, $vf7, $vf15w \n\t"
+            "vmulax.xyzw  ACC, $vf4, $vf16x   \n\t"
+            "vmadday.xyzw ACC, $vf5, $vf16y   \n\t"
+            "vmaddaz.xyzw ACC, $vf6, $vf16z   \n\t"
+            "vmaddw.xyzw  $vf16, $vf7, $vf16w \n\t"
+        : : "r"(m) : "memory");
     }
 
-    asm volatile("
-        sqc2 $vf13, 0x0(%0)
-        sqc2 $vf14, 0x10(%0)
-        sqc2 $vf15, 0x20(%0)
-        sqc2 $vf16, 0x30(%0)
-    " : : "r"(&matrix) : "memory");
+    asm volatile(
+        "sqc2 $vf13, 0x0(%0)  \n\t"
+        "sqc2 $vf14, 0x10(%0) \n\t"
+        "sqc2 $vf15, 0x20(%0) \n\t"
+        "sqc2 $vf16, 0x30(%0) \n\t"
+    : : "r"(&matrix) : "memory");
 
     return &matrix;
 }

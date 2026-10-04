@@ -1221,7 +1221,7 @@ int MenuRoundTim2Trans(TAP_ROUND_ENUM round) {
         hat_change_enum = HCNG_AUTO;
     }
     if (hat_change_enum != HCNG_AUTO) {
-        round = hat_change_enum;
+        round = (TAP_ROUND_ENUM)hat_change_enum;
     }
     if (round >= TRND_MAX) {
         return 1;
