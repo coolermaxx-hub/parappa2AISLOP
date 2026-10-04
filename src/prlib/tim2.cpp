@@ -549,6 +549,8 @@ u_int Tim2LoadClut(TIM2_PICTUREHEADER *ph) {
         default:
             break;
     }
+
+    /* The original returns nothing here (v0 is left over); no caller reads it. */
 }
 
 static void Tim2LoadTexture(int psm, u_int tbp, int tbw, int w, int h, u_long128 *pImage) {
