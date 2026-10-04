@@ -651,7 +651,7 @@ int P3MC_CheckIsNewSave(int mode) {
 }
 
 static int _P3MC_GetSaveDataSize(int dsize) {
-    u_int dsize0 = (dsize + 0xf) >> 0x4 << 0x4;
+    u_int dsize0 = ((dsize + 15) >> 4) << 4; /* rounded up to whole quadwords */
     return sizeof(USER_HEADER) + dsize0 + sizeof(USER_FOOTER);
 }
 
@@ -1068,26 +1068,26 @@ void P3MC_AddUser(P3MC_USRLST *pUser, int mode, USER_DATA *puser) {
     *newUser = *puser;
 
     pUser->nGetUser++;
-    if (pUser->nGetUser > 0x4f) {
+    if (pUser->nGetUser > P3MC_FILE_MAX - 1) {
         printf(" AddUserWork Over All File Count...\n");
-        pUser->nGetUser = 0x4f;
+        pUser->nGetUser = P3MC_FILE_MAX - 1;
     }
 
     switch (mode) {
     case P3MC_MODE_LOG:
         pUser->plog_user[pUser->nLogGet] = newUser;
         pUser->nLogGet++;
-        if (pUser->nLogGet > 0x4f) {
+        if (pUser->nLogGet > P3MC_FILE_MAX - 1) {
             printf(" AddUserWork Over Log File Count...\n");
-            pUser->nLogGet = 0x4f;
+            pUser->nLogGet = P3MC_FILE_MAX - 1;
         }
         break;
     case P3MC_MODE_REPLAY:
         pUser->prep_user[pUser->nRepGet] = newUser;
         pUser->nRepGet++;
-        if (pUser->nRepGet > 0x4f) {
+        if (pUser->nRepGet > P3MC_FILE_MAX - 1) {
             printf(" AddUserWork Over Replay File Count...\n");
-            pUser->nRepGet = 0x4f;
+            pUser->nRepGet = P3MC_FILE_MAX - 1;
         }
         break;
     }
@@ -1104,29 +1104,31 @@ static void _P3MC_AddUserBroken(P3MC_USRLST *pUser, int mode, int fno) {
     newUser->mode = mode;
     newUser->flg = P3MC_USER_BROKEN;
 
+    /* A year above any real (BCD 20xx) one, so broken files sort to the top of the
+     * newest-first list, in file order. */
     newUser->date.year = -0xfb0 - fno;
 
     pUser->nGetUser++;
-    if (pUser->nGetUser > 0x4f) {
+    if (pUser->nGetUser > P3MC_FILE_MAX - 1) {
         printf(" AddUserWork Over All File Count...\n");
-        pUser->nGetUser = 0x4f;
+        pUser->nGetUser = P3MC_FILE_MAX - 1;
     }
 
     switch (mode) {
     case P3MC_MODE_LOG:
         pUser->plog_user[pUser->nLogGet] = newUser;
         pUser->nLogGet++;
-        if (pUser->nLogGet > 0x4f) {
+        if (pUser->nLogGet > P3MC_FILE_MAX - 1) {
             printf(" AddUserWork Over Log File Count...\n");
-            pUser->nLogGet = 0x4f;
+            pUser->nLogGet = P3MC_FILE_MAX - 1;
         }
         break;
     case P3MC_MODE_REPLAY:
         pUser->prep_user[pUser->nRepGet] = newUser;
         pUser->nRepGet++;
-        if (pUser->nRepGet > 0x4f) {
+        if (pUser->nRepGet > P3MC_FILE_MAX - 1) {
             printf(" AddUserWork Over Replay File Count...\n");
-            pUser->nRepGet = 0x4f;
+            pUser->nRepGet = P3MC_FILE_MAX - 1;
         }
         break;
     }
@@ -1567,11 +1569,11 @@ void P3MC_SetUserWorkTime(USER_DATA *puser) {
 
         puser->date.day    = clock.day;
         puser->date.month  = clock.month;
-        puser->date.year   = clock.year + 0x2000;
+        puser->date.year   = clock.year + 0x2000; /* the clock's BCD year has two digits */
     } else {
         puser->date.second = 0;
         puser->date.minute = 0;
-        puser->date.hour   = 12;
+        puser->date.hour   = 12; /* decimal, not BCD 0x12 as the clock would give */
 
         puser->date.day    = 1;
         puser->date.month  = 1;

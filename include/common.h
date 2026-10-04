@@ -44,8 +44,8 @@ typedef float f32;
 #define SCREEN_HEIGHT       448
 #define SCREEN_FIELD_HEIGHT (SCREEN_HEIGHT / 2)
 
-#define GS_X_COORD(x) ((2048 - (SCREEN_WIDTH / 2) + x) << 4)
-#define GS_Y_COORD(y) ((2048 - (SCREEN_FIELD_HEIGHT / 2) + y) << 4)
+#define GS_X_COORD(x) ((2048 - (SCREEN_WIDTH / 2) + (x)) << 4)
+#define GS_Y_COORD(y) ((2048 - (SCREEN_FIELD_HEIGHT / 2) + (y)) << 4)
 
 /* The libgraph GS register structs (sceGsFrame, sceGsZbuf, sceGsTex0, ...) are
  * bitfield views of one 64-bit register word; this reads that word, e.g. for a
