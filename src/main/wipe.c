@@ -203,7 +203,7 @@ static LDMAP ldmap[] = {
 extern PR_SCENEHANDLE ldmap_hdl;
 
 extern WIPE_PARA_STR wipe_para_str;
-extern sceGsDrawEnv1 sceGsDrawEnv1_tmp;
+extern sceGsDrawEnv1 wipe_draw_env;
 
 void wipeParaOutReq(void);
 
@@ -807,13 +807,13 @@ static void WipeParaInDisp(void *x) {
         DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_DRAW);
 
-        sceGsDrawEnv1_tmp = *DrawGetDrawEnvP(DNUM_VRAM2);
-        sceGsDrawEnv1_tmp.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
+        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
 
-        CmnGifADPacketMake(&gifP, &sceGsDrawEnv1_tmp.frame1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_FRAME_1, *(u_long*)&sceGsDrawEnv1_tmp.frame1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_XYOFFSET_1, *(u_long*)&sceGsDrawEnv1_tmp.xyoffset1);
-        sceGifPkAddGsAD(&gifP, SCE_GS_SCISSOR_1, *(u_long*)&sceGsDrawEnv1_tmp.scissor1);
+        CmnGifADPacketMake(&gifP, &wipe_draw_env.frame1);
+        sceGifPkAddGsAD(&gifP, SCE_GS_FRAME_1, *(u_long*)&wipe_draw_env.frame1);
+        sceGifPkAddGsAD(&gifP, SCE_GS_XYOFFSET_1, *(u_long*)&wipe_draw_env.xyoffset1);
+        sceGifPkAddGsAD(&gifP, SCE_GS_SCISSOR_1, *(u_long*)&wipe_draw_env.scissor1);
         sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
         sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
         sceGifPkAddGsAD(&gifP, SCE_GS_RGBAQ, 0);
@@ -821,8 +821,8 @@ static void WipeParaInDisp(void *x) {
         sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(37888, 34560, 1));
         CmnGifADPacketMakeTrans(&gifP);
 
-        WipeInitPrDataPara(&sceGsDrawEnv1_tmp.frame1);
-        WipeDispPrDataPara(timer, &sceGsDrawEnv1_tmp);
+        WipeInitPrDataPara(&wipe_draw_env.frame1);
+        WipeDispPrDataPara(timer, &wipe_draw_env);
         WipeQuitPrDataPara();
 
         ChangeDrawArea(DrawGetDrawEnvP(DNUM_DRAW));
@@ -873,11 +873,11 @@ static void WipeParaInDispMove(void *x) {
         DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_VRAM2);
 
-        sceGsDrawEnv1_tmp = *DrawGetDrawEnvP(DNUM_VRAM2);
-        sceGsDrawEnv1_tmp.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
+        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
 
-        WipeInitPrDataPara(&sceGsDrawEnv1_tmp.frame1);
-        WipeDispPrDataPara(timer, &sceGsDrawEnv1_tmp);
+        WipeInitPrDataPara(&wipe_draw_env.frame1);
+        WipeDispPrDataPara(timer, &wipe_draw_env);
         WipeQuitPrDataPara();
 
         ChangeDrawArea(DrawGetDrawEnvP(DNUM_DRAW));
@@ -924,11 +924,11 @@ static void WipeParaOutDisp(void *x) {
         DrawVramClear(&vclr_para, 0, 0, DNUM_NON, DNUM_ZBUFF);
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_VRAM2);
 
-        sceGsDrawEnv1_tmp = *DrawGetDrawEnvP(DNUM_VRAM2);
-        sceGsDrawEnv1_tmp.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
+        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
 
-        WipeInitPrDataPara(&sceGsDrawEnv1_tmp.frame1);
-        WipeDispPrDataPara(60 - timer, &sceGsDrawEnv1_tmp);
+        WipeInitPrDataPara(&wipe_draw_env.frame1);
+        WipeDispPrDataPara(60 - timer, &wipe_draw_env);
         WipeQuitPrDataPara();
 
         ChangeDrawArea(DrawGetDrawEnvP(DNUM_DRAW));
@@ -1019,7 +1019,7 @@ JIMAKU_STR jimaku_str[] = {
 static PR_SCENEHANDLE ldmap_hdl;
 
 WIPE_PARA_STR wipe_para_str = {};
-sceGsDrawEnv1 sceGsDrawEnv1_tmp = {};
+sceGsDrawEnv1 wipe_draw_env = {};
 
 static void WipeBoxyInDisp(void *x) {
     void *scn_hdl;

@@ -1664,9 +1664,9 @@ void MbarDisp(void) {
 
 int MbarDispScene(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     int   i, j;
-    float men_tmp;
+    float saved_ratio;
 
-    men_tmp = PrGetMendererRatio();
+    saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
     PR_SCOPE()
@@ -1706,7 +1706,7 @@ int MbarDispScene(void *para_pp, int frame, int first_f, int useDisp, int drDisp
     vsAnimationPoll();
     MbarHookPoll();
     CmnGifADPacketMakeTrans(&mbar_gif);
-    PrSetMendererRatio(men_tmp);
+    PrSetMendererRatio(saved_ratio);
 
     if (game_status.subtitle == SUBTITLE_ON) {
         for (i = 0; i < PR_ARRAYSIZEU(mbar_req_str); i++) {
@@ -1727,7 +1727,7 @@ int MbarDispScene(void *para_pp, int frame, int first_f, int useDisp, int drDisp
 
 int MbarDispSceneDraw(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     int   i, j;
-    float men_tmp;
+    float saved_ratio;
 
     if (first_f == -2) {
         return 0;
@@ -1736,7 +1736,7 @@ int MbarDispSceneDraw(void *para_pp, int frame, int first_f, int useDisp, int dr
         return 0;
     }
 
-    men_tmp = PrGetMendererRatio();
+    saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
     PR_SCOPE()
@@ -1763,7 +1763,7 @@ int MbarDispSceneDraw(void *para_pp, int frame, int first_f, int useDisp, int dr
 
     MbarWindowSet(MBWINDOW_NORMAL);
     CmnGifADPacketMakeTrans(&mbar_gif);
-    PrSetMendererRatio(men_tmp);
+    PrSetMendererRatio(saved_ratio);
     return 0;
 }
 
@@ -1817,10 +1817,10 @@ static void guidisp_init_pr(void) {
 
 static void guidisp_draw_quit(int drapP) {
     GUIMAP *guim_pp;
-    float   men_tmp;
+    float   saved_ratio;
     int     i;
 
-    men_tmp = PrGetMendererRatio();
+    saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
     PrSetSceneFrame(guime_hdl, *DrawGetFrameP(drapP));
@@ -1848,19 +1848,19 @@ static void guidisp_draw_quit(int drapP) {
     PrCleanupCamera(guime_camera_hdl);
     PrCleanupScene(guime_hdl);
 
-    PrSetMendererRatio(men_tmp);
+    PrSetMendererRatio(saved_ratio);
 }
 
 int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
     int   *use_mappp;
     int    use_mappp_cnt;
     int    i;
-    float  men_tmp;
+    float  saved_ratio;
 
     use_mappp = NULL;
     use_mappp_cnt = 0;
 
-    men_tmp = PrGetMendererRatio();
+    saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
     if (global_data.play_step == PSTEP_GAME || global_data.play_step == PSTEP_VS) {
@@ -1974,7 +1974,7 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
 
     guidisp_draw_quit(drDisp);
 
-    PrSetMendererRatio(men_tmp);
+    PrSetMendererRatio(saved_ratio);
 
     PR_SCOPE()
     static sceGifPacket mbarNiko_gif;
@@ -1987,9 +1987,9 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
 }
 
 int MbarDispGuiSceneMbarArea(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
-    float men_tmp;
+    float saved_ratio;
 
-    men_tmp = PrGetMendererRatio();
+    saved_ratio = PrGetMendererRatio();
     PrSetMendererRatio(0.0f);
 
     ChangeDrawArea(DrawGetDrawEnvP(drDisp));
@@ -2024,7 +2024,7 @@ int MbarDispGuiSceneMbarArea(void *para_pp, int frame, int first_f, int useDisp,
 
     guidisp_draw_quit(drDisp);
 
-    PrSetMendererRatio(men_tmp);
+    PrSetMendererRatio(saved_ratio);
     return 0;
 }
 

@@ -358,7 +358,7 @@ void p3str_sort_set(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
 
 void p3str_sort_disp(void) {
     int        i, j;
-    P3STR_SORT p3str_sort_tmp;
+    P3STR_SORT swap;
 
     if (p3str_sort_cnt == 0) {
         return;
@@ -367,9 +367,9 @@ void p3str_sort_disp(void) {
     for (i = 0; i < p3str_sort_cnt - 1; i++) {
         for (j = i + 1; j < p3str_sort_cnt; j++) {
             if (p3str_sort[i].p3o_pp->pri > p3str_sort[j].p3o_pp->pri) {
-                p3str_sort_tmp = p3str_sort[i];
+                swap = p3str_sort[i];
                 p3str_sort[i] = p3str_sort[j];
-                p3str_sort[j] = p3str_sort_tmp;
+                p3str_sort[j] = swap;
             }
         }
     }

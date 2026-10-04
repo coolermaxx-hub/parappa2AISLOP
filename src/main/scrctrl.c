@@ -90,7 +90,7 @@ static int replayGuiOffFlag = FALSE;
 static int jimakuWakuOff = FALSE;
 
 int currentTblNumber = 0;
-int vs_tapdat_tmp_cnt = 0;
+int vs_tapdat_work_cnt = 0;
 int scrJimakuLine = 0;
 int scrDrawLine = 0;
 int scrMbarLine = 0;
@@ -435,7 +435,7 @@ SCR_SND_DBUFF scr_snd_dbuff = {};
 static SNDTAP *scr_sndtap_pp[4];
 SCORE_STR score_str = {};
 static SCORE_INDV_STR score_indv_str[5];
-TAPDAT vs_tapdat_tmp[64] = {};
+TAPDAT vs_tapdat_work[64] = {};
 static int follow_scr_tap_memory_cnt;
 static int follow_scr_tap_memory_cnt_load;
 static SCR_TAP_MEMORY follow_scr_tap_memory[256];
@@ -739,11 +739,11 @@ void vsTapdatSetMemorySave(void) {
     VSOTHSAVE  vsothsave_tmp;
     TAPDAT    *tapdat_pp;
 
-    tapdat_pp = vs_tapdat_tmp;
+    tapdat_pp = vs_tapdat_work;
 
     WorkClear(vsothsave_tmp, sizeof(vsothsave_tmp));
 
-    for (i = 0; i < vs_tapdat_tmp_cnt; i++, tapdat_pp++) {
+    for (i = 0; i < vs_tapdat_work_cnt; i++, tapdat_pp++) {
         int time = tapdat_pp->time / 24;
         if (time >= 32) {
             printf("OTH SAVE OVER\n");
@@ -762,15 +762,15 @@ void vsTapdatSetMemoryLoad(void) {
     WorkClear(&vsothsave_tmp, sizeof(vsothsave_tmp));
 
     if (mccReqVSOTHSAVEget(&vsothsave_tmp)) {
-        vs_tapdat_tmp_cnt = 0;
+        vs_tapdat_work_cnt = 0;
 
         for (i = 0; i < 32; i++) {
             if (vsothsave_tmp[i] != 0) {
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].time = i * 24;
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].actor = -1;
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].sound = -1;
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].KeyIndex = vsothsave_tmp[i];
-                vs_tapdat_tmp_cnt++;
+                vs_tapdat_work[vs_tapdat_work_cnt].time = i * 24;
+                vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].actor = -1;
+                vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].sound = -1;
+                vs_tapdat_work[vs_tapdat_work_cnt].KeyIndex = vsothsave_tmp[i];
+                vs_tapdat_work_cnt++;
             }
         }
     }
@@ -834,7 +834,7 @@ void vsTapdatSet(SCORE_INDV_STR *sindv_pp) {
     }
 
     if (KeyCodeAllCk == KeyCodeAll) {
-        vs_tapdat_tmp_cnt = 0;
+        vs_tapdat_work_cnt = 0;
         current_time = -1;
 
         stm_pp = sindv_pp->scr_tap_memory;
@@ -859,11 +859,11 @@ void vsTapdatSet(SCORE_INDV_STR *sindv_pp) {
 
             current_time = tmptime;
 
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].time = current_time;
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].actor = -1;
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].sound = -1;
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].KeyIndex = stm_pp->key;
-            vs_tapdat_tmp_cnt++;
+            vs_tapdat_work[vs_tapdat_work_cnt].time = current_time;
+            vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].actor = -1;
+            vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].sound = -1;
+            vs_tapdat_work[vs_tapdat_work_cnt].KeyIndex = stm_pp->key;
+            vs_tapdat_work_cnt++;
         }
     }
 }
@@ -873,7 +873,7 @@ void vsTapdatSetMoto(SCORE_INDV_STR *sindv_pp) {
     TAPSET *tapset_pp;
     TAPDAT *tapdat_pp;
 
-    vs_tapdat_tmp_cnt = 0;
+    vs_tapdat_work_cnt = 0;
     printf("reset moto!!\n");
 
     tapset_pp = IndvGetTapSetAdrs(sindv_pp);
@@ -882,16 +882,16 @@ void vsTapdatSetMoto(SCORE_INDV_STR *sindv_pp) {
     for (i = 0; i < tapset_pp->tapdat_size; i++, tapdat_pp++) {
         if (tapdat_pp->KeyIndex != KiNO) {
             if (global_data.play_typeL == PLAY_TYPE_ONE) {
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].KeyIndex = KiTR;
+                vs_tapdat_work[vs_tapdat_work_cnt].KeyIndex = KiTR;
             } else {
-                vs_tapdat_tmp[vs_tapdat_tmp_cnt].KeyIndex = tapdat_pp->KeyIndex;
+                vs_tapdat_work[vs_tapdat_work_cnt].KeyIndex = tapdat_pp->KeyIndex;
             }
 
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].time = tapdat_pp->time;
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].actor = -1;
-            vs_tapdat_tmp[vs_tapdat_tmp_cnt].tapct[0].sound = -1;
+            vs_tapdat_work[vs_tapdat_work_cnt].time = tapdat_pp->time;
+            vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].actor = -1;
+            vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].sound = -1;
 
-            vs_tapdat_tmp_cnt++;
+            vs_tapdat_work_cnt++;
         }
     }
 }
@@ -1858,7 +1858,7 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
             vsTapdatSetMoto(sindv_pp);
         } else {
             if (tapset_pp->tapscode != TAPSCODE_NORMAL && padType == PAD_COM) {
-                commake_str_cnt = computerMaking(commake_str, PR_ARRAYSIZE(commake_str), vs_tapdat_tmp, vs_tapdat_tmp_cnt, tapset_pp, global_data.level_vs_enumL);
+                commake_str_cnt = computerMaking(commake_str, PR_ARRAYSIZE(commake_str), vs_tapdat_work, vs_tapdat_work_cnt, tapset_pp, global_data.level_vs_enumL);
             }
         }
 
@@ -2778,8 +2778,8 @@ static void ExamScoreCheck(SCORE_INDV_STR *sindv_pp) {
 
         if (exam_check[i].tapset_pp->tapscode == TAPSCODE_ANSWER) {
             exam_check[i].vs_use = TRUE;
-            exam_check[i].vs_tapdat_pp = vs_tapdat_tmp;
-            exam_check[i].vs_tapdat_cnt = vs_tapdat_tmp_cnt;
+            exam_check[i].vs_tapdat_pp = vs_tapdat_work;
+            exam_check[i].vs_tapdat_cnt = vs_tapdat_work_cnt;
         }
 
         if (global_data.play_typeL == PLAY_TYPE_ONE) {
@@ -2858,7 +2858,7 @@ static void ExamScoreCheck(SCORE_INDV_STR *sindv_pp) {
 
 static int ExamScoreCheckSame(SCORE_INDV_STR *sindv_pp) {
     SCORE_INDV_STR  sindv_tmp;
-    GLOBAL_PLY      global_ply_tmp;
+    GLOBAL_PLY      global_ply_copy;
     int             i;
     TAPSET         *tapset_pp;
     SCR_TAP_MEMORY *scr_tap_memory_pp;
@@ -2870,10 +2870,10 @@ static int ExamScoreCheckSame(SCORE_INDV_STR *sindv_pp) {
         return 150;
     }
 
-    global_ply_tmp = *sindv_pp->global_ply;
+    global_ply_copy = *sindv_pp->global_ply;
 
     sindv_tmp      = *sindv_pp;
-    sindv_tmp.global_ply = &global_ply_tmp;
+    sindv_tmp.global_ply = &global_ply_copy;
 
     tapset_pp = IndvGetTapSetAdrs(sindv_pp);
 
@@ -2884,8 +2884,8 @@ static int ExamScoreCheckSame(SCORE_INDV_STR *sindv_pp) {
     tapdat_cnt = tapset_pp->tapdat_size;
 
     if (tapset_pp->tapscode == TAPSCODE_ANSWER) {
-        tapdat_pp = vs_tapdat_tmp;
-        tapdat_cnt = vs_tapdat_tmp_cnt;
+        tapdat_pp = vs_tapdat_work;
+        tapdat_cnt = vs_tapdat_work_cnt;
     }
 
     for (i = 0; i < tapdat_cnt; i++, tapdat_pp++) {
@@ -2905,7 +2905,7 @@ static int ExamScoreCheckSame(SCORE_INDV_STR *sindv_pp) {
     }
 
     ExamScoreCheck(&sindv_tmp);
-    return global_ply_tmp.now_score;
+    return global_ply_copy.now_score;
 }
 
 static int levelChangeCheck(RANK_LEVEL lvl0, RANK_LEVEL lvl1) {
@@ -4059,8 +4059,8 @@ void ScrMbarReq(int mbarTime) {
         }
 
         if (tapset_pp->tapscode == TAPSCODE_ANSWER) {
-            tapdat_size = vs_tapdat_tmp_cnt;
-            tapdat_pp   = vs_tapdat_tmp;
+            tapdat_size = vs_tapdat_work_cnt;
+            tapdat_pp   = vs_tapdat_work;
         }
 
         if ((dare == MBAR_PARAPPA || dare == MBAR_PARAPPA_HOOK) && mbarTime < sindv_pp->current_time) {

@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static VCLR_PARA vclr_black_tmp = { 0, 0, 0, 0 };
+static VCLR_PARA vclr_black = { 0, 0, 0, 0 };
 /* Tap-bar layouts, mosaic stage tables and title-cut timings. */
 static float bra_tap[10][2] = {
     { 0.25f, 0.1f },
@@ -3249,7 +3249,7 @@ static void DrawCtrlMain(void *x) {
         }
 
         if (global_data.play_step == PSTEP_VS || global_data.play_step == PSTEP_HOOK) {
-            outsideDrawSceneReq(DrawVramClear, 229, DNUM_NON, DNUM_ZBUFF, &vclr_black_tmp);
+            outsideDrawSceneReq(DrawVramClear, 229, DNUM_NON, DNUM_ZBUFF, &vclr_black);
         }
 
         while ((scenectrl_tmp = getOutsideCtrlScene(drawCurrentTime)) != NULL) {
