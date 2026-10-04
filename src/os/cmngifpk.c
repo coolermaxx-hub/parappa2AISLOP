@@ -14,7 +14,7 @@ static u_long128 cmnGifTr[65];
 static sceGifPacket cmnGifPacket;
 
 void CmnGifInit(void *buf_adr, int size) {
-    cmnGifPkEnd     = (buf_adr + size * 16);
+    cmnGifPkEnd     = (u_long128*)buf_adr + size;
     cmnGifPkCurrent = buf_adr;
     cmnGifPkBase    = buf_adr;
     

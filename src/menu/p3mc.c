@@ -690,7 +690,7 @@ MCRWDATA_HDL* P3MC_MakeDataWork(int dsize, USER_DATA *puser) {
         /* Header, data, then footer, in one 16-byte aligned block. */
         phdl->pHead = (USER_HEADER*)pdata;
         phdl->pData = (u_char*)(phdl->pHead + 1);
-        phdl->pFoot = (USER_FOOTER*)(phdl->pData + dsize0);
+        phdl->pFoot = (USER_FOOTER*)((u_char*)phdl->pData + dsize0);
 
         if (puser != NULL) {
             phdl->pHead->user = *puser;

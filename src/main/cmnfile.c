@@ -40,7 +40,7 @@ static CMN_FILE_STR* cmn_file_str_search(CMN_FILE_TYPE_ENUM type) {
         }
         
         /* Go through all categories until we find the one we want */
-        cfstr_pp = (void*)cfstr_pp + cfstr_pp->f_size;
+        cfstr_pp = (CMN_FILE_STR*)((char*)cfstr_pp + cfstr_pp->f_size);
     }
 }
 
@@ -57,7 +57,7 @@ int cmnfTim2Trans(void) {
 
     /* Transfer all the common textures to VRAM */
     for (i = 0; i < cfstr_pp->fnum; i++) {
-        Tim2Trans((void*)cfstr_pp + cfstr_pp->adr[i]);
+        Tim2Trans((char*)cfstr_pp + cfstr_pp->adr[i]);
     }
 
     return 1;
@@ -76,7 +76,7 @@ void* cmnfGetFileAdrs(int num) {
         return NULL;
     }
 
-    return (void*)cfstr_pp + cfstr_pp->adr[num];
+    return (char*)cfstr_pp + cfstr_pp->adr[num];
 }
 
 int cmnfGetFileSize(int num) {

@@ -352,7 +352,7 @@ void intReadSub(void) {
             printf("int file tim2 file in\n");
 
             for (i = 0; i < PACK(head_read_pp)->fnum; i++) {
-                Tim2Trans((void*)PACK(head_read_pp)->adr[i] + UsrMemAllocNext());
+                Tim2Trans((void*)(PACK(head_read_pp)->adr[i] + UsrMemAllocNext()));
             }
 
             printf("int file tim2 file out\n");
@@ -392,7 +392,7 @@ void intReadSub(void) {
                 printf("int file tim2 round:%d file in\n", PACK(head_read_pp)->ftype - 3);
 
                 for (i = 0; i < PACK(head_read_pp)->fnum; i++) {
-                    Tim2Trans((void*)PACK(head_read_pp)->adr[i] + UsrMemAllocNext());
+                    Tim2Trans((void*)(PACK(head_read_pp)->adr[i] + UsrMemAllocNext()));
                 }
 
                 printf("int file tim2 roud file out\n");
@@ -526,7 +526,7 @@ void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
             printf("tim trans in\n");
 
             for (i = 0; i < PACK(head_read_pp)->fnum; i++) {
-                Tim2Trans((void*)PACK(head_read_pp)->adr[i] + UsrMemAllocNext());
+                Tim2Trans((void*)(PACK(head_read_pp)->adr[i] + UsrMemAllocNext()));
             }
 
             printf("tim trans out\n");
@@ -559,7 +559,7 @@ void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
                 printf("int file tim2 round:%d file in\n", PACK(head_read_pp)->ftype - 3);
 
                 for (i = 0; i < PACK(head_read_pp)->fnum; i++) {
-                    Tim2Trans((void*)PACK(head_read_pp)->adr[i] + UsrMemAllocNext());
+                    Tim2Trans((void*)(PACK(head_read_pp)->adr[i] + UsrMemAllocNext()));
                 }
 
                 printf("int file tim2 roud file out\n");

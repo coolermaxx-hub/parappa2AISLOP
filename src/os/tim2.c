@@ -60,7 +60,7 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
         maxinfo = pictures;
     }
 
-    current_pp = tim2_pp + sizeof(TIM2_FILEHEADER);
+    current_pp = (char*)tim2_pp + sizeof(TIM2_FILEHEADER);
     
     for (i = 0; i < maxinfo; i++, info_pp++) {
         info_pp->fileH    = tim2_pp;
@@ -71,9 +71,9 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
         info_pp->image_pp = NULL;
 
         if (TIM2(tim2_pp)->FormatId != 0) {
-            info_pp->picturH = (TIM2_PICTUREHEADER*)PR_ALIGNU(current_pp, 128);
+            info_pp->picturH = (TIM2_PICTUREHEADER*)PR_ALIGNU((u_int)current_pp, 128);
         } else {
-            info_pp->picturH = (TIM2_PICTUREHEADER*)PR_ALIGNU(current_pp, sizeof(TIM2_FILEHEADER));
+            info_pp->picturH = (TIM2_PICTUREHEADER*)PR_ALIGNU((u_int)current_pp, sizeof(TIM2_FILEHEADER));
         }
 
         current_pp = info_pp->picturH + 1;
@@ -87,7 +87,7 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
                 mm_ofs = 48;
             }
 
-            current_pp += mm_ofs;
+            current_pp = (char*)current_pp + mm_ofs;
         }
 
         {
@@ -95,15 +95,15 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
 
             if (k_size != 0) {
                 info_pp->exH = current_pp;
-                current_pp += k_size;
+                current_pp = (char*)current_pp + k_size;
             }
         }
 
         if (info_pp->picturH->ImageSize != 0) {
             if (TIM2(info_pp->fileH)->FormatId != 0) {
-                info_pp->image_pp = (u_long*)PR_ALIGNU(current_pp, 128);
+                info_pp->image_pp = (u_long*)PR_ALIGNU((u_int)current_pp, 128);
             } else {
-                info_pp->image_pp = (u_long*)PR_ALIGNU(current_pp, sizeof(TIM2_FILEHEADER));
+                info_pp->image_pp = (u_long*)PR_ALIGNU((u_int)current_pp, sizeof(TIM2_FILEHEADER));
             }
             
             current_pp = (char*)info_pp->image_pp + info_pp->picturH->ImageSize;
@@ -111,9 +111,9 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
 
         if (info_pp->picturH->ClutSize != 0) {
             if (TIM2(info_pp->fileH)->FormatId != 0) {
-                info_pp->clut_pp = (u_long*)PR_ALIGNU(current_pp, 128);
+                info_pp->clut_pp = (u_long*)PR_ALIGNU((u_int)current_pp, 128);
             } else {
-                info_pp->clut_pp = (u_long*)PR_ALIGNU(current_pp, sizeof(TIM2_FILEHEADER));
+                info_pp->clut_pp = (u_long*)PR_ALIGNU((u_int)current_pp, sizeof(TIM2_FILEHEADER));
             }
 
             current_pp = (char*)info_pp->clut_pp + info_pp->picturH->ClutSize;
