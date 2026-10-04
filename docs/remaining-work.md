@@ -161,6 +161,10 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   set TCC through the `sceGsTex0` fields instead of shifting the two 32-bit
   halves of the 64-bit TEX0 word. Same bits; the compiler now works on the
   whole word.
+- `ScrExamSetCheck` (src/main/scrctrl.c) declares the replay score buffer
+  `mcr_scr` inside the block that fills it, where the original debug info
+  places it. The old function-scope declaration only reproduced the original
+  stack frame; the frame is now 16 bytes smaller and the spill slots move.
 
 ## Data sections still in asm
 

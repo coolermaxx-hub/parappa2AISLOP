@@ -54,9 +54,10 @@ void CmnGifFlush(void) {
     }
 
     {
-        int slot;
-        for (slot = 0; slot < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[slot].pBase; slot++) {
-            sceGifPkCall(&cmnGifPacket, cmngif_pri[slot].pBase, 0, 0, 0);
+        /* A second i, as in the original debug info. */
+        int i;
+        for (i = 0; i < PR_ARRAYSIZE(cmngif_pri) && cmngif_pri[i].pBase; i++) {
+            sceGifPkCall(&cmnGifPacket, cmngif_pri[i].pBase, 0, 0, 0);
         }
     }
 

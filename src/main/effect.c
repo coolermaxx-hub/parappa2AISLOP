@@ -336,18 +336,19 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
                                                            SCE_GS_TRUE/*ABE*/, SCE_GS_FALSE/*AA1*/, 1/*FST*/, SCE_GS_PRIM_CTXT1, 0/*FIX*/));
 
     {
-        int      col, row;
+        /* A second i and j, as in the original debug info. */
+        int      i, j;
         NDL_PRM *tmp1_pp, *tmp2_pp;
 
         /*
          * Original quirk: the grid above holds cntH + 1 vertices per column, but the
          * strips step by cntW + 1. Only a square grid (cntW == cntH) draws correctly.
          */
-        for (col = 0; col < ndl_pp->cntW; col++) {
-            tmp1_pp = &ndl_prm_pp[(col + 0) * (ndl_pp->cntW + 1)];
-            tmp2_pp = &ndl_prm_pp[(col + 1) * (ndl_pp->cntW + 1)];
+        for (i = 0; i < ndl_pp->cntW; i++) {
+            tmp1_pp = &ndl_prm_pp[(i + 0) * (ndl_pp->cntW + 1)];
+            tmp2_pp = &ndl_prm_pp[(i + 1) * (ndl_pp->cntW + 1)];
 
-            for (row = 0; row <= ndl_pp->cntH; row++) {
+            for (j = 0; j <= ndl_pp->cntH; j++) {
                 sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp1_pp->u + 8, tmp1_pp->v + 8));
                 sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp1_pp->xp, tmp1_pp->yp, 1));
 

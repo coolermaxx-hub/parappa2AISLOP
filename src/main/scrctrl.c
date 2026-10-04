@@ -3043,8 +3043,6 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
     int           yaruyaru;
     SCR_EXAM_STR *scex_pp;
 
-    MC_REP_SCR    mcr_scr; /* note: not supposed to be here */
-
     tapset_pp = IndvGetTapSetAdrs(sindv_pp);
     if (tapset_pp == NULL) {
         return 0;
@@ -3115,8 +3113,8 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 }
             } else {
                 if (global_data.demo_flagL == DEMOF_OFF) {
-                    // /* 0x0(sp) */ MC_REP_SCR mcr_scr; /* Supposed to be here, not up there! */
-                    int i;
+                    MC_REP_SCR mcr_scr;
+                    int        i;
 
                     mcr_scr.now_score = sindv_pp->global_ply->now_score;
 
@@ -3292,7 +3290,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         int         hantei_flag;
                         GLOBAL_PLY *gplay_my, *gplay_enemy;
                         int         my_ply,    ene_ply;
-                        TAPSET     *tapset_pp; /* note: not present in STABS. */
+                        int         tapscode; /* not in the original debug info */
 
                         hantei_flag = ScrCtrlIndvNextReadLine(sindv_pp, 2) != 0;
 
@@ -3309,8 +3307,8 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                         printf("exam vs [%d] index[%d]\n", gplay_enemy, scex_pp->vsPlayer);
 
-                        tapset_pp = IndvGetTapSetAdrs(sindv_pp);
-                        if (tapset_pp->tapscode == TAPSCODE_ANSWER_F) {
+                        tapscode = IndvGetTapSetAdrs(sindv_pp)->tapscode;
+                        if (tapscode == TAPSCODE_ANSWER_F) {
                             int pointx;
 
                             printf("first !!hantei[%d]\n", hantei_flag);
@@ -3326,7 +3324,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                             }
 
                             sindv_pp->global_ply->score = pointx;
-                        } else if (tapset_pp->tapscode == TAPSCODE_ANSWER) {
+                        } else if (tapscode == TAPSCODE_ANSWER) {
                             int pointx = sindv_pp->global_ply->now_score - scex_pp->exam_coolP;
 
                             if (pointx < 0) {
@@ -3847,8 +3845,7 @@ static void ScrCtrlIndvJob(void) {
     int             i;
     int             ctime_next;
     SCORE_INDV_STR *sindv_pp;
-    int             next_time, check_time;
-    int             indvTime;
+    int             next_time;
 
     sindv_pp = score_indv_str;
 
@@ -3916,6 +3913,8 @@ static void ScrCtrlIndvJob(void) {
     sindv_pp = score_indv_str;
 
     for (i = 0; i < 5; i++, sindv_pp++) {
+        int indvTime;
+
         if (!(sindv_pp->status & SCS_USE)) {
             continue;
         }
@@ -4731,22 +4730,23 @@ static void bonusGameCtrl(int time) {
     }
 
     {
+        /* A second bng_kotama_pp, as in the original debug info. */
         int         i;
-        BNG_KOTAMA *kotama_pp = bng_str.bng_kotama;
+        BNG_KOTAMA *bng_kotama_pp = bng_str.bng_kotama;
 
-        for (i = 0; i < 4; i++, kotama_pp++) {
-            kotama_pp->wait_time++;
+        for (i = 0; i < 4; i++, bng_kotama_pp++) {
+            bng_kotama_pp->wait_time++;
 
-            switch (kotama_pp->bng_kotama_act_enum) {
+            switch (bng_kotama_pp->bng_kotama_act_enum) {
             case BNGKA_NOTHING:
                 bonusGameKoamaReq(i, BNGAKE_5_TOP);
-                kotama_pp->wait_time = 0;
-                kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
+                bng_kotama_pp->wait_time = 0;
+                bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT;
                 break;
             case BNGKA_LIFT: {
                 int randam_num;
 
-                if (kotama_pp->wait_time == 1) {
+                if (bng_kotama_pp->wait_time == 1) {
                     randam_num = (rand() % 130);
                     randam_num -= bng_str.renzoku_cnt;
 
@@ -4756,41 +4756,41 @@ static void bonusGameCtrl(int time) {
 
                     randam_num += 10;
 
-                    kotama_pp->wait_next_time = randam_num;
+                    bng_kotama_pp->wait_next_time = randam_num;
                 } else {
-                    randam_num = kotama_pp->wait_next_time;
+                    randam_num = bng_kotama_pp->wait_next_time;
                 }
 
-                if (kotama_pp->wait_time > randam_num) {
+                if (bng_kotama_pp->wait_time > randam_num) {
                     if ((rand() % 2) != 0) {
                         bonusGameKoamaReq(i, mochimono_ofs);
-                        kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
+                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFTED;
                     } else {
                         bonusGameKoamaReq(i, BNGAKE_2_TOP);
-                        kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
+                        bng_kotama_pp->bng_kotama_act_enum = BNGKA_LIFT_NG;
                     }
 
-                    kotama_pp->wait_time = 0;
+                    bng_kotama_pp->wait_time = 0;
                 }
 
                 break;
             }
             case BNGKA_LIFT_NG:
-                if (kotama_pp->wait_time >= 24) {
-                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    kotama_pp->wait_time = 0;
+                if (bng_kotama_pp->wait_time >= 24) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_BLOW:
-                if (kotama_pp->wait_time >= 180) {
-                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    kotama_pp->wait_time = 0;
+                if (bng_kotama_pp->wait_time >= 180) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_BREAK:
-                if (kotama_pp->wait_time >= 36) {
-                    kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
-                    kotama_pp->wait_time = 0;
+                if (bng_kotama_pp->wait_time >= 36) {
+                    bng_kotama_pp->bng_kotama_act_enum = BNGKA_NOTHING;
+                    bng_kotama_pp->wait_time = 0;
                 }
                 break;
             case BNGKA_LIFTED:

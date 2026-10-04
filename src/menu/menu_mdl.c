@@ -2889,9 +2889,9 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     anmBit = PR_BIT(no);
 
     for (i = 0; i < 6 && acobj->cflg != 0; i++, acobj++) {
-        int anmBit = acobj->cflg;
-        ano = anmBit & MNANM_TARGET_MASK;
-        switch (anmBit & MNANM_KIND_MASK) {
+        int cflg = acobj->cflg;
+        ano = cflg & MNANM_TARGET_MASK;
+        switch (cflg & MNANM_KIND_MASK) {
         case MNANM_CAMERA:
             PrSelectCamera(pshdl->spc[acobj->no], pshdl->scene);
             pshdl->CAniNo = no;

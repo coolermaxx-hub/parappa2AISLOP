@@ -460,7 +460,7 @@ void (*comMakeingTblLevel3[4])(CM_STR_CTRL *cmstr_pp) = {
 };
 
 static void comSelection(LEVEL_VS_ENUM lvl, CM_STR_CTRL *cmstr_pp) {
-    void (**comMakeingTbl_tmp)(CM_STR_CTRL *cmstr_pp);
+    void (**comMakeingTbl_tmp)(CM_STR_CTRL *);
     int tblcnt;
 
     switch (lvl) {

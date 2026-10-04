@@ -9,7 +9,7 @@ causes = {
     'menu/p3mc.c': 'Typed tables and `P3MC_DATE` replace word casts and a do-while (see remaining-work.md).',
     'main/wipe.c': 'WipeParaOutDisp: loop-alignment asm removed (see remaining-work.md).',
     'main/drawctrl.c': 'DrawMozaikuDisp uses a typed masked frame (see remaining-work.md). ' + NM + ' (DrawObjStrDisp, DrawObjPrReq: register allocation).',
-    'main/scrctrl.c': 'ScrExamSetCheck: gotos replaced by structured control flow.',
+    'main/scrctrl.c': 'ScrExamSetCheck: gotos replaced by structured control flow; the replay score buffer is declared in its own block, as the original debug info shows, which changes the stack frame layout.',
     'prlib/random.cpp': 'PrFloatRandom is a plain do-while (see remaining-work.md).',
     'prlib/prlib.cpp': 'PrSetDebugParamFloat stores through the union member (see remaining-work.md). The original symbol `PrSetModelVisibillity` is spelled `PrSetModelVisibility` here, so it counts as not reproduced.',
     'prlib/scene.cpp': NM + ' (the constructor and SetAppropriateDefaultCamera). ' + WEAK + ' (NaVECTOR<float, 4>::Set and the 4-argument constructor).',

@@ -783,20 +783,15 @@ static int memc_mansub_load(int result) {
 }
 
 static int memc_manager_save(int result) {
-    int             re;
-    MEMC_STAT      *pmw;
-    char            name[64];
-    char           *fname;
-    int             i;
-    int             iscls;
-    int             isfn;
-    sceMcTblGetDir *owDir;
-    int             isSysOWrite;
+    int        re;
+    MEMC_STAT *pmw;
 
     pmw = &memc_stat;
 
     switch (pmw->cmd) {
-    case sceMcFuncNoFileInfo:
+    case sceMcFuncNoFileInfo: {
+        char name[64];
+
         if (result == sceMcResSucceed) {
             if (!pmw->format) {
                 result = sceMcResNoFormat;
@@ -823,6 +818,7 @@ static int memc_manager_save(int result) {
         }
 
         break;
+    }
     case sceMcFuncNoGetDir:
         if (result == 0) {
             if (!pmw->format) {
@@ -846,6 +842,13 @@ static int memc_manager_save(int result) {
         pmw->oldOWClust = 0;
 
         if (result >= 2) {
+            char           *fname;
+            int             i;
+            int             iscls;
+            int             isfn;
+            sceMcTblGetDir *owDir;
+            int             isSysOWrite;
+
             isSysOWrite = FALSE;
             iscls = 0;
             isfn = 0;
