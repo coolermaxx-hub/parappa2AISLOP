@@ -358,6 +358,8 @@ segments:
       # 16 zero bytes of unknown origin (nothing references them); kept as padding.
       - { kind: pad, pad_amount: 0x10, section: .data }
       - { path: src/nalib/navector.cpp.o }
+      # sdk/graphdev's data starts on a 16-byte boundary; the asm object carries no alignment.
+      - { kind: pad, pad_amount: 0x4, section: .data }
 
       - { path: asm/data/sdk/graphdev.data.s.o }
       - { path: asm/data/sdk/libdma.data.s.o }

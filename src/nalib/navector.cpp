@@ -30,6 +30,3 @@ NaMATRIX<float, 2, 2> NaMATRIX<float, 2, 2>::IDENT(1.0f, 0.0f,
 NaMATRIX<float, 3, 3> NaMATRIX<float, 3, 3>::IDENT(1.0f, 0.0f, 0.0f,
                                                    0.0f, 1.0f, 0.0f,
                                                    0.0f, 0.0f, 1.0f);
-
-/* the next object (sdk/graphdev) starts on a 16-byte boundary */
-asm(".section .data\n.align 4\n.text");

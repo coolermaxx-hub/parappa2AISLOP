@@ -904,13 +904,11 @@ void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     ((SprTagCG*)*pk) = sp + 1;
 }
 
-asm("
-.data
-.align 4
-S5432:
-    .word 0x362e9c14, 0xb94fb21f, 0x3c08873e, 0xbe2aaaa4
-.text
-");
+/* Sine series coefficients for rotcossin, loaded into VF01 as one quadword:
+   x^5, x^4, x^3 and x^2 terms are scaled from these by the VU0 code. */
+float rotCosSinCoefficients[4] __attribute__((aligned(16))) = {
+    2.60188699e-06f, -1.98074136e-04f, 8.33302550e-03f, -1.66666567e-01f
+};
 
 static void rotcossin(float rot) {
     asm volatile(
@@ -927,7 +925,7 @@ static void rotcossin(float rot) {
 "_RotCosSin_02:                                    \n\t"
         "mfc1      $8,    %0                       \n\t"
         "qmtc2     $8,    $vf03                    \n\t"
-        "la        $8,    S5432                    \n\t" /* Transfer coefficients of S5-S2 to VF05 */
+        "la        $8,    rotCosSinCoefficients    \n\t" /* Transfer coefficients of S5-S2 to VF01 */
         "lqc2      $vf01, 0($8)                    \n\t"
         "vmr32.w   $vf03, $vf03                    \n\t" /* Copy VF03.x(v) to VF03.w */
         "vaddx.x   $vf04, $vf00, $vf03             \n\t" /* Copy VF03.x(v) to VF04.x */
