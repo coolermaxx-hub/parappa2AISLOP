@@ -413,14 +413,14 @@ void GPadRead(PADD *pad_pp) {
 
 PAD_PRESS_ENUM GetPadbit2PressId(u_short padbit) {
     BIT2PR bit2pr[12] = {
-        { 0x8000, PAD_PR_Lleft }, { 0x2000, PAD_PR_Lright },
-        { 0x1000, PAD_PR_Lup   }, { 0x4000, PAD_PR_Ldown  },
+        { SCE_PADLleft,  PAD_PR_Lleft }, { SCE_PADLright, PAD_PR_Lright },
+        { SCE_PADLup,    PAD_PR_Lup   }, { SCE_PADLdown,  PAD_PR_Ldown  },
 
-        { 0x10,   PAD_PR_Rup   }, { 0x40,   PAD_PR_Rdown  },
-        { 0x80,   PAD_PR_Rleft }, { 0x20,   PAD_PR_Rright },
+        { SCE_PADRup,    PAD_PR_Rup   }, { SCE_PADRdown,  PAD_PR_Rdown  },
+        { SCE_PADRleft,  PAD_PR_Rleft }, { SCE_PADRright, PAD_PR_Rright },
 
-        { 0x4,    PAD_PR_L1    }, { 0x1,    PAD_PR_L2     },
-        { 0x8,    PAD_PR_R1    }, { 0x2,    PAD_PR_R2     }
+        { SCE_PADL1,     PAD_PR_L1    }, { SCE_PADL2,     PAD_PR_L2     },
+        { SCE_PADR1,     PAD_PR_R1    }, { SCE_PADR2,     PAD_PR_R2     }
     };
     PAD_PRESS_ENUM ret = PAD_PR_None;
     u_int i;
@@ -570,8 +570,10 @@ void GGsExecLocalMoveImage(sceGsMoveImage *lp) {
     sceDmaSend(sceDmaGetChan(SCE_DMA_GIF), &exl_dmatag);
 }
 
+#define RAND_15BIT_MASK 0x7fff /* uses the low 15 bits of rand(), scaled by >> 15 */
+
 u_int randMakeMax(u_int max) {
-    u_int ret = (rand() & 0x7fff) * max;
+    u_int ret = (rand() & RAND_15BIT_MASK) * max;
     return ret >> 15;
 }
 
