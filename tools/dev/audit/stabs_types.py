@@ -206,4 +206,5 @@ def main():
                 print('  0x%x: original %s, ours %s' % (pos // 8, ', '.join(a) or '-', ', '.join(b) or '-'))
 
 
-main()
+if __name__ == '__main__':
+    main()

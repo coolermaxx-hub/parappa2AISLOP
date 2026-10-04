@@ -16,7 +16,7 @@
 
 static char *HedderID = "P2_USERDATA_HED";
 static char *FooterID = "P2_USERDATA_FOT";
-GETUSER_WORK *pUChkWork = NULL; /* static */
+static GETUSER_WORK *pUChkWork = NULL;
 static P3MC_WORK P3MC_Work;
 static char filePath[64];
 static MEMC_INFO mcmenu_info;

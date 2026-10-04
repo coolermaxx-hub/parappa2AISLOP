@@ -388,7 +388,7 @@ static void lddisp_draw_on(LDMAP_ENUM ldmap_enum) {
     PrShowModel(ldmap[ldmap_enum].spmHdl, NULL);
 }
 
-void WipeLoadInDisp(void *x) {
+static void WipeLoadInDisp(void *x) {
     int timer;
     int firstf;
     int ttmp;
@@ -584,7 +584,7 @@ void WipeInReq(void) {
     MtcExec(WipeLoadInDisp, MTC_TASK_WIPECTRL);
 }
 
-void WipeLoadInDispSame(void *x) {
+static void WipeLoadInDispSame(void *x) {
     SPR_PRIM spr_prim = {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
@@ -645,7 +645,7 @@ int WipeEndCheck(void) {
     return wipe_end_flag;
 }
 
-void WipeYesNoDispTask(void *x) {
+static void WipeYesNoDispTask(void *x) {
     void *scn_hdl;
     void *spm_hdl;
     float men_tmp;

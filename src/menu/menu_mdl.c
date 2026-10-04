@@ -11,7 +11,7 @@
 #include <math.h>
 #include <string.h>
 
-MN_MDLTBL Mdl_StageMapH[] = {
+static MN_MDLTBL Mdl_StageMapH[] = {
     { 47, { 104, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     {
         76,
@@ -38,7 +38,7 @@ MN_MDLTBL Mdl_StageMapH[] = {
     { 73, { 141, 142, 143, 144, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
-MN_MDLTBL Mdl_StageMapA[] = {
+static MN_MDLTBL Mdl_StageMapA[] = {
     { 46, { 104, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     {
         76,
@@ -65,7 +65,7 @@ MN_MDLTBL Mdl_StageMapA[] = {
     { 73, { 141, 142, 143, 144, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
-MN_MDLTBL Mdl_StageMapY[] = {
+static MN_MDLTBL Mdl_StageMapY[] = {
     { 48, { 104, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     {
         76,
@@ -92,12 +92,15 @@ MN_MDLTBL Mdl_StageMapY[] = {
     { 73, { 141, 142, 143, 144, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
-int Cam_StageMap[] = { 180, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 0 };
+static int Cam_StageMap[] = { 180, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 0 };
+MN_SCENETBL Scene_StageMap  = { Mdl_StageMapH, Cam_StageMap };
+MN_SCENETBL Scene_StageMapA = { Mdl_StageMapA, Cam_StageMap };
+MN_SCENETBL Scene_StageMapY = { Mdl_StageMapY, Cam_StageMap };
 static PRPOS PRP_CTHAL[] = {
     { 0.0f, 0.0f, 56.0f, 0.0f, 0.0f },
     { 0.0f, 0.0f, 56.0f, 0.0f, 0.0f },
 };
-PRPROOT PRP_RootTbl[] = {
+static PRPROOT PRP_RootTbl[] = {
     { PRP_CTHAL, 2 },
 };
 MNANM_TBL StageMapAnime[] = {
@@ -2060,6 +2063,7 @@ MN_MDLTBL Mdl_CityHall[] = {
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
 int Cam_CityHall[] = { 181, 182, 183, 184, 0, 0 };
+MN_SCENETBL Scene_CityHall = { Mdl_CityHall, Cam_CityHall };
 MNANM_TBL CityHallAnime[] = {
     {
         0,
@@ -2531,6 +2535,7 @@ MN_MDLTBL Mdl_OptCounter[] = {
     { 51, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
+MN_SCENETBL Scene_OptCounter = { Mdl_OptCounter, Cam_Notdef };
 MN_MDLTBL Mdl_RepCounter[] = {
     { 77, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 1, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
@@ -2540,6 +2545,7 @@ MN_MDLTBL Mdl_RepCounter[] = {
     { 5, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
+MN_SCENETBL Scene_RepCounter = { Mdl_RepCounter, Cam_Notdef };
 MN_MDLTBL Mdl_StgCounterLoad[] = {
     { 17, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 11, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
@@ -2549,6 +2555,7 @@ MN_MDLTBL Mdl_StgCounterLoad[] = {
     { 15, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
+MN_SCENETBL Scene_StgCounterLoad = { Mdl_StgCounterLoad, Cam_Notdef };
 MN_MDLTBL Mdl_StgCounterSave[] = {
     { 84, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 6, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
@@ -2558,6 +2565,7 @@ MN_MDLTBL Mdl_StgCounterSave[] = {
     { 10, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
+MN_SCENETBL Scene_StgCounterSave = { Mdl_StgCounterSave, Cam_Notdef };
 MNANM_TBL CounterAnime[] = {
     {
         0,
@@ -2657,8 +2665,10 @@ MNANM_TBL CounterAnime[] = {
     },
 };
 MN_MDLTBL Mdl_JimakuBak[] = {
-    { 18, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },    { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
+    { 18, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
+    { 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
 };
+MN_SCENETBL Scene_JimakuBak = { Mdl_JimakuBak, Cam_Notdef };
 
 static u_int AMusicFitTime;
 

@@ -422,13 +422,13 @@ static void  MendererCtrlTitleDisp(int frame, int dera_f);
 static void  DrawCtrlMain(void *x);
 static void  DrawSceneStrInit(SCENESTR *scstr_pp);
 static void  DrawSceneStrReset(SCENESTR *scstr_pp);
-/*static*/ int   ddbg_event_sel(int pad);
-/*static*/ void  ddbg_event_msg(char *buf);
-/*static*/ int   ddbg_scene_sel(int pad);
-/*static*/ void  ddbg_scene_msg(char *buf);
-/*static*/ int   ddbg_event_check(int pad);
-/*static*/ int   ddbg_scene_check(int pad);
-/*static*/ int   ddbg_bmp_check(int pad);
+static int   ddbg_event_sel(int pad);
+static void  ddbg_event_msg(char *buf);
+static int   ddbg_scene_sel(int pad);
+static void  ddbg_scene_msg(char *buf);
+static int   ddbg_event_check(int pad);
+static int   ddbg_scene_check(int pad);
+static int   ddbg_bmp_check(int pad);
 static void  ddbg_event_sub(void);
 static void  ddbg_event_sub_bmp(void);
 static void  ddbg_tap_check(void);
@@ -2863,11 +2863,11 @@ static int drawDispCheckSub(u_int drD, u_int *dat_pp) {
     return ret;
 }
 
-/* static */ int drawUseDispCheck(int useD) {
+static int drawUseDispCheck(int useD) {
     return drawDispCheckSub(useD, &useDispFlag);
 }
 
-/* static */ int drawDrDispCheck(int drD) {
+static int drawDrDispCheck(int drD) {
     return drawDispCheckSub(drD, &drDispFlag);
 }
 
@@ -3479,7 +3479,7 @@ static int ddbg_go_event_scene = 0;
 static int ddbg_tap_num = 0;
 static int ddbg_bmp_frame = 0;
 
-/* static */ int ddbg_event_sel(int pad) {
+static int ddbg_event_sel(int pad) {
     ddbg_event_num += pad;
 
     if (ddbg_event_num < 0) {
@@ -3496,11 +3496,11 @@ static int ddbg_bmp_frame = 0;
     return 0;
 }
 
-/* static */ void ddbg_event_msg(char *buf) {
+static void ddbg_event_msg(char *buf) {
     sprintf(buf, "#%02X", ddbg_event_num);
 }
 
-/* static */ int ddbg_scene_sel(int pad) {
+static int ddbg_scene_sel(int pad) {
     SCENESTR *scenestr_pp = &drawEventrec->scenestr_pp[ddbg_event_num];
 
     ddbg_scene_num += pad;
@@ -3516,21 +3516,21 @@ static int ddbg_bmp_frame = 0;
     return 0;
 }
 
-/* static */ void ddbg_scene_msg(char *buf) {
+static void ddbg_scene_msg(char *buf) {
     sprintf(buf, "#%02X", ddbg_scene_num);
 }
 
-/* static */ int ddbg_event_check(int pad) {
+static int ddbg_event_check(int pad) {
     ddbg_go_event_scene = 0;
     return 1;
 }
 
-/* static */ int ddbg_scene_check(int pad) {
+static int ddbg_scene_check(int pad) {
     ddbg_go_event_scene = 1;
     return 1;
 }
 
-/* static */ int ddbg_bmp_check(int pad) {
+static int ddbg_bmp_check(int pad) {
     ddbg_go_event_scene = 2;
     return 1;
 }

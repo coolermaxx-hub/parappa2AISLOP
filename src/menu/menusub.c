@@ -421,15 +421,6 @@ static short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
 static short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
 static short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
 
-MN_SCENETBL Scene_StageMap       = { Mdl_StageMapH,      Cam_StageMap };
-MN_SCENETBL Scene_StageMapA      = { Mdl_StageMapA,      Cam_StageMap };
-MN_SCENETBL Scene_StageMapY      = { Mdl_StageMapY,      Cam_StageMap };
-MN_SCENETBL Scene_CityHall       = { Mdl_CityHall,       Cam_CityHall };
-MN_SCENETBL Scene_OptCounter     = { Mdl_OptCounter,     Cam_Notdef };
-MN_SCENETBL Scene_RepCounter     = { Mdl_RepCounter,     Cam_Notdef };
-MN_SCENETBL Scene_StgCounterLoad = { Mdl_StgCounterLoad, Cam_Notdef };
-MN_SCENETBL Scene_StgCounterSave = { Mdl_StgCounterSave, Cam_Notdef };
-MN_SCENETBL Scene_JimakuBak      = { Mdl_JimakuBak,      Cam_Notdef };
 static u_char *UserName_InitialStr  = (u_char*)"AAAAAAAA";
 static u_char *UserName_InitialStr2 = (u_char*)"        ";
 static u_char UserName_AsciiSetB[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ!?&1234567890 ";
@@ -1090,8 +1081,6 @@ static USERLIST_TYPE UserListTbl[] = {
     { &MNS_StgCounter[1], 1, 1, 0, { MENU_SAVE_CEL, MENU_SAVE_NAME } },
     { &MNS_RepCounter, 1, 2, 2, { MENU_SAVE_CEL, MENU_SAVE_NAME } },
 };
-/* sdata 399820 */ extern int _TexFunc; /* static */
-/* sdata 399824 */ extern HOSI_OBJ *HOSIObj; /* static */
 MN_SCENE MNS_StageMap = {
     0,
     0,
@@ -1663,13 +1652,13 @@ static void  tsBGMONEVol(int no, int vol);
 static void  tsBGMONETop(int no, int vol);
 static void  tsBGMONEflow(void);
 static void  tsBGMONEPause(int flg);
-/* static */ void  TsBGMInit(void);
-/* static */ void  TsBGMPlay(int no, int time);
+static void  TsBGMInit(void);
+static void  TsBGMPlay(int no, int time);
 static void  TsBGMStop(int time);
 static void  TsBGMMute(int time);
 static int   TsBGMLoadCheck(void);
 static void  TsBGMPause(int flg);
-/* static */ void  TsBGMPoll(void);
+static void  TsBGMPoll(void);
 static void* TsCmnPkOpen(sceGifPacket *pgifpk);
 static void  TsCmnPkClose(sceGifPacket *pgifpk, void *pk, int pri);
 static void  TsClearMenuPad(int no);
@@ -1682,16 +1671,16 @@ static int   TsMENU_GetMapNo(int *psize);
 static void  TsMENU_GetMapTimeState(int flg);
 /* TsMENU_GetMapTimeState: hold the next clock read off for 30 frames (never passed). */
 #define MAPTIME_DELAY 3
-/* static */ void  TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus);
+static void  TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus);
 static void  TsSet_ParappaCapColor(void);
-/* static */ void  TsClearSet(P3GAMESTATE *pstate);
+static void  TsClearSet(P3GAMESTATE *pstate);
 static void  TsCheckEnding(P3GAMESTATE *pstate);
-/* static */ void  TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name);
+static void  TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name);
 static void  TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank);
-/* static */ void  TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser);
-/* static */ void  TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode);
-/* static */ int   TsRanking_Set(void);
-/* static */ int   TsCheckTimeMapChange(void);
+static void  TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser);
+static void  TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode);
+static int   TsRanking_Set(void);
+static int   TsCheckTimeMapChange(void);
 static int   TsMemCardCheck_Flow(int flg, u_int tpad);
 static int   TsMap_Flow(int flg, u_int tpad, u_int tpad2);
 /* TsMap_Flow entrances (the tpad argument with MNFLOW_INIT). */
@@ -1701,9 +1690,9 @@ enum {
     TSMAP_ENTER_STAGE_END = 2,  /* a stage ended: update the rankings and offer to save */
     TSMAP_ENTER_MAP = 3         /* open the map on the current stage */
 };
-/* static */ void  TsMakeUserWork(int mode);
-/* static */ void  TsSaveSuccessProc(void);
-/* static */ int   MpSave_Flow(int flg, u_int tpad, u_int tpad2);
+static void  TsMakeUserWork(int mode);
+static void  TsSaveSuccessProc(void);
+static int   MpSave_Flow(int flg, u_int tpad, u_int tpad2);
 static int   MpCityHall_Flow(int flg, u_int tpad, u_int tpad2);
 /* MpCityHall_Flow entrances (the tpad argument with MNFLOW_INIT). */
 enum {
@@ -1717,13 +1706,13 @@ enum {
     CHALL_RES_REPLAY = 2, /* a replay was loaded: play it */
     CHALL_RES_LOADED = 3  /* a save was loaded; the screen is already faded out */
 };
-/* static */ void  MpCityHallParaStart(int pos);
+static void  MpCityHallParaStart(int pos);
 static void  MpCityHallFPHSSoundMask(int flg);
-/* static */ int   MpCityHallFPHSMove(int pos, int fpos);
+static int   MpCityHallFPHSMove(int pos, int fpos);
 static void  MpCityHallFPHOK(int flg);
-/* static */ void  MpCityHallCharPosSet(int pos);
+static void  MpCityHallCharPosSet(int pos);
 static int   MpPopMenu_Flow(int flg, u_int tpad);
-/* static */ int   MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad);
+static int   MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad);
 /* MpMapMenu_Flow commands beyond MNFLOW_INIT / MNFLOW_RUN. */
 enum {
     MAPMENU_PLACE = 3,  /* put the cursor on position tpad */
@@ -1736,7 +1725,7 @@ enum {
     MAPMENU_DECIDED = 1
 };
 static int   _MapGetMovableDir(MAPPOS *mpw);
-/* static */ int   McErrorMess(int err);
+static int   McErrorMess(int err);
 /*
  * McErrorMess numbers. The low ones are P3MC_RES_* results; the others pick
  * messages the results alone do not tell apart.
@@ -1760,7 +1749,7 @@ enum {
     MCERR_SAVED = 200
 };
 static void  McInitFlow(void);
-/* static */ int   McStartCheckFlow(int flg);
+static int   McStartCheckFlow(int flg);
 /* McStartCheckFlow results: the boot-time card check. */
 enum {
     MCSTART_RUNNING  = -1,
@@ -1792,7 +1781,7 @@ enum {
     MCUCHK_FINISH = 0xf0f0          /* pick the exit after an error */
 };
 
-/* static */ int   McUserCheckFlow(int type, int mode, int *bError);
+static int   McUserCheckFlow(int type, int mode, int *bError);
 /* McUserCheckFlow keeps returning this until it shows the "checking" message, then MCFLOW_RUNNING. */
 #define MCUCHK_RUN_QUIET -2
 /* What McUserCheckFlow reports through bError once the "checking" message is up. */
@@ -1838,13 +1827,13 @@ enum {
     MCUSER_EXIT_CARD_CHANGED = 0xf004
 };
 
-/* static */ int   McUserSaveFlow(USER_DATA *puser);
-/* static */ int   McUserLoadFlow(int fileNo, int mode, int bBroken);
+static int   McUserSaveFlow(USER_DATA *puser);
+static int   McUserLoadFlow(int fileNo, int mode, int bBroken);
 static void  TsMCAMes_Init(void);
 static int   TsMCAMes_GetSelect(void);
 static int   TsMCAMes_IsON(void);
-/* static */ void  TsMCAMes_Flow(u_int tpad);
-/* static */ void  TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr);
+static void  TsMCAMes_Flow(u_int tpad);
+static void  TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  TsCMPMes_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  TsANIME_Init(ANIME_WK *wk);
 static int   TsANIME_Poll(ANIME_WK *wk);
@@ -1858,9 +1847,9 @@ enum {
 };
 #define ANIME_IS_CLOSING(aflg) ((aflg) & 1)
 static int   TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2);
-/* static */ void  _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp);
-/* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank);
-/* static */ int   TsPopMenu_Flow(int flg, u_int tpad);
+static void  _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp);
+static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank);
+static int   TsPopMenu_Flow(int flg, u_int tpad);
 /*
  * TsPopMenu_Flow / MpPopMenu_Flow result: -1 when cancelled, otherwise the play
  * mode picked, with the computer's level above it for POPSEL_VS_COM.
@@ -1870,39 +1859,39 @@ static int   TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2);
 #define POPSEL_VS_COM         3
 #define POPSEL_MODE(ret)      ((ret) & 0xff)
 #define POPSEL_VS_LEVEL(ret)  ((ret) >> 8)
-/* static */ void  TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
-/* static */ int   TsSaveMenu_Flow(int flg, u_int tpad);
-/* static */ void  TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
+static void  TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
+static int   TsSaveMenu_Flow(int flg, u_int tpad);
+static void  TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  TSJukeCDObj_Init(JUKECDOBJ *pw, int pno);
-/* static */ void  _TsJkJacketPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zx, float rot, u_int abgr, u_int abgrs);
-/* static */ void  _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zr, float rrot, u_int abgr, u_int abgrs);
-/* static */ void  TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime);
+static void  _TsJkJacketPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zx, float rot, u_int abgr, u_int abgrs);
+static void  _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zr, float rrot, u_int abgr, u_int abgrs);
+static void  TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime);
 static int   TsJukeIsObjAnime(int isComp);
-/* static */ int   TsJukeObjAnime(int isOut);
-/* static */ int   TsJukeObjAnime2(int isOut);
-/* static */ int   _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj);
-/* static */ void  _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj);
-/* static */ int   TsJukeMenu_Flow(int flg, u_int tpad);
+static int   TsJukeObjAnime(int isOut);
+static int   TsJukeObjAnime2(int isOut);
+static int   _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj);
+static void  _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj);
+static int   TsJukeMenu_Flow(int flg, u_int tpad);
 static void  TsJukeMenu_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  TsCmnCell_CusorSET(CELLOBJ *obj);
 static void  TsCmnCell_CusorON(CELLOBJ *obj);
 static void  TsCmnCell_CusorOFF(CELLOBJ *obj);
 static void  TsCmnCell_CusorSEL(CELLOBJ *obj);
 static void  TsCmnCell_CusorMASK(CELLOBJ *obj);
-/* static */ void  TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor);
-/* static */ int   TsOption_Flow(int flg, u_int tpad);
-/* static */ void  TsOption_Draw(SPR_PKT pk, SPR_PRM *spr);
+static void  TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor);
+static int   TsOption_Flow(int flg, u_int tpad);
+static void  TsOption_Draw(SPR_PKT pk, SPR_PRM *spr);
 static int   TsUserList_GetCurFileNo(int *isBroken);
 static int   TsUserList_IsGetFileSave(void);
 static int   TsUserList_SortUser(void);
 static void  TsUserList_SetCurUserData(USER_DATA *psrc);
 static void  TsUserList_SetCurDispUserData(USER_DATA *psrc);
-/* static */ void  TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate);
+static void  TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate);
 static void  TsUserList_SetType(USERLISTTYPE_TABLE *ptbl, int mode, int curTag);
 static int   TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno);
-/* static */ int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
+static int   TsUserList_SetCurTag(USERLIST_MENU *pfw, int no);
 
-/* static */ int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
+static int   TsUserList_Flow(int flg, u_int tpad, u_int tpad2);
 /* TsUserList_Flow: reset the list onto tab tpad. */
 #define ULIST_FLOW_SET_TAG 3
 /* TsUserList_Flow results with MNFLOW_RUN (0 while running). */
@@ -1911,12 +1900,12 @@ enum {
     ULIST_CANCELLED = -1,
     ULIST_PICKED = 1      /* a file was chosen (TsUserList_GetCurFileNo) */
 };
-/* static */ void  TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr);
+static void  TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  NameSpaceCut(u_char *dst, u_char *src);
-/* static */ void  TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog);
-/* static */ void  TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name);
+static void  TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog);
+static void  TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name);
 static void  TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name);
-/* static */ int   TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad);
+static int   TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad);
 /* TsNAMEINBox_Flow: start the box's closing animation. */
 #define NAMEIN_FLOW_CLOSE 3
 /* TsNAMEINBox_Flow results with MNFLOW_RUN. */
@@ -1926,22 +1915,22 @@ enum {
     NAMEIN_RES_RUNNING = 0,
     NAMEIN_RES_ENTERED = 1   /* the name was stored into the caller's buffer */
 };
-/* static */ void  TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side);
+static void  TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side);
 static void  TsSCFADE_Flow(int flg, int prm);
 /* TsSCFADE_Flow: like MNFLOW_INIT, but leave the screen covered at tone prm. */
 #define SCFADE_FLOW_HOLD 3
-/* static */ void  TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio);
+static void  TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio);
 static void  TsPatTexFnc(int flg);
-/* static */ void  _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy);
+static void  _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy);
 static void  TsPatPut(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy);
 static void  TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h);
-/* static */ void  TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot);
-/* static */ void  TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry);
+static void  TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot);
+static void  TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry);
 static void  TsPatPutSwing(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, int mx, int my, float Crx);
 static void  TsPatPutUneri(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, int mx, int my, float Crx, float Drt);
 static void  TsCELBackInit(void);
-/* static */ void  _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl);
-/* static */ void  TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot);
+static void  _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl);
+static void  TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot);
 
 static int TsGetMenuPadIsRepeat(int no, int npad) {
     return (menuPadState[no][npad].state >= 2);
@@ -2112,7 +2101,7 @@ static void tsBGMONEPause(int flg) {
     }
 }
 
-void TsBGMInit(void) {
+static void TsBGMInit(void) {
     memset(&TsBGMState, 0, sizeof(TsBGMState));
 }
 
@@ -2275,7 +2264,7 @@ enum {
 #define BGMCHG_STING_CHAN 3
 #define BGMCHG_STING_VSET 23
 
-/* static */ void TsBGMPoll(void) {
+static void TsBGMPoll(void) {
     BGMSTATE *pbgm = &TsBGMState;
     int ct;
 
@@ -2783,7 +2772,7 @@ static void TsMENU_GetMapTimeState(int flg) {
     CurMapBakFlg = state;
 }
 
-/* static */ void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
+static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
     int        gmn;
     P3LOG_VAL *pLog;
     int        i;
@@ -2912,7 +2901,7 @@ static void TsSet_ParappaCapColor(void) {
     MenuRoundTim2Trans(n);
 }
 
-/* static */ void TsClearSet(P3GAMESTATE *pstate) {
+static void TsClearSet(P3GAMESTATE *pstate) {
     int        nRound;
     int        nStage;
     int        i;
@@ -3383,7 +3372,7 @@ typedef struct {
     char name[12];
 } USER_NAME;
 
-/* static */ void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
+static void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
     int             i, k, l;
     P3MC_STAGERANK *pRank = pRankTop;
 
@@ -3412,7 +3401,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
     }
 }
 
-/* static */ void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
+static void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
     P3LOG_VAL      *plog;
     P3MC_STAGERANK *pRank;
     int             nStage;
@@ -3461,7 +3450,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
     }
 }
 
-/* static */ void TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode) {
+static void TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode) {
     int i;
 
     if (pDataW->pMemTop != NULL) {
@@ -3526,7 +3515,7 @@ void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
     dat[1] = ((rand() % 0x10000) << 8) + mptim->pad;
 }
 
-/* static */ int TsRanking_Set(void) {
+static int TsRanking_Set(void) {
     P3GAMESTATE    *pstate;
     P3MC_RANKSCORE *pScore;
     u_int           score;
@@ -3604,7 +3593,7 @@ void TsMENU_SetMapScreen(int mapNo) {
     CurMapState = 0;
 }
 
-static int TsCheckTimeMapChange() {
+static int TsCheckTimeMapChange(void) {
     if (CurMapState == 0 && CurMapBakFlg != CurMapOldFlg) {
         if (MNScene_isSeniAnime(&MNS_StageMap)) {
             return 0;
@@ -4174,7 +4163,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     return 0;
 }
 
-/* static */ void TsMakeUserWork(int mode) {
+static void TsMakeUserWork(int mode) {
     int stage = pP3GameState->nStage;
     int round;
     int score;
@@ -4272,7 +4261,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 }
 
-/* static */ void TsSaveSuccessProc(void) {
+static void TsSaveSuccessProc(void) {
     TsUserList_SetCurUserData(UserWork);
 
     *(USER_NAME*)pP3GameState->pLog->name = *(USER_NAME*)UserWork->name;
@@ -5129,7 +5118,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     return CHALL_RES_RUNNING;
 }
 
-/* static */ void MpCityHallParaStart(int pos) {
+static void MpCityHallParaStart(int pos) {
     short *ptr = NULL;
     int    n;
 
@@ -5166,7 +5155,7 @@ static void MpCityHallFPHSSoundMask(int flg) {
     TSSNDMASK_CHAN(3, flg);
 }
 
-/* static */ int MpCityHallFPHSMove(int pos, int fpos) {
+static int MpCityHallFPHSMove(int pos, int fpos) {
     short *ptr = NULL;
     int    n;
 
@@ -5253,7 +5242,7 @@ static void MpCityHallFPHOK(int flg) {
     }
 }
 
-/* static */ void MpCityHallCharPosSet(int pos) {
+static void MpCityHallCharPosSet(int pos) {
     short *ptr = NULL;
     u_int  AnmBit;
     int    n;
@@ -5576,7 +5565,7 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
     return ret;
 }
 
-/* static */ int McErrorMess(int err) {
+static int McErrorMess(int err) {
     int mes;
 
     if (!TsMCAMes_IsON()) {
@@ -5761,7 +5750,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     return MCSTART_RUNNING;
 }
 
-/* static */ int McUserCheckFlow(int type, int mode, int *bError) {
+static int McUserCheckFlow(int type, int mode, int *bError) {
     static int isRun = MCUCHK_RUN_QUIET;
     int flg;
 
@@ -5951,7 +5940,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     return isRun;
 }
 
-/* static */ int McUserSaveFlow(USER_DATA *puser) {
+static int McUserSaveFlow(USER_DATA *puser) {
     switch (subStatus) {
     case MCUSER_START:
         ret = P3MC_CheckChange();
@@ -6118,7 +6107,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     return MCFLOW_RUNNING;
 }
 
-/* static */ int McUserLoadFlow(int fileNo, int mode, int bBroken) {
+static int McUserLoadFlow(int fileNo, int mode, int bBroken) {
     switch (subStatus) {
     case MCUSER_START:
         ret = P3MC_CheckChange();
@@ -6425,7 +6414,7 @@ static void TsMCAMes_Flow(u_int tpad) {
     }
 }
 
-/* static */ void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
+static void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
     MCMES_WORK *pmesw = &MCMesWork;
     int         px, py, x, y;
     float       fRate, fLine;
@@ -6610,7 +6599,7 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
     }
 }
 
-/* static */ void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp) {
+static void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp) {
     int l, k, m;
     int isSame;
 
@@ -6648,7 +6637,7 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
     }
 }
 
-/* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) {
+static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) {
     int             i;
     int             maxn;
     int             rnkMax;
@@ -6787,7 +6776,7 @@ void TsPopCusFlow(POPCTIM *pfw) {
     }
 }
 
-/* static */ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
+void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
     float rt3;
     float rt = 0.0f;
     u_int mode;
@@ -6936,7 +6925,7 @@ enum {
     POPUP_CANCELLED = 0xff20
 };
 
-/* static */ int TsPopMenu_Flow(int flg, u_int tpad) {
+static int TsPopMenu_Flow(int flg, u_int tpad) {
     POPUP_MENU *pfw = &PopupMenu;
     int state;
     int aflg;
@@ -7345,7 +7334,7 @@ enum {
     return 0;
 }
 
-/* static */ void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
+static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     POPUP_MENU *pfw = &PopupMenu;
     char        buf[32];
     float       rt0, rt1, rt2;
@@ -7606,7 +7595,7 @@ enum {
     SAVEMENU_CANCELLED = 0xff20
 };
 
-/* static */ int TsSaveMenu_Flow(int flg, u_int tpad) {
+static int TsSaveMenu_Flow(int flg, u_int tpad) {
     SAVE_MENU *pfw = &SaveMenu;
     int        state;
     int        aret;
@@ -7802,7 +7791,7 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     pw->patNo = pno;
 }
 
-/* static */ void _TsJkJacketPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zx, float rot, u_int abgr, u_int abgrs) {
+static void _TsJkJacketPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zx, float rot, u_int abgr, u_int abgrs) {
     if (pw->vrate == 0.0f) {
         spr->rgba0 = abgrs;
         TsPatPutRZoom(pk, spr, JUKEJKT_PatS, px + 10, py + 5, zx, rot);
@@ -7816,7 +7805,7 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     }
 }
 
-/* static */ void _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zr, float rrot, u_int abgr, u_int abgrs) {
+static void _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, float zr, float rrot, u_int abgr, u_int abgrs) {
     float box, boy;
 
     if (pw->rox == 0.0f && pw->roy == 0.0f) {
@@ -7838,7 +7827,7 @@ static void TSJukeCDObj_Init(JUKECDOBJ *pw, int pno) {
     spr->ofsy = boy;
 }
 
-/* static */ void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
+static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
     PATPOS *ppat;
     float   box, boy;
     float   jrot, rrot;
@@ -8320,7 +8309,7 @@ static int TsJukeObjAnime2(int isOut) {
     return 0;
 }
 
-/* static */ int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
+static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
     int ox = *cx;
     int oy = *cy;
     int x, y, pos;
@@ -8386,7 +8375,7 @@ static int TsJukeObjAnime2(int isOut) {
     return 0;
 }
 
-/* static */ void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
+static void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
     int bx, by;
     int flg;
     int x = sel % 5;
@@ -8467,7 +8456,7 @@ enum {
     JUKE_CANCELLED = 0xff20
 };
 
-/* static */ int TsJukeMenu_Flow(int flg, u_int tpad) {
+static int TsJukeMenu_Flow(int flg, u_int tpad) {
     JUKE_MENU *pfw = &JukeMenu;
     int i;
     int state;
@@ -8871,7 +8860,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     obj->flg = 0xffff;
 }
 
-/* static */ void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor) {
+static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, int ox, int oy, int CurColor) {
     TSTEX_INF *ptex;
     int flg;
     int ton;
@@ -8970,7 +8959,7 @@ enum {
     OPTMENU_EXIT_CANCEL = 0xff20
 };
 
-/* static */ int TsOption_Flow(int flg, u_int tpad) {
+static int TsOption_Flow(int flg, u_int tpad) {
     OPTION_MENU  *pfw = &OptionMenu;
     int           state;
     int           sel;
@@ -9233,7 +9222,7 @@ static void TsUserList_SetCurDispUserData(USER_DATA *psrc) {
     *(pfw->pusrdspWk->pUserDisp + (pfw->curuser + pfw->curPageTop)) = *psrc;
 }
 
-/* static */ void TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate) {
+static void TsUserList_SetCurFileNoCusor(int fileNo, P3MC_DATE *fDate) {
     USERLIST_MENU *pfw = &UserListMenu;
     USER_DATA     *puser;
     int            i;
@@ -9300,7 +9289,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return flg;
 }
 
-/* static */ int TsUserList_SetCurTag(USERLIST_MENU *pfw, int no) {
+static int TsUserList_SetCurTag(USERLIST_MENU *pfw, int no) {
     USERLIST_TYPE *ptbl;
     int            fileNo;
 
@@ -9374,7 +9363,7 @@ enum {
     ULST_EXIT_RECHECK = 0xff40
 };
 
-/* static */ int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
+static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
     USERLIST_MENU *pfw = &UserListMenu;
     USER_DATA     *puser;
     int            state;
@@ -9820,7 +9809,7 @@ enum {
     return 0;
 }
 
-/* static */ void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
+static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     USERLIST_MENU *pfw = &UserListMenu;
     u_char         buf[16];
     int            isScroll;
@@ -10011,7 +10000,7 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
     }
 }
 
-/* static */ void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
+static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
     u_char  buf[32];
     STRPOS *strpos;
     STRPOS *ps;
@@ -10123,11 +10112,11 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 }
 
 /* .sdata after TsUser_PanelDraw's string literals */
-int _TexFunc = 0;
-HOSI_OBJ *HOSIObj = NULL;
+static int _TexFunc = 0;
+static HOSI_OBJ *HOSIObj = NULL;
 MAP_TIME MapTime = { 0 };
 
-/* static */ void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
+static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
     u_short       *pcode = pfw->curnchr;
     int            i, l, j;
     USERNAME_CSET *cset;
@@ -10192,7 +10181,7 @@ enum {
     NAMEIN_CLOSING = 0xff38
 };
 
-/* static */ int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
+static int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
     int i;
     int state;
     int aflg;
@@ -10360,7 +10349,7 @@ enum {
     return NAMEIN_RES_RUNNING;
 }
 
-/* static */ void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
+static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
     float   ofsx = spr->ofsx;
     float   ofsy = spr->ofsy;
     u_char  str[2];
@@ -10569,7 +10558,7 @@ static void TsSCFADE_Flow(int flg, int prm) {
     }
 }
 
-/* static */ void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
+static void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
     SCFADE *pfw = &ScFade;
     u_int   abgr;
 
@@ -10796,7 +10785,7 @@ static void TsPatTexFnc(int flg) {
     _TexFunc = flg;
 }
 
-/* static */ void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
+static void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
     TSTEX_INF *ptex = &tblTex[ppos->texNo];
     int        x, y, w, h;
     u_int      tw;
@@ -10871,7 +10860,7 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
     }
 }
 
-/* static */ void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot) {
+static void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float zrate, float rot) {
     float zx  = spr->zx;
     float zy  = spr->zy;
     float ofx = spr->ofsx;
@@ -10902,7 +10891,7 @@ static void TsPatGetSize(PATPOS *ppos, int *x, int *y, int *w, int *h) {
     spr->ofsy = ofy;
 }
 
-/* static */ void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
+static void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
     float zx   = spr->zx;
     float zy   = spr->zy;
     float ofsx = spr->ofsx;
@@ -11029,7 +11018,7 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     return 1;
 }
 
-/* static */ void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl) {
+static void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *colTbl) {
     int        i;
     int        l;
     HOSI_OBJ  *obj;
@@ -11133,7 +11122,7 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
     }
 }
 
-/* static */ void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot) {
+static void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float py, float zrate, float rot) {
     float zx  = spr->zx;
     float zy  = spr->zy;
     float ofx = spr->ofsx;

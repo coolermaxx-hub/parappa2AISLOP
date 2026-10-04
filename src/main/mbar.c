@@ -22,7 +22,6 @@
 /* sdata 399570 */ static int othon_frame = 0;
 /* sdata 399574 */ static int vs_mouse_disp_flag = 0;
 /* sdata 399578 */ static int mbar_pos_y_ofs = 0;
-/* data 17c2b8 */ extern GAME_STATUS game_status; /* static */
 static GLOBAL_PLY *exam_global_ply[4];
 static int exam_global_ply_current_ply[4];
 static int metFrameCnt[3];
@@ -75,10 +74,10 @@ static int    MbarGetTimeArea2(MBAR_REQ_STR *mr_pp);
 static int    MbarGetStartTime(MBAR_REQ_STR *mr_pp);
 static int    MbarGetEndTime(MBAR_REQ_STR *mr_pp);
 static int    MbarGetStartTap(MBAR_REQ_STR *mr_pp);
-/*static*/ void   MbarOthSet(MBAR_REQ_STR *mr_pp);
-/*static*/ void   MbarCurSet(MBAR_REQ_STR *mr_pp);
+static void   MbarOthSet(MBAR_REQ_STR *mr_pp);
+static void   MbarCurSet(MBAR_REQ_STR *mr_pp);
 static int    MbarTapSubt(MBAR_REQ_STR *mr_pp);
-/*static*/ void   MbarPosOffsetSet(MBAR_REQ_STR *mr_pp);
+static void   MbarPosOffsetSet(MBAR_REQ_STR *mr_pp);
 static void   mbar_othon_frame_set(MBAR_REQ_STR *mr_pp);
 static void   guidisp_init_pr(void);
 static void   guidisp_draw_quit(int drapP);
@@ -1396,7 +1395,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     }
 }
 
-/* static */ void MbarOthSet(MBAR_REQ_STR *mr_pp) {
+static void MbarOthSet(MBAR_REQ_STR *mr_pp) {
     int       i;
     MBARR_CHR mbarr = {
         .mbc_enum = MBC_NONE,
@@ -1536,7 +1535,7 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
     }
 }
 
-/* static */ void MbarCurSet(MBAR_REQ_STR *mr_pp) {
+static void MbarCurSet(MBAR_REQ_STR *mr_pp) {
     MBARR_CHR mbarr;
     int       curtime, gbalTapTime, sttime;
 
@@ -1593,7 +1592,7 @@ static int MbarTapSubt(MBAR_REQ_STR *mr_pp) {
     return 1;
 }
 
-/*static*/ void MbarPosOffsetSet(MBAR_REQ_STR *mr_pp) {
+static void MbarPosOffsetSet(MBAR_REQ_STR *mr_pp) {
     mbar_pos_y_ofs = 0;
     if (MbarGetTimeArea2(mr_pp) == 0) {
         return;
