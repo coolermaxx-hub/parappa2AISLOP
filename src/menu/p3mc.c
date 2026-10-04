@@ -524,7 +524,7 @@ int P3MC_InitReady(void) {
     mcmenu_info.dirfileMax = 8;
     memc_port_info(0, &mcmenu_info);
 
-    re = memc_manager(0);
+    re = memc_manager(MEMC_MODE_SYNC);
     if (re == MEMC_ERR_BUSY || re == MEMC_ERR_SWAP || re == MEMC_ERR_SWAP_UNFORMATTED) {
         P3MC_CheckChangeClear();
         return -1;
@@ -578,7 +578,7 @@ int P3MC_CheckChange(void) {
     int re, err;
 
     err = P3MC_RES_OK;
-    re = memc_manager(1);
+    re = memc_manager(MEMC_MODE_ASYNC);
     if (re == MEMC_ERR_BUSY) {
         return P3MC_RES_BUSY;
     }
@@ -737,7 +737,7 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
     int i;
     int fileNo;
 
-    re = memc_manager(1);
+    re = memc_manager(MEMC_MODE_ASYNC);
     if (re == MEMC_ERR_BUSY) {
         return P3MC_RES_BUSY;
     }
@@ -796,7 +796,7 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
         memset(McReplayFileFlg, 0, sizeof(McReplayFileFlg));
         memset(pDirTable, 0, sizeof(sceMcTblGetDir) * 81);
 
-        if (memc_get_dir(0, _P3MC_GetFilePath(3, -1), pDirTable, 80) == 0) {
+        if (memc_get_dir(0, _P3MC_GetFilePath(P3MC_MODE_ALL, -1), pDirTable, 80) == 0) {
             portCheckFlg = flag;
         }
     } else if (portCheckFlg == 2) {
@@ -1350,7 +1350,7 @@ int P3MC_OpeningCheck(void) {
 
         re = memc_port_info(0, &mcmenu_info);
         if (re != 0) {
-            memc_manager(1);
+            memc_manager(MEMC_MODE_ASYNC);
             return -1;
         }
 
@@ -1360,7 +1360,7 @@ int P3MC_OpeningCheck(void) {
     if (pcw->curState == 3) {
         int isErr;
 
-        re = memc_manager(1);
+        re = memc_manager(MEMC_MODE_ASYNC);
 
         if (re == MEMC_ERR_BUSY) {
             return P3MC_RES_BUSY;
@@ -1756,7 +1756,7 @@ static u_short _P3MC_proc(u_short prg) {
     P3MC_WORK *pw = &P3MC_Work;
     int        need;
 
-    re = memc_manager(1);
+    re = memc_manager(MEMC_MODE_ASYNC);
 
     switch (re) {
     case MEMC_ERR_SWAP:
