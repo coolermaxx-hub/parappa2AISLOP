@@ -503,3 +503,53 @@ original types.
 - **Link-time symbols.** `system.c` stores `(int)&_end` and
   `(int)&_stack_size` in static initialisers, which is only a constant
   expression on a 32-bit target.
+
+## nalib matrix products (2026-10-04)
+
+`NaMATRIX<T, rows, columns>` stores column vectors. The original VU sequence
+visible in `PrModelObject::GetPrimitivePosition` (0x140d20 onwards) loads the four
+columns, seeds ACC with column 0 times x, then accumulates y, z and w. The
+float4 `Apply` and `Multiply` now have explicit specializations containing the
+same hardware instructions. Their argument and result types remain unchanged.
+Game transforms still use VU arithmetic, including its accumulation order.
+
+The generic products previously accepted only float4 operands regardless of
+the enclosing template. They now use `T` and the matrix dimensions. `Apply`
+maps a `columns`-component vector to a `rows`-component vector; `Multiply`
+accepts a square right operand of size `columns`, retaining the left operand's
+shape. These scalar implementations are inferred from the evidenced column
+convention, not recovered instruction matches for unused template instances.
+They seed each sum with the first product and accumulate in column order.
+Their complete result is staged before writing the output, permitting output
+to alias either input, including squaring a matrix in place. `ApplyTransposed`
+retains its separate scalar convention and initial-zero accumulation.
+
+Validation:
+
+- `tests/nalib/matrix_products.cpp` passes as a native C++98 executable. It
+  checks noncommuting matrix products, vector products, output references,
+  left/right/both-input aliasing, float3 column permutations, integer4 storage,
+  and rectangular row/column products. It also compiles to a PS2 object with
+  the historical EE compiler at `-O2`.
+- The existing `tools/test_matrix_layout.py` EE scalar checks pass. The new
+  product test is not run through that generic MIPS adapter: its EE assembly
+  uses R5900 integer multiply-accumulate instructions the adapter does not
+  support. Native execution does not validate PS2 floating-point edge cases.
+- A fresh historical build links both ROMs. Both ROM images are byte-identical
+  to the pre-change build. Objdiff's per-unit measures are unchanged:
+  1316/1429 exact functions and 259636/342284 exact code bytes. The unchanged
+  IOP checksum passes and the unchanged main-ROM checksum still fails.
+
+Native check command:
+
+```sh
+g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/matrix_products.cpp -o /tmp/matrix-products
+/tmp/matrix-products
+```
+
+The restored cloud workspace has inode numbers too large for the historical
+32-bit compiler's `stat` interface. This pass copied build inputs to
+`/tmp/parappa-matrix-products` and used the existing rootless toolchain there.
+The build log, original-output hashes and objdiff report are retained outside
+Git as `/workspace/shared/parappa-env/matrix-products-{build.log,before.json,report.json}`.
+No game assets or generated outputs are committed.

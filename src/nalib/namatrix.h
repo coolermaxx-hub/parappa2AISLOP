@@ -73,21 +73,7 @@ public:
         return Copy(*this, rhs);
     }
 
-    static NaVECTOR<float, 4>& Apply(NaVECTOR<float, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
-        asm volatile("\n\
-            lqc2         $vf4, 0x0(%1)\n\
-            lqc2         $vf5, 0x10(%1)\n\
-            lqc2         $vf6, 0x20(%1)\n\
-            lqc2         $vf7, 0x30(%1)\n\
-            lqc2         $vf8, 0x0(%2)\n\
-            vmulax.xyzw  ACC, $vf4, $vf8x\n\
-            vmadday.xyzw ACC, $vf5, $vf8y\n\
-            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
-            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
-            sqc2         $vf9, 0x0(%0)\n\
-        " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
-        return out;
-    }
+    static NaVECTOR<T, t0>& Apply(NaVECTOR<T, t0>& out, const NaMATRIX<T, t0, t1>& lhs, const NaVECTOR<T, t1>& rhs);
 
     // Scalar callers use the transpose of the VU column-vector convention.
     // Keep the original left-to-right accumulation, including the initial zero.
@@ -106,51 +92,19 @@ public:
         return result;
     }
 
-    NaVECTOR<float, 4> operator*(const NaVECTOR<float, 4>& rhs) const {
-        NaVECTOR<float, 4> ret;
+    NaVECTOR<T, t0> operator*(const NaVECTOR<T, t1>& rhs) const {
+        NaVECTOR<T, t0> ret;
         Apply(ret, *this, rhs);
         return ret;
     }
 
-    static NaMATRIX<float, 4, 4>& Multiply(NaMATRIX<float, 4, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
-        asm volatile("\n\
-            lqc2         $vf4, 0x0(%1)\n\
-            lqc2         $vf5, 0x10(%1)\n\
-            lqc2         $vf6, 0x20(%1)\n\
-            lqc2         $vf7, 0x30(%1)\n\
-            lqc2         $vf8, 0x0(%2)\n\
-            vmulax.xyzw  ACC, $vf4, $vf8x\n\
-            vmadday.xyzw ACC, $vf5, $vf8y\n\
-            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
-            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
-            sqc2         $vf9, 0x0(%0)\n\
-            lqc2         $vf8, 0x10(%2)\n\
-            vmulax.xyzw  ACC, $vf4, $vf8x\n\
-            vmadday.xyzw ACC, $vf5, $vf8y\n\
-            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
-            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
-            sqc2         $vf9, 0x10(%0)\n\
-            lqc2         $vf8, 0x20(%2)\n\
-            vmulax.xyzw  ACC, $vf4, $vf8x\n\
-            vmadday.xyzw ACC, $vf5, $vf8y\n\
-            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
-            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
-            sqc2         $vf9, 0x20(%0)\n\
-            lqc2         $vf8, 0x30(%2)\n\
-            vmulax.xyzw  ACC, $vf4, $vf8x\n\
-            vmadday.xyzw ACC, $vf5, $vf8y\n\
-            vmaddaz.xyzw ACC, $vf6, $vf8z\n\
-            vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
-            sqc2         $vf9, 0x30(%0)\n\
-        " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
-        return out;
-    }
+    static NaMATRIX<T, t0, t1>& Multiply(NaMATRIX<T, t0, t1>& out, const NaMATRIX<T, t0, t1>& lhs, const NaMATRIX<T, t1, t1>& rhs);
 
     NaMATRIX<float, 4, 4>& Translate(const float& x, const float& y, const float& z);
     NaMATRIX<float, 4, 4>& Scale(const float& x, const float& y, const float& z);
 
-    NaMATRIX<float, 4, 4> operator*(const NaMATRIX<float, 4, 4>& rhs) const {
-        NaMATRIX<float, 4, 4> result;
+    NaMATRIX<T, t0, t1> operator*(const NaMATRIX<T, t1, t1>& rhs) const {
+        NaMATRIX<T, t0, t1> result;
         Multiply(result, *this, rhs);
         return result;
     }
@@ -222,6 +176,81 @@ inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>&
     " : : "r"(&lhs), "r"(&rhs)
     : "$6", "$7", "$8", "$9", "memory");
     return lhs;
+}
+
+// Column-vector products: t0 rows, t1 columns. Stage the complete result
+// before writing out so that the scalar path permits the same in-place use
+// as the VU path. Seed with the first product, as VMULA does.
+template <typename T, int t0, int t1>
+inline NaVECTOR<T, t0>& NaMATRIX<T, t0, t1>::Apply(NaVECTOR<T, t0>& out, const NaMATRIX<T, t0, t1>& lhs, const NaVECTOR<T, t1>& rhs) {
+    NaVECTOR<T, t0> result;
+    for (int row = 0; row < t0; row++) {
+        T sum = lhs.m[0][row] * rhs[0];
+        for (int column = 1; column < t1; column++) sum += lhs.m[column][row] * rhs[column];
+        result[row] = sum;
+    }
+    return out = result;
+}
+
+// The right operand is square so the product retains this matrix's shape.
+template <typename T, int t0, int t1>
+inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Multiply(NaMATRIX<T, t0, t1>& out, const NaMATRIX<T, t0, t1>& lhs, const NaMATRIX<T, t1, t1>& rhs) {
+    NaMATRIX<T, t0, t1> result;
+    for (int column = 0; column < t1; column++) Apply(result.m[column], lhs, rhs[column]);
+    return Copy(out, result);
+}
+
+// Preserve the original EE float4 instruction sequence and accumulation order.
+template <>
+inline NaVECTOR<float, 4>& NaMATRIX<float, 4, 4>::Apply(NaVECTOR<float, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
+    asm volatile("\n\
+        lqc2         $vf4, 0x0(%1)\n\
+        lqc2         $vf5, 0x10(%1)\n\
+        lqc2         $vf6, 0x20(%1)\n\
+        lqc2         $vf7, 0x30(%1)\n\
+        lqc2         $vf8, 0x0(%2)\n\
+        vmulax.xyzw  ACC, $vf4, $vf8x\n\
+        vmadday.xyzw ACC, $vf5, $vf8y\n\
+        vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+        vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+        sqc2         $vf9, 0x0(%0)\n\
+    " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
+    return out;
+}
+
+template <>
+inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Multiply(NaMATRIX<float, 4, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
+    asm volatile("\n\
+        lqc2         $vf4, 0x0(%1)\n\
+        lqc2         $vf5, 0x10(%1)\n\
+        lqc2         $vf6, 0x20(%1)\n\
+        lqc2         $vf7, 0x30(%1)\n\
+        lqc2         $vf8, 0x0(%2)\n\
+        vmulax.xyzw  ACC, $vf4, $vf8x\n\
+        vmadday.xyzw ACC, $vf5, $vf8y\n\
+        vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+        vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+        sqc2         $vf9, 0x0(%0)\n\
+        lqc2         $vf8, 0x10(%2)\n\
+        vmulax.xyzw  ACC, $vf4, $vf8x\n\
+        vmadday.xyzw ACC, $vf5, $vf8y\n\
+        vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+        vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+        sqc2         $vf9, 0x10(%0)\n\
+        lqc2         $vf8, 0x20(%2)\n\
+        vmulax.xyzw  ACC, $vf4, $vf8x\n\
+        vmadday.xyzw ACC, $vf5, $vf8y\n\
+        vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+        vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+        sqc2         $vf9, 0x20(%0)\n\
+        lqc2         $vf8, 0x30(%2)\n\
+        vmulax.xyzw  ACC, $vf4, $vf8x\n\
+        vmadday.xyzw ACC, $vf5, $vf8y\n\
+        vmaddaz.xyzw ACC, $vf6, $vf8z\n\
+        vmaddw.xyzw  $vf9, $vf7, $vf8w\n\
+        sqc2         $vf9, 0x30(%0)\n\
+    " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
+    return out;
 }
 
 template <typename T, int t0, int t1>

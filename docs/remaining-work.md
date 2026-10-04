@@ -40,7 +40,10 @@ cannot prove original behavior or complete understanding of the data formats.
    vector/matrix types, with real EE float4 MMI specializations; small-matrix
    identity checks use their own type. Basic scalar and component-wise arithmetic
    now also respects template types and dimensions while retaining the float4 VU
-   backend. Matrix products and other hardware interfaces remain to audit.
+   backend. Matrix/vector products now use the template's dimensions and element
+   type, with the existing float4 VU code isolated in explicit specializations;
+   see [product validation](behavior-notes.md#nalib-matrix-products-2026-10-04).
+   Inverse, transform-only APIs and other hardware interfaces remain to audit.
 
 The supplied OLM overlays do not contain recognizable SPM records. The retained
 original executable and its built-in `common.ipk` support layout/disassembly
