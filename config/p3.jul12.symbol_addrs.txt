@@ -1503,8 +1503,6 @@ codeKanjiACheck                     = 0x0013db58; // type:func
 euc2sjis                            = 0x0013db98; // type:func allow_duplicated:true
 
 
-_PadFont_SW                         = 0x00399890;
-_PadArrowState                      = 0x00399894; // size:0x4
 
 
 mcode_dat_pp                        = 0x01c81880; // size:0x1000 allow_duplicated:true

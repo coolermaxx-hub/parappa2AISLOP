@@ -364,7 +364,7 @@ segments:
         - [0x299700, .sdata, menu/menusub]
         - [0x299830, .sdata, menu/p3mc]
         - [0x299878, .sdata, menu/memc]
-        - [0x299890, sdata, menu/menufont]
+        - [0x299890, .sdata, menu/menufont]
         - [0x2998A0, .sdata, menu/pksprite]
 
         - [0x2998B8, .sdata, prlib/gifreg]
