@@ -53,7 +53,7 @@ static PrNoodleStripPacket noodleStripDmaPacket = {
     { 14, 1, 0, 0, 0, 0, 0, 1, 0xe /* A+D */, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, SCE_GS_BITBLTBUF },
     { 0, SCE_GS_TRXPOS },
-    { SCE_GS_SET_TRXREG(640, 224), SCE_GS_TRXREG },
+    { SCE_GS_SET_TRXREG(SCREEN_WIDTH, SCREEN_FIELD_HEIGHT), SCE_GS_TRXREG },
     { SCE_GS_SET_TRXDIR(2), SCE_GS_TRXDIR },
     { 0, SCE_GS_FRAME_2 },
     { SCE_GS_SET_XYOFFSET(0x8000, 0x8000), SCE_GS_XYOFFSET_2 },

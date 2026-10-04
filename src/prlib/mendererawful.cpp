@@ -44,7 +44,7 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 1, 0), SCE_GS_PRIM },
     {
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
-        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(640), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x8700, 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 } },
     },
@@ -144,7 +144,7 @@ void PrInitializeAwfulBackground(void *tim2) {
         awfulPicture = NULL;
     }
 
-    WaveCtrlInit(&awfulWave, 640, 224, WM_WSLICE);
+    WaveCtrlInit(&awfulWave, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, WM_WSLICE);
 }
 
 void PrDrawAwfulBackground(sceGsFrame frame) {

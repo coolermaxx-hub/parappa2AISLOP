@@ -11,9 +11,6 @@
 #include <libgraph.h>
 #include <libdma.h>
 
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 448
-
 extern int outbuf_idx;
 extern int oddeven_idx;
 

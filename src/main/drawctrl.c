@@ -2405,13 +2405,13 @@ int DrawVramClear(void *para_pp, int frame, int first_f, int useDisp, int drDisp
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_2, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(vclr_para_pp->r, vclr_para_pp->g, vclr_para_pp->b, vclr_para_pp->a, 0));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, SCE_GS_SET_SCISSOR(0, 640, 0, 224));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH, 0, SCREEN_FIELD_HEIGHT));
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 0, 0, 0, 0, 0, 1, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(640), GS_Y_COORD(224), 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 
     CmnGifADPacketMakeTrans(&gifpk);
 
@@ -2717,8 +2717,8 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV((0 << 4) | (1 << 3), (0 << 4) | (1 << 3)));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV((640 << 4) | (1 << 3), (224 << 4) | (1 << 3)));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(640), GS_Y_COORD(224), 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV((SCREEN_WIDTH << 4) | (1 << 3), (SCREEN_FIELD_HEIGHT << 4) | (1 << 3)));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 
     CmnGifADPacketMakeTrans(&gifpk);
     return 0;
@@ -2780,8 +2780,8 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(640 << 4, 224 << 4));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(640), GS_Y_COORD(224), 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(SCREEN_WIDTH << 4, SCREEN_FIELD_HEIGHT << 4));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, *(u_long*)draw_pp);
@@ -2805,7 +2805,7 @@ int DrawVramLocalCopy(void *para_pp, int frame, int first_f, int useDisp, int dr
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, 640, 224, 0);
+    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -2830,7 +2830,7 @@ int DrawVramLocalCopy2(void *para_pp, int frame, int first_f, int useDisp, int d
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, 640, 224, 0);
+    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -3648,7 +3648,7 @@ static void ddbg_event_sub_bmp(void) {
         DrawScenectrlReq(check_scenectrl[lsjkl], drawCurrentTime);
     }
 
-    VramTmpSave(dat1_pp, 640, 224, outbuf_idx ^ 1);
+    VramTmpSave(dat1_pp, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1);
 
     PR_SCOPE()
     VCLR_PARA vclr_para = {};
@@ -3672,13 +3672,13 @@ static void ddbg_event_sub_bmp(void) {
 
     ChangeDrawArea(DrawGetDrawEnvP(DNUM_DRAW));
 
-    VramTmpSave(dat2_pp, 640, 224, outbuf_idx ^ 1);
+    VramTmpSave(dat2_pp, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1);
 
     PR_SCOPE()
     char save_name[20];
 
     sprintf(save_name, "scr%04d.bmp", ddbg_bmp_frame);
-    VramTmpSaveOutBMP(save_name, 640, 224, outbuf_idx ^ 1, dat1_pp, dat2_pp);
+    VramTmpSaveOutBMP(save_name, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, outbuf_idx ^ 1, dat1_pp, dat2_pp);
     PR_SCOPEEND()
 
     usrFree(dat2_pp);

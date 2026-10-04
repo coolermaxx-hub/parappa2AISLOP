@@ -152,5 +152,5 @@ void SprWindow(u_int x, u_int y, u_int w, u_int h) {
 }
 
 void SprWindowDf(void) {
-    SprWindow(0, 0, 640, 224);
+    SprWindow(0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT);
 }

@@ -358,8 +358,8 @@ void examCharCltSet(EX_CHAR_DISP *ecd_pp, TIM2_DAT *tim2_dat_pp) {
 }
 
 void examCharPosSet(EX_CHAR_DISP *ecd_pp, int xp, int yp) {
-    ecd_pp->x = (xp << 4) - GS_X_COORD(640);
-    ecd_pp->y = (yp << 4) - GS_Y_COORD(224);
+    ecd_pp->x = (xp << 4) - GS_X_COORD(SCREEN_WIDTH);
+    ecd_pp->y = (yp << 4) - GS_Y_COORD(SCREEN_FIELD_HEIGHT);
 }
 
 void examCharUVWHSet(EX_CHAR_DISP *ecd_pp, u_short u, u_short v, u_short w, u_short h) {

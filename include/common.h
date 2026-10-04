@@ -38,8 +38,14 @@ typedef float f32;
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 
-#define GS_X_COORD(x) ((2048 - (640 / 2) + x) << 4)
-#define GS_Y_COORD(y) ((2048 - (224 / 2) + y) << 4)
+/* Frame buffer size. Games draw one 224-line field at a time, so draw areas are
+ * SCREEN_FIELD_HEIGHT high and the GS primitive origin sits at the field centre. */
+#define SCREEN_WIDTH        640
+#define SCREEN_HEIGHT       448
+#define SCREEN_FIELD_HEIGHT (SCREEN_HEIGHT / 2)
+
+#define GS_X_COORD(x) ((2048 - (SCREEN_WIDTH / 2) + x) << 4)
+#define GS_Y_COORD(y) ((2048 - (SCREEN_FIELD_HEIGHT / 2) + y) << 4)
 
 #define PR_EXTERN extern "C"
 

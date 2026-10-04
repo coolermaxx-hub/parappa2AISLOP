@@ -264,7 +264,7 @@ static void LocalBufCopy(int disp) {
         break;
     }
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, 0, 0, 0, sbp, 10, 0, 0, 0, 640, 224, 0);
+    GGsSetLocalMoveImage(&mi, dbp, 10, 0, 0, 0, sbp, 10, 0, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -589,7 +589,7 @@ void WipeLoadInDispSame(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
     SPR_DAT  spr_dat  = {};
 
@@ -654,7 +654,7 @@ void WipeYesNoDispTask(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
 
     SPR_DAT spr_dat = {};
@@ -785,7 +785,7 @@ static void WipeParaInDisp(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
     SPR_DAT      spr_dat   = {};
     int          timer;
@@ -851,7 +851,7 @@ static void WipeParaInDispMove(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
     SPR_DAT   spr_dat   = {};
     int       timer;
@@ -906,7 +906,7 @@ static void WipeParaOutDisp(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
     SPR_DAT   spr_dat   = {};
     int       timer     = 0;
@@ -1038,7 +1038,7 @@ static void WipeBoxyInDisp(void *x) {
         .x = 2048, .y = 2048,
         .scalex = 256, .scaley = 256,
         .u = 0, .v = 0,
-        .w = 640, .h = 224,
+        .w = SCREEN_WIDTH, .h = SCREEN_FIELD_HEIGHT,
     };
     SPR_DAT  spr_dat  = {};
 
