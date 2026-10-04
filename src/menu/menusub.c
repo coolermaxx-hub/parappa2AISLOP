@@ -84,7 +84,7 @@ static int waitTime;
 static MCRWDATA_HDL *pGameData;
 static MNMAPPOS mnmapMap1[] = {
     {
-        0,
+        MENU_MAP1_HALL,
         8,
         0,
         1,
@@ -96,7 +96,7 @@ static MNMAPPOS mnmapMap1[] = {
         },
     },
     {
-        1,
+        MENU_MAP1_ST1,
         7,
         0,
         1,
@@ -110,7 +110,7 @@ static MNMAPPOS mnmapMap1[] = {
 };
 static MNMAPPOS mnmapMap[] = {
     {
-        2,
+        MENU_HALL,
         8,
         0,
         1,
@@ -122,7 +122,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        3,
+        MENU_ST1,
         7,
         0,
         1,
@@ -134,7 +134,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        4,
+        MENU_ST2,
         15,
         0,
         1,
@@ -146,7 +146,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        5,
+        MENU_ST3,
         17,
         0,
         1,
@@ -158,7 +158,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        6,
+        MENU_ST4,
         19,
         0,
         1,
@@ -170,7 +170,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        7,
+        MENU_ST5,
         21,
         0,
         1,
@@ -182,7 +182,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        8,
+        MENU_ST6,
         23,
         0,
         1,
@@ -194,7 +194,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        9,
+        MENU_ST7,
         25,
         0,
         1,
@@ -206,7 +206,7 @@ static MNMAPPOS mnmapMap[] = {
         },
     },
     {
-        10,
+        MENU_ST8,
         27,
         0,
         1,
@@ -220,7 +220,7 @@ static MNMAPPOS mnmapMap[] = {
 };
 static MNMAPPOS mnmapMap2[] = {
     {
-        2,
+        MENU_HALL,
         8,
         0,
         1,
@@ -232,7 +232,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        3,
+        MENU_ST1,
         7,
         0,
         1,
@@ -244,7 +244,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        4,
+        MENU_ST2,
         15,
         0,
         1,
@@ -256,7 +256,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        5,
+        MENU_ST3,
         17,
         0,
         1,
@@ -268,7 +268,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        6,
+        MENU_ST4,
         19,
         0,
         1,
@@ -280,7 +280,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        7,
+        MENU_ST5,
         21,
         0,
         1,
@@ -292,7 +292,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        8,
+        MENU_ST6,
         23,
         0,
         1,
@@ -304,7 +304,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        9,
+        MENU_ST7,
         25,
         0,
         1,
@@ -316,7 +316,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        10,
+        MENU_ST8,
         27,
         0,
         1,
@@ -328,7 +328,7 @@ static MNMAPPOS mnmapMap2[] = {
         },
     },
     {
-        11,
+        MENU_RECORD,
         31,
         0,
         1,
@@ -362,7 +362,7 @@ static short *RecordShopRute[] = {
 };
 static MNMAPPOS mnmapCityHall[] = {
     {
-        32,
+        MENU_LOGLOAD_CT,
         2,
         -1,
         -1,
@@ -374,7 +374,7 @@ static MNMAPPOS mnmapCityHall[] = {
         },
     },
     {
-        34,
+        MENU_OPT_CT,
         5,
         -1,
         -1,
@@ -386,7 +386,7 @@ static MNMAPPOS mnmapCityHall[] = {
         },
     },
     {
-        33,
+        MENU_REPLOAD_CT,
         8,
         -1,
         -1,
@@ -1035,41 +1035,53 @@ static USERLISTTYPE_TABLE ULTypeT_CITY_STGCLR = { 2, { 0, 1 } };
 static USERLISTTYPE_TABLE ULTypeT_CITY_REPLAY = { 1, { 2, 0 } };
 static USERLISTTYPE_TABLE ULTypeT_SAVE_LOG = { 1, { 3, 0 } };
 static USERLISTTYPE_TABLE ULTypeT_SAVE_REPLAY = { 1, { 4, 0 } };
-static int POPBtn2Sel[] = { 0, 1, 2, 3, 3, 4 };
+/* Stage pop-up items (POPUP_MENU::selno). */
+enum {
+    POPITEM_SINGLE = 0,
+    POPITEM_VS_MAN = 1,
+    POPITEM_VS_COM = 2,
+    POPITEM_SINGLE_RANK = 3,
+    POPITEM_VS_COM_RANK = 4
+};
+/* Item under each button: the three play buttons, then the same columns on the ranking row. */
+static int POPBtn2Sel[] = {
+    POPITEM_SINGLE, POPITEM_VS_MAN, POPITEM_VS_COM,
+    POPITEM_SINGLE_RANK, POPITEM_SINGLE_RANK, POPITEM_VS_COM_RANK
+};
 static int POPSel2Btn[] = { 0, 1, 2, 0, 2, 0 };
-static int Pop_CmpMesNo[] = { 22, 25, 23, 26, 27, 0 };
+static int Pop_CmpMesNo[] = { MENU_POPUP_S, MENU_POPUP_VP2, MENU_POPUP_VCOMP, MENU_POPUP_SRANK, MENU_POPUP_VRANK, 0 };
 static int POPSel2BtnDir[] = { MCODE_ARROW_ALL, MCODE_ARROW_LEFT | MCODE_ARROW_RIGHT, MCODE_ARROW_ALL, MCODE_ARROW_ALL, MCODE_ARROW_ALL, 0 };
-static int SaveMenu_CmpMesNo[] = { 44, 45 };
+static int SaveMenu_CmpMesNo[] = { MENU_SAVE_STAGE, MENU_SAVE_REPLAY };
 typedef struct { // 0x8
     /* 0x0 */ MENU_DISKSND_ENUM bgmNo;
     /* 0x4 */ int endV;
 } BGM_TABLE;
 
 static BGM_TABLE JukeBgmTbl[] = {
-    { 1, 10532 },
-    { 2, 12834 },
-    { 3, 14492 },
-    { 4, 13410 },
-    { 5, 11108 },
-    { 6, 13834 },
-    { 7, 12126 },
-    { 8, 14254 },
-    { 9, 14914 },
-    { 0, 9890 },
+    { MDISK_01, 10532 },
+    { MDISK_02, 12834 },
+    { MDISK_03, 14492 },
+    { MDISK_04, 13410 },
+    { MDISK_05, 11108 },
+    { MDISK_06, 13834 },
+    { MDISK_07, 12126 },
+    { MDISK_08, 14254 },
+    { MDISK_09, 14914 },
+    { MDISK_00, 9890 },
 };
-static int JukeMenu_CmpMesNo[] = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 };
+static int JukeMenu_CmpMesNo[] = { MENU_REC1, MENU_REC2, MENU_REC3, MENU_REC4, MENU_REC5, MENU_REC6, MENU_REC7, MENU_REC8, MENU_REC9, MENU_REC10 };
 static MNOPT_SELINF OptionSelTbl[] = {
-    { 2, OptionSelTbl_Sel0, 40, 48 },
-    { 2, OptionSelTbl_Sel1, 41, 49 },
-    { 2, OptionSelTbl_Sel2, 42, 50 },
-    { 2, OptionSelTbl_Sel3, 43, 51 },
+    { 2, OptionSelTbl_Sel0, MENU_OPT_LANG, VSND_OPTION1 },
+    { 2, OptionSelTbl_Sel1, MENU_OPT_SUBTITLE, VSND_OPTION2 },
+    { 2, OptionSelTbl_Sel2, MENU_OPT_VIB, VSND_OPTION3 },
+    { 2, OptionSelTbl_Sel3, MENU_OPT_BUTTON, VSND_OPTION4 },
 };
 static USERLIST_TYPE UserListTbl[] = {
-    { MNS_StgCounter, 0, 1, 1, { 36, -1 } },
-    { &MNS_StgCounter[1], 1, 1, 0, { 49, 47 } },
-    { &MNS_RepCounter, 0, 2, 2, { 38, -1 } },
-    { &MNS_StgCounter[1], 1, 1, 0, { 46, 47 } },
-    { &MNS_RepCounter, 1, 2, 2, { 46, 47 } },
+    { MNS_StgCounter, 0, 1, 1, { MENU_LOGLOAD, -1 } },
+    { &MNS_StgCounter[1], 1, 1, 0, { MENU_SAVE_CEL2, MENU_SAVE_NAME } },
+    { &MNS_RepCounter, 0, 2, 2, { MENU_REPLOAD_CEL, -1 } },
+    { &MNS_StgCounter[1], 1, 1, 0, { MENU_SAVE_CEL, MENU_SAVE_NAME } },
+    { &MNS_RepCounter, 1, 2, 2, { MENU_SAVE_CEL, MENU_SAVE_NAME } },
 };
 /* sdata 399820 */ extern int _TexFunc; /* static */
 /* sdata 399824 */ extern HOSI_OBJ *HOSIObj; /* static */
@@ -1808,6 +1820,14 @@ static void  TsCMPMes_Draw(SPR_PKT pk, SPR_PRM *spr);
 static void  TsANIME_Init(ANIME_WK *wk);
 static int   TsANIME_Poll(ANIME_WK *wk);
 static void  TsANIME_Start(ANIME_WK *wk, int state, int tim);
+/* TsANIME_Start kinds. Only bit 0 changes the animation: clear opens, set closes. */
+enum {
+    ANIME_WIN_OPEN = 2,
+    ANIME_WIN_CLOSE = 3,
+    ANIME_RANK_OPEN = 4,  /* the stage pop-up's ranking board */
+    ANIME_RANK_CLOSE = 5
+};
+#define ANIME_IS_CLOSING(aflg) ((aflg) & 1)
 static int   TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2);
 /* static */ void  _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp);
 /* static */ RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank);
@@ -5142,7 +5162,7 @@ static void MpCityHallFPHSSoundMask(int flg) {
         return fpos;
     }
 
-    TSSNDPLAY(0x34);
+    TSSNDPLAY(VSND_WAIT1);
     while ((n = *ptr) != -1) {
         if (n & CHALL_ANIME_CONTINUE) {
             MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
@@ -6332,15 +6352,15 @@ static void TsMCAMes_Flow(u_int tpad) {
     
         if (isOK && (tpad & SCE_PADRright)) {
             pmesw->selflg = 1;
-            TSSNDPLAY(6);
+            TSSNDPLAY(VSND_SELPOPUP);
         }
     
         if (isCAN && (tpad & SCE_PADRdown)) {
             pmesw->selflg = 2;
             if (pmesw->mesflg & (MCMES_BIT_CANCEL_OK << 24)) {
-                TSSNDPLAY(6);
+                TSSNDPLAY(VSND_SELPOPUP);
             } else {
-                TSSNDPLAY(9);
+                TSSNDPLAY(VSND_CANCEL);
             }
         }
     
@@ -6471,7 +6491,7 @@ static int TsANIME_Poll(ANIME_WK *wk) {
         return wk->atim;
     }
 
-    if (!(wk->aflg & 0x1)) {
+    if (!ANIME_IS_CLOSING(wk->aflg)) {
         wk->atrn = TSNumMov(wk->atrn, 0, 3);
         wk->atrn2 = TSNumMov(wk->atrn2, 0, 4);
         wk->atrn3 = TSNumMov(wk->atrn3, 0, 6);
@@ -6505,7 +6525,7 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
         p1 = wk->atrn2 * 0.001953125f;
         p2 = wk->atrn3 * 0.001953125f;
 
-        if (!(wk->aflg & 1)) {
+        if (!ANIME_IS_CLOSING(wk->aflg)) {
             p0 = 1.0f - p0;
             p1 = 1.0f - p1;
         } else {
@@ -6838,6 +6858,32 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
     return (pfw->bDim[POPBtn2Sel[(bank != 0) ? (nbtn + 3) : (nbtn + 0)]] == FALSE);
 }
 
+/* TsPopMenu_Flow states: the stage pop-up with its level picker and ranking board. */
+enum {
+    POPUP_OPEN = 0,
+    POPUP_OPENING = 0x800,
+    POPUP_SELECT_START = 0x1000,
+    POPUP_SELECT = 0x1010,
+    POPUP_DECIDE = 0x2000,
+    POPUP_LEVEL_START = 0x3000,     /* flash the button, then pick the computer's level */
+    POPUP_LEVEL_FLASH = 0x3005,
+    POPUP_LEVEL = 0x3010,
+    POPUP_RANK_START = 0x5000,      /* read the rankings saved on the card */
+    POPUP_RANK_CARD_CHECK = 0x5010,
+    POPUP_RANK_OPEN = 0x6000,
+    POPUP_RANK_LOAD = 0x6002,       /* build the list for the chosen level */
+    POPUP_RANK_OPENING = 0x6005,
+    POPUP_RANK = 0x6010,            /* page through the board */
+    POPUP_RANK_CLOSE = 0x6020,
+    POPUP_RANK_CLOSING = 0x6030,
+    POPUP_DECIDED = 0xf000,         /* flash the chosen button */
+    POPUP_DECIDED_FLASH = 0xf010,
+    POPUP_CLOSE = 0xf020,
+    POPUP_CLOSING = 0xf080,
+    POPUP_CLOSED = 0xf100,          /* report the choice */
+    POPUP_CANCELLED = 0xff20
+};
+
 /* static */ int TsPopMenu_Flow(int flg, u_int tpad) {
     POPUP_MENU *pfw = &PopupMenu;
     int state;
@@ -6852,8 +6898,8 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         pfw->isRnkWAnime = 0;
         TsPopCusInit(&pfw->cani, 0);
 
-        pfw->state = 0;
-        pfw->selno = 0;
+        pfw->state = POPUP_OPEN;
+        pfw->selno = POPITEM_SINGLE;
         pfw->btnNo = 0;
         pfw->bSelRank = 0;
         pfw->selLev = 0;
@@ -6898,24 +6944,24 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
 
     state = pfw->state;
     switch (state) {
-    case 0:
-        state = 0x800;
-        TsANIME_Start(&pfw->awork, 2, 15);
+    case POPUP_OPEN:
+        state = POPUP_OPENING;
+        TsANIME_Start(&pfw->awork, ANIME_WIN_OPEN, 15);
         aflg = TsANIME_Poll(&pfw->awork);
         pfw->isRnkWAnime = 0;
         /* fallthrough */
-    case 0x800:
+    case POPUP_OPENING:
         if (aflg) {
             break;
         }
         /* fallthrough */
-    case 0x1000:
+    case POPUP_SELECT_START:
         pfw->isSelLev = 0;
-        state = 0x1010;
+        state = POPUP_SELECT;
         pfw->selLev = 0;
         pfw->exitflg = 0;
         break;
-    case 0x1010:
+    case POPUP_SELECT:
         if (pP3GameState->pLog->nRound == 0 && !(((int)pP3GameState->pLog->clrFlg[0] >> (pP3GameState->nStage - 1)) & 1)) {
             MENUSubt_PadFontArrowSet(0);
         } else {
@@ -6974,69 +7020,69 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         TsCMPMes_SetMes(Pop_CmpMesNo[pfw->selno]);
 
         if (tpad & SCE_PADRdown) {
-            state = 0xf020;
+            state = POPUP_CLOSE;
             pfw->exitflg = 1;
             TSSNDPLAY(VSND_CANCEL);
         }
         if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             switch (pfw->selno) {
-            case 0:
-            case 1:
+            case POPITEM_SINGLE:
+            case POPITEM_VS_MAN:
                 TSSNDPLAY(VSND_GO_GAME);
                 break;
-            case 2:
+            case POPITEM_VS_COM:
                 if (pfw->levMax < 2) {
                     TSSNDPLAY(VSND_GO_GAME);
                 } else {
                     TSSNDPLAY(VSND_SELPOPUP);
                 }
                 break;
-            case 3:
-            case 4:
+            case POPITEM_SINGLE_RANK:
+            case POPITEM_VS_COM_RANK:
                 TSSNDPLAY(VSND_SELPOPUP);
                 break;
             }
-            state = 0x2000;
+            state = POPUP_DECIDE;
         }
         break;
-    case 0x2000:
+    case POPUP_DECIDE:
         switch (pfw->selno) {
-        case 0:
-        case 1:
+        case POPITEM_SINGLE:
+        case POPITEM_VS_MAN:
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
-            state = 0xf000;
+            state = POPUP_DECIDED;
             break;
-        case 2:
+        case POPITEM_VS_COM:
             if (pfw->levMax < 2) {
-                state = 0xf000;
+                state = POPUP_DECIDED;
                 MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
                 pfw->selLev = 0;
             } else {
-                state = 0x3000;
+                state = POPUP_LEVEL_START;
             }
             break;
-        case 3:
-        case 4:
-            state = 0x5000;
+        case POPITEM_SINGLE_RANK:
+        case POPITEM_VS_COM_RANK:
+            state = POPUP_RANK_START;
             break;
         }
         break;
-    case 0x3000:
+    case POPUP_LEVEL_START:
         pfw->cani.okTim = 25;
-        state = 0x3005;
+        state = POPUP_LEVEL_FLASH;
         pfw->cani.onTNo = pfw->selno;
         /* fallthrough */
-    case 0x3005:
+    case POPUP_LEVEL_FLASH:
         if (pfw->cani.okTim) {
             break;
         }
         pfw->selLev = 0;
         pfw->isSelLev = 1;
-        TsCMPMes_SetMes(24);
-        state = 0x3010;
+        TsCMPMes_SetMes(MENU_POPUP_LEVEL);
+        state = POPUP_LEVEL;
         /* fallthrough */
-    case 0x3010:
+    case POPUP_LEVEL:
         if (TsCheckTimeMapChange()) {
             break;
         }
@@ -7055,20 +7101,20 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         }
 
         if (tpad & SCE_PADRdown) {
-            state = 0x1000;
+            state = POPUP_SELECT_START;
             TSSNDPLAY(VSND_CANCEL);
         }
         if (tpad & SCE_PADRright) {
-            state = 0xf000;
+            state = POPUP_DECIDED;
             TSSNDPLAY(VSND_GO_GAME);
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
             pfw->isSelLev = 0;
         }
         break;
-    case 0x5000:
+    case POPUP_RANK_START:
         pfw->cani.okTim = 25;
         pfw->cani.onTNo = pfw->selno;
-        if (pfw->selno == 3) {
+        if (pfw->selno == POPITEM_SINGLE_RANK) {
             pfw->nTagMax = 1;
             pfw->nRankMax = 20;
         } else {
@@ -7076,32 +7122,32 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             pfw->nTagMax = pfw->levMax;
         }
         pfw->rVsLev = 0;
-        state = 0x5010;
+        state = POPUP_RANK_CARD_CHECK;
         McInitFlow();
         break;
-    case 0x5010:
+    case POPUP_RANK_CARD_CHECK:
         ret = McUserCheckFlow(MCCHECK_BROWSE, P3MC_MODE_ALL, NULL);
         if (ret < 0) {
             break;
         }
         if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
             pfw->isRankOn = 0;
-            state = 0x1010;
+            state = POPUP_SELECT;
         } else {
-            state = 0x6000;
+            state = POPUP_RANK_OPEN;
         }
         break;
-    case 0x6000:
-        TsANIME_Start(&pfw->awork, 4, 15);
+    case POPUP_RANK_OPEN:
+        TsANIME_Start(&pfw->awork, ANIME_RANK_OPEN, 15);
         pfw->isRnkWAnime = 1;
         aflg = TsANIME_Poll(&pfw->awork);
         /* fallthrough */
-    case 0x6002:
+    case POPUP_RANK_LOAD:
         pfw->selrnkpg = 0;
         pfw->isRankOn = 1;
         pfw->rsline = 0;
         pfw->rStageNo = pP3GameState->nStage - 1;
-        if (pfw->selno == 3) {
+        if (pfw->selno == POPITEM_SINGLE_RANK) {
             pfw->rankFlg = 0;
         } else {
             pfw->rankFlg = 1;
@@ -7114,24 +7160,24 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         if (pfw->nPageMax == 0) {
             pfw->nPageMax = 1;
         }
-        state = 0x6005;
+        state = POPUP_RANK_OPENING;
         /* fallthrough */
-    case 0x6005:
+    case POPUP_RANK_OPENING:
         if (aflg) {
             break;
         }
         if (pfw->nPageMax < 2) {
             if (pfw->rankFlg) {
-                TsCMPMes_SetMes(30);
+                TsCMPMes_SetMes(MENU_LIST_VS);
             } else {
-                TsCMPMes_SetMes(29);
+                TsCMPMes_SetMes(MENU_LIST_1PAGE);
             }
         } else {
-            TsCMPMes_SetMes(28);
+            TsCMPMes_SetMes(MENU_LIST);
         }
-        state = 0x6010;
+        state = POPUP_RANK;
         break;
-    case 0x6010:
+    case POPUP_RANK:
         if (pfw->rsline) {
             pfw->rsline = TSNumMov(pfw->rsline, 0, 5);
         } else {
@@ -7175,71 +7221,71 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             if (bkSel != sel) {
                 pfw->rVsLev = sel;
                 TSSNDPLAY(VSND_MVCUS_LR);
-                state = 0x6002;
+                state = POPUP_RANK_LOAD;
                 break;
             }
         }
 
         if (tpad & SCE_PADRdown) {
             pfw->exitflg = 0;
-            state = 0x6020;
+            state = POPUP_RANK_CLOSE;
             TSSNDPLAY(VSND_CANCEL);
         }
         break;
-    case 0x6020:
-        state = 0x6030;
-        TsANIME_Start(&pfw->awork, 5, 15);
+    case POPUP_RANK_CLOSE:
+        state = POPUP_RANK_CLOSING;
+        TsANIME_Start(&pfw->awork, ANIME_RANK_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
         pfw->isRnkWAnime = 1;
         /* fallthrough */
-    case 0x6030:
+    case POPUP_RANK_CLOSING:
         if (aflg) {
             break;
         }
         pfw->isRankOn = 0;
-        state = 0x1010;
+        state = POPUP_SELECT;
         break;
-    case 0xf000:
+    case POPUP_DECIDED:
         pfw->cani.okTim = 25;
-        state = 0xf010;
+        state = POPUP_DECIDED_FLASH;
         pfw->cani.onTNo = pfw->selno;
         /* fallthrough */
-    case 0xf010:
+    case POPUP_DECIDED_FLASH:
         if (pfw->cani.okTim) {
             break;
         }
         /* fallthrough */
-    case 0xf020:
-        state = 0xf080;
-        TsANIME_Start(&pfw->awork, 3, 15);
+    case POPUP_CLOSE:
+        state = POPUP_CLOSING;
+        TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
         pfw->isRnkWAnime = 0;
         /* fallthrough */
-    case 0xf080:
+    case POPUP_CLOSING:
         if (aflg) {
             break;
         }
         /* fallthrough */
-    case 0xf100:
+    case POPUP_CLOSED:
         PopMenu_Sw = 0;
         pfw->isRankOn = 0;
         if (pfw->exitflg) {
-            state = 0xff20;
+            state = POPUP_CANCELLED;
             break;
         }
         switch (pfw->selno) {
-        case 0:
+        case POPITEM_SINGLE:
             ret = POPSEL_SINGLE;
             break;
-        case 1:
+        case POPITEM_VS_MAN:
             ret = POPSEL_VS_MAN;
             break;
-        case 2:
+        case POPITEM_VS_COM:
             ret = (pfw->selLev << 8) | POPSEL_VS_COM;
             break;
         }
         return ret;
-    case 0xff20:
+    case POPUP_CANCELLED:
         return -1;
     }
 
@@ -7494,6 +7540,20 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
     spr->ofsy = bofsy;
 }
 
+/* TsSaveMenu_Flow states: the log / replay choice after a stage. */
+enum {
+    SAVEMENU_OPEN = 0,
+    SAVEMENU_OPENING = 0x100,
+    SAVEMENU_SELECT_START = 0x1000,
+    SAVEMENU_SELECT = 0x1010,
+    SAVEMENU_DECIDED = 0xf000,       /* flash the chosen button */
+    SAVEMENU_DECIDED_FLASH = 0xf010,
+    SAVEMENU_CLOSE = 0xf020,
+    SAVEMENU_CLOSING = 0xf080,
+    SAVEMENU_CLOSED = 0xf100,        /* report the choice */
+    SAVEMENU_CANCELLED = 0xff20
+};
+
 /* static */ int TsSaveMenu_Flow(int flg, u_int tpad) {
     SAVE_MENU *pfw = &SaveMenu;
     int        state;
@@ -7506,7 +7566,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
         } else {
             pfw->selno = 0;
         }
-        pfw->state = 0;
+        pfw->state = SAVEMENU_OPEN;
         TsANIME_Init(&pfw->awork);
         TsPopCusInit(&pfw->cani, 0);
         SaveMenu_Sw = TRUE;
@@ -7523,19 +7583,21 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
     TsPopCusFlow(&pfw->cani);
 
     switch (state) {
-    case 0:
-        state = 0x100;
-        TsANIME_Start(&pfw->awork, 2, 15);
+    case SAVEMENU_OPEN:
+        state = SAVEMENU_OPENING;
+        TsANIME_Start(&pfw->awork, ANIME_WIN_OPEN, 15);
         aret = TsANIME_Poll(&pfw->awork);
-    case 0x100:
+        /* fallthrough */
+    case SAVEMENU_OPENING:
         if (aret) {
             break;
         }
-    case 0x1000:
+        /* fallthrough */
+    case SAVEMENU_SELECT_START:
         pfw->exitflg = 0;
-        state = 0x1010;
+        state = SAVEMENU_SELECT;
         break;
-    case 0x1010:
+    case SAVEMENU_SELECT:
         TsCMPMes_SetMes(SaveMenu_CmpMesNo[pfw->selno]);
         if (TsCheckTimeMapChange()) {
             break;
@@ -7555,57 +7617,61 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
             TsPopCusAOff(&pfw->cani);
             pfw->cani.onTNo = sel;
             pfw->cani.onTim = 10;
-            TSSNDPLAY(2);
+            TSSNDPLAY(VSND_MVCUS_LR);
             TsCMPMes_SetMes(SaveMenu_CmpMesNo[pfw->selno]);
         }
 
         if (tpad & SCE_PADRdown) {
             pfw->exitflg = 1;
-            TSSNDPLAY(9);
-            state = 0xf020;
+            TSSNDPLAY(VSND_CANCEL);
+            state = SAVEMENU_CLOSE;
         } else if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
-            state = 0xf000;
-            TSSNDPLAY(6);
+            state = SAVEMENU_DECIDED;
+            TSSNDPLAY(VSND_SELPOPUP);
         }
         break;
-    case 0xf000:
+    case SAVEMENU_DECIDED:
         pfw->cani.okTim = 25;
-        state = 0xf010;
+        state = SAVEMENU_DECIDED_FLASH;
         pfw->cani.onTNo = pfw->selno;
-    case 0xf010:
+        /* fallthrough */
+    case SAVEMENU_DECIDED_FLASH:
         if (pfw->cani.okTim) {
             break;
         }
-    case 0xf020:
-        state = 0xf080;
-        TsANIME_Start(&pfw->awork, 3, 20);
+        /* fallthrough */
+    case SAVEMENU_CLOSE:
+        state = SAVEMENU_CLOSING;
+        TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 20);
         aret = TsANIME_Poll(&pfw->awork);
-    case 0xf080:
+        /* fallthrough */
+    case SAVEMENU_CLOSING:
         if (aret) {
             break;
         }
-    case 0xf100:
+        /* fallthrough */
+    case SAVEMENU_CLOSED:
         SaveMenu_Sw = FALSE;
         if (pfw->exitflg) {
-            state = 0xff20;
+            state = SAVEMENU_CANCELLED;
             break;
         }
 
         switch (pfw->selno) {
         case 0:
-            ret = 1;
+            ret = MPSAVE_SEL_LOG;
             break;
         case 1:
-            ret = 2;
+            ret = MPSAVE_SEL_REPLAY;
             break;
         default:
             ret = 3;
             break;
         }
         return ret;
-    case 0xff20:
+    case SAVEMENU_CANCELLED:
         return -1;
     }
 
@@ -8798,6 +8864,16 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     PkALPHA_Add(pk, 0x44);
 }
 
+/* TsOption_Flow states. */
+enum {
+    OPTMENU_START = 0,
+    OPTMENU_SELECT = 0x1000,
+    OPTMENU_CLOSE = 0xf000,     /* store the settings unless the player cancelled */
+    OPTMENU_CLOSED = 0xf100,
+    OPTMENU_EXIT_OK = 0xff10,
+    OPTMENU_EXIT_CANCEL = 0xff20
+};
+
 /* static */ int TsOption_Flow(int flg, u_int tpad) {
     OPTION_MENU  *pfw = &OptionMenu;
     int           state;
@@ -8812,7 +8888,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     static int opt_oneb;
 
     if (flg == MNFLOW_INIT) {
-        pfw->state = 0;
+        pfw->state = OPTMENU_START;
         pfw->selno = 0;
         opt_lang = pP3GameState->pGameStatus->language_type;
         opt_subt = pP3GameState->pGameStatus->subtitle;
@@ -8860,9 +8936,10 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
     }
 
     switch (state) {
-    case 0:
-        state = 0x1000;
-    case 0x1000:
+    case OPTMENU_START:
+        state = OPTMENU_SELECT;
+        /* fallthrough */
+    case OPTMENU_SELECT:
     {
         int osel;
         int old;
@@ -8880,7 +8957,7 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
             TsCmnCell_CusorON(&pfw->cellcs[sel]);
             pfw->selno = sel;
             TSSNDPLAY(OptionSelTbl[sel].voiceNo);
-            TSSNDPLAY(5);
+            TSSNDPLAY(VSND_MVCUS_UD);
         }
 
         osel = pfw->selno;
@@ -8898,23 +8975,23 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
             pfw->btnlr[osel].tim[(sel < old) ? 0 : 1] = 6;
             max = OptionSelTbl[osel].nObj;
             pfw->sw[pfw->selno] = TSLOOP(sel, max);
-            TSSNDPLAY(2);
+            TSSNDPLAY(VSND_MVCUS_LR);
         }
 
         if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
-            state = 0xf000;
-            TSSNDPLAY(6);
+            state = OPTMENU_CLOSE;
+            TSSNDPLAY(VSND_SELPOPUP);
         }
         if (tpad & SCE_PADRdown) {
-            state = 0xf000;
+            state = OPTMENU_CLOSE;
             pfw->exitflg = 1;
-            TSSNDPLAY(9);
+            TSSNDPLAY(VSND_CANCEL);
         }
         TsCMPMes_SetMes(OptionSelTbl[pfw->selno].cmpMesNo);
     }
         break;
-    case 0xf000:
+    case OPTMENU_CLOSE:
         if (pfw->exitflg == 0) {
             pselw = OptionSelTbl;
             for (i = 0; i < PR_ARRAYSIZEU(pfw->sw); i++, pselw++) {
@@ -8941,16 +9018,17 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
             pP3GameState->pGameStatus->play_table_modeG = opt_oneb;
             TsCMPMes_SetMes(-1);
         }
-    case 0xf100:
+        /* fallthrough */
+    case OPTMENU_CLOSED:
         if (pfw->exitflg == 0) {
-            state = 0xff10;
+            state = OPTMENU_EXIT_OK;
         } else {
-            state = 0xff20;
+            state = OPTMENU_EXIT_CANCEL;
         }
         break;
-    case 0xff10:
+    case OPTMENU_EXIT_OK:
         return 1;
-    case 0xff20:
+    case OPTMENU_EXIT_CANCEL:
         return -1;
     }
 
@@ -10014,7 +10092,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         TsNAMEINBox_SetName(pfw, (u_char *)pfw->desname);
         pfw->isOn = 1;
         pfw->nameMsk = 1;
-        TsANIME_Start(&pfw->awork, 2, 15);
+        TsANIME_Start(&pfw->awork, ANIME_WIN_OPEN, 15);
         aflg = TsANIME_Poll(&pfw->awork);
     case 0x80:
         if (aflg != 0) {
@@ -10042,7 +10120,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             sel = TSLOOP(sel, 9);
             pfw->curnpos = sel;
             pfw->curchrmode = pfw->curnchr[sel] >> USERNAME_CHAR_SET_SHIFT;
-            TSSNDPLAY(2);
+            TSSNDPLAY(VSND_MVCUS_LR);
         }
 
         if (sel < 8) {
@@ -10053,7 +10131,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             if (pfw->curchrmode != sel) {
                 pfw->curchrmode = TSLOOP(sel, 2);
                 pfw->curnchr[pfw->curnpos] = USERNAME_CHAR(pfw->curchrmode, pfw->curnchr[pfw->curnpos] & USERNAME_CHAR_INDEX_MASK);
-                TSSNDPLAY(5);
+                TSSNDPLAY(VSND_MVCUS_UD);
             }
 
             osel = sel = pfw->curnchr[pfw->curnpos] & USERNAME_CHAR_INDEX_MASK;
@@ -10065,7 +10143,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             }
             if (osel != sel) {
                 pfw->curnchr[pfw->curnpos] = USERNAME_CHAR(pfw->curchrmode, TSLOOP(sel, UserName_CharSet[pfw->curchrmode].len - 1));
-                TSSNDPLAY(5);
+                TSSNDPLAY(VSND_MVCUS_UD);
             }
         }
     }
@@ -10074,18 +10152,18 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             pfw->onTime = 30;
             TsNAMEINBox_GetName(pfw, (u_char *)pfw->desname);
             state = 0xff00;
-            TSSNDPLAY(6);
+            TSSNDPLAY(VSND_SELPOPUP);
         }
         if (pfw->isCan && (tpad & SCE_PADRdown)) {
             state = 0xff20;
-            TSSNDPLAY(9);
+            TSSNDPLAY(VSND_CANCEL);
         }
         if (tpad & SCE_PADRleft) {
             for (i = 0; i < 8; i++) {
                 TsNAMEINBox_SetName(pfw, UserName_InitialStr2);
                 pfw->curnpos = 0;
             }
-            TSSNDPLAY(9);
+            TSSNDPLAY(VSND_CANCEL);
         }
         break;
     case 0xff00:
@@ -10096,7 +10174,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
     case 0xff10:
         pfw->nameMsk = 2;
         state = 0xff18;
-        TsANIME_Start(&pfw->awork, 3, 15);
+        TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
     case 0xff18:
         if (aflg == 0) {
@@ -10111,7 +10189,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         pfw->onTime = 0;
         pfw->nameMsk = 0;
         state = 0xff38;
-        TsANIME_Start(&pfw->awork, 3, 15);
+        TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 15);
         aflg = TsANIME_Poll(&pfw->awork);
     case 0xff38:
         if (aflg == 0) {
