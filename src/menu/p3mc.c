@@ -1572,10 +1572,6 @@ void P3MC_SetUserWorkTime(USER_DATA *puser) {
     }
 }
 
-typedef struct {
-    char id[16];
-} P3MC_FILEID;
-
 int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     P3MC_WORK  *pw = &P3MC_Work;
     u_char     *pData;
@@ -1615,9 +1611,9 @@ int P3MC_SaveUser(MCRWDATA_HDL *pdhdl, int flg) {
     isFileFlgCash = 0;
     P3MC_SetUserWorkTime(&pdhdl->pHead->user);
 
-    *(P3MC_FILEID *)pdhdl->pHead->header = *(P3MC_FILEID *)HedderID;
-    *(P3MC_FILEID *)pdhdl->pHead->footer = *(P3MC_FILEID *)FooterID;
-    *(P3MC_FILEID *)pdhdl->pFoot->footer = *(P3MC_FILEID *)FooterID;
+    memcpy(pdhdl->pHead->header, HedderID, sizeof(pdhdl->pHead->header));
+    memcpy(pdhdl->pHead->footer, FooterID, sizeof(pdhdl->pHead->footer));
+    memcpy(pdhdl->pFoot->footer, FooterID, sizeof(pdhdl->pFoot->footer));
 
     P3MC_Work.prg = 0;
     pw->data_no = fileNo;

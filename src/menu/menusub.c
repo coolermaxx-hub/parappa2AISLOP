@@ -3364,14 +3364,6 @@ void TsMenu_Draw(void) {
     TsCmnPkClose(&FPacket, pkt, 0xf);
 }
 
-typedef struct {
-    u_char name[8];
-} RANK_NAME;
-
-typedef struct {
-    char name[12];
-} USER_NAME;
-
 static void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
     int             i, k, l;
     P3MC_STAGERANK *pRank = pRankTop;
@@ -3379,14 +3371,14 @@ static void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
     for (l = 0; l < 8; l++, pRank++) {
         for (i = 0; i < pRank->nSplay; i++) {
             if (pRank->splay[i].name[0] == '\0') {
-                *(RANK_NAME*)pRank->splay[i].name = *(RANK_NAME*)name;
+                memcpy(pRank->splay[i].name, name, sizeof(pRank->splay[i].name));
             }
         }
 
         for (k = 0; k < 4; k++) {
             for (i = 0; i < pRank->nVplay[k]; i++) {
                 if (pRank->vplay[k][i].name[0] == '\0') {
-                    *(RANK_NAME*)pRank->vplay[k][i].name = *(RANK_NAME*)name;
+                    memcpy(pRank->vplay[k][i].name, name, sizeof(pRank->vplay[k][i].name));
                 }
             }
         }
@@ -3415,7 +3407,7 @@ static void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
             memcpy(pDataW->pData, pP3GameState->pLog, sizeof(P3LOG_VAL));
 
             plog = (P3LOG_VAL*)pDataW->pData;
-            *(USER_NAME*)plog->name = *(USER_NAME*)puser->name;
+            memcpy(plog->name, puser->name, sizeof(plog->name));
             plog->name[11] = '\0';
 
             TsSetRanking2UData(&pDataW->pHead->user, pCStageRank);
@@ -3503,15 +3495,12 @@ int DateChgInt(u_int n) {
 }
 
 void GetRankScoreID(MAP_TIME *mptim, u_int *dat) {
-    int year   = DateChgInt(mptim->year);
-    int second = DateChgInt(mptim->second);
-    int hour   = DateChgInt(mptim->hour);
-    int day    = DateChgInt(mptim->day);
-    int month  = DateChgInt(mptim->month);
-    int minute = DateChgInt(mptim->minute);
-
-    dat[0] = (year % 50) * (12 * 31 * 24 * 60 * 60) + (month % 12) * (31 * 24 * 60 * 60) +
-             (day % 31) * (24 * 60 * 60) + (hour % 24) * (60 * 60) + (minute % 60) * 60 + (second % 60);
+    dat[0] = (DateChgInt(mptim->year) % 50) * (12 * 31 * 24 * 60 * 60) +
+             (DateChgInt(mptim->month) % 12) * (31 * 24 * 60 * 60) +
+             (DateChgInt(mptim->day) % 31) * (24 * 60 * 60) +
+             (DateChgInt(mptim->hour) % 24) * (60 * 60) +
+             (DateChgInt(mptim->minute) % 60) * 60 +
+             (DateChgInt(mptim->second) % 60);
     dat[1] = ((rand() % 0x10000) << 8) + mptim->pad;
 }
 
@@ -4164,37 +4153,39 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 }
 
 static void TsMakeUserWork(int mode) {
-    int stage = pP3GameState->nStage;
-    int round;
-    int score;
-    int i, no;
+    int nStage = pP3GameState->nStage;
 
-    if (stage < 0) {
-        stage = 0;
+    if (nStage < 0) {
+        nStage = 0;
     }
-    if (stage > 8) {
-        stage = 8;
+    if (nStage > 8) {
+        nStage = 8;
     }
 
     memset(UserWork, 0, sizeof(USER_DATA));
 
-    *(USER_NAME*)UserWork->name = *(USER_NAME*)pP3GameState->pLog->name;
+    memcpy(UserWork->name, pP3GameState->pLog->name, sizeof(UserWork->name));
     UserWork->name[11] = 0;
 
     if (mode == P3MC_MODE_REPLAY) {
-        *(USER_NAME*)UserWork->name1 = *(USER_NAME*)pP3GameState->pLog->name1;
+        memcpy(UserWork->name1, pP3GameState->pLog->name1, sizeof(UserWork->name1));
         UserWork->name1[11] = 0;
 
-        /* Against the computer, the stage's teacher is the opponent. */
+        /*
+         * Against the computer, the stage's teacher is the opponent. The
+         * teacher names are 8-byte literals, so the copy also takes the 4
+         * bytes stored after the literal; name2[11] is cleared right after.
+         */
         if (pP3GameState->nMode == PLAY_MODE_VS_COM) {
-            no = (stage > 8) ? 8 : stage;
-            if (no > 0) {
-                no--;
+            int n = (nStage > 8) ? 8 : nStage;
+
+            if (n > 0) {
+                n--;
             }
-            *(USER_NAME*)UserWork->name2 = *(USER_NAME*)TeachersName_Tbl[no];
+            memcpy(UserWork->name2, TeachersName_Tbl[n], sizeof(UserWork->name2));
             UserWork->name2[11] = 0;
         } else {
-            *(USER_NAME*)UserWork->name2 = *(USER_NAME*)pP3GameState->pLog->name2;
+            memcpy(UserWork->name2, pP3GameState->pLog->name2, sizeof(UserWork->name2));
             UserWork->name2[11] = 0;
         }
     }
@@ -4202,29 +4193,36 @@ static void TsMakeUserWork(int mode) {
     UserWork->mode = mode;
     UserWork->flg = P3MC_USER_VALID;
 
-    round = pP3GameState->pLog->nRound;
-    for (i = 0; i < 8; i++) {
-        if (round < pP3GameState->pLog->clrCount[i]) {
-            break;
+    {
+        int r = pP3GameState->pLog->nRound;
+        int i;
+
+        for (i = 0; i < 8; i++) {
+            if (r < pP3GameState->pLog->clrCount[i]) {
+                break;
+            }
         }
-    }
-    if (i >= 8) {
-        round--;
+        if (i >= 8) {
+            r--;
+        }
+        if (r < 0) {
+            r = 0;
+        }
+        if (r > 98) {
+            r = 98;
+        }
+        UserWork->roundNo = r;
     }
 
-    UserWork->stageNo = stage;
-    score = pP3GameState->score;
-    if (score < 0) {
-        score = 0;
+    UserWork->stageNo = nStage;
+    {
+        int sc = pP3GameState->score;
+
+        if (sc < 0) {
+            sc = 0;
+        }
+        UserWork->score = sc;
     }
-    UserWork->score = score;
-    if (round < 0) {
-        round = 0;
-    }
-    if (round > 98) {
-        round = 98;
-    }
-    UserWork->roundNo = round;
     UserWork->score2 = pP3GameState->score2P;
 
     if (pP3GameState->nMode == PLAY_MODE_VS_MAN || pP3GameState->nMode == PLAY_MODE_VS_COM) {
@@ -4264,15 +4262,15 @@ static void TsMakeUserWork(int mode) {
 static void TsSaveSuccessProc(void) {
     TsUserList_SetCurUserData(UserWork);
 
-    *(USER_NAME*)pP3GameState->pLog->name = *(USER_NAME*)UserWork->name;
+    memcpy(pP3GameState->pLog->name, UserWork->name, sizeof(pP3GameState->pLog->name));
     pP3GameState->pLog->name[11] = 0;
 
     if (UserWork->mode == P3MC_MODE_REPLAY) {
-        *(USER_NAME*)pP3GameState->pLog->name1 = *(USER_NAME*)UserWork->name1;
+        memcpy(pP3GameState->pLog->name1, UserWork->name1, sizeof(pP3GameState->pLog->name1));
         pP3GameState->pLog->name1[11] = 0;
 
         if (UserWork->isVs == 1) {
-            *(USER_NAME*)pP3GameState->pLog->name2 = *(USER_NAME*)UserWork->name2;
+            memcpy(pP3GameState->pLog->name2, UserWork->name2, sizeof(pP3GameState->pLog->name2));
             pP3GameState->pLog->name2[11] = 0;
         }
     }
@@ -6416,13 +6414,14 @@ static void TsMCAMes_Flow(u_int tpad) {
 
 static void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
     MCMES_WORK *pmesw = &MCMesWork;
-    int         px, py, x, y;
-    float       fRate, fLine;
-    float       ofsy;
-    u_int       col;
+    int         x, y;
+    int         px, py;
+    u_int       abgr;
+    float       cdy, LinZoom;
 
     if (pmesw->btton) {
-        spr->rgba0 = pmesw->btton << 24;
+        abgr = pmesw->btton << 24;
+        spr->rgba0 = abgr;
         spr->zy = 1.0f;
         spr->zx = 1.0f;
         SetSprScreenXYWH(spr);
@@ -6436,28 +6435,30 @@ static void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
     py = pmesw->py;
     px = pmesw->px;
     if (pmesw->Dline <= 0x1000) {
-        fLine = 0.0f;
-        fRate = 0.0f;
+        cdy = 0.0f;
+        LinZoom = 0.0f;
     } else {
-        fRate = (pmesw->Dline - 0x1000) / 4096.0f;
-        fLine = fRate * 12.0f - 2.0f;
+        LinZoom = (pmesw->Dline - 0x1000) / 4096.0f;
+        cdy = LinZoom * 12.0f - 2.0f;
     }
 
     if (pmesw->backSw) {
+        float bofsy;
+
         x = px - 0x124;
-        ofsy = spr->ofsy;
+        bofsy = spr->ofsy;
         y = py + 5;
         spr->zy = 0.5f;
         spr->zx = 1.0f;
         spr->rgba0 = MN_COLOR_NEUTRAL;
-        spr->ofsy = ofsy - (fLine * 0.5f + 36.0f);
+        spr->ofsy = bofsy - (cdy * 0.5f + 36.0f);
         TsPatPut(pk, spr, &PAT_ALERT_WIN_ABOVE, x, y);
 
         spr->ofsy += 35.5f;
-        if (fLine > 0.0f) {
-            spr->zy = fRate * 0.5f;
+        if (cdy > 0.0f) {
+            spr->zy = LinZoom * 0.5f;
             TsPatPut(pk, spr, &PAT_ALERT_WIN_CENTER, x, y);
-            spr->ofsy += fLine - 1.0f;
+            spr->ofsy += cdy - 1.0f;
         }
 
         spr->zy = 0.5f;
@@ -6465,18 +6466,21 @@ static void TsMCAMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
         if (pmesw->faceNo > 0) {
             TsPatPut(pk, spr, &PAT_ALERT_WIN_FFACE[pmesw->faceNo - 1], px + 0xcc, y);
         }
-        spr->ofsy = ofsy;
+        spr->ofsy = bofsy;
     }
 
     if (pmesw->mesflg >= 0) {
+        /* The original declares a second abgr here, shadowing the one above. */
+        u_int abgr;
+
         y = py - ((pmesw->line * 12) >> 1);
-        col = 0x80220061;
+        abgr = 0x80220061;
         if (pmesw->color != 0) {
             if (pmesw->color == 1) {
-                col = 0x807f7f7f;
+                abgr = 0x807f7f7f;
             }
         }
-        _PkMCMsgPut(pk, spr, pmesw->mesflg & MCMES_ID_MASK, px, y, col);
+        _PkMCMsgPut(pk, spr, pmesw->mesflg & MCMES_ID_MASK, px, y, abgr);
     }
 }
 
@@ -6706,7 +6710,7 @@ static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) 
     rnkMax = 0;
     for (i = 0; i < 20 && ptRank[i] != NULL; i++) {
         RankLst[i].score = ptRank[i]->score;
-        *(RANK_NAME*)RankLst[i].name = *(RANK_NAME*)ptRank[i]->name;
+        memcpy(RankLst[i].name, ptRank[i]->name, sizeof(ptRank[i]->name));
         RankLst[i].name[8] = '\0';
         if (RankLst[i].name[0] == '\0') {
             strcpy(RankLst[i].name, UserName_RankingNoSave);
@@ -7510,13 +7514,13 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
 void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py, u_int hicol, u_int nmcol, int dflg) {
     int   i;
     float bofsy;
-    int   bPut;
-    int   bHiLgt;
 
     bofsy = spr->ofsy;
 
     for (i = 0; i < 5; i++) {
-        bHiLgt = 0;
+        int bPut;
+        int bHiLgt = 0;
+
         pfw->cani.habgr = hicol;
         pfw->cani.nabgr = nmcol;
 
@@ -8313,24 +8317,25 @@ static int TsJukeObjAnime2(int isOut) {
 }
 
 static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
-    int ox = *cx;
-    int oy = *cy;
-    int x, y, pos;
+    int bx = *cx;
+    int by = *cy;
     int i;
+    int cn;
+    int nx, ny;
 
-    x   = ox;
-    y   = TSLOOP(oy + my, 2);
-    pos = y * 5 + x;
+    nx = bx;
+    ny = TSLOOP(by + my, 2);
+    cn = ny * 5 + nx;
 
     if (mx != 0) {
-        pos = TSLOOP(pos + mx, 10);
-        x   = pos % 5;
-        y   = pos / 5;
+        cn = TSLOOP(cn + mx, 10);
+        nx = cn % 5;
+        ny = cn / 5;
     }
 
-    if (!cobj[pos].bMsk) {
-        *cx = x;
-        *cy = y;
+    if (!cobj[cn].bMsk) {
+        *cx = nx;
+        *cy = ny;
         return 1;
     }
 
@@ -8341,37 +8346,37 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
             mx = -1;
         }
         for (i = 0; i < 10; i++) {
-            pos = TSLOOP(pos + mx, 10);
-            if (!cobj[pos].bMsk) {
-                x = pos % 5;
-                y = pos / 5;
-                *cx = x;
-                *cy = y;
-                return (ox != x || oy != y);
+            cn = TSLOOP(cn + mx, 10);
+            if (!cobj[cn].bMsk) {
+                nx = cn % 5;
+                ny = cn / 5;
+                *cx = nx;
+                *cy = ny;
+                return (bx != nx || by != ny);
             }
         }
         return 0;
     }
 
-    for (i = x; i < 5; i++) {
-        pos = y * 5 + i;
-        if (!cobj[pos].bMsk) {
-            x = pos % 5;
-            y = pos / 5;
-            *cx = x;
-            *cy = y;
+    for (i = nx; i < 5; i++) {
+        cn = ny * 5 + i;
+        if (!cobj[cn].bMsk) {
+            nx = cn % 5;
+            ny = cn / 5;
+            *cx = nx;
+            *cy = ny;
             return 1;
         }
     }
 
-    for (i = x; i >= 0; i--) {
-        pos = y * 5 + i;
-        if (!cobj[pos].bMsk) {
-            x = pos % 5;
-            y = pos / 5;
-            *cx = x;
-            *cy = y;
-            return (ox != x || oy != y);
+    for (i = nx; i >= 0; i--) {
+        cn = ny * 5 + i;
+        if (!cobj[cn].bMsk) {
+            nx = cn % 5;
+            ny = cn / 5;
+            *cx = nx;
+            *cy = ny;
+            return (bx != nx || by != ny);
         }
     }
 
@@ -8966,6 +8971,8 @@ static int TsOption_Flow(int flg, u_int tpad) {
     OPTION_MENU  *pfw = &OptionMenu;
     int           state;
     int           sel;
+    int           osel;
+    int           old;
     int           i;
     int           l;
     int          *psw;
@@ -9028,10 +9035,6 @@ static int TsOption_Flow(int flg, u_int tpad) {
         state = OPTMENU_SELECT;
         /* fallthrough */
     case OPTMENU_SELECT:
-    {
-        int osel;
-        int old;
-
         osel = sel = pfw->selno;
         if (tpad & SCE_PADLup) {
             sel--;
@@ -9059,9 +9062,9 @@ static int TsOption_Flow(int flg, u_int tpad) {
         if (old != sel) {
             int max;
 
-            /* Start the press timer of the left or right arrow */
-            pfw->btnlr[osel].tim[(sel < old) ? 0 : 1] = 6;
             max = OptionSelTbl[osel].nObj;
+            /* Start the press timer of the left or right arrow */
+            (pfw->btnlr + osel)->tim[(sel < old) ? 0 : 1] = 6;
             pfw->sw[pfw->selno] = TSLOOP(sel, max);
             TSSNDPLAY(VSND_MVCUS_LR);
         }
@@ -9077,7 +9080,6 @@ static int TsOption_Flow(int flg, u_int tpad) {
             TSSNDPLAY(VSND_CANCEL);
         }
         TsCMPMes_SetMes(OptionSelTbl[pfw->selno].cmpMesNo);
-    }
         break;
     case OPTMENU_CLOSE:
         if (pfw->exitflg == 0) {
@@ -10004,10 +10006,10 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 }
 
 static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, int py, int pflg, int isLog) {
-    u_char  buf[32];
-    STRPOS *strpos;
-    STRPOS *ps;
-    u_int   m;
+    u_char  sbuf[32];
+    PATPOS *ppat;
+    STRPOS *pstrTop;
+    STRPOS *psps;
 
     spr->zx = 1.0f;
     spr->zy = 0.5f;
@@ -10015,7 +10017,8 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
 
     if (user == NULL || user->flg == P3MC_USER_NEW) {
         spr->rgba0 = MN_COLOR_NEUTRAL;
-        TsPatPut(pk, spr, (isLog >= 0) ? ((isLog < 2) ? &LG_NEWDATA_MARK : &RP_NEWDATA_MARK) : &RP_NEWDATA_MARK, px, py);
+        ppat = (isLog >= 0) ? ((isLog < 2) ? &LG_NEWDATA_MARK : &RP_NEWDATA_MARK) : &RP_NEWDATA_MARK;
+        TsPatPut(pk, spr, ppat, px, py);
         return;
     }
 
@@ -10035,81 +10038,82 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
                 break;
             }
 
-            strpos = VSREPLAY_StrCOD;
+            pstrTop = VSREPLAY_StrCOD;
         } else {
-            strpos = REPLAY_StrCOD;
+            pstrTop = REPLAY_StrCOD;
         }
 
-        sprintf(buf, "STAGE%d", user->stageNo);
+        sprintf(sbuf, "STAGE%d", user->stageNo);
     } else {
         if (isLog) {
-            strpos = LOGL_StrCOD;
+            pstrTop = LOGL_StrCOD;
         } else {
-            strpos = LOGS_StrCOD;
+            pstrTop = LOGS_StrCOD;
         }
 
         if (user->roundNo) {
-            int round = (user->roundNo + 1 > 99) ? 99 : user->roundNo + 1;
-            sprintf(buf, "CIRCUIT%d", round);
+            int r = (user->roundNo + 1 > 99) ? 99 : user->roundNo + 1;
+            sprintf(sbuf, "CIRCUIT%d", r);
         } else {
-            sprintf(buf, "STAGE%d", user->stageNo);
+            sprintf(sbuf, "STAGE%d", user->stageNo);
         }
     }
 
     if (user->flg == P3MC_USER_BROKEN) {
-        strcpy(buf, " STAGE?");
+        strcpy(sbuf, " STAGE?");
     }
-    ps = strpos;
-    MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+    psps = pstrTop;
+    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
 
     if (user->flg != P3MC_USER_BROKEN && user->date.year != 0) {
-        m = user->date.month;
-        if (m >= 19) {
-            m = 18;
-        }
-        sprintf(buf, "%02x.%s.%04x", user->date.day, _MONTH_STR[m], user->date.year);
-        ps = &strpos[1];
-        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+        u_int month = user->date.month;
 
-        sprintf(buf, "%02x:%02x", user->date.hour, user->date.minute);
-        ps = &strpos[2];
-        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+        if (month >= 19) {
+            month = 18;
+        }
+        sprintf(sbuf, "%02x.%s.%04x", user->date.day, _MONTH_STR[month], user->date.year);
+        psps = &pstrTop[1];
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
+
+        sprintf(sbuf, "%02x:%02x", user->date.hour, user->date.minute);
+        psps = &pstrTop[2];
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
     } else {
-        ps = &strpos[1];
-        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, "--.---.----");
-        ps = &strpos[2];
-        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, "--:--");
+        psps = &pstrTop[1];
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, "--.---.----");
+        psps = &pstrTop[2];
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, "--:--");
     }
 
-    sprintf(buf, "%02d", user->fileNo + 1);
-    ps = &strpos[3];
-    MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+    sprintf(sbuf, "%02d", user->fileNo + 1);
+    psps = &pstrTop[3];
+    MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
 
-    ps = &strpos[4];
+    psps = &pstrTop[4];
     if (!(pflg & 2)) {
         if (user->mode == P3MC_MODE_LOG) {
-            NameSpaceCut(buf, user->name);
+            NameSpaceCut(sbuf, user->name);
         } else {
-            NameSpaceCut(buf, user->name1);
+            NameSpaceCut(sbuf, user->name1);
         }
-        MENUFontPutL(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+        MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
     }
 
     if (user->mode == P3MC_MODE_REPLAY) {
-        sprintf(buf, "%06d", user->score);
-        ps = &strpos[5];
-        MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+        sprintf(sbuf, "%06d", user->score);
+        psps = &pstrTop[5];
+        MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
 
         if (user->isVs) {
-            ps = &strpos[6];
+            psps = &pstrTop[6];
             if (!(pflg & 4)) {
-                NameSpaceCut(buf, user->name2);
-                MENUFontPutL(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+                NameSpaceCut(sbuf, user->name2);
+                MENUFontPutL(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
             }
 
-            sprintf(buf, "%06d", user->score2);
-            ps = &strpos[7];
-            MENUFontPutS(pk, spr, ps->x + px, ps->y + py, ps->abgr, 0x201, buf);
+            sprintf(sbuf, "%06d", user->score2);
+            psps = &pstrTop[7];
+            MENUFontPutS(pk, spr, psps->x + px, psps->y + py, psps->abgr, 0x201, sbuf);
         }
     }
 }
@@ -10791,7 +10795,6 @@ static void TsPatTexFnc(int flg) {
 static void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy) {
     TSTEX_INF *ptex = &tblTex[ppos->texNo];
     int        x, y, w, h;
-    u_int      tw;
 
     switch (_TexFunc) {
     case 0:
@@ -10830,9 +10833,8 @@ static void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy)
         h = ptex->h;
         spr->ux = 0;
         spr->uy = h - 1;
-        tw = ptex->w;
+        spr->uw = ptex->w;
         spr->uh = 2 - h;
-        spr->uw = tw;
     }
 
     spr->px = x;
@@ -10895,10 +10897,10 @@ static void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy
 }
 
 static void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, float Zrx, float Zry, int mx, int my, float Crx, float Cry) {
-    float zx   = spr->zx;
-    float zy   = spr->zy;
-    float ofsx = spr->ofsx;
-    float ofsy = spr->ofsy;
+    float zx  = spr->zx;
+    float zy  = spr->zy;
+    float ofx = spr->ofsx;
+    float ofy = spr->ofsy;
 
     spr->zx = zx * Zrx;
     spr->zy = zy * Zry;
@@ -10910,8 +10912,8 @@ static void TsPatPutMZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy
 
     spr->zx = zx;
     spr->zy = zy;
-    spr->ofsx = ofsx;
-    spr->ofsy = ofsy;
+    spr->ofsx = ofx;
+    spr->ofsy = ofy;
 }
 
 static void TsPatPutSwing(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy, int mx, int my, float Crx) {
