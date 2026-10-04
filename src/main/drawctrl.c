@@ -2409,7 +2409,8 @@ int DrawVramClear(void *para_pp, int frame, int first_f, int useDisp, int drDisp
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 0, 0, 0, 0, 0, 1, 0));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/0,
+                                                           /*AA1*/0, /*FST*/0, /*CTXT*/1, /*FIX*/0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 

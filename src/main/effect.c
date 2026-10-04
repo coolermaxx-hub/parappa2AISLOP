@@ -119,8 +119,7 @@ void UG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, sceGifPacket *alpPkSpr) {
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(/*AC*/1));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_TEST_1, GS_TEST_OFF);
-    sceGifPkAddGsAD(alpPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(/*A*/SCE_GS_ALPHA_CS, /*B*/SCE_GS_ALPHA_CD, /*C*/SCE_GS_ALPHA_FIX, /*D*/SCE_GS_ALPHA_CD,
-                                                               /*FIX*/plh_pp->alp));
+    sceGifPkAddGsAD(alpPkSpr, SCE_GS_ALPHA_1, GS_ALPHA_FIXED(plh_pp->alp));
 
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REGION_CLAMP, /*WMT*/SCE_GS_REGION_CLAMP,
                                                                /*MINU*/0, /*MAXU*/SCREEN_WIDTH - 1, /*MINV*/0, /*MAXV*/SCREEN_FIELD_HEIGHT - 1));

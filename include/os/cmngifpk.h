@@ -39,6 +39,9 @@
 /* ALPHA for the usual blend, (Cs - Cd) * As + Cd. */
 #define GS_ALPHA_BLEND SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0)
 
+/* ALPHA that blends at a fixed opacity, (Cs - Cd) * fix / 128 + Cd. */
+#define GS_ALPHA_FIXED(fix) SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_CD, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, (fix))
+
 /* CLAMP that clamps both texture axes at the texture edges. */
 #define GS_CLAMP_EDGES SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_CLAMP, /*WMT*/SCE_GS_CLAMP, 0, 0, 0, 0)
 

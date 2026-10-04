@@ -109,23 +109,30 @@ void SprDispAlp(SPR_PRIM *prm_pp) {
     sprSetNum++;
 }
 
+/* Following sprites write RGB only, keeping the frame buffer's alpha and Z. */
 void SprDispZABnclr(void) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 0, 0, 3, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(/*ATE*/1, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_RGB_ONLY,
+                                                               /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/SCE_GS_ZALWAYS));
 }
 
+/* Following sprites write colour only, keeping Z. */
 void SprDispZBnclr(void) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 0, 0, 1, 0, 0, 1, SCE_GS_ZALWAYS));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_COLOR_ONLY);
 }
 
+/* Following sprites are depth tested (Z >= buffer) with no alpha test. */
 void SprDispZcheck(void) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(0, 0, 0, 0, 0, 0, 1, SCE_GS_ZGEQUAL));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(/*ATE*/0, /*ATST*/SCE_GS_ALPHA_NEVER, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP,
+                                                               /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/SCE_GS_ZGEQUAL));
 }
 
+/* flg set: draw only texels with alpha above zero. Clear: draw only texels with zero alpha. */
 void SprDispAcheck(int flg) {
     if (flg) {
-        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO); // GREATER ATST register
+        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
     } else {
-        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 3, 0, 0, 0, 0, 1, SCE_GS_ZALWAYS)); // LEQUAL ATST register
+        sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(/*ATE*/1, /*ATST*/SCE_GS_ALPHA_LEQUAL, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP,
+                                                                   /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/SCE_GS_ZALWAYS));
     }
 }
 
@@ -134,9 +141,12 @@ void SprDispAlphaSet(void) {
 }
 
 void SprBox(SPR_PRIM *prm_pp) {
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 1, 0, 0, 0, 0, 1, 1));
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(1, 2, 0, 0, 0));
-    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(/*ATE*/1, /*ATST*/SCE_GS_ALPHA_ALWAYS, /*AREF*/0, /*AFAIL*/SCE_GS_AFAIL_KEEP,
+                                                             /*DATE*/0, /*DATM*/0, /*ZTE*/1, /*ZTST*/SCE_GS_DEPTH_ALWAYS));
+    /* Cd * As + Cs: the frame is scaled by the box alpha, then the box colour is added. */
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(SCE_GS_ALPHA_CD, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CS, 0));
+    sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1,
+                                                            /*AA1*/0, /*FST*/0, SCE_GS_PRIM_CTXT1, /*FIX*/0));
 
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2((prm_pp->x << 4) - (((prm_pp->w * prm_pp->scalex) / 2) >> 4),
                                                             (prm_pp->y << 4) - (((prm_pp->h * prm_pp->scaley) / 2) >> 4), 1));

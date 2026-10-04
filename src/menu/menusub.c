@@ -9406,7 +9406,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             y = 0xf;
         }
 
-        PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, 0x80));
+        PkALPHA_Add(pk, GS_ALPHA_FIXED(0x80));
         spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->ux = 0x26;
         spr->uy = 0x43;
@@ -10079,7 +10079,7 @@ static void TsSCFADE_Flow(int flg, int prm) {
     case 6:
         spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->zx = spr->zy = 1.0f;
-        PkALPHA_Add(pk, SCE_GS_SET_ALPHA(0, 1, 2, 1, (pfw->ton * 128) >> 8));
+        PkALPHA_Add(pk, GS_ALPHA_FIXED((pfw->ton * 128) >> 8));
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
         SetSprScreenXYWH(spr);
         PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
@@ -10172,8 +10172,9 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     PkSprPkt_SetDrawEnv(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
     PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
 
-    PkTEX1_Add(pk, SCE_GS_SET_TEX1(0, 0, 0, 0, 0, 0, 0));
-    PkALPHA_Add(pk, SCE_GS_SET_ALPHA(2, 2, 0, 0, 0));
+    PkTEX1_Add(pk, SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_NEAREST, /*MMIN*/SCE_GS_NEAREST, /*MTBA*/0, /*L*/0, /*K*/0));
+    /* (0 - 0) * As + Cs: copy the source colour unblended. */
+    PkALPHA_Add(pk, SCE_GS_SET_ALPHA(SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CS, 0));
 
     spr->zy = 1.0f;
     spr->zx = 1.0f;
