@@ -24,6 +24,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Ids with this bit set index VSNDSEQ_Tbl (a scripted sequence) instead of TsVoiceTbl. */
+#define TSSND_SEQ_FLAG   0x8000
+/* Set on a map direction's destination number when the move is blocked once the map limit is reached. */
+#define MNMAP_LIMITED    0x8000
+
 static TSREPPAD menuPadState[2][4];
 static TSSND_CHAN TsSndChan[15];
 static BGMSTATE TsBGMState;
@@ -98,10 +103,10 @@ static MNMAPPOS mnmapMap[] = {
         0,
         1,
         {
-            { 32773, 11, 10, 0 },
+            { MNMAP_LIMITED | 5, 11, 10, 0 },
             { 1, 7, 10, 0 },
-            { 32771, 9, 10, 0 },
-            { 32775, 13, 10, 0 },
+            { MNMAP_LIMITED | 3, 9, 10, 0 },
+            { MNMAP_LIMITED | 7, 13, 10, 0 },
         },
     },
     {
@@ -113,7 +118,7 @@ static MNMAPPOS mnmapMap[] = {
             { 0, 8, 10, 0 },
             { -1, -1, 0, 0 },
             { 2, 15, 10, 0 },
-            { 32776, 30, 10, 0 },
+            { MNMAP_LIMITED | 8, 30, 10, 0 },
         },
     },
     {
@@ -137,7 +142,7 @@ static MNMAPPOS mnmapMap[] = {
             { 4, 19, 10, 0 },
             { 2, 18, 10, 0 },
             { -1, -1, 0, 0 },
-            { 32768, 10, 10, 0 },
+            { MNMAP_LIMITED | 0, 10, 10, 0 },
         },
     },
     {
@@ -159,7 +164,7 @@ static MNMAPPOS mnmapMap[] = {
         1,
         {
             { -1, -1, 0, 0 },
-            { 32768, 12, 0, 0 },
+            { MNMAP_LIMITED | 0, 12, 0, 0 },
             { 4, 22, 10, 0 },
             { 6, 23, 10, 0 },
         },
@@ -184,7 +189,7 @@ static MNMAPPOS mnmapMap[] = {
         {
             { 6, 26, 10, 0 },
             { 8, 27, 10, 0 },
-            { 32768, 14, 10, 0 },
+            { MNMAP_LIMITED | 0, 14, 10, 0 },
             { -1, -1, 0, 0 },
         },
     },
@@ -196,7 +201,7 @@ static MNMAPPOS mnmapMap[] = {
         {
             { 7, 28, 10, 0 },
             { -1, -1, 0, 0 },
-            { 32769, 29, 10, 0 },
+            { MNMAP_LIMITED | 1, 29, 10, 0 },
             { -1, -1, 0, 0 },
         },
     },
@@ -946,7 +951,7 @@ static MCDATA_TBL McVoiceTbl[23] = {
     { MCMES(2, 13), 21 },
     { MCMES(2, 14), 21 },
     { MCMES(2, 4), 23 },
-    { MCMES(16, 22), 32768 },
+    { MCMES(16, 22), TSSND_SEQ_FLAG | 0 },
     { MCMES(2, 5), 35 },
     { MCMES(2, 6), 36 },
     { MCMES(2, 8), 40 },
@@ -1716,9 +1721,6 @@ static void  TsCELBackInit(void);
 static int TsGetMenuPadIsRepeat(int no, int npad) {
     return (menuPadState[no][npad].state >= 2);
 }
-
-/* Ids with this bit set index VSNDSEQ_Tbl (a scripted sequence) instead of TsVoiceTbl. */
-#define TSSND_SEQ_FLAG 0x8000
 
 static void TSSNDPLAY(int n) {
     TSVOICE_TBL *ptap;
@@ -4986,12 +4988,12 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
             }
 
             if (idx < 4) {
-                posNo = mpos->mapdir[idx].mapNo & ~0x8000;
+                posNo = mpos->mapdir[idx].mapNo & ~MNMAP_LIMITED;
                 if (mpw->lmtPos != 0) {
                     if (posNo >= mpw->lmtPos) {
                         return 0;
                     }
-                    if (mpos->mapdir[idx].mapNo & 0x8000) {
+                    if (mpos->mapdir[idx].mapNo & MNMAP_LIMITED) {
                         if (bkNo == mpw->lmtPos - 1) {
                             return 0;
                         }
@@ -5086,7 +5088,7 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         if (idx >= 0 && ((mpw->mvFlag >> idx) & 1)) {
             posNo = mpos->mapdir[idx].mapNo;
             if (posNo != -1) {
-                posNo &= ~0x8000;
+                posNo &= ~MNMAP_LIMITED;
                 mpw->curPos = posNo;
                 mpw->anmLtim = mpos->mapdir[idx].anmLtim;
                 if (mpw->pscene != NULL && mpw->panime != NULL) {
@@ -5151,7 +5153,7 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
         if (posNo == -1) {
             flg = FALSE;
         } else {
-            posNo &= ~0x8000;
+            posNo &= ~MNMAP_LIMITED;
             if (mpw->lmtPos != 0) {
                 if (posNo >= mpw->lmtPos) {
                     flg = FALSE;
