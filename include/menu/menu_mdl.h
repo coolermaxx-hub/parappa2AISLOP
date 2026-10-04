@@ -17,6 +17,18 @@ typedef struct { // 0x8
     /* 0x4 */ int *pctbl;
 } MN_SCENETBL;
 
+/* MNANM_COBJ::cflg: the low byte selects the model (or camera) the entry drives,
+ * the upper byte selects what it does. */
+#define MNANM_TARGET_MASK    0x00ff
+#define MNANM_KIND_MASK      0xff00
+#define MNANM_MOTION         0x0100 /* link a motion animation */
+#define MNANM_POSITION       0x0200 /* link a position animation */
+#define MNANM_MOVE_MODE      0x0400 /* drive the model from a move-mode table */
+#define MNANM_VISIBLE        0x0800 /* show (no != 0) or hide the model */
+#define MNANM_CAMERA         0x0f00 /* select a camera */
+#define MNANM_BLEND_FAST     0x2100 /* motion blended from the saved posture, 0.1 per frame */
+#define MNANM_BLEND_SLOW     0x1100 /* motion blended from the saved posture, 1/30 per frame */
+
 typedef struct { // 0x4
     /* 0x0 */ u_short cflg;
     /* 0x2 */ u_short no;

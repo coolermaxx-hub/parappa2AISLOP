@@ -2890,14 +2890,14 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
 
     for (i = 0; i < 6 && acobj->cflg != 0; i++, acobj++) {
         int anmBit = acobj->cflg;
-        ano = anmBit & 0xff;
-        switch (anmBit & 0xff00) {
-        case PR_BIT(8) | PR_BIT(9) | PR_BIT(10) | PR_BIT(11):
+        ano = anmBit & MNANM_TARGET_MASK;
+        switch (anmBit & MNANM_KIND_MASK) {
+        case MNANM_CAMERA:
             PrSelectCamera(pshdl->spc[acobj->no], pshdl->scene);
             pshdl->CAniNo = no;
             pshdl->CSpcNo = acobj->no + 1;
             break;
-        case PR_BIT(8):
+        case MNANM_MOTION:
             mdl = &pshdl->mdl[ano];
             if (mdl->spm != NULL) {
                 PrShowModel(mdl->spm, NULL);
@@ -2908,8 +2908,8 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
                 mdl->dspSw  = 1;
             }
             break;
-        case PR_BIT(13) | PR_BIT(8):
-        case PR_BIT(12) | PR_BIT(8):
+        case MNANM_BLEND_FAST:
+        case MNANM_BLEND_SLOW:
             mdl = &pshdl->mdl[ano];
             if (mdl->spm != NULL) {
                 if (mdl->bABlend != 0) {
@@ -2923,7 +2923,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
                 mdl->bABlend = 1;
                 mdl->ablend_rate = 0.0f;
 
-                if ((acobj->cflg & 0xff00) == (PR_BIT(12) | PR_BIT(8))) {
+                if ((acobj->cflg & MNANM_KIND_MASK) == MNANM_BLEND_SLOW) {
                     mdl->ablend_speed = 0.033333335f;
                 } else {
                     mdl->ablend_speed = 0.1f;
@@ -2934,7 +2934,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
                 mdl->dspSw  = 1;
             }
             break;
-        case PR_BIT(9):
+        case MNANM_POSITION:
             mdl = &pshdl->mdl[ano];
             if (mdl->spm != NULL) {
                 PrShowModel(mdl->spm, NULL);
@@ -2945,7 +2945,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
                 mdl->dspSw  = 1;
             }
             break;
-        case PR_BIT(10):
+        case MNANM_MOVE_MODE:
             mdl = &pshdl->mdl[ano];
             if (mdl->spm != NULL) {
                 MnMoveMode_InitRoot(acobj->no - 1);
@@ -2958,7 +2958,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
                 mdl->PSpaNo  = 0;
             }
             break;
-        case PR_BIT(11):
+        case MNANM_VISIBLE:
             mdl = &pshdl->mdl[ano];
             if (mdl->spm != NULL) {
                 if (acobj->no != 0) {
