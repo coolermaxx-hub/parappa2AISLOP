@@ -11,6 +11,7 @@ causes = {
     'prlib/random.cpp': 'PrFloatRandom is a plain do-while (see remaining-work.md).',
     'prlib/prlib.cpp': 'PrSetDebugParamFloat stores through the union member (see remaining-work.md).',
     'prlib/renderee.cpp': 'The two vertex kernels are inline asm blocks instead of standalone functions, and the orphan helper is gone; surrounding functions inherit the shifted register use.',
+    'menu/menusub.c': 'Twelve functions were reconstructed from asm and never matched without compiler steering; `main-rom-matching` keeps their original asm under `NON_MATCHING` (TsRestoreSaveData, TsRanking_Set, TsPopMenu_Flow, TsPopMenu_Draw, TsPopMenCus_Draw, TsSaveMenu_Draw, TSJukeCDObj_Draw, TsCmnCell_CusorDraw, TsOption_Flow, TsUserList_SetCurTag, TsUserList_Flow, TsNAMEINBox_Draw). TsBGMStop lost a one-pass do-while (tail-call layout only), TsGetTm2Tex and TsGetTm2HedTex read TEX0 fields through `sceGsTex0` (see remaining-work.md), and TsHosiPut differs only by a trailing alignment nop.',
     'prlib/depthfield.cpp': 'The original carried a local copy of `NaGifPacketWrapper::AddGsAD`; ours calls the shared weak symbol. The copy is a banned brute-forced template.',
 }
 d = sum(len(v[0]) for v in a.values())
@@ -26,6 +27,6 @@ lines = [
 for k, (bad, miss) in a.items():
     if not bad and not miss:
         continue
-    lines.append(f"| `{k}` | {len(bad)} | {len(miss)} | {causes.get(k, 'Typed reconstruction without compiler steering; not yet classified.')} |")
+    lines.append(f"| `{k}` | {len(bad)} | {len(miss)} | {causes.get(k[:-2] if k.endswith('.o') else k, 'Typed reconstruction without compiler steering; not yet classified.')} |")
 lines += ['', 'Regenerate with `python3 tools/dev/audit/alldiff.py && python3 tools/dev/audit/gen_binary_diff_doc.py`.']
 open('docs/binary-differences.md', 'w').write('\n'.join(lines) + '\n')

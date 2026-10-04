@@ -154,6 +154,10 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   (the `menu/p3mc` data section is now C) and writes the two output bytes
   separately instead of one `u_short` store through a `char*`. Same bytes on
   little-endian; the code is a few instructions longer than the original.
+- `TsGetTm2Tex` and `TsGetTm2HedTex` (src/menu/menusub.c) read TW and TH and
+  set TCC through the `sceGsTex0` fields instead of shifting the two 32-bit
+  halves of the 64-bit TEX0 word. Same bits; the compiler now works on the
+  whole word.
 
 ## Data sections still in asm
 

@@ -2403,11 +2403,11 @@ int _P3DATA_SIZE(int mode) {
     u_int size;
 
     switch (mode) {
-    case 1:
-        size = 0x188;
+    case P3MC_MODE_LOG:
+        size = sizeof(P3LOG_VAL);
         break;
-    case 2:
-        size = 0x4528;
+    case P3MC_MODE_REPLAY:
+        size = sizeof(MC_REP_STR);
         break;
     default:
         size = 0;
@@ -2427,13 +2427,13 @@ void TsGetTm2Tex(void *ptim2, TSTEX_INF *tex) {
     tex->h = info.picturH->ImageHeight;
     tex->tex0 = info.picturH->GsTex0;
 
-    ptw = (((int*)&tex->tex0)[0] >> 0x1a) & 0xf; /* TW */
-    pth = (((u_int*)&tex->tex0)[0] >> 0x1e) | ((((u_int*)&tex->tex0)[1] & 0x3) << 0x2); /* TH */
+    ptw = GS_REG_VIEW(sceGsTex0, tex->tex0).TW;
+    pth = GS_REG_VIEW(sceGsTex0, tex->tex0).TH;
 
     tex->rUsize = 1.0f / (1 << ptw);
     tex->rVsize = 1.0f / (1 << pth);
 
-    ((u_int*)&tex->tex0)[1] |= 0x4; /* TCC = 1 */
+    GS_REG_VIEW(sceGsTex0, tex->tex0).TCC = 1;
 }
 
 void TsGetTm2HedTex(int no, TSTEX_INF *tex) {
@@ -2446,13 +2446,13 @@ void TsGetTm2HedTex(int no, TSTEX_INF *tex) {
     tex->h = ptm2h->h;
     tex->tex0 = ptm2h->GsTex0;
 
-    ptw = (((int*)&ptm2h->GsTex0)[0] >> 0x1a) & 0xf; /* TW */
-    pth = (((u_int*)&ptm2h->GsTex0)[0] >> 0x1e) | ((((u_int*)&ptm2h->GsTex0)[1] & 0x3) << 0x2); /* TH */
+    ptw = GS_REG_VIEW(sceGsTex0, ptm2h->GsTex0).TW;
+    pth = GS_REG_VIEW(sceGsTex0, ptm2h->GsTex0).TH;
 
     tex->rUsize = 1.0f / (1 << ptw);
     tex->rVsize = 1.0f / (1 << pth);
 
-    ((u_int*)&tex->tex0)[1] |= 0x4; /* TCC = 1 */
+    GS_REG_VIEW(sceGsTex0, tex->tex0).TCC = 1;
 }
 
 static void TsClearMenuPad(int no) {
@@ -3118,8 +3118,8 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
 
     PrSetStage(0);
 
-    P3MC_SetCheckSaveSize(1, 0x8c, 0x188);
-    P3MC_SetCheckSaveSize(2, 0xa0, 0x4528);
+    P3MC_SetCheckSaveSize(P3MC_MODE_LOG, 140, sizeof(P3LOG_VAL));
+    P3MC_SetCheckSaveSize(P3MC_MODE_REPLAY, 160, sizeof(MC_REP_STR));
 
     if (!iniflg) {
         MENUSubt_PadFontSw(0);

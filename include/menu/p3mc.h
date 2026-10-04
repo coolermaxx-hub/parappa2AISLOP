@@ -164,6 +164,10 @@ typedef struct { // 0x3b00
 
 int P3MC_InitReady(void);
 int P3MC_GetSaveSize(int size, int mode);
+/*
+ * fsize: free card space, in 1 KB clusters, a new file of this kind needs (P3MC_OpeningCheck).
+ * csize: size of its data block, read back to check the files listed on the card.
+ */
 void P3MC_SetCheckSaveSize(int mode, int fsize, int csize);
 /* Polls the card slot: P3MC_RES_BUSY while checking, then P3MC_RES_OK, P3MC_RES_NO_CARD or P3MC_RES_CARD_SWAPPED. */
 int P3MC_CheckChange(void);
