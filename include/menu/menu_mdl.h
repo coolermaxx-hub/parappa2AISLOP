@@ -56,6 +56,17 @@ typedef struct { // 0x20
     /* 0x08 */ MNANM_COBJ anmCobj[6];
 } MNANM_TBL;
 
+/* Number of anime timer banks in a scene. */
+#define MN_SCENE_BANKS       10
+
+/* A bank argument (MNScene_isAnimeBank, MNScene_SetAnimeBankEnd) is either a
+ * bank number or a set of banks: MNANM_BANK_SET plus bit n for bank n, the
+ * bits MNScene_StartAnime returns. MNANM_ALL_BANKS covers every bank. */
+#define MNANM_BANK_SET       0x80000000
+#define MNANM_ALL_BANKS      (-1)
+/* MNScene_StartAnime/ContinueAnime bank: use the entry's own aTimNo. */
+#define MNANM_TABLE_BANK     (-1)
+
 typedef struct { // 0x14
     /* 0x00 */ float x;
     /* 0x04 */ float y;
@@ -98,10 +109,10 @@ typedef struct { // 0x1154
     /* 0x000c */ MN_HMDL mdl[30];
     /* 0x1074 */ int ncam;
     /* 0x1078 */ void *spc[14];
-    /* 0x10b0 */ int time[10];
-    /* 0x10d8 */ void *anime[10];
-    /* 0x1100 */ void *cntani[10];
-    /* 0x1128 */ int speed[10];
+    /* 0x10b0 */ int time[MN_SCENE_BANKS];
+    /* 0x10d8 */ void *anime[MN_SCENE_BANKS];
+    /* 0x1100 */ void *cntani[MN_SCENE_BANKS];
+    /* 0x1128 */ int speed[MN_SCENE_BANKS];
     /* 0x1150 */ short CSpcNo;
     /* 0x1152 */ short CAniNo;
 } MN_SCENE;

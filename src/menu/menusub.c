@@ -2788,23 +2788,23 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
     switch (tflg) {
     case 1:
         MNScene_Init(pScene, &Scene_StageMap, bFocus);
-        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[0]);
+        MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimeBK[0]);
         break;
     case 2:
         MNScene_Init(pScene, &Scene_StageMapY, bFocus);
-        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[1]);
+        MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimeBK[1]);
         break;
     case 0:
     default:
         MNScene_Init(pScene, &Scene_StageMapA, bFocus);
-        MNScene_StartAnime(pScene, -1, &StageMapAnimeBK[2]);
+        MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimeBK[2]);
         break;
     }
 
     MNScene_DispSw(pScene, 1);
-    MNScene_StartAnime(pScene, -1, &StageMapAnime[mapNo]);
-    MNScene_StartAnime(pScene, -1, &StageMapAnime[gmn + 11]);
-    MNScene_StartAnime(pScene, -1, StageMapAnimeSEA);
+    MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnime[mapNo]);
+    MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnime[gmn + 11]);
+    MNScene_StartAnime(pScene, MNANM_TABLE_BANK, StageMapAnimeSEA);
 
     for (i = 0; i < 8; i++) {
         int clrno;
@@ -2820,7 +2820,7 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
             int   l;
             u_int Cflg;
 
-            MNScene_StartAnime(pScene, -1, &StageMapAnimeBB[i * 2]);
+            MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimeBB[i * 2]);
 
             if (clrno > nRound + 1) {
                 clrno = nRound + 1;
@@ -2851,7 +2851,7 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
             if (nCrown <= 0) {
                 MNScene_ModelDispSw(pScene, i + 12, 0);
             } else {
-                MNScene_StartAnime(pScene, -1, &StageMapCWptr[i][nCrown - 1]);
+                MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapCWptr[i][nCrown - 1]);
                 for (l = 0; l < nCrown; l++) {
                     int cn = cwCol[nCrown - 1 - l];
 
@@ -2861,14 +2861,14 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
                 }
             }
         } else {
-            MNScene_StartAnime(pScene, -1, &StageMapAnimeBB[i * 2 + 1]);
+            MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimeBB[i * 2 + 1]);
             MNScene_ModelDispSw(pScene, i + 12, 0);
         }
     }
 
     if (mapNo == 0) {
-        MNScene_StartAnime(pScene, -1, &StageMapAnimePA[0]);
-        MNScene_StartAnime(pScene, -1, &StageMapAnimePA[6]);
+        MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimePA[0]);
+        MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnimePA[6]);
     }
 }
 
@@ -3621,7 +3621,7 @@ static int TsCheckTimeMapChange(void) {
 }
 
 int TsAnimeWait_withKeySkip(u_int tpad, MN_SCENE *scene, int ltim, u_int bnk) {
-    if (bnk == -1) {
+    if (bnk == MNANM_ALL_BANKS) {
         return MNScene_isAnime(scene, ltim);
     } else {
         return MNScene_isAnimeBank(scene, ltim, bnk);
@@ -3838,7 +3838,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         if (!pP3GameState->isWipeEnd || TsBGMLoadCheck()) {
             return 0;
         }
-        if (TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
+        if (TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, MNANM_ALL_BANKS)) {
             return 0;
         }
         /* fallthrough */
@@ -3949,12 +3949,12 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         /* fallthrough */
     case TSMAP_DECIDED:
         if (MapCity.curPos == MAP_POS_CITY_HALL) {
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
             state = TSMAP_HALL;
             break;
         } else if (MapCity.curPos == MAP_POS_RECORD_SHOP) {
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
             TSSNDPLAY(VSND_SELMODE);
             state = TSMAP_SHOP;
             break;
@@ -4017,7 +4017,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_OPEN;
         break;
     case TSMAP_STAGE_MENU_OPEN:
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
         MpPopMenu_Flow(MNFLOW_INIT, 0);
         state = TSMAP_STAGE_MENU;
         /* fallthrough */
@@ -4027,7 +4027,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         if (ret == 0) {
             break;
         } else if (ret == -1) {
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[0]);
             state = TSMAP_SHOW;
             break;
         }
@@ -4066,7 +4066,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_SHOP_OPEN;
         break;
     case TSMAP_SHOP_ARRIVE:
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[0]);
         state = TSMAP_SHOP_ARRIVE_WAIT;
         _MNwaitTime = 40;
         /* fallthrough */
@@ -4078,7 +4078,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case TSMAP_SHOP_OPEN:
         pP3GameState->nStage = MapCity.curPos;
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
         TsJukeMenu_Flow(MNFLOW_INIT, pP3GameState->curRecJacket);
         state = TSMAP_SHOP_MENU;
         /* fallthrough */
@@ -4087,7 +4087,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             return 0;
         }
         TsJukeMenu_Flow(MNFLOW_END, 0);
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[0]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[0]);
         state = TSMAP_SHOW;
         break;
     case TSMAP_HALL:
@@ -4609,7 +4609,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         case CHALL_ENTER_DOOR:
             MNScene_DispSw(&MNS_StageMap, 0);
             MNScene_DispSw(&MNS_CityHall, 1);
-            AnmBit = MNScene_StartAnime(&MNS_CityHall, -1, CityHallAnime);
+            AnmBit = MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, CityHallAnime);
             TsCMPMes_SetMes(-1);
             MapCHall.pscene = &MNS_CityHall;
             MapCHall.panime = CityHallAnime;
@@ -4699,9 +4699,9 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         }
 
-        AnmBit = 0x80000000;
+        AnmBit = MNANM_BANK_SET;
         if (anmno >= 0) {
-            AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[anmno]);
+            AnmBit |= MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[anmno]);
         }
 
         MpCityHallFPHSSoundMask(1);
@@ -4726,7 +4726,7 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
             TsCMPMes_SetMes(MENU_HALL_INSIDE);
             TSSNDPLAY(VSND_MENU1);
         }
-        if (TsAnimeWait_withKeySkip(tpad, &MNS_CityHall, 0, -1)) {
+        if (TsAnimeWait_withKeySkip(tpad, &MNS_CityHall, 0, MNANM_ALL_BANKS)) {
             return 0;
         }
         TSSND_SKIPPLAY(VSND_MENU1);
@@ -5148,9 +5148,9 @@ static void MpCityHallParaStart(int pos) {
         }
 
         if (n & CHALL_ANIME_CONTINUE) {
-            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
+            MNScene_ContinueAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
-            MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+            MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n]);
         }
         ptr++;
     }
@@ -5219,9 +5219,9 @@ static int MpCityHallFPHSMove(int pos, int fpos) {
         }
 
         if (n & CHALL_ANIME_CONTINUE) {
-            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
+            MNScene_ContinueAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
-            MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+            MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n]);
         }
         ptr++;
     }
@@ -5249,9 +5249,9 @@ static void MpCityHallFPHOK(int flg) {
 
     if (!TsAnimeWait_withKeySkip(0, &MNS_CityHall, 1, 6)) {
         MNScene_ContinueAnime(&MNS_CityHall, 1, NULL);
-        MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+        MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n]);
     } else {
-        MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
+        MNScene_ContinueAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n]);
     }
 }
 
@@ -5271,7 +5271,7 @@ static void MpCityHallCharPosSet(int pos) {
         break;
     }
 
-    AnmBit = 0x80000000;
+    AnmBit = MNANM_BANK_SET;
     while (TRUE) {
         int n = *ptr;
 
@@ -5279,7 +5279,7 @@ static void MpCityHallCharPosSet(int pos) {
             break;
         }
 
-        AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
+        AnmBit |= MNScene_StartAnime(&MNS_CityHall, MNANM_TABLE_BANK, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         ptr++;
     }
 
@@ -5371,13 +5371,13 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
                 int anmNo;
 
                 anmNo = mpos->posanm0;
-                mpw->anmBit = 0x80000000;
+                mpw->anmBit = MNANM_BANK_SET;
                 if (anmNo != -1) {
-                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                 }
                 anmNo = mpos->posanm1;
                 if (anmNo != -1) {
-                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                 }
                 MNScene_SetAnimeEnd(mpw->pscene);
             }
@@ -5419,13 +5419,13 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
 
                     anmNo = mpos->movanm1;
                     mpw->bMove = 1;
-                    mpw->anmBit = 0x80000000;
+                    mpw->anmBit = MNANM_BANK_SET;
                     if (anmNo != -1) {
-                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                     }
                     anmNo = mpos->mapdir[idx].anmNo;
                     if (anmNo != -1) {
-                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                     }
                 }
                 mpw->anmtrg = mpos->mapdir[idx].exflg;
@@ -5460,13 +5460,13 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
                 int anmNo;
 
                 anmNo = mpos->posanm0;
-                mpw->anmBit = 0x80000000;
+                mpw->anmBit = MNANM_BANK_SET;
                 if (anmNo != -1) {
-                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                 }
                 anmNo = mpos->posanm1;
                 if (anmNo != -1) {
-                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                    mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                 }
                 MNScene_SetAnimeBankEnd(mpw->pscene, mpw->anmBit);
             }
@@ -5506,13 +5506,13 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
 
                     anmNo = mpos->movanm1;
                     mpw->bMove = 1;
-                    mpw->anmBit = 0x80000000;
+                    mpw->anmBit = MNANM_BANK_SET;
                     if (anmNo != -1) {
-                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                     }
                     anmNo = mpos->mapdir[idx].anmNo;
                     if (anmNo != -1) {
-                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, -1, &mpw->panime[anmNo]);
+                        mpw->anmBit |= MNScene_StartAnime(mpw->pscene, MNANM_TABLE_BANK, &mpw->panime[anmNo]);
                     }
                 }
                 state = MAPMENU_ST_MOVING;
@@ -7131,13 +7131,13 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
         switch (pfw->selno) {
         case POPITEM_SINGLE:
         case POPITEM_VS_MAN:
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[2]);
             state = POPUP_DECIDED;
             break;
         case POPITEM_VS_COM:
             if (pfw->levMax < 2) {
                 state = POPUP_DECIDED;
-                MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+                MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[2]);
                 pfw->selLev = 0;
             } else {
                 state = POPUP_LEVEL_START;
@@ -7188,7 +7188,7 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
         if (tpad & SCE_PADRright) {
             state = POPUP_DECIDED;
             TSSNDPLAY(VSND_GO_GAME);
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[2]);
             pfw->isSelLev = 0;
         }
         break;
@@ -7710,7 +7710,7 @@ static int TsSaveMenu_Flow(int flg, u_int tpad) {
             state = SAVEMENU_CLOSE;
         } else if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
             state = SAVEMENU_DECIDED;
             TSSNDPLAY(VSND_SELPOPUP);
         }
@@ -8597,13 +8597,13 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         }
         break;
     case JKCAM_BACK:
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[1]);
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[34]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[1]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[34]);
         scstate = JKCAM_BACKING;
         /* fallthrough */
     case JKCAM_BACKING:
-        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
+        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, MNANM_ALL_BANKS)) {
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[3]);
             scstate = JKCAM_MENU;
         }
         break;
@@ -8613,20 +8613,20 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         }
         break;
     case JKCAM_ZOOM:
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[4]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[4]);
         scstate = JKCAM_ZOOM_WAIT;
         break;
     case JKCAM_ZOOM_WAIT:
-        if (TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
+        if (TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, MNANM_ALL_BANKS)) {
             break;
         }
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[1]);
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[33]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[1]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[33]);
         scstate = JKCAM_ZOOMING;
         /* fallthrough */
     case JKCAM_ZOOMING:
-        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, -1)) {
-            MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[5]);
+        if (!TsAnimeWait_withKeySkip(tpad, &MNS_StageMap, 0, MNANM_ALL_BANKS)) {
+            MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimePA[5]);
             scstate = JKCAM_LISTEN;
         }
         break;
@@ -8727,8 +8727,8 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         MenuDataDiskVolume(128);
         memset(&pfw->MNS_StageMapW, 0, sizeof(pfw->MNS_StageMapW));
         MNScene_CopyState(&pfw->MNS_StageMapW, &MNS_StageMap);
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimeSEA[1]);
-        MNScene_StartAnime(&MNS_StageMap, -1, &StageMapBGMCamera[pfw->selno]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapAnimeSEA[1]);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, &StageMapBGMCamera[pfw->selno]);
         pfw->timeV = 0;
         break;
     case JUKE_PLAYING:
@@ -8750,7 +8750,7 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
     case JUKE_STOP_RESTORE:
     {
         int mn;
-        u_int AnmBit = 0x80000000;
+        u_int AnmBit = MNANM_BANK_SET;
 
         mn = TsMENU_GetMapNo(NULL);
         state = JUKE_STOP_FADE;
@@ -8759,7 +8759,7 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         TsMENU_SetMapScreen(mn);
         MNScene_CopyState(&MNS_StageMap, &pfw->MNS_StageMapW);
         MNScene_DispSw(&MNS_StageMap2, 1);
-        MNScene_SetAnimeBankEnd(&MNS_StageMap2, MNScene_StartAnime(&MNS_StageMap2, -1, &StageMapAnimePA[33]) | AnmBit);
+        MNScene_SetAnimeBankEnd(&MNS_StageMap2, MNScene_StartAnime(&MNS_StageMap2, MNANM_TABLE_BANK, &StageMapAnimePA[33]) | AnmBit);
         MNScene_DispSw(&MNS_StageMap, 0);
         pfw->bgmFadeVol = 128;
         TsJukeObjAnime2(2);
@@ -8779,7 +8779,7 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         state = JUKE_STOP_WAIT;
         MNScene_DispSw(&MNS_StageMap2, 0);
         MNScene_End(&MNS_StageMap2);
-        MNScene_StartAnime(&MNS_StageMap, -1, StageMapAnimeSEA);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, StageMapAnimeSEA);
         MNScene_DispSw(&MNS_StageMap, 1);
         MenuDataDiskSndEnd();
         TsJukeObjAnime2(1);
@@ -8803,7 +8803,7 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         MNScene_CopyStateMdl(&pfw->MNS_StageMapW, &MNS_StageMap);
         TsMENU_SetMapScreen(mn);
         MNScene_CopyState(&MNS_StageMap, &pfw->MNS_StageMapW);
-        MNScene_StartAnime(&MNS_StageMap, -1, StageMapAnimeSEA);
+        MNScene_StartAnime(&MNS_StageMap, MNANM_TABLE_BANK, StageMapAnimeSEA);
         scstPos = JKCAM_TO_MENU;
         TsBGMPause(0);
         TsBGMPlay(BGM_TRACK_MAP(pP3GameState->nStage), 60);
@@ -9474,7 +9474,7 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
             TsUserList_SetCurFileNoCusor(pfw->curFileNo, &pfw->curFileDate);
         }
         if (pfw->scene != NULL) {
-            MNScene_StartAnime(pfw->scene, -1, &CounterAnime[nCell]);
+            MNScene_StartAnime(pfw->scene, MNANM_TABLE_BANK, &CounterAnime[nCell]);
             MNScene_DispSw(pfw->scene, 1);
         }
 

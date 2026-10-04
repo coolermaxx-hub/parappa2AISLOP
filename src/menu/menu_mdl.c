@@ -596,12 +596,12 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
 
     if (anime == NULL) {
         pshdl->anime[no] = NULL;
-        return PR_BIT(31);
+        return MNANM_BANK_SET;
     }
     if (no < 0) {
         no = anime->aTimNo;
     }
-    if (no >= 10) {
+    if (no >= MN_SCENE_BANKS) {
         no = 0;
     }
 
@@ -706,14 +706,15 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
 
 void MNScene_ContinueAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     if (anime == NULL) {
-        if (no < 11u) {
+        /* Off by one: no == MN_SCENE_BANKS writes cntani[10], which is speed[0]. */
+        if ((u_int)no <= MN_SCENE_BANKS) {
             pshdl->cntani[no] = NULL;
         }
     } else {
         if (no < 0) {
             no = anime->aTimNo;
         }
-        if (no > 9) {
+        if (no >= MN_SCENE_BANKS) {
             no = 0;
         }
 
@@ -733,7 +734,7 @@ void MNScene_ExecAnime(MN_SCENE *pshdl) {
     int        i;
     int        time;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MN_SCENE_BANKS; i++) {
         MNANM_TBL *panm = pshdl->anime[i];
 
         if (panm == NULL) {
@@ -909,7 +910,7 @@ void MNScene_CopyStateMdl(MN_SCENE *pdhdl, MN_SCENE *pshdl) {
 }
 
 void MNScene_SetAnimeSpeed(MN_SCENE *pshdl, int nAnime, int speed) {
-    if (nAnime >= 10) {
+    if (nAnime >= MN_SCENE_BANKS) {
         return;
     }
 
@@ -919,7 +920,7 @@ void MNScene_SetAnimeSpeed(MN_SCENE *pshdl, int nAnime, int speed) {
 void MNScene_SetAnimeEnd(MN_SCENE *pshdl) {
     int i;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MN_SCENE_BANKS; i++) {
         MNANM_TBL *panm = pshdl->anime[i];
 
         if (panm != NULL) {
@@ -946,7 +947,7 @@ void MNScene_SetAnimeBankEnd(MN_SCENE *pshdl, u_int bnk) {
     } else {
         int i;
 
-        for (i = 0; i < 10; i++, bnk >>= 1) {
+        for (i = 0; i < MN_SCENE_BANKS; i++, bnk >>= 1) {
             if (!(bnk & 1)) {
                 continue;
             }
@@ -966,7 +967,7 @@ void MNScene_SetAnimeBankEnd(MN_SCENE *pshdl, u_int bnk) {
 int MNScene_isAnime(MN_SCENE *pshdl, int ltim) {
     int i;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < MN_SCENE_BANKS; i++) {
         MNANM_TBL *panm = pshdl->anime[i];
 
         if (panm != NULL) {
@@ -996,7 +997,7 @@ int MNScene_isAnimeBank(MN_SCENE *pshdl, int ltim, u_int bnk) {
     } else {
         int i;
 
-        for (i = 0; i < 10; i++, bnk >>= 1) {
+        for (i = 0; i < MN_SCENE_BANKS; i++, bnk >>= 1) {
             if (!(bnk & 1)) {
                 continue;
             }
