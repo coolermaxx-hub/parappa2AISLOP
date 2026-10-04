@@ -5401,7 +5401,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         if (flg != 0) {
             subStatus = 0x100;
         } else {
-            subStatus = 0xf000;
+            subStatus = MCUSER_EXIT_DONE;
         }
         break;
     case 0x100:
@@ -5483,7 +5483,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 UCheckSaveError = 0;
             }
             if (errorNo == 0) {
-                subStatus = 0xf000;
+                subStatus = MCUSER_EXIT_DONE;
                 break;
             }
         }
@@ -5552,23 +5552,23 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             if (errorNo == 70) {
                 memset(UserLst, 0, sizeof(*UserLst));
             }
-            subStatus = 0xf000;
+            subStatus = MCUSER_EXIT_DONE;
         } else {
-            subStatus = 0xf002;
+            subStatus = MCUSER_EXIT_FAILED;
         }
         break;
-    case 0xf000:
+    case MCUSER_EXIT_DONE:
         P3MC_GetUserEnd();
         TsMCAMes_SetMes(-1);
-        return 0;
-    case 0xf001:
+        return MCFLOW_DONE;
+    case MCUSER_EXIT_BROKEN:
         P3MC_GetUserEnd();
         TsMCAMes_SetMes(-1);
-        return 1;
-    case 0xf002:
+        return MCFLOW_BROKEN;
+    case MCUSER_EXIT_FAILED:
         P3MC_GetUserEnd();
         TsMCAMes_SetMes(-1);
-        return 2;
+        return MCFLOW_FAILED;
     }
 
     return isRun;
