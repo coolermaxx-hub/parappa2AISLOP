@@ -52,6 +52,65 @@ static void    _P3MC_dataCheckFunc(P3MC_WORK *pw, P3MCDataCheckFunc funcp);
 static int     _P3MC_CheckUserData(P3MC_WORK *pw);
 static int     _P3MC_CheckUserDataHead(P3MC_WORK *pw);
 
+/*
+ * P3MC_WORK::prg is the state of the save/load sequencer. The top nibble selects the
+ * operation (P3MC_OP_SAVE or P3MC_OP_LOAD), the next byte the stage of that operation
+ * and the low byte a step or outcome inside the stage. _P3MC_proc turns the card
+ * manager's result into the next state; _P3MC_SaveCheck and _P3MC_loadCheck turn
+ * terminal states into the P3MC_RES_* values returned to the menu.
+ */
+#define P3MC_OP_MASK    0xf000
+#define P3MC_OP_SAVE    0x0000
+#define P3MC_OP_LOAD    0x1000
+#define P3MC_STAGE_MASK 0xff00
+
+enum {
+    P3MC_STAGE_SAVE_CHECK  = 0x0200, /* looking at the card before writing */
+    P3MC_STAGE_SAVE_WRITE  = 0x0400,
+    P3MC_STAGE_SAVE_FORMAT = 0x0500,
+    P3MC_STAGE_LOAD_CHECK  = 0x1200,
+    P3MC_STAGE_LOAD_RETRY  = 0x1204,
+    P3MC_STAGE_LOAD_READ   = 0x1400
+};
+
+enum {
+    P3MC_SAVE_START             = 0x000, /* read the card info */
+    P3MC_SAVE_CHECK_CARD        = 0x200,
+    P3MC_SAVE_NO_CARD           = 0x201, /* no usable card */
+    P3MC_SAVE_NO_SPACE          = 0x206,
+    P3MC_SAVE_ERROR             = 0x207, /* any other card error */
+    P3MC_SAVE_CARD_SWAPPED      = 0x210,
+    P3MC_SAVE_CARD_LOST         = 0x211, /* card went away while writing */
+    P3MC_SAVE_WRITE             = 0x400, /* file is being written */
+    P3MC_SAVE_DONE              = 0x401,
+    P3MC_SAVE_UNUSED_402        = 0x402, /* handled but never entered */
+    P3MC_SAVE_CONFIRM_OVERWRITE = 0x410, /* file exists: ask unless P3MC_FLAG_OVERWRITE */
+    P3MC_SAVE_OVERWRITE         = 0x411,
+    P3MC_SAVE_NEED_FORMAT       = 0x510, /* card unformatted: ask unless P3MC_FLAG_FORMAT */
+    P3MC_SAVE_FORMAT_ALLOWED    = 0x511,
+    P3MC_SAVE_FORMATTING        = 0x520,
+    P3MC_SAVE_FORMAT_FAILED     = 0x530
+};
+
+enum {
+    P3MC_LOAD_START        = 0x1000, /* read the card info */
+    P3MC_LOAD_FIRST_FILE   = 0x1001, /* first boot: load the initial file */
+    P3MC_LOAD_FILE         = 0x1002,
+    P3MC_LOAD_READ_CARD    = 0x1100,
+    P3MC_LOAD_CHECK_CARD   = 0x1200,
+    P3MC_LOAD_NO_CARD      = 0x1201,
+    P3MC_LOAD_NO_SAVE_DATA = 0x1202, /* handled but never entered */
+    P3MC_LOAD_UNFORMATTED  = 0x1203,
+    P3MC_LOAD_UNUSED_1204  = 0x1204, /* stage only, never entered */
+    P3MC_LOAD_ERROR        = 0x1207,
+    P3MC_LOAD_NO_FILE      = 0x1209,
+    P3MC_LOAD_CARD_SWAPPED = 0x1210,
+    P3MC_LOAD_CARD_LOST    = 0x1211,
+    P3MC_LOAD_BAD_DATA     = 0x1231,
+    P3MC_LOAD_READ         = 0x1400, /* file is being read */
+    P3MC_LOAD_DONE         = 0x1401
+};
+
 static int P3MC_GetIconSize(int mode) {
     int isize;
 
@@ -931,7 +990,7 @@ int P3MC_GetUserCheck(void) {
                         pcw->chkData.datasize = chksize;
                         P3MC_LoadUser(pcw->curMode, pcw->curFno, &pcw->chkData, 0);
                         _P3MC_dataCheckFunc(pw, _P3MC_CheckUserDataHead);
-                        P3MC_Work.prg = (pcw->bFirst) ? 0x1001 : 0x1002;
+                        P3MC_Work.prg = (pcw->bFirst) ? P3MC_LOAD_FIRST_FILE : P3MC_LOAD_FILE;
                         pcw->curFno++;
                         loadPending = 1;
                         break;
@@ -1342,7 +1401,7 @@ int P3MC_LoadUser(int mode, int fileNo, MCRWDATA_HDL *pdhdl, int flg) {
     _P3MC_SetUserDirName(mode, fileNo);
     _P3MC_dataCheckFunc(pw, _P3MC_CheckUserData);
 
-    pw->prg = 0x1000;
+    pw->prg = P3MC_LOAD_START;
     pw->dstat = 0;
 
     pw->data_mode = mode;
@@ -1361,15 +1420,15 @@ int P3MC_LoadCheck(void) {
     re = _P3MC_loadCheck(pw, 0);
     if (re < 0) {
         if (pw->dstat == 0) {
-            return -1;
+            return P3MC_RES_BUSY;
         } else {
-            return -2;
+            return P3MC_RES_ACCESSING;
         }
     }
 
     if (re != 0) {
-        if (re == 11) {
-            re = 4;
+        if (re == P3MC_RES_NO_FILE) {
+            re = P3MC_RES_NO_SAVE_DATA;
         }
 
         memset(pw->dhdl->pMemTop, 0, pw->dhdl->rwsize);
@@ -1382,29 +1441,29 @@ static int _P3MC_loadCheck(P3MC_WORK *pw, int skip) {
     int ret;
     int re;
 
-    ret = -1;
+    ret = P3MC_RES_BUSY;
 
     switch (pw->prg) {
-    case 0x1001:
+    case P3MC_LOAD_FIRST_FILE:
         re = memc_loadFirst(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize);
         if (re == 0) {
-            pw->prg = 0x1400;
+            pw->prg = P3MC_LOAD_READ;
         } else {
             _P3MC_proc(pw->prg);
         }
         break;
-    case 0x1002:
+    case P3MC_LOAD_FILE:
         re = memc_load_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize);
         if (re == 0) {
-            pw->prg = 0x1400;
+            pw->prg = P3MC_LOAD_READ;
         } else {
             _P3MC_proc(pw->prg);
         }
         break;
-    case 0x1000:
-        pw->prg = 0x1100;
+    case P3MC_LOAD_START:
+        pw->prg = P3MC_LOAD_READ_CARD;
         /* fallthrough */
-    case 0x1100:
+    case P3MC_LOAD_READ_CARD:
         if (skip == 0) {
             re = memc_port_info(0, &mcmenu_info);
         } else {
@@ -1412,58 +1471,58 @@ static int _P3MC_loadCheck(P3MC_WORK *pw, int skip) {
         }
 
         if (re == 0) {
-            pw->prg = 0x1200;
+            pw->prg = P3MC_LOAD_CHECK_CARD;
         } else {
             _P3MC_proc(pw->prg);
         }
         break;
-    case 0x1200:
+    case P3MC_LOAD_CHECK_CARD:
         pw->prg = _P3MC_proc(pw->prg);
-        if (pw->prg == 0x1400) {
+        if (pw->prg == P3MC_LOAD_READ) {
             memc_load_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize);
         }
         break;
-    case 0x1201:
-        ret = 3;
+    case P3MC_LOAD_NO_CARD:
+        ret = P3MC_RES_NO_CARD;
         break;
-    case 0x1202:
-        ret = 4;
+    case P3MC_LOAD_NO_SAVE_DATA:
+        ret = P3MC_RES_NO_SAVE_DATA;
         break;
-    case 0x1209:
-        ret = 11;
+    case P3MC_LOAD_NO_FILE:
+        ret = P3MC_RES_NO_FILE;
         break;
-    case 0x1203:
-        ret = 2;
+    case P3MC_LOAD_UNFORMATTED:
+        ret = P3MC_RES_UNFORMATTED;
         break;
-    case 0x1207:
-    case 0x1211:
-        ret = 1;
+    case P3MC_LOAD_ERROR:
+    case P3MC_LOAD_CARD_LOST:
+        ret = P3MC_RES_FILE_ERROR;
         break;
-    case 0x1210:
-        ret = 5;
+    case P3MC_LOAD_CARD_SWAPPED:
+        ret = P3MC_RES_CARD_SWAPPED;
         break;
-    case 0x1231:
-        ret = 6;
+    case P3MC_LOAD_BAD_DATA:
+        ret = P3MC_RES_BAD_DATA;
         break;
-    case 0x1400:
+    case P3MC_LOAD_READ:
         pw->dstat = 1;
 
         pw->prg = _P3MC_proc(pw->prg);
-        if (pw->prg != 0x1401) {
+        if (pw->prg != P3MC_LOAD_DONE) {
             break;
         }
 
         if (pw->data_cfunc != NULL) {
             if (((P3MCDataCheckFunc)pw->data_cfunc)(pw) != 0) {
-                pw->prg = 0x1231;
-                ret = 6;
+                pw->prg = P3MC_LOAD_BAD_DATA;
+                ret = P3MC_RES_BAD_DATA;
                 break;
             }
         }
 
         /* fallthrough */
-    case 0x1401:
-        ret = 0;
+    case P3MC_LOAD_DONE:
+        ret = P3MC_RES_OK;
         break;
     default:
         break;
@@ -1567,108 +1626,108 @@ int P3MC_SaveCheck(void) {
     }
 
     if (pw->dstat == 1) {
-        return -2;
+        return P3MC_RES_ACCESSING;
     }
     if (pw->dstat != 2) {
-        return -1;
+        return P3MC_RES_BUSY;
     }
-    return -3;
+    return P3MC_RES_FORMATTING;
 }
 
 static int _P3MC_SaveCheck(P3MC_WORK *pw) {
     int ret;
     int re;
 
-    ret = -1;
+    ret = P3MC_RES_BUSY;
 
     switch (pw->prg) {
-    case 0:
+    case P3MC_SAVE_START:
         re = memc_port_info(0, &mcmenu_info);
         if (re == 0) {
-            pw->prg = 0x200;
+            pw->prg = P3MC_SAVE_CHECK_CARD;
         } else {
             _P3MC_proc(pw->prg);
         }
         break;
-    case 0x200:
+    case P3MC_SAVE_CHECK_CARD:
         pw->prg = _P3MC_proc(pw->prg);
-        if (pw->prg == 0x400) {
+        if (pw->prg == P3MC_SAVE_WRITE) {
             pw->dstat = 1;
             if (pw->dhdl->pMemTop != NULL) {
-                memc_save_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize, pw->prgflag & 0x4);
+                memc_save_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize, pw->prgflag & P3MC_FLAG_WRITE_SYSTEM);
             }
         }
         break;
-    case 0x201:
-        ret = 3;
+    case P3MC_SAVE_NO_CARD:
+        ret = P3MC_RES_NO_CARD;
         break;
-    case 0x206:
-        ret = 7;
+    case P3MC_SAVE_NO_SPACE:
+        ret = P3MC_RES_NO_SPACE;
         break;
-    case 0x207:
-    case 0x211:
-        ret = 1;
+    case P3MC_SAVE_ERROR:
+    case P3MC_SAVE_CARD_LOST:
+        ret = P3MC_RES_FILE_ERROR;
         break;
-    case 0x210:
-        ret = 5;
+    case P3MC_SAVE_CARD_SWAPPED:
+        ret = P3MC_RES_CARD_SWAPPED;
         break;
-    case 0x401:
-        ret = 0;
+    case P3MC_SAVE_DONE:
+        ret = P3MC_RES_OK;
         break;
-    case 0x400:
+    case P3MC_SAVE_WRITE:
         pw->prg = _P3MC_proc(pw->prg);
 
-        if (pw->prg == 0x401) {
+        if (pw->prg == P3MC_SAVE_DONE) {
             break;
         }
-        if (pw->prg == 0x400) {
+        if (pw->prg == P3MC_SAVE_WRITE) {
             break;
         }
 
-        if (pw->prg == 0x206) {
-            ret = 7;
+        if (pw->prg == P3MC_SAVE_NO_SPACE) {
+            ret = P3MC_RES_NO_SPACE;
         } else {
-            ret = 1;
+            ret = P3MC_RES_FILE_ERROR;
         }
 
         break;
-    case 0x402:
+    case P3MC_SAVE_UNUSED_402:
         pw->prg = _P3MC_proc(pw->prg);
         break;
-    case 0x410:
-        if (pw->prgflag & 0x1) {
+    case P3MC_SAVE_CONFIRM_OVERWRITE:
+        if (pw->prgflag & P3MC_FLAG_OVERWRITE) {
             memc_port_info(0, &mcmenu_info);
-            pw->prg = 0x411;
+            pw->prg = P3MC_SAVE_OVERWRITE;
         } else {
-            ret = 8;
+            ret = P3MC_RES_CONFIRM_OVERWRITE;
         }
         break;
-    case 0x411:
+    case P3MC_SAVE_OVERWRITE:
         pw->prg = _P3MC_proc(pw->prg);
-        if (pw->prg == 0x400) {
+        if (pw->prg == P3MC_SAVE_WRITE) {
             pw->dstat = 1;
             if (pw->dhdl->pMemTop != NULL) {
-                memc_save_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize, pw->prgflag & 0x4);
+                memc_save_file(0, 0, pw->dhdl->pMemTop, pw->dhdl->rwsize, pw->prgflag & P3MC_FLAG_WRITE_SYSTEM);
             }
         }
         break;
-    case 0x510:
-        if (pw->prgflag & 0x2) {
+    case P3MC_SAVE_NEED_FORMAT:
+        if (pw->prgflag & P3MC_FLAG_FORMAT) {
             memc_port_info(0, &mcmenu_info);
-            pw->prg = 0x511;
+            pw->prg = P3MC_SAVE_FORMAT_ALLOWED;
         } else {
-            ret = 9;
+            ret = P3MC_RES_NEED_FORMAT;
         }
         break;
-    case 0x511:
+    case P3MC_SAVE_FORMAT_ALLOWED:
         pw->prg = _P3MC_proc(pw->prg);
         break;
-    case 0x520:
+    case P3MC_SAVE_FORMATTING:
         pw->dstat = 2;
         pw->prg = _P3MC_proc(pw->prg);
         break;
-    case 0x530:
-        ret = 10;
+    case P3MC_SAVE_FORMAT_FAILED:
+        ret = P3MC_RES_FORMAT_FAILED;
         break;
     default:
         break;
@@ -1685,149 +1744,149 @@ static u_short _P3MC_proc(u_short prg) {
     re = memc_manager(1);
 
     switch (re) {
-    case 6:
-    case 48:
-        switch (prg & 0xff00) {
-        case 0x200:
-        case 0x1200:
-            if (pw->prgflag & 0x8) {
+    case MEMC_ERR_SWAP:
+    case MEMC_ERR_SWAP_UNFORMATTED:
+        switch (prg & P3MC_STAGE_MASK) {
+        case P3MC_STAGE_SAVE_CHECK:
+        case P3MC_STAGE_LOAD_CHECK:
+            if (pw->prgflag & P3MC_FLAG_RETRY_SWAP) {
                 memc_port_info(0, &mcmenu_info);
                 re = prg;
                 break;
             }
             /* fallthrough */
         default:
-            if (prg & 0xf000) {
-                re = 0x1210;
+            if (prg & P3MC_OP_MASK) {
+                re = P3MC_LOAD_CARD_SWAPPED;
             } else {
-                re = 0x210;
+                re = P3MC_SAVE_CARD_SWAPPED;
             }
             break;
         }
         break;
-    case 0:
-        switch (prg & 0xff00) {
-        case 0x200:
-            if (mcmenu_info.flag & 0x200) {
+    case MEMC_OK:
+        switch (prg & P3MC_STAGE_MASK) {
+        case P3MC_STAGE_SAVE_CHECK:
+            if (mcmenu_info.flag & MCMC_FLAG_PS2) {
                 if (!_P3MC_mainfile_chk(-1, pw->dhdl->datasize, pw->data_mode, &need)) {
-                    re = 0x410;
+                    re = P3MC_SAVE_CONFIRM_OVERWRITE;
                     break;
                 }
                 if (mcmenu_info.free < need) {
-                    re = 0x206;
+                    re = P3MC_SAVE_NO_SPACE;
                 } else {
-                    re = 0x400;
+                    re = P3MC_SAVE_WRITE;
                 }
                 break;
             }
-            re = 0x201;
+            re = P3MC_SAVE_NO_CARD;
             break;
-        case 0x400:
-            if (prg == 0x411) {
-                re = 0x400;
+        case P3MC_STAGE_SAVE_WRITE:
+            if (prg == P3MC_SAVE_OVERWRITE) {
+                re = P3MC_SAVE_WRITE;
             } else {
-                re = 0x401;
+                re = P3MC_SAVE_DONE;
             }
             break;
-        case 0x500:
+        case P3MC_STAGE_SAVE_FORMAT:
             memc_port_info(0, &mcmenu_info);
-            re = 0x200;
+            re = P3MC_SAVE_CHECK_CARD;
             break;
-        case 0x1200:
-            if (mcmenu_info.flag & 0x200) {
+        case P3MC_STAGE_LOAD_CHECK:
+            if (mcmenu_info.flag & MCMC_FLAG_PS2) {
                 /* note: variable not in STABS info. */
                 int chk = _P3MC_mainfile_chk(-1, pw->dhdl->datasize, pw->data_mode, NULL);
                 if (chk >= -1 && chk <= 0) {
-                    re = 0x1400;
+                    re = P3MC_LOAD_READ;
                 } else {
-                    re = 0x1231;
+                    re = P3MC_LOAD_BAD_DATA;
                 }
                 break;
             }
-            re = 0x1201;
+            re = P3MC_LOAD_NO_CARD;
             break;
-        case 0x1204:
-            re = 0x1100;
+        case P3MC_STAGE_LOAD_RETRY:
+            re = P3MC_LOAD_READ_CARD;
             break;
-        case 0x1400:
-            re = 0x1401;
+        case P3MC_STAGE_LOAD_READ:
+            re = P3MC_LOAD_DONE;
             break;
         default:
-            re = prg & 0xf000;
+            re = prg & P3MC_OP_MASK;
             break;
         }
         break;
-    case 16:
+    case MEMC_ERR_BUSY:
         re = prg;
         break;
-    case 18:
-        re = 0x400;
+    case MEMC_ERR_FILE_EXISTS:
+        re = P3MC_SAVE_WRITE;
         memc_save_overwrite();
         break;
-    case 2:
-        switch (prg & 0xf000) {
-        case 0:
-            if (prg == 0x400) {
-                re = 0x211;
+    case MEMC_ERR_INVALID:
+        switch (prg & P3MC_OP_MASK) {
+        case P3MC_OP_SAVE:
+            if (prg == P3MC_SAVE_WRITE) {
+                re = P3MC_SAVE_CARD_LOST;
             } else {
-                re = 0x201;
+                re = P3MC_SAVE_NO_CARD;
             }
             break;
-        case 0x1000:
-            if ((prg & 0xff00) == 0x1400) {
-                re = 0x1211;
+        case P3MC_OP_LOAD:
+            if ((prg & P3MC_STAGE_MASK) == P3MC_STAGE_LOAD_READ) {
+                re = P3MC_LOAD_CARD_LOST;
             } else {
-                re = 0x1201;
+                re = P3MC_LOAD_NO_CARD;
             }
             break;
         }
         break;
-    case 5:
-    case 17:
-        switch (prg & 0xf000) {
-        case 0:
+    case MEMC_ERR_FILE_NOT_FOUND:
+    case MEMC_ERR_DIR_NOT_FOUND:
+        switch (prg & P3MC_OP_MASK) {
+        case P3MC_OP_SAVE:
             if (_P3MC_freesize_chk() & pw->data_mode) {
-                re = 0x400;
+                re = P3MC_SAVE_WRITE;
             } else {
-                re = 0x206;
+                re = P3MC_SAVE_NO_SPACE;
             }
             break;
-        case 0x1000:
-            re = 0x1209;
+        case P3MC_OP_LOAD:
+            re = P3MC_LOAD_NO_FILE;
             break;
         }
         break;
-    case 4:
-        if ((prg & 0xf000) == 0) {
-            re = 0x206;
+    case MEMC_ERR_FULL:
+        if ((prg & P3MC_OP_MASK) == P3MC_OP_SAVE) {
+            re = P3MC_SAVE_NO_SPACE;
         } else {
-            re = 0x1231;
+            re = P3MC_LOAD_BAD_DATA;
         }
         break;
-    case 3:
-        switch (prg & 0xf000) {
-        case 0:
-            if ((prg & 0xff00) == 0x200) {
-                re = 0x510;
-            } else if (prg == 0x511) {
-                re = 0x520;
+    case MEMC_ERR_UNFORMATTED:
+        switch (prg & P3MC_OP_MASK) {
+        case P3MC_OP_SAVE:
+            if ((prg & P3MC_STAGE_MASK) == P3MC_STAGE_SAVE_CHECK) {
+                re = P3MC_SAVE_NEED_FORMAT;
+            } else if (prg == P3MC_SAVE_FORMAT_ALLOWED) {
+                re = P3MC_SAVE_FORMATTING;
                 memc_format(0);
             } else {
-                re = 0x210;
+                re = P3MC_SAVE_CARD_SWAPPED;
             }
             break;
-        case 0x1000:
-            re = 0x1203;
+        case P3MC_OP_LOAD:
+            re = P3MC_LOAD_UNFORMATTED;
             break;
         }
         break;
     default:
-        if ((prg & 0xff00) == 0x500) {
-            re = 0x530;
-        } else if (prg & 0x1000) {
-            re = 0x1207;
+        if ((prg & P3MC_STAGE_MASK) == P3MC_STAGE_SAVE_FORMAT) {
+            re = P3MC_SAVE_FORMAT_FAILED;
+        } else if (prg & P3MC_OP_LOAD) {
+            re = P3MC_LOAD_ERROR;
         } else {
-            re = 0x207;
+            re = P3MC_SAVE_ERROR;
         }
         break;
     }

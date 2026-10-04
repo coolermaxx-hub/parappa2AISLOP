@@ -102,6 +102,31 @@ typedef struct { // 0x20
     /* 0x1c */ void *data_cfunc;
 } P3MC_WORK;
 
+/* P3MC_SaveUser / P3MC_LoadUser flags (P3MC_WORK::prgflag). */
+#define P3MC_FLAG_OVERWRITE    0x1 /* replace an existing file without asking */
+#define P3MC_FLAG_FORMAT       0x2 /* format an unformatted card without asking */
+#define P3MC_FLAG_WRITE_SYSTEM 0x4 /* also write the system and icon files (memc_save_file bSysRW) */
+#define P3MC_FLAG_RETRY_SWAP   0x8 /* re-read the card instead of failing when it was swapped */
+
+/* P3MC_SaveCheck / P3MC_LoadCheck results: negative while the operation is still running. */
+enum {
+    P3MC_RES_FORMATTING = -3, /* save only: the card is being formatted */
+    P3MC_RES_ACCESSING = -2,  /* the card is being read or written */
+    P3MC_RES_BUSY = -1,
+    P3MC_RES_OK = 0,
+    P3MC_RES_FILE_ERROR = 1,
+    P3MC_RES_UNFORMATTED = 2, /* load only */
+    P3MC_RES_NO_CARD = 3,
+    P3MC_RES_NO_SAVE_DATA = 4, /* load only */
+    P3MC_RES_CARD_SWAPPED = 5,
+    P3MC_RES_BAD_DATA = 6,     /* load only */
+    P3MC_RES_NO_SPACE = 7,     /* save only */
+    P3MC_RES_CONFIRM_OVERWRITE = 8, /* save only */
+    P3MC_RES_NEED_FORMAT = 9,  /* save only */
+    P3MC_RES_FORMAT_FAILED = 10, /* save only */
+    P3MC_RES_NO_FILE = 11      /* load only, reported to the menu as NO_SAVE_DATA */
+};
+
 typedef int (*P3MCDataCheckFunc)(P3MC_WORK *pw);
 
 typedef struct { // 0x3b00

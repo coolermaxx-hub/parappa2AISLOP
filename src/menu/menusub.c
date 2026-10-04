@@ -5565,7 +5565,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         subStatus = 0x100;
     case 0x100:
-        P3MC_SaveUser(pGameData, 5);
+        P3MC_SaveUser(pGameData, P3MC_FLAG_OVERWRITE | P3MC_FLAG_WRITE_SYSTEM);
         subStatus = 0x2000;
         break;
     case 0x1000:
@@ -5594,15 +5594,15 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         TsMCAMes_SetMes(-1);
         subStatus = 0x1030;
     case 0x1030:
-        P3MC_SaveUser(pGameData, 3);
+        P3MC_SaveUser(pGameData, P3MC_FLAG_OVERWRITE | P3MC_FLAG_FORMAT);
         subStatus = 0x2000;
         break;
     case 0x2000:
         ret = P3MC_SaveCheck();
-        if (ret == -2) {
+        if (ret == P3MC_RES_ACCESSING) {
             TsMCAMes_SetMes(MCMES(0, 19));
         }
-        if (ret == -3) {
+        if (ret == P3MC_RES_FORMATTING) {
             TsMCAMes_SetMes(MCMES(0, 17));
         }
         if (ret < 0) {
@@ -5613,21 +5613,21 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         if (ret != 0) {
             errorNo = 0;
             switch (ret) {
-            case 9:
+            case P3MC_RES_NEED_FORMAT:
                 subStatus = 0x1000;
                 break;
-            case 3:
+            case P3MC_RES_NO_CARD:
                 if (puser->mode == 2) {
                     errorNo = 60;
                 } else {
                     errorNo = 50;
                 }
                 break;
-            case 1:
-            case 8:
+            case P3MC_RES_FILE_ERROR:
+            case P3MC_RES_CONFIRM_OVERWRITE:
                 errorNo = 1;
                 break;
-            case 7:
+            case P3MC_RES_NO_SPACE:
                 if (puser->mode == 2) {
                     errorNo = 15;
                 } else {
@@ -5757,9 +5757,9 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         if (ret != 0) {
             errorNo = 0;
             switch (ret) {
-            case 1:
-            case 2:
-            case 4:
+            case P3MC_RES_FILE_ERROR:
+            case P3MC_RES_UNFORMATTED:
+            case P3MC_RES_NO_SAVE_DATA:
                 errorNo = 2;
                 break;
             default:
