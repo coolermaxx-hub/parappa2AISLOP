@@ -303,8 +303,8 @@ static SCRPRGSTR scrprgstr_hook[] = {
 static TIM2_DAT tim2spr_tbl[] = {
     /* BN_KANJI_TXT */
     {
-        .GsTex0 = 0x2006d885a14136b0,
-        .GsTex1 = 0x260,
+        .GsTex0 = SCE_GS_SET_TEX0(0x36b0, 4, SCE_GS_PSMT4, 8, 6, 1, 0, 0x36c4, SCE_GS_PSMCT32, 0, 0, 1),
+        .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
         .GsRegs = 0x0,
         .GsTexClut = 0x0,
         .w = 160,
@@ -312,8 +312,8 @@ static TIM2_DAT tim2spr_tbl[] = {
     },
     /* BN_SUUJI_TXT */
     {
-        .GsTex0 = 0x2006d8a55d40b6c0,
-        .GsTex1 = 0x260,
+        .GsTex0 = SCE_GS_SET_TEX0(0x36c0, 2, SCE_GS_PSMT4, 7, 5, 1, 0, 0x36c5, SCE_GS_PSMCT32, 0, 0, 1),
+        .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
         .GsRegs = 0x0,
         .GsTexClut = 0x0,
         .w = 120,

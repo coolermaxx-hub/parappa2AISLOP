@@ -236,9 +236,9 @@ int SUBT_POSX = 2048;
 int SUBT_POSY = 2098;
 /* TEX0 for the three subtitle font textures. */
 static u_long SubtGsTex0[3] = {
-    SCE_GS_SET_TEX0(0x3f6d, 4, 20, 8, 8, 1, 0, 0x3fed, 0, 0, 0, 1),
-    SCE_GS_SET_TEX0(0x2300, 4, 20, 8, 10, 1, 0, 0x2500, 2, 0, 0, 1),
-    SCE_GS_SET_TEX0(0x251c, 4, 20, 8, 10, 1, 0, 0x27d8, 2, 0, 0, 1),
+    SCE_GS_SET_TEX0(0x3f6d, 4, SCE_GS_PSMT4, 8, 8, 1, 0, 0x3fed, SCE_GS_PSMCT32, 0, 0, 1),
+    SCE_GS_SET_TEX0(0x2300, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x2500, SCE_GS_PSMCT16, 0, 0, 1),
+    SCE_GS_SET_TEX0(0x251c, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x27d8, SCE_GS_PSMCT16, 0, 0, 1),
 };
 static int subtSetNum = 0;
 

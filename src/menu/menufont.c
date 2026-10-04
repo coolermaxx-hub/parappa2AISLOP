@@ -7,8 +7,12 @@
 
 #include <string.h>
 
-static u_long SubtGsTex0_TmpMenuFont[3] = { 0x2007fda621413f6d, 0x2014a00661412300, 0 };
-static MCODE_ASCII mcode_ascii_TmpMenuFont[] = {
+static u_long SubtGsTex0[3] = {
+    SCE_GS_SET_TEX0(0x3f6d, 4, SCE_GS_PSMT4, 8, 8, 1, 0, 0x3fed, SCE_GS_PSMCT32, 0, 0, 1),
+    SCE_GS_SET_TEX0(0x2300, 4, SCE_GS_PSMT4, 8, 9, 1, 0, 0x2500, SCE_GS_PSMCT16, 0, 0, 1),
+    0,
+};
+static MCODE_ASCII mcode_ascii[] = {
     { 0, 0, 16, 25, 0, 0 },
     { 100, 0, 7, 25, 0, 0 },
     { 200, 0, 8, 25, 0, 0 },
@@ -369,7 +373,7 @@ static char Tbl_ASC2EUC[193] = {
 static int _PadFont_SW = 0;
 static int _PadArrowState = 0;
 static int _AnimeFontFlg;
-static MCODE_STR *kanji_pp_TmpMenuFont;
+static MCODE_STR *kanji_pp;
 
 static MCODE_CHAR mcode_dat_pp[512];
 static MNFONT_INFO MnSubtFontInfo[3];
@@ -401,7 +405,7 @@ void MenuFont_ASC2EUC(char *des, char *src) {
 }
 
 void MENUSubtSetKanji(void *kanji_data_top) {
-    kanji_pp_TmpMenuFont = (MCODE_STR*)kanji_data_top;
+    kanji_pp = (MCODE_STR*)kanji_data_top;
 }
 
 void MENUSubt_PadFontSw(int flg) {
@@ -432,7 +436,7 @@ int MENUSubtGetLine(u_char *str, int lflg) {
     if (lflg == LANG_JAPANESE) {
         line = _JPFont_GetSubtCode(str, subt_code);
     } else {
-        line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii_TmpMenuFont);
+        line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii);
     }
 
     return line;
@@ -443,10 +447,10 @@ void MENUSubtPut(SPR_PKT pk, SPR_PRM *spr, int x, int y, u_int abgr, int flg, u_
     int       line;
     u_long    tex0;
 
-    MnSubtFontInfo[0].tex0 = SubtGsTex0_TmpMenuFont[0];
+    MnSubtFontInfo[0].tex0 = SubtGsTex0[0];
     MnSubtFontInfo[0].abgr = abgr;
 
-    MnSubtFontInfo[1].tex0 = SubtGsTex0_TmpMenuFont[1];
+    MnSubtFontInfo[1].tex0 = SubtGsTex0[1];
     MnSubtFontInfo[1].abgr = abgr;
 
     tex0 = TsGetTM2Hed(1)->GsTex0;
@@ -458,7 +462,7 @@ void MENUSubtPut(SPR_PKT pk, SPR_PRM *spr, int x, int y, u_int abgr, int flg, u_
     if (lflg == LANG_JAPANESE) {
         line = _JPFont_GetSubtCode(str, subt_code);
     } else {
-        line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii_TmpMenuFont);
+        line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii);
     }
 
     if (line != 0) {
@@ -478,15 +482,15 @@ void MENUFontPutL(SPR_PKT pk, SPR_PRM *spr, int x, int y, u_int abgr, int flg, u
     int       line;
     u_long    tex0;
 
-    line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii_TmpMenuFont);
+    line = _EGFont_GetSubtCode(str, subt_code, mcode_ascii);
     if (line == 0) {
         return;
     }
 
-    MnSubtFontInfo[0].tex0 = SubtGsTex0_TmpMenuFont[0];
+    MnSubtFontInfo[0].tex0 = SubtGsTex0[0];
     MnSubtFontInfo[0].abgr = abgr;
 
-    MnSubtFontInfo[1].tex0 = SubtGsTex0_TmpMenuFont[1];
+    MnSubtFontInfo[1].tex0 = SubtGsTex0[1];
     MnSubtFontInfo[1].abgr = abgr;
 
     tex0 = TsGetTM2Hed(1)->GsTex0;
@@ -519,7 +523,7 @@ void MENUFontPutS(SPR_PKT pk, SPR_PRM *spr, int x, int y, u_int abgr, int flg, u
     MnSubtFontInfo[0].tex0 = tex0;
     MnSubtFontInfo[0].abgr = abgr;
 
-    MnSubtFontInfo[1].tex0 = SubtGsTex0_TmpMenuFont[1];
+    MnSubtFontInfo[1].tex0 = SubtGsTex0[1];
     MnSubtFontInfo[1].abgr = abgr;
 
     tex0 = TsGetTM2Hed(1)->GsTex0;
@@ -552,7 +556,7 @@ void MENUFontPutR(SPR_PKT pk, SPR_PRM *spr, int x, int y, u_int abgr, int flg, u
     MnSubtFontInfo[0].tex0 = tex0;
     MnSubtFontInfo[0].abgr = abgr;
 
-    MnSubtFontInfo[1].tex0 = SubtGsTex0_TmpMenuFont[1];
+    MnSubtFontInfo[1].tex0 = SubtGsTex0[1];
     MnSubtFontInfo[1].abgr = abgr;
 
     tex0 = TsGetTM2Hed(1)->GsTex0;
@@ -752,7 +756,7 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
             }
         }
 
-        ppMcode->pmcode = codeKanjiCheck(dat0, dat1, kanji_pp_TmpMenuFont->mcode_kanji, kanji_pp_TmpMenuFont->mcode_max);
+        ppMcode->pmcode = codeKanjiCheck(dat0, dat1, kanji_pp->mcode_kanji, kanji_pp->mcode_max);
         if (ppMcode->pmcode != NULL) {
             subt_code[line_num].cnt++;
             subt_code[line_num].wsize += ppMcode->pmcode->w;
