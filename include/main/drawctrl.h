@@ -288,7 +288,7 @@ typedef struct { // 0x20
     /* 0x04 */ u_int end_flame;
     /* 0x08 */ u_int useDisp;
     /* 0x0c */ u_int drDisp;
-    /* 0x10 */ u_char pri;
+    /* 0x10 */ u_char pri; /* draw order, lowest first; see DRAW_PRI_* */
     /* 0x11 */ u_char use_flag;
     /* 0x14 */ OVL_FUNC prg_pp;
     /* 0x18 */ void *param_pp;
@@ -360,6 +360,16 @@ typedef struct { // 0x18
     /* 0x10 */ float next_line_ang;
     /* 0x14 */ float next_time_ang;
 } DOUBLE_PARA;
+
+/* Draw order (SCENECTRL::pri) of the scenes the game requests each frame
+ * besides the score's own. Score scenes above DRAW_PRI_MENDERER draw without
+ * the noodle effect. */
+#define DRAW_PRI_BALL_THROW 200
+#define DRAW_PRI_MENDERER   210
+#define DRAW_PRI_MOZAIKU    215
+#define DRAW_PRI_MBAR       220
+#define DRAW_PRI_VRAM_CLEAR 229
+#define DRAW_PRI_GUI        240
 
 void outsideDrawSceneClear(void);
 int outsideDrawSceneReq(int (*prg_pp)(void *para_pp, int frame, int first_f, int useDisp, int drDisp), u_char pri, u_int useF, u_int drawF, void *param);

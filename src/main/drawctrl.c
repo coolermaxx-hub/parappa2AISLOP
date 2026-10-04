@@ -3298,15 +3298,15 @@ static void DrawCtrlMain(void *x) {
             }
         }
 
-        outsideDrawSceneReq(BallThrowPollScene, 200, DNUM_NON, DNUM_DRAW, NULL);
-        outsideDrawSceneReq(MozaikuPollScene, 215, DNUM_DRAW, DNUM_DRAW, NULL);
+        outsideDrawSceneReq(BallThrowPollScene, DRAW_PRI_BALL_THROW, DNUM_NON, DNUM_DRAW, NULL);
+        outsideDrawSceneReq(MozaikuPollScene, DRAW_PRI_MOZAIKU, DNUM_DRAW, DNUM_DRAW, NULL);
 
         if (GlobalMendererUseCheck()) {
-            outsideDrawSceneReq(MendererCtrlScene, 210, DNUM_NON, DNUM_DRAW, &scene_req_flag);
+            outsideDrawSceneReq(MendererCtrlScene, DRAW_PRI_MENDERER, DNUM_NON, DNUM_DRAW, &scene_req_flag);
         }
 
         if (global_data.play_step == PSTEP_VS || global_data.play_step == PSTEP_HOOK) {
-            outsideDrawSceneReq(DrawVramClear, 229, DNUM_NON, DNUM_ZBUFF, &vclr_black);
+            outsideDrawSceneReq(DrawVramClear, DRAW_PRI_VRAM_CLEAR, DNUM_NON, DNUM_ZBUFF, &vclr_black);
         }
 
         /* Then the scenes requested from outside the score. */
@@ -3333,7 +3333,7 @@ static void DrawCtrlMain(void *x) {
             float men_tmp = PrGetMendererRatio();
 
             if (check_scenectrl[lsjkl]->prg_pp == DrawSceneObjData) {
-                if (check_scenectrl[lsjkl]->pri > 210) {
+                if (check_scenectrl[lsjkl]->pri > DRAW_PRI_MENDERER) {
                     PrSetMendererRatio(0.0f);
                 }
                 

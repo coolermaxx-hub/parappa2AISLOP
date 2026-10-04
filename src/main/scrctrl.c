@@ -4260,18 +4260,18 @@ void ScrCtrlMainLoop(void *x) {
 
             if (score_str.mbar_flag) {
                 ScrMbarReq(ScrDrawTimeGet(scrMbarLine));
-                outsideDrawSceneReq(MbarDispScene, 0xdc, DNUM_NON, DNUM_VRAM2, NULL);
+                outsideDrawSceneReq(MbarDispScene, DRAW_PRI_MBAR, DNUM_NON, DNUM_VRAM2, NULL);
                 if (!replayGuiOffFlag) {
                     if (otehonSetCheck()) {
-                        outsideDrawSceneReq(MbarDispGuiScene, 0xf0, DNUM_DRAW, DNUM_DRAW, NULL);
+                        outsideDrawSceneReq(MbarDispGuiScene, DRAW_PRI_GUI, DNUM_DRAW, DNUM_DRAW, NULL);
                     } else {
-                        outsideDrawSceneReq(MbarDispGuiScene, 0xf0, DNUM_NON, DNUM_DRAW, NULL);
+                        outsideDrawSceneReq(MbarDispGuiScene, DRAW_PRI_GUI, DNUM_NON, DNUM_DRAW, NULL);
                     }
                 } else {
-                    outsideDrawSceneReq(MbarDispGuiSceneMbarArea, 0xf0, DNUM_NON, DNUM_DRAW, NULL);
+                    outsideDrawSceneReq(MbarDispGuiSceneMbarArea, DRAW_PRI_GUI, DNUM_NON, DNUM_DRAW, NULL);
                 }
             } else if (!jimakuWakuOff) {
-                outsideDrawSceneReq(MbarDispGuiScene, 0xf0, DNUM_NON, DNUM_DRAW, NULL);
+                outsideDrawSceneReq(MbarDispGuiScene, DRAW_PRI_GUI, DNUM_NON, DNUM_DRAW, NULL);
                 if (game_status.subtitle == SUBTITLE_ON) {
                     ExamDispSubt();
                 }
