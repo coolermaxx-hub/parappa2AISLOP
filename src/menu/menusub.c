@@ -14,6 +14,8 @@
 #include "os/system.h"
 #include "os/tim2.h"
 
+#include <libpad.h>
+
 #include <prlib/prlib.h>
 
 #include <malloc.h>
@@ -5063,21 +5065,21 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         MENUSubt_PadFontArrowSet(mpw->mvFlag);
         TsCMPMes_SetMes(mpos->cmpmes);
 
-        if (tpad & 0x20) {
+        if (tpad & SCE_PADRright) {
             state = 0x1200;
             mpw->sndtrg = 2;
-        } else if (tpad & 0x40) {
+        } else if (tpad & SCE_PADRdown) {
             state = 0x1f00;
             mpw->sndtrg = 3;
         }
 
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             idx = 0;
-        } else if (tpad & 0x2000) {
+        } else if (tpad & SCE_PADLright) {
             idx = 1;
-        } else if (tpad & 0x1000) {
+        } else if (tpad & SCE_PADLup) {
             idx = 2;
-        } else if (tpad & 0x4000) {
+        } else if (tpad & SCE_PADLdown) {
             idx = 3;
         }
 
@@ -5987,12 +5989,12 @@ static void TsMCAMes_Flow(u_int tpad) {
             isCAN = TRUE;
         }
     
-        if (isOK && (tpad & 0x20)) {
+        if (isOK && (tpad & SCE_PADRright)) {
             pmesw->selflg = 1;
             TSSNDPLAY(6);
         }
     
-        if (isCAN && (tpad & 0x40)) {
+        if (isCAN && (tpad & SCE_PADRdown)) {
             pmesw->selflg = 2;
             if (pmesw->mesflg & 0x4000000) {
                 TSSNDPLAY(6);
@@ -6588,10 +6590,10 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         bkSel = POPBtn2Sel[pfw->bSelRank ? i + 3 : i];
         sel = i;
 
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sel--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sel++;
         }
         if (i != sel) {
@@ -6607,10 +6609,10 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             pfw->bSelRank = 0;
         } else {
             sel = pfw->bSelRank;
-            if (tpad & 0x1000) {
+            if (tpad & SCE_PADLup) {
                 sel--;
             }
-            if (tpad & 0x4000) {
+            if (tpad & SCE_PADLdown) {
                 sel++;
             }
             if (pfw->bSelRank != sel) {
@@ -6630,12 +6632,12 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         }
         TsCMPMes_SetMes(Pop_CmpMesNo[pfw->selno]);
 
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             state = 0xf020;
             pfw->exitflg = 1;
             TSSNDPLAY(VSND_CANCEL);
         }
-        if (tpad & 0x20) {
+        if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             switch (pfw->selno) {
             case 0:
@@ -6699,10 +6701,10 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         }
 
         osel = sel = pfw->selLev;
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sel--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sel++;
         }
         sel = TSLOOP(sel, pfw->levMax);
@@ -6711,11 +6713,11 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             TSSNDPLAY(VSND_MVCUS_LR);
         }
 
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             state = 0x1000;
             TSSNDPLAY(VSND_CANCEL);
         }
-        if (tpad & 0x20) {
+        if (tpad & SCE_PADRright) {
             state = 0xf000;
             TSSNDPLAY(VSND_GO_GAME);
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[2]);
@@ -6799,10 +6801,10 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             sel = pfw->selrnkpg;
             bkSel = sel;
             osel = sel;
-            if (tpad & 0x1000) {
+            if (tpad & SCE_PADLup) {
                 sel--;
             }
-            if (tpad & 0x4000) {
+            if (tpad & SCE_PADLdown) {
                 sel++;
             }
             sel = TSLIMIT(sel, 0, pfw->nPageMax);
@@ -6822,10 +6824,10 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
 
             sel = pfw->rVsLev;
             bkSel = sel;
-            if (tpad & 0x8000) {
+            if (tpad & SCE_PADLleft) {
                 sel--;
             }
-            if (tpad & 0x2000) {
+            if (tpad & SCE_PADLright) {
                 sel++;
             }
             sel = TSLOOP(sel, pfw->nTagMax);
@@ -6837,7 +6839,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
             }
         }
 
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             pfw->exitflg = 0;
             state = 0x6020;
             TSSNDPLAY(VSND_CANCEL);
@@ -7199,10 +7201,10 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
         }
 
         sel = pfw->selno;
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sel--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sel++;
         }
 
@@ -7216,11 +7218,11 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
             TsCMPMes_SetMes(SaveMenu_CmpMesNo[pfw->selno]);
         }
 
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             pfw->exitflg = 1;
             TSSNDPLAY(9);
             state = 0xf020;
-        } else if (tpad & 0x20) {
+        } else if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             MNScene_StartAnime(&MNS_StageMap, -1, &StageMapAnimePA[3]);
             state = 0xf000;
@@ -8126,13 +8128,13 @@ static int TsJukeObjAnime2(int isOut) {
         selx = osel % 5;
         sely = osel / 5;
 
-        if (tpad & 0x1000) {
+        if (tpad & SCE_PADLup) {
             _TsJKMoveCus(&selx, &sely, 0, -1, pfw->cusObj);
-        } else if (tpad & 0x4000) {
+        } else if (tpad & SCE_PADLdown) {
             _TsJKMoveCus(&selx, &sely, 0, 1, pfw->cusObj);
-        } else if (tpad & 0x8000) {
+        } else if (tpad & SCE_PADLleft) {
             _TsJKMoveCus(&selx, &sely, -1, 0, pfw->cusObj);
-        } else if (tpad & 0x2000) {
+        } else if (tpad & SCE_PADLright) {
             _TsJKMoveCus(&selx, &sely, 1, 0, pfw->cusObj);
         }
 
@@ -8147,11 +8149,11 @@ static int TsJukeObjAnime2(int isOut) {
             TSSNDPLAY(VSND_MVCUS_LR);
         }
 
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             pfw->exitflg = 1;
             TSSNDPLAY(VSND_CANCEL);
             state = 0xf020;
-        } else if (tpad & 0x20) {
+        } else if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             (pfw->cusObj + sel)->state = TSJKCUS_SELOK;
             (pfw->cusObj + sel)->time = 0;
@@ -8525,10 +8527,10 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
         int old;
 
         osel = sel = pfw->selno;
-        if (tpad & 0x1000) {
+        if (tpad & SCE_PADLup) {
             sel--;
         }
-        if (tpad & 0x4000) {
+        if (tpad & SCE_PADLdown) {
             sel++;
         }
         if (osel != sel) {
@@ -8542,10 +8544,10 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
 
         osel = pfw->selno;
         old = sel = pfw->sw[osel];
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sel--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sel++;
         }
         if (old != sel) {
@@ -8558,12 +8560,12 @@ static void TsCmnCell_CusorMASK(CELLOBJ *obj) {
             TSSNDPLAY(2);
         }
 
-        if (tpad & 0x20) {
+        if (tpad & SCE_PADRright) {
             pfw->exitflg = 0;
             state = 0xf000;
             TSSNDPLAY(6);
         }
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             state = 0xf000;
             pfw->exitflg = 1;
             TSSNDPLAY(9);
@@ -8979,16 +8981,16 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
 
         sely = pfw->nTag;
         ret = sely;
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sely--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sely++;
         }
         sely = TSLIMIT(sely, 0, pfw->ptypttbl->nType);
 
         if (ret != sely) {
-            if (tpad & 0x8000) {
+            if (tpad & SCE_PADLleft) {
                 TSSNDPLAY(VSND_MVCUS_L);
             } else {
                 TSSNDPLAY(VSND_MVCUS_R);
@@ -9009,10 +9011,10 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         osely = sely = pfw->curuser;
         optop = pfw->curPageTop;
         if (pfw->userMax > 0) {
-            if (tpad & 0x1000) {
+            if (tpad & SCE_PADLup) {
                 sely--;
             }
-            if (tpad & 0x4000) {
+            if (tpad & SCE_PADLdown) {
                 sely++;
             }
             if (bScrollEnd && sely == osely) {
@@ -9081,13 +9083,13 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             }
         }
 
-        if (tpad & 0x20) {
+        if (tpad & SCE_PADRright) {
             state = 0x3f00;
             TsCmnCell_CusorSEL(&pfw->cellcs[pfw->curuser]);
             pfw->wtim = 28;
             TSSNDPLAY(VSND_SELPOPUP);
         }
-        if (tpad & 0x40) {
+        if (tpad & SCE_PADRdown) {
             state = 0x3f10;
             TSSNDPLAY(VSND_CANCEL);
         }
@@ -9685,13 +9687,13 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         int osel;
 
         sel = osel = pfw->curnpos;
-        if (tpad & 0x8000) {
+        if (tpad & SCE_PADLleft) {
             sel--;
         }
-        if (tpad & 0x2000) {
+        if (tpad & SCE_PADLright) {
             sel++;
         }
-        if (sel < 8 && (tpad & 0x20)) {
+        if (sel < 8 && (tpad & SCE_PADRright)) {
             sel++;
             tpad &= ~0x20;
         }
@@ -9714,10 +9716,10 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             }
 
             osel = sel = pfw->curnchr[pfw->curnpos] & 0xfff;
-            if (tpad & 0x1000) {
+            if (tpad & SCE_PADLup) {
                 sel++;
             }
-            if (tpad & 0x4000) {
+            if (tpad & SCE_PADLdown) {
                 sel--;
             }
             if (osel != sel) {
@@ -9727,13 +9729,13 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
         }
     }
 
-        if ((tpad & 0x20) && pfw->curnpos == 8) {
+        if ((tpad & SCE_PADRright) && pfw->curnpos == 8) {
             pfw->onTime = 30;
             TsNAMEINBox_GetName(pfw, (u_char *)pfw->desname);
             state = 0xff00;
             TSSNDPLAY(6);
         }
-        if (pfw->isCan && (tpad & 0x40)) {
+        if (pfw->isCan && (tpad & SCE_PADRdown)) {
             state = 0xff20;
             TSSNDPLAY(9);
         }
