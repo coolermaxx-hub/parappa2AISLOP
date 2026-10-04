@@ -120,16 +120,9 @@ ADRD* getADRDnum(ADRD *adr_pp, int id) {
 }
 
 int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
-    int    i;
-
-    ADRD  *adrd_pp;
-    int    adrd_cnt;
-
-    u_char scnname[4];
-    u_int  fbp_tmp;
-    
-    ADRD  *adrd_tmp;
-    u_int  handle_tmp;
+    ADRD *adrd_pp;
+    int   adrd_cnt;
+    int   i;
 
     if (p3o_pp->first || p3o_pp->od_type == OD_VRAMCLR) {
         return 0;
@@ -142,6 +135,9 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
     adrd_cnt = p3sd_pp->adrDsize / 16;
 
     if (p3o_pp->od_type == OD_SCENE) {
+        u_int  fbp_tmp;
+        u_char scnname[4];
+
         sprintf(scnname, "%d", datnum);
         printf("scene no:%d\n", datnum);
 
@@ -155,8 +151,10 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
     }
 
     for (i = 0; i < adrd_cnt; i++) {
-        handle_tmp = NULL;
-        adrd_tmp   = getADRDnum(adrd_pp, i);
+        ADRD  *adrd_tmp;
+        u_int  handle_tmp = NULL;
+
+        adrd_tmp = getADRDnum(adrd_pp, i);
 
         if (adrd_tmp->handle != NULL) {
             handle_tmp = adrd_tmp->handle;
@@ -251,20 +249,12 @@ int p3StrQuitSdEach(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp) {
 }
 
 void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
-    int        i;
-
-    int        cur_time;
-    int        tmp_time;
-
-    SD_SCENE  *scn_pp;
-    ADRD      *adrd_pp;
-
-    SD_FADE   *fade_pp;
-    SD_DISPIN *dispin_pp;
-
     if (p3o_pp->od_type == OD_SCENE) {
-        scn_pp  = (SD_SCENE*)p3sd_pp->usrD;
-        adrd_pp = (ADRD*)p3sd_pp->adrD;
+        SD_SCENE *scn_pp  = (SD_SCENE*)p3sd_pp->usrD;
+        ADRD     *adrd_pp = (ADRD*)p3sd_pp->adrD;
+        int       i;
+        int       tmp_time;
+        int       cur_time;
 
         ChangeDrawArea(DrawGetDrawEnvP(p3o_pp->draw));
         PrSetSceneEnv((PR_SCENEHANDLE)p3o_pp->pad2, DrawGetDrawEnvP(p3o_pp->draw));
@@ -323,13 +313,15 @@ void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
     }
 
     if (p3o_pp->od_type == OD_FADE) {
-        fade_pp = (SD_FADE*)p3sd_pp->usrD;
+        SD_FADE *fade_pp = (SD_FADE*)p3sd_pp->usrD;
+
         fade_pp->subDadr = (u_int)&fade_pp->subD;
         DrawFadeDisp(fade_pp, subtime, 0, p3o_pp->use, p3o_pp->draw);
     }
 
     if (p3o_pp->od_type == OD_DISPIN) {
-        dispin_pp = (SD_DISPIN*)p3sd_pp->usrD;
+        SD_DISPIN *dispin_pp = (SD_DISPIN*)p3sd_pp->usrD;
+
         dispin_pp->subDadr = (u_int)&dispin_pp->subD;
         DrawMoveDispIn(dispin_pp, subtime, 0, p3o_pp->use, p3o_pp->draw);
     }
@@ -358,7 +350,7 @@ void p3str_sort_set(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
 
 void p3str_sort_disp(void) {
     int        i, j;
-    P3STR_SORT swap;
+    P3STR_SORT p3str_sort_tmp;
 
     if (p3str_sort_cnt == 0) {
         return;
@@ -367,9 +359,9 @@ void p3str_sort_disp(void) {
     for (i = 0; i < p3str_sort_cnt - 1; i++) {
         for (j = i + 1; j < p3str_sort_cnt; j++) {
             if (p3str_sort[i].p3o_pp->pri > p3str_sort[j].p3o_pp->pri) {
-                swap = p3str_sort[i];
-                p3str_sort[i] = p3str_sort[j];
-                p3str_sort[j] = swap;
+                p3str_sort_tmp = p3str_sort[i];
+                p3str_sort[i]  = p3str_sort[j];
+                p3str_sort[j]  = p3str_sort_tmp;
             }
         }
     }

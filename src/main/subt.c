@@ -393,11 +393,12 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
     }
 
     for (i = 0, k = 0; i < line_num; i++) {
-        int posx = xp - (subt_code[i].wsize / 2);
-        int posy = yp + (hsize * i);
+        int        posx = xp - (subt_code[i].wsize / 2);
+        int        posy = yp + (hsize * i);
+        MCODE_DAT *mcode_pp;
 
         for (j = 0; j < subt_code[i].cnt; j++) {
-            MCODE_DAT *mcode_pp = mcode_dat_pp[k++];
+            mcode_pp = mcode_dat_pp[k++];
 
             sceGifPkAddGsAD(&subtPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
@@ -470,9 +471,8 @@ void SubtMenuCtrlPrint(u_char *msg_pp, int xp, int yp, int lang) {
 }
 
 int SubtMsgDataKaijyouCnt(u_char *msg_pp, int jap_flag) {
-    u_char *tmp_pp;
-    u_char  dat0, dat1;
     int     ret = 1;
+    u_char *tmp_pp;
 
     if (*msg_pp == '\0') {
         return NULL;
@@ -481,8 +481,8 @@ int SubtMsgDataKaijyouCnt(u_char *msg_pp, int jap_flag) {
     tmp_pp = msg_pp;
 
     while (*tmp_pp != '\0') {
-        dat0 = tmp_pp[0];
-        dat1 = tmp_pp[1];
+        u_char dat0 = tmp_pp[0];
+        u_char dat1 = tmp_pp[1];
 
         tmp_pp++;
 
@@ -505,9 +505,8 @@ int SubtMsgDataKaijyouCnt(u_char *msg_pp, int jap_flag) {
 }
 
 u_char* SubtMsgDataPos(u_char *msg_pp, int jap_flag, int pos) {
-    u_char *tmp_pp;
-    u_char  dat0, dat1;
     int     ret = 0;
+    u_char *tmp_pp;
 
     if (*msg_pp == '\0') {
         return NULL;
@@ -523,22 +522,25 @@ u_char* SubtMsgDataPos(u_char *msg_pp, int jap_flag, int pos) {
             break;
         }
 
-        dat0 = tmp_pp[0];
-        dat1 = tmp_pp[1];
-        tmp_pp++;
-
-        /* New line */
-        if (dat0 == '@') {
-            ret++;
-        } else if (jap_flag) {
-            euc2sjis(&dat0, &dat1);
-
-            /* '@' in SJIS - new line */
-            if (dat0 == SJIS_FULLWIDTH_AT_HI && dat1 == SJIS_FULLWIDTH_AT_LO) {
-                ret++;
-            }
+        {
+            u_char dat0 = tmp_pp[0];
+            u_char dat1 = tmp_pp[1];
 
             tmp_pp++;
+
+            /* New line */
+            if (dat0 == '@') {
+                ret++;
+            } else if (jap_flag) {
+                euc2sjis(&dat0, &dat1);
+
+                /* '@' in SJIS - new line */
+                if (dat0 == SJIS_FULLWIDTH_AT_HI && dat1 == SJIS_FULLWIDTH_AT_LO) {
+                    ret++;
+                }
+
+                tmp_pp++;
+            }
         }
     }
 
@@ -563,8 +565,10 @@ void SubtTapPrintWake(u_char *tap_msg_pp, int lang, int lng, int nowp) {
 
     cntmax = SubtMsgDataKaijyouCnt(tap_msg_pp, lang == LANG_JAPANESE);
     if (cntmax >= 3) {
-        cntmax = ((cntmax + 1) / 2 * nowp) / lng * 2;
-        tap_msg_pp = SubtMsgDataPos(tap_msg_pp, lang == LANG_JAPANESE, cntmax);
+        /* Number of two-line pages, then the page that matches how far into the tap we are. */
+        selpos = (cntmax + 1) / 2;
+        selpos = selpos * nowp / lng;
+        tap_msg_pp = SubtMsgDataPos(tap_msg_pp, lang == LANG_JAPANESE, selpos * 2);
     }
 
     SubtTapPrint(tap_msg_pp, lang);
