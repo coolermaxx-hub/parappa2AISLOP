@@ -7398,7 +7398,7 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     spr->zx = 1.0f;
     spr->zy = 0.5f;
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     if (pfw->isRnkWAnime == 0 && TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
         pos = &POPWZoom_CXY[pfw->nPBubPat];
@@ -7789,7 +7789,7 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     spr->zx = 1.0f;
     spr->zy = 0.5f;
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
     ppat = SAVE_MENU_SELPAT;
@@ -7897,7 +7897,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
     box = spr->ofsx;
     boy = spr->ofsy;
 
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     jrot = 0.0f;
     addx = 0.0f;
@@ -8857,7 +8857,7 @@ static void TsJukeMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     spr->zx = 1.0f;
     spr->zy = 0.5f;
 
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     for (i = 0; i < PR_ARRAYSIZE(pfw->cusObj); i++) {
         if (i != pfw->selno) {
@@ -8963,12 +8963,12 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
     }
 
     if (flg == 1) {
-        PkALPHA_Add(pk, 0x48);
+        PkALPHA_Add(pk, GS_ALPHA_ADD);
         spr->rgba0 = GetDToneColor(0, CurColor, ton);
     } else if (flg == -1) {
         return;
     } else {
-        PkALPHA_Add(pk, 0x42);
+        PkALPHA_Add(pk, GS_ALPHA_SUBTRACT);
         spr->rgba0 = GetDToneColor(0x808080, 0x10808080, ton);
     }
 
@@ -8986,7 +8986,7 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
     spr->sw = 0x234;
     spr->sh = ptex->h * 2;
     PkNSprite_Add(pk, spr, PKSPR_UV_RECT);
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 }
 
 /* TsOption_Flow states. */
@@ -9192,7 +9192,7 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
         }
     }
 
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
     spr->zx = 1.0f;
     spr->zy = 0.5f;
     spr->rgba0 = MN_COLOR_NEUTRAL;
@@ -9872,7 +9872,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     ofsy = spr->ofsy;
     spr->zx = 1.0f;
     spr->zy = 0.5f;
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
     spr->rgba0 = MN_COLOR_NEUTRAL;
 
     dispColor = pfw->dispColor;
@@ -9941,7 +9941,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
         spr->ofsy = ofsy;
         spr->zx = 1.0f;
         spr->zy = 0.5f;
-        PkALPHA_Add(pk, 0x44);
+        PkALPHA_Add(pk, GS_ALPHA_BLEND);
     }
 
     spr->rgba0 = MN_COLOR_NEUTRAL;
@@ -10059,7 +10059,7 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
 
     spr->zx = 1.0f;
     spr->zy = 0.5f;
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     if (user == NULL || user->flg == P3MC_USER_NEW) {
         spr->rgba0 = MN_COLOR_NEUTRAL;
@@ -10465,7 +10465,7 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
 
     col = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
     spr->rgba0 = col;
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     for (i = 0; i < 5; i++) {
         TsPatPut(pk, spr, &pbox[i], px, py);
@@ -10630,7 +10630,7 @@ static void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
         SetSprScreenXYWH(spr);
         PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
-        PkALPHA_Add(pk, 0x44);
+        PkALPHA_Add(pk, GS_ALPHA_BLEND);
         break;
     case SCFADE_FROM_BLACK:
     case SCFADE_TO_BLACK:
@@ -10638,7 +10638,7 @@ static void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
         spr->zx = spr->zy = 1.0f;
         spr->rgba0 = GetDToneColor(0, 0x80000000, pfw->ton);
         SetSprScreenXYWH(spr);
-        PkALPHA_Add(pk, 0x44);
+        PkALPHA_Add(pk, GS_ALPHA_BLEND);
         PkCRect_Add(pk, spr, 0);
         break;
     }
@@ -11052,7 +11052,7 @@ int TsCELBackDraw(TsUSERPKT *UPacket, SPR_PRM *spr, int dispSw, int colNo) {
 
     colTbl = HosiColor[colNo];
     bkabgr = colTbl[0];
-    PkALPHA_Add(pk, 0x44);
+    PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     spr->zx = spr->zy = 1.0f;
     SetSprScreenXYWH(spr);
