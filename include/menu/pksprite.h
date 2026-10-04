@@ -82,7 +82,7 @@ typedef struct { // 0x90
     /* 0x68 */ float px3;
     /* 0x6c */ float py3;
     /* 0x70 */ SPR_ZOOM zoom;
-} SPR_PRM;
+} PR_ALIGNED(16) SPR_PRM; /* 16-byte aligned in the original debug info (sizeof 0x90) */
 
 /* Flags for the Pk*Sprite/Line _Add functions. */
 #define PKSPR_UV_RECT   0x1 /* texture rectangle comes from ux/uy/uw/uh instead of px/py/sw/sh */

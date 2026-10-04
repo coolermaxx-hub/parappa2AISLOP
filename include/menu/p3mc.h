@@ -29,6 +29,8 @@ typedef struct { // 0x4c4
  * pad. Read as two little-endian words the fields give year:month:day and
  * hour:minute:second:pad, so the game orders and matches saves by comparing
  * those words (see P3MC_SortUser, TsUserList_SetCurFileNoCusor).
+ * The original calls this layout MAP_TIME (fields date_day ... date_hour)
+ * and spells it out inline in USER_DATA; the field names here drop the prefix.
  */
 typedef struct { // 0x8
     /* 0x0 */ u_char day;

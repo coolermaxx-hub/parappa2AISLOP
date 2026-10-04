@@ -53,8 +53,8 @@ typedef struct { // 0x8
 } STRPOS;
 
 typedef struct { // 0x8
-    /* 0x0 */ PTPOS *menu;
-    /* 0x4 */ PTPOS *rank;
+    /* 0x0 */ PTPOS *pPopPos; /* where the popup menu sits */
+    /* 0x4 */ PTPOS *pRnkPos; /* where the ranking board sits */
 } POPRNK_PPOS;
 
 typedef struct { // 0xc

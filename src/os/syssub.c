@@ -13,6 +13,34 @@
 
 #define PAD_NUM (2)
 
+/*
+ * scePadRead() receive buffer, by terminal type (the original names).
+ * Each layout extends the previous one; GPadRead picks one from `id`.
+ */
+typedef struct { // 0x4
+    /* 0x0 */ u_char connect; /* 0 when the read succeeded */
+    /* 0x1 */ u_char id;      /* terminal type (PAD_ENUM_*) in the high nibble, data size in halfwords in the low */
+    /* 0x2 */ u_char dup;     /* high byte of the button word, active low */
+    /* 0x3 */ u_char ddown;   /* low byte of the button word, active low */
+} PADR_NORMAL;
+
+typedef struct { // 0x8
+    /* 0x0 */ u_char connect;
+    /* 0x1 */ u_char id;
+    /* 0x2 */ u_char dup;
+    /* 0x3 */ u_char ddown;
+    /* 0x4 */ u_char ana[PAD_ANA_MAX]; /* sticks, in PAD_ANA order */
+} PADR_ANA;
+
+typedef struct { // 0x14
+    /* 0x0 */ u_char connect;
+    /* 0x1 */ u_char id;
+    /* 0x2 */ u_char dup;
+    /* 0x3 */ u_char ddown;
+    /* 0x4 */ u_char ana[PAD_ANA_MAX];
+    /* 0x8 */ u_char prs[PAD_PR_MAX];  /* button pressures, in PAD_PRESS_ENUM order */
+} PADR_DS2;
+
 PAD_SYSD sysPad[PAD_NUM] PR_ALIGNED(64) = {};
 
 static u_long128 pad_dma_buf[PAD_NUM][scePadDmaBufferMax] PR_ALIGNED(64);
@@ -236,22 +264,18 @@ void padOneOffBitCLear(PADD *pad_pp) {
 }
 
 void padNormalRead(PADD *pad_pp, u_char *rdata_pp) {
-    /*
-     * Join button state into a short and swap
-     * the state (prev. it was [0: pushed, 1: released]).
-     */
-    padMakeData(pad_pp, ~((rdata_pp[2] << 8) | rdata_pp[3]));
+    PADR_NORMAL *padr = (PADR_NORMAL*)rdata_pp;
+
+    /* The pad reports buttons active low; flip them so a set bit means held. */
+    padMakeData(pad_pp, ~((padr->dup << 8) | padr->ddown));
 }
 
 void padAnaRead(PADD *pad_pp, u_char *rdata_pp) {
-    int     i;
-    u_char *ana_pp = pad_pp->ana;
-
-    /* Advance buffer into analog stick data. */
-    rdata_pp += 4;
+    PADR_ANA *padr = (PADR_ANA*)rdata_pp;
+    int       i;
 
     for (i = 0; i < PR_ARRAYSIZE(pad_pp->ana); i++) {
-        ana_pp[i] = rdata_pp[i];
+        pad_pp->ana[i] = padr->ana[i];
     }
 }
 
@@ -264,14 +288,11 @@ void padAnaRead0Clear(PADD *pad_pp) {
 }
 
 void padPrsRead(PADD *pad_pp, u_char *rdata_pp) {
-    int     i;
-    u_char *prs_pp = pad_pp->press;
-
-    /* Advance buffer into pressure sensitivity data. */
-    rdata_pp += 8;
+    PADR_DS2 *padr = (PADR_DS2*)rdata_pp;
+    int       i;
 
     for (i = 0; i < PR_ARRAYSIZE(pad_pp->press); i++) {
-        prs_pp[i] = rdata_pp[i];
+        pad_pp->press[i] = padr->prs[i];
     }
 }
 
@@ -356,12 +377,14 @@ void GPadRead(PADD *pad_pp) {
     int i;
 
     for (i = 0; i < PAD_NUM; i++, pad_pp++) {
-        if (sysPad[i].rdata[0] != 0) {
+        PADR_NORMAL *padr = (PADR_NORMAL*)sysPad[i].rdata;
+
+        if (padr->connect != 0) {
             /* Pad connection wasn't successful. */
             pad0Clear(pad_pp);
         }
 
-        switch (sysPad[i].rdata[1] & 0xf0) {
+        switch (padr->id & 0xf0) {
         case PAD_ENUM_DSHOCK: /* DualShock controller */
             padNormalRead(pad_pp, sysPad[i].rdata);
             padAnaRead(pad_pp, sysPad[i].rdata);
@@ -381,7 +404,7 @@ void GPadRead(PADD *pad_pp) {
              * data length will be 9*2 = 18 bytes (ignoring
              * the first two bytes).
              */
-            if (sysPad[i].rdata[1] == PAD_ENUM_DSHOCK2) {
+            if (padr->id == PAD_ENUM_DSHOCK2) {
                 padPrsRead(pad_pp, sysPad[i].rdata);
                 pad_pp->padId = PAD_ENUM_DSHOCK2;
                 padPrsTreate(pad_pp);

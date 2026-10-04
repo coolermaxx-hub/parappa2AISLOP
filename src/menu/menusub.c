@@ -7385,7 +7385,7 @@ enum {
         ton = 0x100;
     }
 
-    pos = PopRnk_pPos[pfw->nPPosSet].menu;
+    pos = PopRnk_pPos[pfw->nPPosSet].pPopPos;
     py  = pos->y;
     px  = pos->x;
     spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, ton);
@@ -7407,7 +7407,7 @@ enum {
 
     ox  = px;
     oy  = py;
-    pos = PopRnk_pPos[pfw->nPPosSet].rank;
+    pos = PopRnk_pPos[pfw->nPPosSet].pRnkPos;
     py  = pos->y;
     px  = pos->x;
 

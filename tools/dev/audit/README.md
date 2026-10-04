@@ -14,5 +14,6 @@ Helpers used during the readability pass. Run them from the repository root afte
 | `cmpsec.py`, `cmpdata.py`, `cmpbss.py`, `dataconv.py` | Section-level comparisons used while converting data to C. |
 | `stabs.py <name>` | Dump the original executable's debug symbols for source files whose name contains `<name>`: original local names, register or stack slots and block scopes for the C units. |
 | `stabs_locals.py <files>` | List locals in the given C files that the original debug info does not have (heuristic; confirm with `stabs.py`). |
+| `stabs_types.py [name]` | Compare every struct, union and enum the original C units define with ours (from the `.s` files the build leaves): prints members whose name or offset differ, and size differences. |
 
 `expected2/` is untracked: build the upstream tree at the matching commit there with the same pinned toolchain.

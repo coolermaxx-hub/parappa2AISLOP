@@ -18,8 +18,8 @@
 /* sdata 399560 */ static int hook_use_flag = 0;
 /* sdata 399564 */ static int exam_disp_cursor_timer = -1;
 /* sdata 399568 */ static int scoreTentouFlag = 0;
-/* sdata 39956c */ int otehonAniCnt = 0; /* static */
-/* sdata 399570 */ int othon_frame = 0; /* static */
+/* sdata 39956c */ static int otehonAniCnt = 0;
+/* sdata 399570 */ static int othon_frame = 0;
 /* sdata 399574 */ static int vs_mouse_disp_flag = 0;
 /* sdata 399578 */ static int mbar_pos_y_ofs = 0;
 /* data 17c2b8 */ extern GAME_STATUS game_status; /* static */
@@ -35,6 +35,11 @@ static VS_SCR_CTRL vs_scr_ctrl[4];
 static MBAR_REQ_STR mbar_req_str[5];
 static sceGifPacket mbar_gif;
 static GLOBAL_PLY *exam_global_ply_current;
+/*
+ * The original declares this enum without `typedef`, so it also defines an
+ * unused global of the same name (it is in the original symbol table).
+ * drawctrl.h's ANI_BLUMOVE_ENUM had the same slip; nothing reads either.
+ */
 /* sdata 399584 */ enum SCR_TENMETU_ENUM {
     SCR_TENMETU_NORMAL = 0,
     SCR_TENMETU_PL = 1,
