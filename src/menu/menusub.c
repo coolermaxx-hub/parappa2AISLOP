@@ -1940,11 +1940,10 @@ static void TSSNDPLAY(int n) {
     TSVOICE_TBL *ptap;
     TSSND_CHAN  *pchan;
     int          bMsk;
-    TSVSNDSEQ   *pSeq;
 
     if (n >= 0) {
         if (n & TSSND_SEQ_FLAG) {
-            pSeq  = &VSNDSEQ_Tbl[n & ~TSSND_SEQ_FLAG];
+            TSVSNDSEQ *pSeq = &VSNDSEQ_Tbl[n & ~TSSND_SEQ_FLAG];
             pchan = &TsSndChan[pSeq->chanNo];
 
             bMsk = pchan->bMsk;
@@ -2018,25 +2017,19 @@ static void TSSND_SKIPPLAY(int n) {
 
 static int TSSND_CHANISSTOP(int chan) {
     TSSND_CHAN *pchan = &TsSndChan[chan];
-    int         ret   = FALSE;
 
-    if (pchan->pTap == NULL) {
-        ret = (pchan->pSeq == NULL);
-    }
-
-    return ret;
+    return (pchan->pTap == NULL && pchan->pSeq == NULL);
 }
 
 static void tsBGMONEPlay(int no) {
-    BGMONE *wbgm  = &TsBGMState.wbgm[no];
-    MAPBGM *mpbgm = &MapBgmTbl[no];
+    BGMONE *wbgm = &TsBGMState.wbgm[no];
 
-    wbgm->pbgm = mpbgm;
+    wbgm->pbgm = &MapBgmTbl[no];
     wbgm->vol  = 0;
-    
-    if (mpbgm->lpTimeF != 0) {
-        wbgm->tim = mpbgm->lpTimeF;
-        MenuVoicePlayVol(mpbgm->chan, mpbgm->tapNo, 0);
+
+    if (wbgm->pbgm->lpTimeF != 0) {
+        wbgm->tim = wbgm->pbgm->lpTimeF;
+        MenuVoicePlayVol(wbgm->pbgm->chan, wbgm->pbgm->tapNo, 0);
     }
 }
 
@@ -2062,12 +2055,11 @@ static void tsBGMONEVol(int no, int vol) {
 
 static void tsBGMONETop(int no, int vol) {
     BGMONE *wbgm = &TsBGMState.wbgm[no];
-    MAPBGM *mpbgm = &MapBgmTbl[no];
 
-    wbgm->pbgm = mpbgm;
+    wbgm->pbgm = &MapBgmTbl[no];
     wbgm->vol  = vol;
-    wbgm->tim  = mpbgm->lpTimeF;
-    MenuVoicePlayVol(mpbgm->chan, mpbgm->tapNo, vol);
+    wbgm->tim  = wbgm->pbgm->lpTimeF;
+    MenuVoicePlayVol(wbgm->pbgm->chan, wbgm->pbgm->tapNo, vol);
 }
 
 static void tsBGMONEflow(void) {
@@ -2266,7 +2258,6 @@ enum {
 
 static void TsBGMPoll(void) {
     BGMSTATE *pbgm = &TsBGMState;
-    int ct;
 
     MNSceneMusicFitTimerFrame();
     if (pbgm->state == 0) {
@@ -2298,6 +2289,8 @@ static void TsBGMPoll(void) {
             tsBGMONEVol(pbgm->sndno, pbgm->vol);
             pbgm->ctim = 0;
         } else {
+            int ct;
+
             if (pbgm->ctim <= BGMCHG_CUT) {
                 ct = pbgm->ctim;
                 tsBGMONEVol(BGM_TRACK_MOVE, ct * pbgm->vol);
@@ -2503,7 +2496,7 @@ static void TsSndFlow(int flg) {
     int          i;
     TSVOICE_TBL *ptap;
     TSSND_CHAN  *pchan;
-    u_short     *pSeq, *pCur;
+    u_short     *pSeq;
 
     if (flg == MNFLOW_INIT) {
         memset(&TsSndChan, 0, sizeof(TsSndChan));
@@ -2541,9 +2534,11 @@ static void TsSndFlow(int flg) {
         } else {
             pSeq = pchan->pSeq;
             if (pSeq != NULL) {
+                u_short *pCur;
+
                 pchan->tim++;
                 pCur = &pSeq[pchan->sqIdx * 2];
-    
+
                 if (!pchan->isOn) {
                     pchan->isOn = 1;
                 } else {
@@ -2554,7 +2549,7 @@ static void TsSndFlow(int flg) {
                     pchan->sqIdx++;
                     pCur = &pSeq[pchan->sqIdx * 2];
                 }
-    
+
                 switch (pCur[0]) {
                 case VSNDSEQ_REST:
                     break;
@@ -2568,7 +2563,7 @@ static void TsSndFlow(int flg) {
                     memset(pchan, 0, sizeof(*pchan));
                     continue;
                 }
-                
+
                 if (!pchan->bMsk && !(pCur[0] & VSNDSEQ_CMD_MASK)) {
                     MenuVoicePlay(i, pCur[0]);
                 }
@@ -2579,12 +2574,11 @@ static void TsSndFlow(int flg) {
 
 static int TSNumMov(int cn, int dn, int scale) {
     int d;
-    int dv;
-    int da;
 
     d = cn - dn;
     if (d != 0) {
-        da = abs(d);
+        int dv;
+        int da = abs(d);
 
         switch (scale) {
         case 0:
@@ -2656,12 +2650,12 @@ static int TSLIMIT(int no, int min, int max) {
 static int TsMENU_GetMapNo(int *psize) {
     int mn;
     int size;
-    int flg;
 
     mn = 9;
 
     if (pP3GameState->pLog->nRound <= 0) {
-        flg = pP3GameState->pLog->clrFlg[0];
+        int flg = pP3GameState->pLog->clrFlg[0];
+
         for (mn = 1; flg != 0; mn++) {
             flg >>= 1;
         }
@@ -2690,18 +2684,12 @@ static int TsMENU_GetMapNo(int *psize) {
     return mn;
 }
 
-/* Inline required to match. */
-static inline int PrBcdInt(u_int n) {
-    return (((n / 16) * 10) + (n % 16));
-}
-
 static void TsMENU_GetMapTimeState(int flg) {
     static int nTim = 0;
     int         err;
     short       hour;
     short       state;
     MAP_TIME   *mptim;
-    sceCdCLOCK  clock;
 
     mptim = &MapTime;
 
@@ -2715,61 +2703,64 @@ static void TsMENU_GetMapTimeState(int flg) {
         return;
     }
 
+    /* Read the clock every 30 calls. */
     nTim--;
-    if (nTim > 0) {
-        return;
-    }
+    if (nTim <= 0) {
+        sceCdCLOCK clock;
 
-    nTim = 30;
+        nTim = 30;
 
-    err = sceCdReadClock(&clock);
-    mptim->pad = rand() % 200;
-    if (err != 0 && clock.stat == 0) {
-        mptim->second = clock.second;
-        mptim->minute = clock.minute;
-        mptim->hour = clock.hour;
-        mptim->day = clock.day;
-        mptim->month = clock.month;
-        mptim->year = clock.year + 0x2000;
-        flg = FALSE;
-    } else {
-        mptim->second = 0x0;
-        mptim->minute = 0x0;
-        mptim->hour = 12; /* BUG: Value isn't valid BCD, */
-        mptim->day = 0x1; /*      though it still works. */
-        mptim->month = 0x1;
-        mptim->year = 0x2000;
-        flg = TRUE;
-    }
-
-    state = CurMapBakFlg;
-
-    if (!flg) {
-        hour = PrBcdInt(mptim->hour);
-
-        /* Dumb nested ifs but required to match. */
-        if (hour < 4) {
-            state = 2;
+        err = sceCdReadClock(&clock);
+        mptim->pad = rand() % 200;
+        if (err != 0 && clock.stat == 0) {
+            mptim->second = clock.second;
+            mptim->minute = clock.minute;
+            mptim->hour = clock.hour;
+            mptim->day = clock.day;
+            mptim->month = clock.month;
+            mptim->year = clock.year + 0x2000;
+            flg = FALSE;
         } else {
-            state = 0;
-            if (hour >= 7) {
-                state = 1;
-                if (hour >= 16) {
-                    if (hour <= 18) {
-                        state = 0;
-                    } else {
-                        state = 2;
+            mptim->second = 0x0;
+            mptim->minute = 0x0;
+            mptim->hour = 12; /* BUG: Value isn't valid BCD, */
+            mptim->day = 0x1; /*      though it still works. */
+            mptim->month = 0x1;
+            mptim->year = 0x2000;
+            flg = TRUE;
+        }
+
+        state = CurMapBakFlg;
+
+        if (!flg) {
+            /* The clock is BCD. */
+            hour = mptim->hour;
+            hour = ((hour >> 4) * 10) + (hour & 0xf);
+
+            /* 2 at night, 0 at dawn (4-6) and dusk (16-18), 1 by day (7-15). */
+            if (hour < 4) {
+                state = 2;
+            } else {
+                state = 0;
+                if (hour >= 7) {
+                    state = 1;
+                    if (hour >= 16) {
+                        if (hour <= 18) {
+                            state = 0;
+                        } else {
+                            state = 2;
+                        }
                     }
                 }
             }
+        } else {
+            if (state <= -1) {
+                state = 1;
+            }
         }
-    } else {
-        if (state <= -1) {
-            state = 1;
-        }
-    }
 
-    CurMapBakFlg = state;
+        CurMapBakFlg = state;
+    }
 }
 
 static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
@@ -2778,12 +2769,6 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
     int        i;
     int        nRound;
     static char map0Msk[8] = { 1, 0, 0, 0, 1, 1, 1, 1 };
-    int        clrno;
-    int        nCrown;
-    int        cwCol[4];
-    int        l;
-    u_int      Cflg;
-    int        cn;
 
     gmn = mapNo;
     pLog = pP3GameState->pLog;
@@ -2822,12 +2807,19 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
     MNScene_StartAnime(pScene, -1, StageMapAnimeSEA);
 
     for (i = 0; i < 8; i++) {
+        int clrno;
+        int nCrown;
+        int cwCol[4];
+
         clrno = pLog->clrCount[i];
         if (mapNo == 0 && map0Msk[i]) {
             clrno = 0;
         }
 
         if (clrno > 0) {
+            int   l;
+            u_int Cflg;
+
             MNScene_StartAnime(pScene, -1, &StageMapAnimeBB[i * 2]);
 
             if (clrno > nRound + 1) {
@@ -2861,7 +2853,8 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
             } else {
                 MNScene_StartAnime(pScene, -1, &StageMapCWptr[i][nCrown - 1]);
                 for (l = 0; l < nCrown; l++) {
-                    cn = cwCol[nCrown - 1 - l];
+                    int cn = cwCol[nCrown - 1 - l];
+
                     if (cn > 0) {
                         MenuCoolCl1Trans(i, l, cn - 1);
                     }
@@ -2908,10 +2901,6 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     int        flg;
     int        bGoRecShop = FALSE;
     int        bRecJacket = 0;
-    int        vslev;
-    int        nextPos;
-    u_int      clog;
-    short     *pRute;
     P3LOG_VAL *pLog = pstate->pLog;
 
     nStage = pstate->nStage - 1;
@@ -2925,7 +2914,8 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     }
 
     if (pstate->nMode == PLAY_MODE_VS_COM) {
-        vslev = pstate->vsLev;
+        int vslev = pstate->vsLev;
+
         if (nRound >= 4 && pLog->clrVSCOM1[nStage] < 4 && vslev + 1 >= 4) {
             flg = 0;
             for (i = 0; i < 8; i++) {
@@ -2944,7 +2934,9 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     } else if (pstate->nMode == PLAY_MODE_SINGLE) {
         pstate->pAutoMove = NULL;
         if (nRound == 0 && pLog->clrCount[nStage] <= 0) {
-            nextPos = pstate->nStage + 1;
+            /* Walk on to the next stage after a first clear. */
+            int nextPos = pstate->nStage + 1;
+
             if (nextPos >= 9) {
                 nextPos = 1;
             }
@@ -2964,6 +2956,8 @@ static void TsClearSet(P3GAMESTATE *pstate) {
         }
 
         if (pP3GameState->bCoolClr) {
+            u_int clog;
+
             if (!flg && pLog->clrCOOL[nStage] < 4) {
                 bGoRecShop = TRUE;
                 bRecJacket = nStage;
@@ -2994,7 +2988,8 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     }
 
     if (bGoRecShop) {
-        pRute = RecordShopRute[nStage + 1];
+        short *pRute = RecordShopRute[nStage + 1];
+
         for (i = 0; i < 9; i++) {
             pstate->autoMovePos[i] = pRute[i];
             if (pRute[i] < 0) {
@@ -3100,8 +3095,7 @@ void TsMenu_RankingClear(void) {
 }
 
 void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
-    int   i;
-    void *ptim2;
+    int i;
 
     pP3GameState = pstate;
 
@@ -3137,6 +3131,8 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
         tblTex = (TSTEX_INF*)malloc(sizeof(TSTEX_INF) * 104);
 
         for (i = 0; i < 104; i++) {
+            void *ptim2;
+
             switch (TexTable[i].flg) {
             case 0:
                 TsGetTm2HedTex(TexTable[i].fno, &tblTex[i]);
@@ -3394,11 +3390,7 @@ static void TsSetRanking2UData(USER_DATA *puser, P3MC_STAGERANK *wkRank) {
 }
 
 static void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
-    P3LOG_VAL      *plog;
-    P3MC_STAGERANK *pRank;
-    int             nStage;
-    P3MC_RANKSCORE *pScore;
-    int             vsLev;
+    P3LOG_VAL *plog;
 
     if (pDataW->pMemTop != NULL) {
         switch (mode) {
@@ -3413,21 +3405,29 @@ static void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
             TsSetRanking2UData(&pDataW->pHead->user, pCStageRank);
             TsSetRankingName(pDataW->pHead->user.stageRank, plog->name);
             break;
-        case P3MC_MODE_REPLAY:
+        case P3MC_MODE_REPLAY: {
+            P3MC_STAGERANK *pRank;
+            int             nStage;
+
             memcpy(pDataW->pData, pP3GameState->pReplayArea, sizeof(MC_REP_STR));
 
             pRank = pDataW->pHead->user.stageRank;
             nStage = puser->stageNo - 1;
             memset(pRank, 0, sizeof(pDataW->pHead->user.stageRank));
 
+            /* The replay carries only the score it was recorded with. */
             if (nStage >= 0 && nStage < 8) {
+                P3MC_RANKSCORE *pScore;
+
                 switch (puser->isVs) {
-                case PLAY_MODE_VS_COM:
-                    vsLev = puser->vsLev;
+                case PLAY_MODE_VS_COM: {
+                    int vsLev = puser->vsLev;
+
                     pRank[nStage].nVplay[vsLev] = 1;
                     pScore = pRank[nStage].vplay[vsLev];
                     *pScore = CurRankScore;
                     break;
+                }
                 case PLAY_MODE_SINGLE:
                     pRank[nStage].nSplay = 1;
                     pScore = pRank[nStage].splay;
@@ -3438,6 +3438,7 @@ static void TsSetSaveData(MCRWDATA_HDL *pDataW, int mode, USER_DATA *puser) {
 
             TsSetRankingName(pRank, puser->name1);
             break;
+        }
         }
     }
 }
@@ -3514,7 +3515,6 @@ static int TsRanking_Set(void) {
     int            *pNRank;
     int             nRank;
     int             RankMAX;
-    int             vsLev;
 
     pstate = pP3GameState;
     nStage = pstate->nStage;
@@ -3525,7 +3525,8 @@ static int TsRanking_Set(void) {
     }
 
     if (pstate->nMode == PLAY_MODE_VS_COM) {
-        vsLev   = pstate->vsLev;
+        int vsLev = pstate->vsLev;
+
         RankMAX = 10;
         score   = pstate->score;
         pNRank  = &pCStageRank[nStage - 1].nVplay[vsLev];
@@ -4602,7 +4603,6 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     int anmno;
     int cmpmesNo;
     int isError;
-    int ntag;
 
     if (flg == MNFLOW_INIT) {
         switch (tpad) {
@@ -4872,6 +4872,8 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
         /* fallthrough */
     case CHALL_LIST_SETUP:
         if (MapCHall.curPos == CHALL_POS_LOG) {
+            int ntag;
+
             if (UCheckLoadError != 0) {
                 ntag = 1;
                 curTag = 1;
@@ -5118,7 +5120,6 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
 
 static void MpCityHallParaStart(int pos) {
     short *ptr = NULL;
-    int    n;
 
     switch (pos) {
     case 1:
@@ -5139,7 +5140,13 @@ static void MpCityHallParaStart(int pos) {
         return;
     }
 
-    while ((n = *ptr) != -1) {
+    while (TRUE) {
+        int n = *ptr;
+
+        if (n == -1) {
+            break;
+        }
+
         if (n & CHALL_ANIME_CONTINUE) {
             MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
@@ -5155,7 +5162,7 @@ static void MpCityHallFPHSSoundMask(int flg) {
 
 static int MpCityHallFPHSMove(int pos, int fpos) {
     short *ptr = NULL;
-    int    n;
+    int    tpos;
 
     if (pos == fpos) {
         if (!TsAnimeWait_withKeySkip(0, &MNS_CityHall, 0, 6)) {
@@ -5170,13 +5177,15 @@ static int MpCityHallFPHSMove(int pos, int fpos) {
         return fpos;
     }
 
+    /* Moving between the left and right counters goes through the middle first. */
+    tpos = pos;
     if (pos > 0 && fpos > 0) {
-        pos = 0;
+        tpos = 0;
     }
 
     switch (fpos) {
     case 0:
-        switch (pos) {
+        switch (tpos) {
         case 1:
             ptr = AnmCHallFphs_Opt;
             break;
@@ -5186,12 +5195,12 @@ static int MpCityHallFPHSMove(int pos, int fpos) {
         }
         break;
     case 1:
-        if (pos == 0) {
+        if (tpos == 0) {
             ptr = AnmCHallFphs_OptRet;
         }
         break;
     case 2:
-        if (pos == 0) {
+        if (tpos == 0) {
             ptr = AnmCHallFphs_RepRet;
         }
         break;
@@ -5202,7 +5211,13 @@ static int MpCityHallFPHSMove(int pos, int fpos) {
     }
 
     TSSNDPLAY(VSND_WAIT1);
-    while ((n = *ptr) != -1) {
+    while (TRUE) {
+        int n = *ptr;
+
+        if (n == -1) {
+            break;
+        }
+
         if (n & CHALL_ANIME_CONTINUE) {
             MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
@@ -5211,7 +5226,7 @@ static int MpCityHallFPHSMove(int pos, int fpos) {
         ptr++;
     }
 
-    return pos;
+    return tpos;
 }
 
 static void MpCityHallFPHOK(int flg) {
@@ -5243,7 +5258,6 @@ static void MpCityHallFPHOK(int flg) {
 static void MpCityHallCharPosSet(int pos) {
     short *ptr = NULL;
     u_int  AnmBit;
-    int    n;
 
     switch (pos) {
     case 0:
@@ -5258,8 +5272,14 @@ static void MpCityHallCharPosSet(int pos) {
     }
 
     AnmBit = 0x80000000;
-    while ((n = *ptr) != -1) {
-        AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+    while (TRUE) {
+        int n = *ptr;
+
+        if (n == -1) {
+            break;
+        }
+
+        AnmBit |= MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         ptr++;
     }
 
@@ -5278,7 +5298,6 @@ enum {
 static int MpPopMenu_Flow(int flg, u_int tpad) {
     static int state;
     int ret;
-    int mpsize;
 
     if (flg == MNFLOW_INIT) {
         state = POPMENU_START;
@@ -5289,10 +5308,13 @@ static int MpPopMenu_Flow(int flg, u_int tpad) {
     case POPMENU_START:
         state = POPMENU_OPEN;
         break;
-    case POPMENU_OPEN:
+    case POPMENU_OPEN: {
+        int mpsize;
+
         TsMENU_GetMapNo(&mpsize);
         TsPopMenu_Flow(MNFLOW_INIT, mpsize);
         state = POPMENU_SELECT;
+    }
     /* fallthrough */
     case POPMENU_SELECT:
         ret = TsPopMenu_Flow(MNFLOW_RUN, tpad);
@@ -5527,7 +5549,7 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
 static int _MapGetMovableDir(MAPPOS *mpw) {
     int       posNo, ret, DirMask;
     MNMAPPOS *mpos;
-    int       flg, i;
+    int       i;
 
     DirMask = 1;
     mpos = &mpw->mnmap[mpw->curPos];
@@ -5535,7 +5557,8 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
     ret = 0;
 
     for (i = 0; i < PR_ARRAYSIZE(mpos->mapdir); i++, DirMask <<= 1) {
-        flg = TRUE;
+        int flg = TRUE;
+
         posNo = mpos->mapdir[i].mapNo;
 
         if (posNo == -1) {
@@ -5564,64 +5587,64 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
 }
 
 static int McErrorMess(int err) {
-    int mes;
+    int mess;
 
     if (!TsMCAMes_IsON()) {
         switch (err) {
         case MCERR_LOAD_FAILED:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR);
             break;
         case MCERR_NO_CARD:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD2);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD2);
             break;
         case MCERR_NO_LOG_DATA:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_S);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_S);
             break;
         case MCERR_SAVE_FAILED:
         case P3MC_RES_CARD_SWAPPED:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR3);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR3);
             break;
         case MCERR_BAD_DATA:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR2);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR2);
             break;
         case MCERR_NO_SPACE_LOG:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR);
             break;
         case MCERR_NO_SPACE_REPLAY:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR2);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR2);
             break;
         case MCERR_FORMAT_FAILED:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_INITIAL_ERR);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_INITIAL_ERR);
             break;
         case MCERR_CHECK_FAILED:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_CHECK_ERR);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_CHECK_ERR);
             break;
         case MCERR_NO_REPLAY_DATA:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_R);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_R);
             break;
         case MCERR_SAVE_NO_CARD_LOG:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD3);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD3);
             break;
         case MCERR_SAVE_NO_CARD_REPLAY:
-            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD4);
+            mess = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD4);
             break;
         case MCERR_LIST_READ_FAILED:
-            mes = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR2);
+            mess = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR2);
             break;
         case MCERR_LIST_HAS_BROKEN:
-            mes = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR);
+            mess = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR);
             break;
         case MCERR_LOADED:
-            mes = MCMES(MCMES_KIND_TIMED, MCA_LOAD_COMP);
+            mess = MCMES(MCMES_KIND_TIMED, MCA_LOAD_COMP);
             break;
         case MCERR_SAVED:
-            mes = MCMES(MCMES_KIND_TIMED, MCA_SAVE_COMP);
+            mess = MCMES(MCMES_KIND_TIMED, MCA_SAVE_COMP);
             break;
         default:
             return 0;
         }
 
-        TsMCAMes_SetMes(mes);
+        TsMCAMes_SetMes(mess);
     }
 
     if (TsMCAMes_GetSelect() > 0) {
@@ -6320,13 +6343,11 @@ void TsMCAMes_SetMes(int no) {
 
 static void TsMCAMes_Flow(u_int tpad) {
     MCMES_WORK *pmesw;
-    int         cLine;
-    float       fRate;
-    int         isOK, isCAN;
 
     pmesw = &MCMesWork;
     if (pmesw->backSw && pmesw->mesflg >= 0) {
-        cLine = pmesw->line;
+        int cLine = pmesw->line;
+
         if (cLine == 1) {
             cLine = 2;
         }
@@ -6338,11 +6359,16 @@ static void TsMCAMes_Flow(u_int tpad) {
             pmesw->Dline = pmesw->D0line = TSNumMov(pmesw->D0line, cLine, 4);
         }
 
-        fRate = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
-        fRate *= 6.2831855f;
-        fRate = cosf(fRate);
-        fRate = ((fRate * fRate) * 1228.8f);
-        pmesw->Dline += (int)fRate;
+        /* The plate breathes with the music, once every 72 frames. */
+        {
+            float fRate;
+
+            fRate = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
+            fRate *= 6.2831855f;
+            fRate = cosf(fRate);
+            fRate = ((fRate * fRate) * 1228.8f);
+            pmesw->Dline += (int)fRate;
+        }
     } else {
         pmesw->D0line = 0;
         pmesw->Dline = 0;
@@ -6365,6 +6391,8 @@ static void TsMCAMes_Flow(u_int tpad) {
     }
 
     if (pmesw->mesflg >= 0 && (pmesw->mesflg & MCMES_KIND_MASK)) {
+        int isOK, isCAN;
+
         if (pmesw->mesflg & ((MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK) << 24)) {
             if (!TSSND_CHANISSTOP(1)) {
                 pmesw->seltim++;
@@ -6377,23 +6405,23 @@ static void TsMCAMes_Flow(u_int tpad) {
         } else {
             isCAN = FALSE;
         }
-    
+
         if (pmesw->mesflg & (MCMES_BIT_OK << 24)) {
             isOK = TRUE;
         } else {
             isOK = FALSE;
         }
-        
+
         if (pmesw->mesflg & ((MCMES_BIT_CONFIRM | MCMES_BIT_CANCEL_OK) << 24)) {
             isOK = TRUE;
             isCAN = TRUE;
         }
-    
+
         if (isOK && (tpad & SCE_PADRright)) {
             pmesw->selflg = 1;
             TSSNDPLAY(VSND_SELPOPUP);
         }
-    
+
         if (isCAN && (tpad & SCE_PADRdown)) {
             pmesw->selflg = 2;
             if (pmesw->mesflg & (MCMES_BIT_CANCEL_OK << 24)) {
@@ -6402,7 +6430,7 @@ static void TsMCAMes_Flow(u_int tpad) {
                 TSSNDPLAY(VSND_CANCEL);
             }
         }
-    
+
         if (pmesw->mesflg & ((MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK) << 24)) {
             pmesw->seltim++;
             if (pmesw->seltim >= 0x79) {
@@ -6605,7 +6633,6 @@ static int TsANIME_GetRate(ANIME_WK *wk, float *rt0, float *rt1, float *rt2) {
 
 static void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pRank, int bNameCmp) {
     int l, k, m;
-    int isSame;
 
     for (l = 0; l < n; l++, pRank++) {
         for (k = 0; k < 20; k++) {
@@ -6618,10 +6645,11 @@ static void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pR
             }
 
             if (ptRank[k]->score == pRank->score && ptRank[k]->scDate[0] == pRank->scDate[0] && ptRank[k]->scDate[1] == pRank->scDate[1]) {
+                /* Same score and date: skip it if it is the same entry (n shadows the parameter, as in the original). */
+                int n, isSame;
+
                 isSame = TRUE;
                 if (bNameCmp) {
-                    int n;
-
                     for (n = 0; n < 8; n++) {
                         if (ptRank[k]->name[n] != pRank->name[n]) {
                             isSame = FALSE;
@@ -6646,24 +6674,23 @@ static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) 
     int             maxn;
     int             rnkMax;
     P3MC_RANKSCORE *ptRank[20];
+    int             n;
+    P3MC_RANKSCORE *pRank;
 
     for (i = 0; i < 20; i++) {
         ptRank[i] = NULL;
     }
 
-    {
-        int             n;
-        P3MC_RANKSCORE *pRank;
-
-        if (flag == 0) {
-            n     = pCStageRank[stageNo].nSplay;
-            pRank = pCStageRank[stageNo].splay;
-        } else {
-            n     = pCStageRank[stageNo].nVplay[vsLev];
-            pRank = pCStageRank[stageNo].vplay[vsLev];
-        }
-        _TsSortSetRanking(ptRank, n, pRank, 1);
+    /* This session's ranking first, then every saved game's, then every replay's. The loops
+       declare their own n and pRank, as the original does. */
+    if (flag == 0) {
+        n     = pCStageRank[stageNo].nSplay;
+        pRank = pCStageRank[stageNo].splay;
+    } else {
+        n     = pCStageRank[stageNo].nVplay[vsLev];
+        pRank = pCStageRank[stageNo].vplay[vsLev];
     }
+    _TsSortSetRanking(ptRank, n, pRank, 1);
 
     maxn = P3MC_SortUser(UserLst, 1, 0);
     for (i = 0; i < maxn; i++) {
@@ -6888,10 +6915,13 @@ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int dflg, POPCTIM *pfw, int bPut, int
     case 5:
     case 6:
     {
+        /* Pulse in time with the music, once every 45 frames. */
         float zrat = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
+
+        zrat = zrat * 0.1f + 0.95f;
         pfw->srTNo = idx;
         pfw->srTim = 8;
-        TsPatPutMZoom(pk, spr, ppat, px, py, zrat * 0.1f + 0.95f, zrat * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
+        TsPatPutMZoom(pk, spr, ppat, px, py, zrat, zrat, 4, 4, 0.0f, 0.0f);
         pfw->offinf[idx].bCur = 1;
     }
         break;
@@ -6903,7 +6933,10 @@ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int dflg, POPCTIM *pfw, int bPut, int
 }
 
 int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
-    return (pfw->bDim[POPBtn2Sel[(bank != 0) ? (nbtn + 3) : (nbtn + 0)]] == FALSE);
+    /* The second bank's buttons follow the first bank's three. */
+    int n = POPBtn2Sel[(bank != 0) ? (nbtn + 3) : nbtn];
+
+    return (pfw->bDim[n] == FALSE);
 }
 
 /* TsPopMenu_Flow states: the stage pop-up with its level picker and ranking board. */
@@ -7558,14 +7591,16 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
         TsPopCusPut(pk, spr, dflg, &pfw->cani, bPut, i, &PopMenuSel_Pat[i], px, py);
 
         if (i == 2) {
-            int     i;
-            int     bPut0;
-            PATPOS *pt;
+            /* The level buttons under the VS COM button (i shadows the outer i, as in the original). */
+            int i;
 
             pfw->cani.habgr = nmcol;
             pfw->cani.nabgr = nmcol;
 
             for (i = 0; i < pfw->levMax; i++) {
+                int     bPut0;
+                PATPOS *pt;
+
                 spr->rgba0 = nmcol;
                 bPut0 = bPut;
                 pt = &VSComMenuSel_Pat[i];
@@ -7605,7 +7640,7 @@ enum {
 static int TsSaveMenu_Flow(int flg, u_int tpad) {
     SAVE_MENU *pfw = &SaveMenu;
     int        state;
-    int        aret;
+    int        aflg;
     int        sel;
 
     if (flg == MNFLOW_INIT) {
@@ -7627,17 +7662,17 @@ static int TsSaveMenu_Flow(int flg, u_int tpad) {
     }
 
     state = pfw->state;
-    aret = TsANIME_Poll(&pfw->awork);
+    aflg = TsANIME_Poll(&pfw->awork);
     TsPopCusFlow(&pfw->cani);
 
     switch (state) {
     case SAVEMENU_OPEN:
         state = SAVEMENU_OPENING;
         TsANIME_Start(&pfw->awork, ANIME_WIN_OPEN, 15);
-        aret = TsANIME_Poll(&pfw->awork);
+        aflg = TsANIME_Poll(&pfw->awork);
         /* fallthrough */
     case SAVEMENU_OPENING:
-        if (aret) {
+        if (aflg) {
             break;
         }
         /* fallthrough */
@@ -7693,10 +7728,10 @@ static int TsSaveMenu_Flow(int flg, u_int tpad) {
     case SAVEMENU_CLOSE:
         state = SAVEMENU_CLOSING;
         TsANIME_Start(&pfw->awork, ANIME_WIN_CLOSE, 20);
-        aret = TsANIME_Poll(&pfw->awork);
+        aflg = TsANIME_Poll(&pfw->awork);
         /* fallthrough */
     case SAVEMENU_CLOSING:
-        if (aret) {
+        if (aflg) {
             break;
         }
         /* fallthrough */
@@ -7734,8 +7769,6 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     float      fswing;
     int        arate;
     float      rt0, rt1, rt2;
-    int        bHiLgt;
-    int        bPut;
 
     fswing = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
     fswing = -cosf(fswing * 6.2831855f);
@@ -7764,8 +7797,8 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     pfw->cani.nabgr = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
 
     for (i = 0; i < 2; i++, ppat++) {
-        bHiLgt = 0;
-        bPut = 0;
+        int bHiLgt = 0;
+        int bPut = 0;
 
         if (i == pfw->selno) {
             bHiLgt = 1;
@@ -8872,8 +8905,6 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
     TSTEX_INF *ptex;
     int flg;
     int ton;
-    int t;
-    float ft;
 
     if ((u_int)(n + 1) >= 9) {
         return;
@@ -8895,7 +8926,8 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
                 obj->state = 0;
                 obj->flg = 0;
             } else {
-                t = obj->tim * 16;
+                int t = obj->tim * 16;
+
                 if (t > 90) {
                     obj->flg = 1;
                     obj->ton = ((t - 90) << 8) / 166;
@@ -8910,7 +8942,7 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
                 obj->state = 0;
                 obj->flg = 1;
             } else {
-                ft = sinf((obj->tim % 8) * 0.125f * 3.1415927f);
+                float ft = sinf((obj->tim % 8) * 0.125f * 3.1415927f);
                 obj->flg = 1;
                 obj->ton = (int)(ft * 256.0f) + 0x100;
             }
@@ -9130,19 +9162,21 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
     int           i;
     OPTION_MENU  *pfw = &OptionMenu;
     MNOPT_SELINF *pselw;
-    int           l;
-    PATPOS       *ppat;
-    float         zr;
 
     for (i = 0; i < PR_ARRAYSIZEU(pfw->cellcs); i++) {
         TsCmnCell_CusorDraw(pk, spr, i, &pfw->cellcs[i], 0, 0, 0x1a808080);
     }
 
     for (i = 0; i < PR_ARRAYSIZEU(pfw->btnlr); i++) {
+        int     l;
+        PATPOS *ppat;
+
         spr->rgba0 = 0x800062ff;
         TsPatPut(pk, spr, &MNOptMiniFrm[i], 0, 0);
 
         for (l = 0; l < 2; l++) {
+            float zr;
+
             ppat = &MNOptLRBtn[i * 2 + l];
 
             if (pfw->btnlr[i].tim[l] > 0) {
@@ -9379,11 +9413,6 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
     int            ret2;
     int            i;
     int            bScrollEnd;
-    int            nCell;
-    int            err;
-    int            dumy;
-    int            sflg;
-    int            errNo;
 
     if (flg == MNFLOW_INIT) {
         pfw->curFileNo = -1;
@@ -9418,6 +9447,8 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     if (flg == ULIST_FLOW_SET_TAG) {
+        int nCell;
+
         if (pfw->ptypttbl != NULL && TsUserList_SetCurTag(pfw, tpad)) {
             return 0;
         }
@@ -9539,6 +9570,9 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
         sely = TSLIMIT(sely, 0, pfw->ptypttbl->nType);
 
         if (ret != sely) {
+            int err;
+            int dumy;
+
             if (tpad & SCE_PADLleft) {
                 TSSNDPLAY(VSND_MVCUS_L);
             } else {
@@ -9577,7 +9611,8 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
         }
 
         if (osely != sely) {
-            sflg = ULST_MOVED;
+            int sflg = ULST_MOVED;
+
             if (sely < 0) {
                 sflg = ULST_SCROLLED_UP;
                 pfw->curPageTop += sely;
@@ -9680,11 +9715,14 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
         state = ULST_SAVE_NO_ROOM;
         /* fallthrough */
     case ULST_SAVE_NO_ROOM:
-        errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_NO_SPACE_REPLAY : MCERR_NO_SPACE_LOG;
-        if (McErrorMess(errNo) >= 0) {
+    {
+        int errorNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_NO_SPACE_REPLAY : MCERR_NO_SPACE_LOG;
+
+        if (McErrorMess(errorNo) >= 0) {
             state = ULST_SELECT_START;
         }
         break;
+    }
     case ULST_SAVE_OVERWRITE:
         puser = pfw->pusrlst->pUserTbl[pfw->curuser + pfw->curPageTop];
         if (puser->flg == P3MC_USER_NEW) {
@@ -9764,12 +9802,15 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
             state = ULST_EXIT_RECHECK;
             break;
         }
-        err = MCERR_NO_CARD;
-        if (pfw->isSave) {
-            err = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_SAVE_NO_CARD_REPLAY : MCERR_SAVE_NO_CARD_LOG;
-        }
-        if (McErrorMess(err) >= 0) {
-            state = ULST_CARD_CHANGED_DONE;
+        {
+            int errNo = MCERR_NO_CARD;
+
+            if (pfw->isSave) {
+                errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_SAVE_NO_CARD_REPLAY : MCERR_SAVE_NO_CARD_LOG;
+            }
+            if (McErrorMess(errNo) >= 0) {
+                state = ULST_CARD_CHANGED_DONE;
+            }
         }
         break;
     case ULST_CARD_CHANGED_DONE:
@@ -9979,7 +10020,6 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
 static void NameSpaceCut(u_char *dst, u_char *src) {
     int     i, l;
     u_char *ps;
-    u_char  c;
 
     ps = src;
 
@@ -9989,7 +10029,13 @@ static void NameSpaceCut(u_char *dst, u_char *src) {
 
     l = 0;
 
-    while ((c = *ps++) != '\0') {
+    while (TRUE) {
+        u_char c = *ps++;
+
+        if (c == '\0') {
+            break;
+        }
+
         dst[l] = c;
         l++;
     }
@@ -10124,16 +10170,17 @@ static HOSI_OBJ *HOSIObj = NULL;
 MAP_TIME MapTime = { 0 };
 
 static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
-    u_short       *pcode = pfw->curnchr;
-    int            i, l, j;
-    USERNAME_CSET *cset;
-    u_char        *pchrlst;
+    u_short *pcode = pfw->curnchr;
+    int      i;
 
     if (name == NULL || *name == '\0') {
         name = UserName_InitialStr;
     }
 
     for (i = 0; i < PR_ARRAYSIZE(pfw->curnchr); i++, pcode++) {
+        int            l, j;
+        USERNAME_CSET *cset;
+
         if (*name == '\0') {
             *pcode = 0x27;
             continue;
@@ -10141,7 +10188,8 @@ static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
 
         cset = UserName_CharSet;
         for (j = 0; j < 2; j++, cset++) {
-            pchrlst = cset->ptbl;
+            u_char *pchrlst = cset->ptbl;
+
             for (l = 0; l < cset->len; l++, pchrlst++) {
                 if (*name == *pchrlst) {
                     break;
@@ -10191,6 +10239,7 @@ enum {
 static int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
     int i;
     int state;
+    int sel, osel;
     int aflg;
 
     if (flg == MNFLOW_INIT) {
@@ -10250,10 +10299,6 @@ static int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
         state = NAMEIN_EDIT;
         /* fallthrough */
     case NAMEIN_EDIT:
-    {
-        int sel;
-        int osel;
-
         sel = osel = pfw->curnpos;
         if (tpad & SCE_PADLleft) {
             sel--;
@@ -10296,7 +10341,6 @@ static int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
                 TSSNDPLAY(VSND_MVCUS_UD);
             }
         }
-    }
 
         if ((tpad & SCE_PADRright) && pfw->curnpos == USERNAME_LEN) {
             pfw->onTime = 30;
@@ -10487,7 +10531,6 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
 int TsSCFADE_Set(int flg, int num, int prio) {
     SCFADE *pfw = &ScFade;
     int     state = 0;
-    int     t;
 
     switch (flg) {
     case SCFADE_FROM_BLACK:
@@ -10514,6 +10557,9 @@ int TsSCFADE_Set(int flg, int num, int prio) {
     }
 
     if (state) {
+        /* Already fading this way, or no fade was asked for: report the frames left. */
+        int t;
+
         t = pfw->ttim0 - 1;
         t -= pfw->ttim;
         if (t < 1) {
@@ -10578,7 +10624,9 @@ static void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
     case SCFADE_TO_CAPTURE:
         spr->rgba0 = MN_COLOR_NEUTRAL;
         spr->zx = spr->zy = 1.0f;
-        PkALPHA_Add(pk, GS_ALPHA_FIXED((pfw->ton * 128) >> 8));
+        /* Blend the captured frame in by the fade's tone. */
+        abgr = (pfw->ton * 128) >> 8;
+        PkALPHA_Add(pk, GS_ALPHA_FIXED(abgr));
         PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));
         SetSprScreenXYWH(spr);
         PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
@@ -10588,8 +10636,7 @@ static void TsSCFADE_Draw(SPR_PKT pk, SPR_PRM *spr, int prio) {
     case SCFADE_TO_BLACK:
     default:
         spr->zx = spr->zy = 1.0f;
-        abgr = GetDToneColor(0, 0x80000000, pfw->ton);
-        spr->rgba0 = abgr;
+        spr->rgba0 = GetDToneColor(0, 0x80000000, pfw->ton);
         SetSprScreenXYWH(spr);
         PkALPHA_Add(pk, 0x44);
         PkCRect_Add(pk, spr, 0);
@@ -10701,8 +10748,6 @@ void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy
     int     x, y;
     int     cx, cy;
     float   rw, rh;
-    float   rx, ry;
-    float   sx;
 
     mesh = PkMesh_Create(mx, my);
     PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * spr->zy);
@@ -10715,6 +10760,9 @@ void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy
 
     for (y = 0; y < mesh->mh + 1; y++) {
         for (x = 0; x < mesh->mw + 1; x++) {
+            float rx, ry;
+            float sx;
+
             pt = &mesh->pmspt[y * (mesh->mw + 1) + x];
 
             rx = (float)(cx - x) / cx;
@@ -10762,8 +10810,6 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
     int     x, y;
     float   fdy;
     float   flx, frx;
-    float   lx, rx;
-    float   uy, dy;
 
     flx = wr * 6.2831855f;
     mesh = PkMesh_Create(mx, my);
@@ -10773,12 +10819,16 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
     PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
 
     for (y = 0; y < mesh->mh + 1; y++) {
+        float lx, rx;
+
         lx = sinf(flx + ((float)y / mesh->mh) * 3.1415927f) * 1.5f + 0.75f;
         rx = -sinf(frx - ((float)y / mesh->mh) * 4.712389f) * 1.5f + 0.75f;
         PkMesh_SetHLinOfsLRX(mesh, y, lx * dr, rx * dr);
     }
 
     for (x = 0; x < mesh->mw + 1; x++) {
+        float uy, dy;
+
         uy = cosf(flx + ((float)x / mesh->mw) * 3.1415927f) * 0.7f;
         dy = -cosf(fdy - ((float)x / mesh->mw) * 4.712389f) * 0.7f;
         PkMesh_SetVLinOfsUDY(mesh, x, uy * dr, dy * dr);
@@ -11035,10 +11085,6 @@ static void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *c
     int        t0;
     float      zf;
     float      rt;
-    int        x;
-    int        y;
-    int        w;
-    int        h;
 
     obj  = HOSIObj;
     type = hTypeTable;
@@ -11055,6 +11101,12 @@ static void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *c
         for (i = 0; i < type->num; i++, obj++) {
             if (obj->wtim > 0) {
                 if (--obj->wtim == 0) {
+                    /* Reappear somewhere in a strip along one of the four screen edges. */
+                    int x;
+                    int y;
+                    int w;
+                    int h;
+
                     obj->tim = type->dispTime;
                     obj->dir = rand() & 1;
 

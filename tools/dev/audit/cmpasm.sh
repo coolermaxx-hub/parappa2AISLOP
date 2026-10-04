@@ -13,7 +13,10 @@ for f in "$@"; do
   [ -s /tmp/_cmp_old.s ] || { echo "$f COMPILE FAILED (HEAD)"; continue; }
   n=$(diff /tmp/_cmp_old.s /tmp/_cmp_new.s | grep -v '\.file' | grep -c '^[<>]')
   # Local label numbers shift when a change creates or drops a label elsewhere in the
-  # unit; the linked image only depends on where the labels are, so count those apart.
-  m=$(diff <(sed -E 's/\$L[0-9]+/$L/g' /tmp/_cmp_old.s) <(sed -E 's/\$L[0-9]+/$L/g' /tmp/_cmp_new.s) | grep -v '\.file' | grep -c '^[<>]')
-  echo "$f asm-diff-lines: $n ($m ignoring local label numbers)"
+  # unit, and so do the numbers gcc appends to function-scope statics (nTim.174) when
+  # declarations are added or removed; the linked image only depends on where those
+  # symbols are, so count them apart.
+  norm='s/\$L[0-9]+/$L/g; s/\b([A-Za-z_][A-Za-z_0-9]*)\.[0-9]+\b/\1.N/g'
+  m=$(diff <(sed -E "$norm" /tmp/_cmp_old.s) <(sed -E "$norm" /tmp/_cmp_new.s) | grep -v '\.file' | grep -c '^[<>]')
+  echo "$f asm-diff-lines: $n ($m ignoring local label and static numbers)"
 done
