@@ -2431,8 +2431,7 @@ static int exh_mbar_time_out(EXAM_CHECK *ec_pp) {
 }
 
 static int exh_mbar_num_out(EXAM_CHECK *ec_pp) {
-    int ret = ec_pp->ted_num - ec_pp->oth_num;
-    return (ret >= 0) ? -ret : ret;
+    return -abs(ec_pp->ted_num - ec_pp->oth_num);
 }
 
 static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
@@ -2502,7 +2501,7 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
         };
         u_char yaku_scr[4] = { 6, 9, 15, 18 };
         u_char yaku_cnt[4] = {};
-        u_char ymin, ymax;
+        u_char ymin; /* first the number of pressed shapes present, then the rarest one's count */
 
         for (i = 0; i < PR_ARRAYSIZE(yaku_tmp_buf); i++) {
             for (j = 0; j < 4; j++) {
@@ -2529,7 +2528,7 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
             }
         }
 
-        ymax = min(min(yaku_cnt[0], yaku_cnt[1]), yaku_cnt[2]);
+        ymin = min(min(yaku_cnt[0], yaku_cnt[1]), yaku_cnt[2]);
 
         if (hane_flag) {
             if (yaku_cnt[1] == 0 && yaku_cnt[2] == 0) {
@@ -2540,8 +2539,8 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
             }
         }
 
-        if (yaku_cnt[3] > ymax) {
-            yaku_cnt[3] = ymax;
+        if (yaku_cnt[3] > ymin) {
+            yaku_cnt[3] = ymin;
         }
 
         ret = 0;
