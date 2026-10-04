@@ -521,7 +521,7 @@ void ClearFrameBufferGifTag(sceGsFrame *draw_pp, sceGifPacket *gifpk_pp, u_char 
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, a, 0));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, 640, 0, 224));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(27648, 30976)); // ???
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0))); // ???
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRIM, SCE_GS_PRIM_SPRITE);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(640), GS_Y_COORD(224), 1));

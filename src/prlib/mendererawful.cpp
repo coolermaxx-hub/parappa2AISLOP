@@ -27,7 +27,7 @@ static PrFadeFramePacket mendererFadeData = {
     { SCE_GS_SET_ALPHA(0, 1, 0, 1, 0), SCE_GS_ALPHA_1 },
     { 0, SCE_GS_RGBAQ },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0), SCE_GS_PRIM },
-    { SCE_GS_SET_XYZ(0x6C00, 0x7900, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
     { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 },
 };
 
@@ -43,15 +43,15 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
     { SCE_GS_SET_RGBAQ(0xFF, 0xFF, 0xFF, 0x80, 0), SCE_GS_RGBAQ },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 1, 0), SCE_GS_PRIM },
     {
-        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x7900, 0), SCE_GS_XYZ2 } },
-        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x7900, 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(640), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x8700, 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 } },
     },
     { SCE_GS_SET_TEST(1, 0, 0, 2, 0, 0, 1, 1), SCE_GS_TEST_2 },
     { 0, SCE_GS_ZBUF_2 },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 1, 0), SCE_GS_PRIM },
-    { SCE_GS_SET_XYZ(0x7C00, 0x7900, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(GS_X_COORD(256), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
     { SCE_GS_SET_XYZ(0x8D00, 0x7B00, 0), SCE_GS_XYZ2 },
     { SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 2), SCE_GS_TEST_2 },
 };

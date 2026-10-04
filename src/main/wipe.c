@@ -817,7 +817,7 @@ static void WipeParaInDisp(void *x) {
         sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 0, 0, 1, 0, 0, 1, 1));
         sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
         sceGifPkAddGsAD(&gifP, SCE_GS_RGBAQ, 0);
-        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(27648, 30976, 1));
+        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
         sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(37888, 34560, 1));
         CmnGifADPacketMakeTrans(&gifP);
 

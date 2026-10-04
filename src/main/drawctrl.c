@@ -447,13 +447,13 @@ void UseGsSetXyOffset(int ofs) {
     int          offsy;
   
     if (ofs) {
-        offsy = 0x7908;
+        offsy = GS_Y_COORD(0) + 8; /* half a pixel lower */
     } else {
-        offsy = 0x7900;
+        offsy = GS_Y_COORD(0);
     }
 
     CmnGifADPacketMake(&gifpk, NULL);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(0x6c00, offsy));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), offsy));
     CmnGifADPacketMakeTrans(&gifpk);
 }
 
@@ -824,8 +824,8 @@ void BallThrowPoll(void) {
                         sceGifPkAddGsAD(&gifP, SCE_GS_TEX0_1, info.picturH->GsTex0);
                         sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
 
-                        px = ((int)(bts_pp->xp * 16.0f) - (w) + 27648);
-                        py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + 30976);
+                        px = ((int)(bts_pp->xp * 16.0f) - (w) + GS_X_COORD(0));
+                        py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + GS_Y_COORD(0));
 
                         sceGifPkAddGsAD(&gifP, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
 
@@ -2407,7 +2407,7 @@ int DrawVramClear(void *para_pp, int frame, int first_f, int useDisp, int drDisp
     sceGifPkAddGsAD(&gifpk, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(vclr_para_pp->r, vclr_para_pp->g, vclr_para_pp->b, vclr_para_pp->a, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_SCISSOR_2, SCE_GS_SET_SCISSOR(0, 640, 0, 224));
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, SCE_GS_SET_XYOFFSET(27648, 30976));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_XYOFFSET_2, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 0, 0, 0, 0, 0, 1, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));

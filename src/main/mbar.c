@@ -1070,13 +1070,13 @@ void MbarCharSet(MBARR_CHR *mb_pp) {
     h *= 0.5f;
     x1 = (mb_pp->xp - w) * 16.0f;
     y1 = (mb_pp->yp - h) * 16.0f;
-    sceGifPkAddGsAD(&mbar_gif, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(0x6C00 + x1, 0x7900 + y1, 1));
+    sceGifPkAddGsAD(&mbar_gif, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0) + x1, GS_Y_COORD(0) + y1, 1));
 
     sceGifPkAddGsAD(&mbar_gif, SCE_GS_UV, SCE_GS_SET_UV(mbcd_pp->tim2_dat_pp->w << 4, mbcd_pp->tim2_dat_pp->h << 4));
 
     x2 = (mb_pp->xp + w) * 16.0f;
     y2 = (mb_pp->yp + h) * 16.0f;
-    sceGifPkAddGsAD(&mbar_gif, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(0x6C00 + x2, 0x7900 + y2, 1));
+    sceGifPkAddGsAD(&mbar_gif, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0) + x2, GS_Y_COORD(0) + y2, 1));
 }
 
 void MbarCharSet2(MBARR_CHR2 *mb_pp) {

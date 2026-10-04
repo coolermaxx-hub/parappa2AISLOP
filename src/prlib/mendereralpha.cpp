@@ -50,7 +50,7 @@ static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
     { SCE_GS_SET_UV(0x180, 0x100), SCE_GS_UV },
     { SCE_GS_SET_XYZ(0x2800, 0xE00, 0), SCE_GS_XYZ2 },
     { 0, SCE_GS_FRAME_1 },
-    { SCE_GS_SET_XYOFFSET(0x6C00, 0x7900), SCE_GS_XYOFFSET_1 },
+    { SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)), SCE_GS_XYOFFSET_1 },
 };
 
 // VIF1 chain: GS state (REF), parameters (REF, UNPACK), microprogram (MSCAL,
@@ -169,7 +169,7 @@ void PrBlendNoodleImage(bool clear) {
     packet.color.address = SCE_GS_RGBAQ;
     packet.firstUv.value = SCE_GS_SET_UV(8, 8);
     packet.firstUv.address = SCE_GS_UV;
-    packet.firstPosition.value = SCE_GS_SET_XYZ(0x6C00, 0x7900, 0);
+    packet.firstPosition.value = SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0);
     packet.firstPosition.address = SCE_GS_XYZ2;
     packet.secondUv.value = SCE_GS_SET_UV(0x2808, 0xE08);
     packet.secondUv.address = SCE_GS_UV;
