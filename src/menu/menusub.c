@@ -932,54 +932,54 @@ HOSI_TYPE hTypeTable[17] = {
 static TSTEX_INF *tblTex = NULL;
 static u_int RPPadBit[] = { SCE_PADLup, SCE_PADLdown, SCE_PADLright, SCE_PADLleft };
 static MCDATA_TBL McVoiceTbl[23] = {
-    { 3, 22 },
-    { 7, 39 },
-    { 19, 17 },
-    { 17, 14 },
-    { 201326602, 41 },
-    { 201326613, 19 },
-    { 201326616, 55 },
-    { 201326615, 54 },
-    { 33554434, 20 },
-    { 33554443, 20 },
-    { 33554444, 20 },
-    { 33554445, 21 },
-    { 33554446, 21 },
-    { 33554436, 23 },
-    { 268435478, 32768 },
-    { 33554437, 35 },
-    { 33554438, 36 },
-    { 33554440, 40 },
-    { 33554441, 40 },
-    { 268435471, 16 },
-    { 268435472, 13 },
-    { 33554450, 15 },
-    { 33554452, 18 },
+    { MCMES(0, 3), 22 },
+    { MCMES(0, 7), 39 },
+    { MCMES(0, 19), 17 },
+    { MCMES(0, 17), 14 },
+    { MCMES(12, 10), 41 },
+    { MCMES(12, 21), 19 },
+    { MCMES(12, 24), 55 },
+    { MCMES(12, 23), 54 },
+    { MCMES(2, 2), 20 },
+    { MCMES(2, 11), 20 },
+    { MCMES(2, 12), 20 },
+    { MCMES(2, 13), 21 },
+    { MCMES(2, 14), 21 },
+    { MCMES(2, 4), 23 },
+    { MCMES(16, 22), 32768 },
+    { MCMES(2, 5), 35 },
+    { MCMES(2, 6), 36 },
+    { MCMES(2, 8), 40 },
+    { MCMES(2, 9), 40 },
+    { MCMES(16, 15), 16 },
+    { MCMES(16, 16), 13 },
+    { MCMES(2, 18), 15 },
+    { MCMES(2, 20), 18 },
 };
 static MCDATA_TBL McFaceTbl[23] = {
-    { 3, 3 },
-    { 7, 3 },
-    { 19, 3 },
-    { 17, 3 },
-    { 201326602, 4 },
-    { 201326613, 4 },
-    { 201326616, 2 },
-    { 201326615, 2 },
-    { 33554434, 2 },
-    { 33554443, 2 },
-    { 33554444, 2 },
-    { 33554445, 2 },
-    { 33554446, 2 },
-    { 33554436, 2 },
-    { 268435478, 1 },
-    { 33554437, 1 },
-    { 33554438, 1 },
-    { 33554440, 2 },
-    { 33554441, 2 },
-    { 268435471, 1 },
-    { 268435472, 1 },
-    { 33554450, 2 },
-    { 33554452, 2 },
+    { MCMES(0, 3), 3 },
+    { MCMES(0, 7), 3 },
+    { MCMES(0, 19), 3 },
+    { MCMES(0, 17), 3 },
+    { MCMES(12, 10), 4 },
+    { MCMES(12, 21), 4 },
+    { MCMES(12, 24), 2 },
+    { MCMES(12, 23), 2 },
+    { MCMES(2, 2), 2 },
+    { MCMES(2, 11), 2 },
+    { MCMES(2, 12), 2 },
+    { MCMES(2, 13), 2 },
+    { MCMES(2, 14), 2 },
+    { MCMES(2, 4), 2 },
+    { MCMES(16, 22), 1 },
+    { MCMES(2, 5), 1 },
+    { MCMES(2, 6), 1 },
+    { MCMES(2, 8), 2 },
+    { MCMES(2, 9), 2 },
+    { MCMES(16, 15), 1 },
+    { MCMES(16, 16), 1 },
+    { MCMES(2, 18), 2 },
+    { MCMES(2, 20), 2 },
 };
 static int UserList_Sw = 0;
 static int OptionList_Sw = 0;
@@ -3434,10 +3434,10 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
                 switch (ret) {
                 case 1:
-                    TsMCAMes_SetMes(0x1030001);
+                    TsMCAMes_SetMes(MCMES(1, 1) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 case 2:
-                    TsMCAMes_SetMes(0x1030000);
+                    TsMCAMes_SetMes(MCMES(1, 0) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 }
             }
@@ -5385,7 +5385,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case 0x102:
         isRun = -1;
         waitTime = 90;
-        TsMCAMes_SetMes(3);
+        TsMCAMes_SetMes(MCMES(0, 3));
         if (errorNo == 0) {
             subStatus = 0x103;
         } else {
@@ -5558,7 +5558,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x2000;
         break;
     case 0x1000:
-        TsMCAMes_SetMes(0x10000010);
+        TsMCAMes_SetMes(MCMES(16, 16));
         subStatus = 0x1010;
     case 0x1010:
         ret = P3MC_CheckChange();
@@ -5589,10 +5589,10 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case 0x2000:
         ret = P3MC_SaveCheck();
         if (ret == -2) {
-            TsMCAMes_SetMes(0x13);
+            TsMCAMes_SetMes(MCMES(0, 19));
         }
         if (ret == -3) {
-            TsMCAMes_SetMes(0x11);
+            TsMCAMes_SetMes(MCMES(0, 17));
         }
         if (ret < 0) {
             break;
@@ -5726,7 +5726,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = 0x100;
     case 0x100:
         waitTime = 90;
-        TsMCAMes_SetMes(7);
+        TsMCAMes_SetMes(MCMES(0, 7));
         P3MC_LoadUser(mode, fileNo, pGameData, 0);
         subStatus = 0x2000;
         break;
@@ -5899,7 +5899,7 @@ void TsMCAMes_SetMes(int no) {
         }
     }
 
-    if (no & 0x10000) {
+    if (no & MCMES_NOPLATE) {
         pmesw->backSw = 0;
         pmesw->btflg = 0;
     } else {
@@ -5907,7 +5907,7 @@ void TsMCAMes_SetMes(int no) {
         pmesw->btflg = 1;
     }
 
-    if (no & 0x20000) {
+    if (no & MCMES_COLOR) {
         pmesw->color = 1;
     } else {
         pmesw->color = 0;
@@ -9108,7 +9108,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
         break;
     case 0x5000:
         state = 0x5010;
-        TsMCAMes_SetMes(0x10000016);
+        TsMCAMes_SetMes(MCMES(16, 22));
         /* fallthrough */
     case 0x5010:
         ret = TsMCAMes_GetSelect();
@@ -9143,7 +9143,7 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
             break;
         }
         state = 0x4015;
-        TsMCAMes_SetMes(0x1000000f);
+        TsMCAMes_SetMes(MCMES(16, 15));
         /* fallthrough */
     case 0x4015:
         ret = TsMCAMes_GetSelect();

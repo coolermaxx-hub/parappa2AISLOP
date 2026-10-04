@@ -166,6 +166,13 @@ typedef struct { // 0x8
     /* 0x4 */ int dataNo;
 } MCDATA_TBL;
 
+/* Memory card message number: low 16 bits select the text, the top byte is a kind
+ * (non-zero kinds are selectable), and two flag bits change how it is shown. */
+#define MCMES(kind, id)  (((kind) << 24) | (id))
+#define MCMES_NOPLATE    0x10000 /* no back plate and no button prompt */
+#define MCMES_COLOR      0x20000 /* alternate text colour */
+
+
 typedef struct { // 0xc
     /* 0x0 */ u_short vol;
     /* 0x2 */ short bPause;
