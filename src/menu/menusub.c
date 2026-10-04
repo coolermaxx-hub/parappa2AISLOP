@@ -519,9 +519,9 @@ static TSVOICE_TBL TsVoiceTbl[] = {
 #define VSNDSEQ_LOOP     0xfffe /* restart from the first step */
 #define VSNDSEQ_STOP     0xfffd /* stop the voice and free the channel */
 
-static u_short VSNDSEQ_Tbl_Seq0[] = { VSNDSEQ_REST, 360, 52, 65535, VSNDSEQ_LOOP };
-static u_short VSNDSEQ_Tbl_Seq1[] = { VSNDSEQ_REST, 240, 52, 65535, VSNDSEQ_LOOP };
-static u_short VSNDSEQ_Tbl_Seq2[] = { 36, 100, 37, 100, VSNDSEQ_STOP };
+static u_short VSNDSEQ_Tbl_Seq0[] = { VSNDSEQ_REST, 360, VSND_WAIT1, 65535, VSNDSEQ_LOOP };
+static u_short VSNDSEQ_Tbl_Seq1[] = { VSNDSEQ_REST, 240, VSND_WAIT1, 65535, VSNDSEQ_LOOP };
+static u_short VSNDSEQ_Tbl_Seq2[] = { VSND_MC_LOAD2, 100, VSND_MC_LOAD3A, 100, VSNDSEQ_STOP };
 static TSVSNDSEQ VSNDSEQ_Tbl[] = {
     { 1, VSNDSEQ_Tbl_Seq2 },
     { 3, VSNDSEQ_Tbl_Seq0 },
@@ -977,54 +977,54 @@ HOSI_TYPE hTypeTable[17] = {
 static TSTEX_INF *tblTex = NULL;
 static u_int RPPadBit[] = { SCE_PADLup, SCE_PADLdown, SCE_PADLright, SCE_PADLleft };
 static MCDATA_TBL McVoiceTbl[23] = {
-    { MCMES(0, 3), 22 },
-    { MCMES(0, 7), 39 },
-    { MCMES(0, 19), 17 },
-    { MCMES(0, 17), 14 },
-    { MCMES(MCMES_KIND_TIMED, 10), 41 },
-    { MCMES(MCMES_KIND_TIMED, 21), 19 },
-    { MCMES(MCMES_KIND_TIMED, 24), 55 },
-    { MCMES(MCMES_KIND_TIMED, 23), 54 },
-    { MCMES(MCMES_KIND_CANCEL, 2), 20 },
-    { MCMES(MCMES_KIND_CANCEL, 11), 20 },
-    { MCMES(MCMES_KIND_CANCEL, 12), 20 },
-    { MCMES(MCMES_KIND_CANCEL, 13), 21 },
-    { MCMES(MCMES_KIND_CANCEL, 14), 21 },
-    { MCMES(MCMES_KIND_CANCEL, 4), 23 },
-    { MCMES(MCMES_KIND_CONFIRM, 22), TSSND_SEQ_FLAG | 0 },
-    { MCMES(MCMES_KIND_CANCEL, 5), 35 },
-    { MCMES(MCMES_KIND_CANCEL, 6), 36 },
-    { MCMES(MCMES_KIND_CANCEL, 8), 40 },
-    { MCMES(MCMES_KIND_CANCEL, 9), 40 },
-    { MCMES(MCMES_KIND_CONFIRM, 15), 16 },
-    { MCMES(MCMES_KIND_CONFIRM, 16), 13 },
-    { MCMES(MCMES_KIND_CANCEL, 18), 15 },
-    { MCMES(MCMES_KIND_CANCEL, 20), 18 },
+    { MCMES(0, MCA_CHECK), VSND_MC_CHECK1 },
+    { MCMES(0, MCA_LOAD), VSND_MC_LOAD4 },
+    { MCMES(0, MCA_SAVE), VSND_MC_SAVE2 },
+    { MCMES(0, MCA_INITIAL), VSND_MC_FORMAT2 },
+    { MCMES(MCMES_KIND_TIMED, MCA_LOAD_COMP), VSND_MC_LOAD6 },
+    { MCMES(MCMES_KIND_TIMED, MCA_SAVE_COMP), VSND_MC_SAVE4 },
+    { MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR2), VSND_MC_CHECK2_B },
+    { MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR), VSND_MC_LOAD7 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD2), VSND_MC_ALERT1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD3), VSND_MC_ALERT1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD4), VSND_MC_ALERT1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR), VSND_MC_ALERT2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR2), VSND_MC_ALERT2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_CHECK_ERR), VSND_MC_CHECK2 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_LOAD_CONF), TSSND_SEQ_FLAG | 0 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_S), VSND_MC_LOAD1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_R), VSND_MC_LOAD2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR), VSND_MC_LOAD5 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR2), VSND_MC_LOAD5 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_REWRITE_CONF), VSND_MC_SAVE1 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_INITIAL_CONF), VSND_MC_FORMAT1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_INITIAL_ERR), VSND_MC_FORMAT3 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR3), VSND_MC_SAVE3 },
 };
 static MCDATA_TBL McFaceTbl[23] = {
-    { MCMES(0, 3), 3 },
-    { MCMES(0, 7), 3 },
-    { MCMES(0, 19), 3 },
-    { MCMES(0, 17), 3 },
-    { MCMES(MCMES_KIND_TIMED, 10), 4 },
-    { MCMES(MCMES_KIND_TIMED, 21), 4 },
-    { MCMES(MCMES_KIND_TIMED, 24), 2 },
-    { MCMES(MCMES_KIND_TIMED, 23), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 2), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 11), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 12), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 13), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 14), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 4), 2 },
-    { MCMES(MCMES_KIND_CONFIRM, 22), 1 },
-    { MCMES(MCMES_KIND_CANCEL, 5), 1 },
-    { MCMES(MCMES_KIND_CANCEL, 6), 1 },
-    { MCMES(MCMES_KIND_CANCEL, 8), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 9), 2 },
-    { MCMES(MCMES_KIND_CONFIRM, 15), 1 },
-    { MCMES(MCMES_KIND_CONFIRM, 16), 1 },
-    { MCMES(MCMES_KIND_CANCEL, 18), 2 },
-    { MCMES(MCMES_KIND_CANCEL, 20), 2 },
+    { MCMES(0, MCA_CHECK), 3 },
+    { MCMES(0, MCA_LOAD), 3 },
+    { MCMES(0, MCA_SAVE), 3 },
+    { MCMES(0, MCA_INITIAL), 3 },
+    { MCMES(MCMES_KIND_TIMED, MCA_LOAD_COMP), 4 },
+    { MCMES(MCMES_KIND_TIMED, MCA_SAVE_COMP), 4 },
+    { MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR2), 2 },
+    { MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD2), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD3), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD4), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR2), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_CHECK_ERR), 2 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_LOAD_CONF), 1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_S), 1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_R), 1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR2), 2 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_REWRITE_CONF), 1 },
+    { MCMES(MCMES_KIND_CONFIRM, MCA_INITIAL_CONF), 1 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_INITIAL_ERR), 2 },
+    { MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR3), 2 },
 };
 static int UserList_Sw = 0;
 static int OptionList_Sw = 0;
@@ -1730,6 +1730,28 @@ enum {
 };
 static int   _MapGetMovableDir(MAPPOS *mpw);
 /* static */ int   McErrorMess(int err);
+/*
+ * McErrorMess numbers. The low ones are P3MC_RES_* results; the others pick
+ * messages the results alone do not tell apart.
+ */
+enum {
+    MCERR_SAVE_FAILED = P3MC_RES_FILE_ERROR, /* also shown for P3MC_RES_CARD_SWAPPED */
+    MCERR_LOAD_FAILED = P3MC_RES_UNFORMATTED,
+    MCERR_NO_CARD = P3MC_RES_NO_CARD,
+    MCERR_NO_LOG_DATA = P3MC_RES_NO_SAVE_DATA,
+    MCERR_BAD_DATA = P3MC_RES_BAD_DATA,
+    MCERR_NO_SPACE_LOG = P3MC_RES_NO_SPACE,
+    MCERR_FORMAT_FAILED = P3MC_RES_FORMAT_FAILED,
+    MCERR_CHECK_FAILED = 12,
+    MCERR_NO_SPACE_REPLAY = 15,
+    MCERR_NO_REPLAY_DATA = 40,
+    MCERR_SAVE_NO_CARD_LOG = 50,    /* the card went missing while saving */
+    MCERR_SAVE_NO_CARD_REPLAY = 60,
+    MCERR_LIST_READ_FAILED = 70,    /* listing only: the list is emptied */
+    MCERR_LIST_HAS_BROKEN = 80,     /* listing only: some files are damaged */
+    MCERR_LOADED = 100,
+    MCERR_SAVED = 200
+};
 static void  McInitFlow(void);
 /* static */ int   McStartCheckFlow(int flg);
 /* McStartCheckFlow results: the boot-time card check. */
@@ -3639,10 +3661,10 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
 
                 switch (ret) {
                 case MCSTART_NO_SPACE:
-                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 1) | MCMES_NOPLATE | MCMES_COLOR);
+                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, MCA_NO_SPACE) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 case MCSTART_NO_CARD:
-                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 0) | MCMES_NOPLATE | MCMES_COLOR);
+                    TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, MCA_NO_CARD) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 }
             }
@@ -5536,54 +5558,54 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
 
     if (!TsMCAMes_IsON()) {
         switch (err) {
-        case 2:
-            mes = MCMES(MCMES_KIND_CANCEL, 8);
+        case MCERR_LOAD_FAILED:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR);
             break;
-        case 3:
-            mes = MCMES(MCMES_KIND_CANCEL, 2);
+        case MCERR_NO_CARD:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD2);
             break;
-        case 4:
-            mes = MCMES(MCMES_KIND_CANCEL, 5);
+        case MCERR_NO_LOG_DATA:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_S);
             break;
-        case 1:
-        case 5:
-            mes = MCMES(MCMES_KIND_CANCEL, 20);
+        case MCERR_SAVE_FAILED:
+        case P3MC_RES_CARD_SWAPPED:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR3);
             break;
-        case 6:
-            mes = MCMES(MCMES_KIND_CANCEL, 9);
+        case MCERR_BAD_DATA:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_LOAD_ERR2);
             break;
-        case 7:
-            mes = MCMES(MCMES_KIND_CANCEL, 13);
+        case MCERR_NO_SPACE_LOG:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR);
             break;
-        case 15:
-            mes = MCMES(MCMES_KIND_CANCEL, 14);
+        case MCERR_NO_SPACE_REPLAY:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_SAVE_ERR2);
             break;
-        case 10:
-            mes = MCMES(MCMES_KIND_CANCEL, 18);
+        case MCERR_FORMAT_FAILED:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_INITIAL_ERR);
             break;
-        case 12:
-            mes = MCMES(MCMES_KIND_CANCEL, 4);
+        case MCERR_CHECK_FAILED:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_CHECK_ERR);
             break;
-        case 40:
-            mes = MCMES(MCMES_KIND_CANCEL, 6);
+        case MCERR_NO_REPLAY_DATA:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_DATA_R);
             break;
-        case 50:
-            mes = MCMES(MCMES_KIND_CANCEL, 11);
+        case MCERR_SAVE_NO_CARD_LOG:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD3);
             break;
-        case 60:
-            mes = MCMES(MCMES_KIND_CANCEL, 12);
+        case MCERR_SAVE_NO_CARD_REPLAY:
+            mes = MCMES(MCMES_KIND_CANCEL, MCA_NO_CARD4);
             break;
-        case 70:
-            mes = MCMES(MCMES_KIND_TIMED, 24);
+        case MCERR_LIST_READ_FAILED:
+            mes = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR2);
             break;
-        case 80:
-            mes = MCMES(MCMES_KIND_TIMED, 23);
+        case MCERR_LIST_HAS_BROKEN:
+            mes = MCMES(MCMES_KIND_TIMED, MCA_RANK_ERR);
             break;
-        case 100:
-            mes = MCMES(MCMES_KIND_TIMED, 10);
+        case MCERR_LOADED:
+            mes = MCMES(MCMES_KIND_TIMED, MCA_LOAD_COMP);
             break;
-        case 200:
-            mes = MCMES(MCMES_KIND_TIMED, 21);
+        case MCERR_SAVED:
+            mes = MCMES(MCMES_KIND_TIMED, MCA_SAVE_COMP);
             break;
         default:
             return 0;
@@ -5753,7 +5775,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case MCUCHK_SHOW_SCANNING:
         isRun = MCFLOW_RUNNING;
         waitTime = 90;
-        TsMCAMes_SetMes(MCMES(0, 3));
+        TsMCAMes_SetMes(MCMES(0, MCA_CHECK));
         if (errorNo == 0) {
             subStatus = MCUCHK_SCAN_WAIT;
         } else {
@@ -5775,7 +5797,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         if (type == MCCHECK_BROWSE && errorNo == 0) {
             if (P3MC_CheckBrokenUser(UserLst, mode) != 0) {
-                errorNo = 80;
+                errorNo = MCERR_LIST_HAS_BROKEN;
             }
         }
         subStatus = MCUCHK_RESULT;
@@ -5798,9 +5820,9 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             UCheckLoadError = P3MC_RES_NO_SAVE_DATA;
             if (P3MC_CheckIsNewSave(mode) == 0) {
                 if (mode == P3MC_MODE_REPLAY) {
-                    UCheckSaveError = 15;
+                    UCheckSaveError = MCERR_NO_SPACE_REPLAY;
                 } else {
-                    UCheckSaveError = 7;
+                    UCheckSaveError = MCERR_NO_SPACE_LOG;
                 }
             }
         }
@@ -5821,9 +5843,9 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
         if (errorNo == P3MC_RES_FILE_ERROR) {
             if (type == MCCHECK_BROWSE) {
-                errorNo = 70;
+                errorNo = MCERR_LIST_READ_FAILED;
             } else {
-                errorNo = 12;
+                errorNo = MCERR_CHECK_FAILED;
             }
         }
         if (errorNo == P3MC_RES_NO_CARD) {
@@ -5831,8 +5853,8 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         } else {
             subStatus = MCUCHK_ERROR;
         }
-        if (errorNo == 4 && mode == P3MC_MODE_REPLAY) {
-            errorNo = 40;
+        if (errorNo == MCERR_NO_LOG_DATA && mode == P3MC_MODE_REPLAY) {
+            errorNo = MCERR_NO_REPLAY_DATA;
         }
         break;
     case MCUCHK_ERROR:
@@ -5864,11 +5886,11 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             }
             subStatus = MCUCHK_START;
         } else {
-            if (errorNo == 3 && type == MCCHECK_SAVE) {
+            if (errorNo == MCERR_NO_CARD && type == MCCHECK_SAVE) {
                 if (mode == P3MC_MODE_REPLAY) {
-                    errorNo = 60;
+                    errorNo = MCERR_SAVE_NO_CARD_REPLAY;
                 } else {
-                    errorNo = 50;
+                    errorNo = MCERR_SAVE_NO_CARD_LOG;
                 }
             }
             if (McErrorMess(errorNo) >= 0) {
@@ -5880,8 +5902,8 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = MCUCHK_FINISH;
         break;
     case MCUCHK_FINISH:
-        if (type == MCCHECK_BROWSE && (errorNo == 70 || errorNo == 80)) {
-            if (errorNo == 70) {
+        if (type == MCCHECK_BROWSE && (errorNo == MCERR_LIST_READ_FAILED || errorNo == MCERR_LIST_HAS_BROKEN)) {
+            if (errorNo == MCERR_LIST_READ_FAILED) {
                 memset(UserLst, 0, sizeof(*UserLst));
             }
             subStatus = MCUSER_EXIT_DONE;
@@ -5926,7 +5948,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = MCUSER_POLL;
         break;
     case MCUSER_ASK_FORMAT:
-        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 16));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, MCA_INITIAL_CONF));
         subStatus = MCUSER_ASK_FORMAT_WAIT;
     case MCUSER_ASK_FORMAT_WAIT:
         ret = P3MC_CheckChange();
@@ -5957,10 +5979,10 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
     case MCUSER_POLL:
         ret = P3MC_SaveCheck();
         if (ret == P3MC_RES_ACCESSING) {
-            TsMCAMes_SetMes(MCMES(0, 19));
+            TsMCAMes_SetMes(MCMES(0, MCA_SAVE));
         }
         if (ret == P3MC_RES_FORMATTING) {
-            TsMCAMes_SetMes(MCMES(0, 17));
+            TsMCAMes_SetMes(MCMES(0, MCA_INITIAL));
         }
         if (ret < 0) {
             break;
@@ -5975,20 +5997,20 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 break;
             case P3MC_RES_NO_CARD:
                 if (puser->mode == P3MC_MODE_REPLAY) {
-                    errorNo = 60;
+                    errorNo = MCERR_SAVE_NO_CARD_REPLAY;
                 } else {
-                    errorNo = 50;
+                    errorNo = MCERR_SAVE_NO_CARD_LOG;
                 }
                 break;
             case P3MC_RES_FILE_ERROR:
             case P3MC_RES_CONFIRM_OVERWRITE:
-                errorNo = 1;
+                errorNo = MCERR_SAVE_FAILED;
                 break;
             case P3MC_RES_NO_SPACE:
                 if (puser->mode == P3MC_MODE_REPLAY) {
-                    errorNo = 15;
+                    errorNo = MCERR_NO_SPACE_REPLAY;
                 } else {
-                    errorNo = 7;
+                    errorNo = MCERR_NO_SPACE_LOG;
                 }
                 break;
             default:
@@ -6006,7 +6028,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = MCUSER_SAVE_SUCCESS_MES;
         TsMCAMes_SetMes(-1);
     case MCUSER_SAVE_SUCCESS_MES:
-        if (McErrorMess(200) >= 0) {
+        if (McErrorMess(MCERR_SAVED) >= 0) {
             subStatus = MCUSER_EXIT_DONE;
         }
         break;
@@ -6037,9 +6059,9 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             break;
         default:
             if (puser->mode == P3MC_MODE_REPLAY) {
-                errorNo = 60;
+                errorNo = MCERR_SAVE_NO_CARD_REPLAY;
             } else {
-                errorNo = 50;
+                errorNo = MCERR_SAVE_NO_CARD_LOG;
             }
             if (McErrorMess(errorNo) < 0) {
                 break;
@@ -6094,7 +6116,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = MCUSER_BEGIN_IO;
     case MCUSER_BEGIN_IO:
         waitTime = 90;
-        TsMCAMes_SetMes(MCMES(0, 7));
+        TsMCAMes_SetMes(MCMES(0, MCA_LOAD));
         P3MC_LoadUser(mode, fileNo, pGameData, 0);
         subStatus = MCUSER_POLL;
         break;
@@ -6117,7 +6139,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
             case P3MC_RES_FILE_ERROR:
             case P3MC_RES_UNFORMATTED:
             case P3MC_RES_NO_SAVE_DATA:
-                errorNo = 2;
+                errorNo = MCERR_LOAD_FAILED;
                 break;
             default:
                 errorNo = ret;
@@ -6134,7 +6156,7 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         subStatus = MCUSER_LOAD_SUCCESS_MES;
         TsMCAMes_SetMes(-1);
     case MCUSER_LOAD_SUCCESS_MES:
-        if (McErrorMess(100) >= 0) {
+        if (McErrorMess(MCERR_LOADED) >= 0) {
             subStatus = MCUSER_EXIT_DONE;
         }
         break;
@@ -9618,7 +9640,7 @@ enum {
         break;
     case ULST_LOAD_CONFIRM:
         state = ULST_LOAD_CONFIRM_WAIT;
-        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 22));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, MCA_LOAD_CONF));
         /* fallthrough */
     case ULST_LOAD_CONFIRM_WAIT:
         ret = TsMCAMes_GetSelect();
@@ -9641,7 +9663,7 @@ enum {
         state = ULST_SAVE_NO_ROOM;
         /* fallthrough */
     case ULST_SAVE_NO_ROOM:
-        errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? 15 : 7;
+        errNo = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_NO_SPACE_REPLAY : MCERR_NO_SPACE_LOG;
         if (McErrorMess(errNo) >= 0) {
             state = ULST_SELECT_START;
         }
@@ -9653,7 +9675,7 @@ enum {
             break;
         }
         state = ULST_SAVE_OVERWRITE_WAIT;
-        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, 15));
+        TsMCAMes_SetMes(MCMES(MCMES_KIND_CONFIRM, MCA_REWRITE_CONF));
         /* fallthrough */
     case ULST_SAVE_OVERWRITE_WAIT:
         ret = TsMCAMes_GetSelect();
@@ -9725,9 +9747,9 @@ enum {
             state = ULST_EXIT_RECHECK;
             break;
         }
-        err = 3;
+        err = MCERR_NO_CARD;
         if (pfw->isSave) {
-            err = (pfw->dataMode == P3MC_MODE_REPLAY) ? 60 : 50;
+            err = (pfw->dataMode == P3MC_MODE_REPLAY) ? MCERR_SAVE_NO_CARD_REPLAY : MCERR_SAVE_NO_CARD_LOG;
         }
         if (McErrorMess(err) >= 0) {
             state = ULST_CARD_CHANGED_DONE;
