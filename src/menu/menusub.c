@@ -5215,53 +5215,53 @@ static int _MapGetMovableDir(MAPPOS *mpw) {
     if (!TsMCAMes_IsON()) {
         switch (err) {
         case 2:
-            mes = 0x2000008;
+            mes = MCMES(MCMES_KIND_CANCEL, 8);
             break;
         case 3:
-            mes = 0x2000002;
+            mes = MCMES(MCMES_KIND_CANCEL, 2);
             break;
         case 4:
-            mes = 0x2000005;
+            mes = MCMES(MCMES_KIND_CANCEL, 5);
             break;
         case 1:
         case 5:
-            mes = 0x2000014;
+            mes = MCMES(MCMES_KIND_CANCEL, 20);
             break;
         case 6:
-            mes = 0x2000009;
+            mes = MCMES(MCMES_KIND_CANCEL, 9);
             break;
         case 7:
-            mes = 0x200000d;
+            mes = MCMES(MCMES_KIND_CANCEL, 13);
             break;
         case 15:
-            mes = 0x200000e;
+            mes = MCMES(MCMES_KIND_CANCEL, 14);
             break;
         case 10:
-            mes = 0x2000012;
+            mes = MCMES(MCMES_KIND_CANCEL, 18);
             break;
         case 12:
-            mes = 0x2000004;
+            mes = MCMES(MCMES_KIND_CANCEL, 4);
             break;
         case 40:
-            mes = 0x2000006;
+            mes = MCMES(MCMES_KIND_CANCEL, 6);
             break;
         case 50:
-            mes = 0x200000b;
+            mes = MCMES(MCMES_KIND_CANCEL, 11);
             break;
         case 60:
-            mes = 0x200000c;
+            mes = MCMES(MCMES_KIND_CANCEL, 12);
             break;
         case 70:
-            mes = 0xc000018;
+            mes = MCMES(MCMES_KIND_TIMED, 24);
             break;
         case 80:
-            mes = 0xc000017;
+            mes = MCMES(MCMES_KIND_TIMED, 23);
             break;
         case 100:
-            mes = 0xc00000a;
+            mes = MCMES(MCMES_KIND_TIMED, 10);
             break;
         case 200:
-            mes = 0xc000015;
+            mes = MCMES(MCMES_KIND_TIMED, 21);
             break;
         default:
             return 0;
