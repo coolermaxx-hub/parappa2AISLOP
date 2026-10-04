@@ -593,7 +593,7 @@ void WipeLoadInDispSame(void *x) {
     };
     SPR_DAT  spr_dat  = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 0, 0, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);
 
     wipe_end_flag = TRUE;
     SprInit();
@@ -659,7 +659,7 @@ void WipeYesNoDispTask(void *x) {
 
     SPR_DAT spr_dat = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 0, 0, 0, 0, 0, 0, 0);;
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);;
 
     SprInit();
 
@@ -790,7 +790,7 @@ static void WipeParaInDisp(void *x) {
     SPR_DAT      spr_dat   = {};
     int          timer;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
     TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 0);
@@ -856,7 +856,7 @@ static void WipeParaInDispMove(void *x) {
     SPR_DAT   spr_dat   = {};
     int       timer;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
     TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 0);
@@ -911,7 +911,7 @@ static void WipeParaOutDisp(void *x) {
     SPR_DAT   spr_dat   = {};
     int       timer     = 0;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
 
@@ -1042,7 +1042,7 @@ static void WipeBoxyInDisp(void *x) {
     };
     SPR_DAT  spr_dat  = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, 0, 10, 8, 0, 0, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);
 
     Tim2Trans(cmnfGetFileAdrs(79));
     SprInit();

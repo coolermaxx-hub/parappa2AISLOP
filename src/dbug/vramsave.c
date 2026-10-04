@@ -87,7 +87,7 @@ void VramSave(u_char *fname, int wsize, int hsize, int id) {
     tim2setinfo.t2p.TotalSize   = tim2setinfo.t2p.ImageSize + sizeof(TIM2_PICTUREHEADER);
     tim2setinfo.t2p.ImageWidth  = wsize;
     tim2setinfo.t2p.ImageHeight = hsize * 2;
-    tim2setinfo.t2p.GsTex0      = SCE_GS_SET_TEX0((wsize * hsize) / 32, wsize / 64, 0, BekiDat(wsize), BekiDat(hsize * 2), 0, 0, 0, 0, 0, 0, 0);
+    tim2setinfo.t2p.GsTex0      = SCE_GS_SET_TEX0((wsize * hsize) / 32, wsize / 64, SCE_GS_PSMCT32, BekiDat(wsize), BekiDat(hsize * 2), 0, 0, 0, 0, 0, 0, 0);
 
     sceLseek(fd, 0, 0);
     sceWrite(fd, &tim2setinfo, sizeof(tim2setinfo));

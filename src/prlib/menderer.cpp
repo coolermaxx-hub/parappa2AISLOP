@@ -118,7 +118,7 @@ void PushNoodleColor(u_long *rgbaq);
 
 void InitializeNoodleStripRendering(u_int tbp, u_int fbp, u_int tw, u_int th) {
     noodleStripDmaPacket.frame.value = SCE_GS_SET_FRAME(fbp, 10, 0, 0);
-    noodleStripDmaPacket.texture.value = SCE_GS_SET_TEX0(tbp, 4, 0, tw, th, 1, 0, 0, 0, 0, 0, 0);
+    noodleStripDmaPacket.texture.value = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
 }
 
 static float GetRandom() {

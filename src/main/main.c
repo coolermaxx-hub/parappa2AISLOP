@@ -762,14 +762,14 @@ void startUpDisp(void) {
         /* NanaOn-Sha */
         {
             .GsTex0 = SCE_GS_SET_TEX0(10240, 6, SCE_GS_PSMT8, 9, 8, 0, 0, 10320, SCE_GS_PSMCT32, 0, 0, 1),
-            .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
+            .GsTex1 = GS_TEX1_LINEAR,
             .w = 320,
             .h = 224
         },
         /* SCEI presents */
         {
             .GsTex0 = SCE_GS_SET_TEX0(10600, 8, SCE_GS_PSMT4, 9, 6, 0, 0, 10324, SCE_GS_PSMCT16, 0, 0, 1),
-            .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
+            .GsTex1 = GS_TEX1_LINEAR,
             .w = 440,
             .h = 52
         },

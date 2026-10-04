@@ -6,6 +6,7 @@
 #include "os/mtc.h"
 #include "os/syssub.h"
 #include "os/system.h"
+#include "os/tim2.h"
 #include "os/usrmem.h"
 
 #include "main/commake.h"
@@ -304,7 +305,7 @@ static TIM2_DAT tim2spr_tbl[] = {
     /* BN_KANJI_TXT */
     {
         .GsTex0 = SCE_GS_SET_TEX0(0x36b0, 4, SCE_GS_PSMT4, 8, 6, 1, 0, 0x36c4, SCE_GS_PSMCT32, 0, 0, 1),
-        .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
+        .GsTex1 = GS_TEX1_LINEAR,
         .GsRegs = 0x0,
         .GsTexClut = 0x0,
         .w = 160,
@@ -313,7 +314,7 @@ static TIM2_DAT tim2spr_tbl[] = {
     /* BN_SUUJI_TXT */
     {
         .GsTex0 = SCE_GS_SET_TEX0(0x36c0, 2, SCE_GS_PSMT4, 7, 5, 1, 0, 0x36c5, SCE_GS_PSMCT32, 0, 0, 1),
-        .GsTex1 = SCE_GS_SET_TEX1(0, 0, 1, 1, 1, 0, 0),
+        .GsTex1 = GS_TEX1_LINEAR,
         .GsRegs = 0x0,
         .GsTexClut = 0x0,
         .w = 120,

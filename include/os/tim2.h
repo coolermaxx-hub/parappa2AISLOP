@@ -15,6 +15,9 @@
 
 #define TIM2(x) ((TIM2_FILEHEADER*)x)
 
+/* Texture filter shared by the static sprite tables: bilinear magnify and minify, MTBA set. */
+#define GS_TEX1_LINEAR SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_LINEAR, /*MMIN*/SCE_GS_LINEAR, /*MTBA*/1, /*L*/0, /*K*/0)
+
 typedef struct { // 0x10
     /* 0x0 */ char FileId[4];
     /* 0x4 */ u_char FormatVersion;
