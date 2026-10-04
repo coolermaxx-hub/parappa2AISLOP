@@ -549,7 +549,7 @@ void ScrTapReq(int id, int box, int num) {
     int     use_chan;
     SNDTAP *tp_pp;
 
-    if (id == -1) {
+    if (id == SCR_TAP_COMMON) {
         use_chan = 0;
     } else {
         use_chan = scr_snd_dbuff.bank[id & 1];
@@ -1806,9 +1806,9 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
 
             if (GetKeyCode2Index(paddata_tmp) != KiNO && !sindv_pp->cansel_flag) {
                 if (global_data.play_step == PSTEP_BONUS) {
-                    ScrTapReq(-1, 3, 0);
+                    ScrTapReq(SCR_TAP_COMMON, 3, 0);
                 } else {
-                    ScrTapReq(-1, 3, 2);
+                    ScrTapReq(SCR_TAP_COMMON, 3, 2);
                 }
 
                 sindv_pp->cansel_flag = TRUE;
@@ -3280,9 +3280,9 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         }
 
                         if (scex_pp->exam_point > 0) {
-                            ScrTapReq(-1, 0, 0);
+                            ScrTapReq(SCR_TAP_COMMON, 0, 0);
                         } else {
-                            ScrTapReq(-1, 0, 1);
+                            ScrTapReq(SCR_TAP_COMMON, 0, 1);
                         }
 
                         break;
@@ -3316,11 +3316,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                             if (sindv_pp->global_ply->now_score > 0) {
                                 pointx = sindv_pp->global_ply->now_score + 500;
-                                ScrTapReq(-1, 0, 0);
+                                ScrTapReq(SCR_TAP_COMMON, 0, 0);
                                 vsAnimationReq(my_ply, 500, pointx, VSMT_UP);
                             } else {
                                 pointx = sindv_pp->global_ply->now_score + 500;
-                                ScrTapReq(-1, 0, 1);
+                                ScrTapReq(SCR_TAP_COMMON, 0, 1);
                                 vsAnimationReq(my_ply, 500, pointx, VSMT_DW);
                             }
 
@@ -3336,7 +3336,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->score = 0;
                                 }
 
-                                ScrTapReq(-1, 0, 1);
+                                ScrTapReq(SCR_TAP_COMMON, 0, 1);
 
                                 sindv_pp->global_ply->now_score = pointx;
 
@@ -3350,7 +3350,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_enemy->score = 0;
                                 }
 
-                                ScrTapReq(-1, 0, 0);
+                                ScrTapReq(SCR_TAP_COMMON, 0, 0);
 
                                 gplay_enemy->now_score = -pointx;
 
@@ -3492,7 +3492,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[line_change];
 
                                 if (rank_moto < rank_saki) {
-                                    ScrTapReq(-1, 0, 1);
+                                    ScrTapReq(SCR_TAP_COMMON, 0, 1);
 
                                     if (RANK_LEVEL2DISP_LEVEL_HK(rank_saki) == DLVL_BAD) {
                                         men_ctrl_enum = MEN_CTRL_GtoB;
@@ -3501,7 +3501,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                         men_ctrl_enum = MEN_CTRL_BtoA;
                                     }
                                 } else {
-                                    ScrTapReq(-1, 0, 0);
+                                    ScrTapReq(SCR_TAP_COMMON, 0, 0);
 
                                     if (RANK_LEVEL2DISP_LEVEL_HK(rank_saki) == DLVL_GOOD) {
                                         men_ctrl_enum = MEN_CTRL_BtoG;
@@ -3523,7 +3523,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                         }
                                     }
 
-                                    ScrTapReq(-1, 0, 1);
+                                    ScrTapReq(SCR_TAP_COMMON, 0, 1);
                                 } else {
                                     if (scex_pp->scr_exam_job[2].goto_job != -1) {
                                         if (scex_pp->scr_exam_job[2].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
@@ -3531,7 +3531,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                             scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[2];
                                         }
                                     }
-                                    ScrTapReq(-1, 0, 0);
+                                    ScrTapReq(SCR_TAP_COMMON, 0, 0);
                                 }
                             }
                         } else {
@@ -3542,7 +3542,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                 }
                             }
 
-                            ScrTapReq(-1, 0, 0);
+                            ScrTapReq(SCR_TAP_COMMON, 0, 0);
                         }
                     }
                 }
@@ -3728,7 +3728,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
         case SCRSUBJ_SPU_ON2:
         case SCRSUBJ_SPU_ON3:
         case SCRSUBJ_SPU_ON4:
-            ScrTapReq(-1, sindv_pp->sjob_data[j][0], sindv_pp->sjob_data[j][1]);
+            ScrTapReq(SCR_TAP_COMMON, sindv_pp->sjob_data[j][0], sindv_pp->sjob_data[j][1]);
             break;
         case SCRSUBJ_TITLE:
             if (sindv_pp->sjob_data[j][0] == 0) {
@@ -3752,7 +3752,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
             } else if (pad[0].one & SCE_PADstart) {
                 if (!titleStartKey) {
                     titleStartKey = TRUE;
-                    ScrTapReq(-1, 0, 2);
+                    ScrTapReq(SCR_TAP_COMMON, 0, 2);
                     DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_TITLE_START), PINDEX_NONE, NULL);
                 }
             }

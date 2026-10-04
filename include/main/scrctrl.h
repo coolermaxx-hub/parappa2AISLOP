@@ -680,6 +680,9 @@ void ScrTapCtrlInit(void *data_top);
 void ScrTapDataTrans(SNDREC *sndrec_pp, int bank, void *data_top);
 int ScrTapDataTransCheck(void);
 
+/* ScrTapReq id that plays from the common sound bank (channel 0) instead of a stage bank. */
+#define SCR_TAP_COMMON (-1)
+
 void ScrTapReq(int id, int box, int num);
 void ScrTapReqStop(int box);
 
