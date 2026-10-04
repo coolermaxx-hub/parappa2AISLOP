@@ -50,6 +50,7 @@ sceGsDrawEnv1 *drawEnvP[5] = {};
 
 PADD pad[2] = {};
 
+/* Global in the original; static keeps it out of the linker's common symbols. */
 static u_long128 GifPkCommon[8192];
 
 void (*OsFuncAddr)() = NULL;

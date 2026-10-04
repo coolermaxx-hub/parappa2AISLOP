@@ -435,7 +435,7 @@ static LERO_POS_STR lero_pos_str[][2] = {
 SCR_SND_DBUFF scr_snd_dbuff = {};
 static SNDTAP *scr_sndtap_pp[4];
 SCORE_STR score_str = {};
-static SCORE_INDV_STR score_indv_str[5];
+static SCORE_INDV_STR score_indv_str[5]; /* global in the original; static keeps it out of the common symbols */
 TAPDAT vs_tapdat_work[64] = {};
 static int follow_scr_tap_memory_cnt;
 static int follow_scr_tap_memory_cnt_load;

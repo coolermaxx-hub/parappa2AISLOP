@@ -409,17 +409,17 @@ static MNMAPPOS mnmapCityHall[] = {
  * continues that animation instead of restarting it. */
 #define CHALL_ANIME_CONTINUE 0x1000
 
-static short AnmCHallPara_OptRet[] = { 14, 20, CHALL_ANIME_CONTINUE | 12, -1 };
-static short AnmCHallPara_Opt[] = { 14, 21, CHALL_ANIME_CONTINUE | 12, -1 };
-static short AnmCHallPara_RepRet[] = { 14, 22, CHALL_ANIME_CONTINUE | 12, -1 };
-static short AnmCHallPara_Rep[] = { 14, 23, CHALL_ANIME_CONTINUE | 12, -1 };
-static short AnmCHallFphs_OptRet[] = { 15, 25, CHALL_ANIME_CONTINUE | 13, -1 };
-static short AnmCHallFphs_Opt[] = { 15, 26, CHALL_ANIME_CONTINUE | 13, -1 };
-static short AnmCHallFphs_RepRet[] = { 15, 27, CHALL_ANIME_CONTINUE | 13, -1 };
-static short AnmCHallFphs_Rep[] = { 15, 28, CHALL_ANIME_CONTINUE | 13, -1 };
-static short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
-static short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
-static short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
+short AnmCHallPara_OptRet[] = { 14, 20, CHALL_ANIME_CONTINUE | 12, -1 };
+short AnmCHallPara_Opt[] = { 14, 21, CHALL_ANIME_CONTINUE | 12, -1 };
+short AnmCHallPara_RepRet[] = { 14, 22, CHALL_ANIME_CONTINUE | 12, -1 };
+short AnmCHallPara_Rep[] = { 14, 23, CHALL_ANIME_CONTINUE | 12, -1 };
+short AnmCHallFphs_OptRet[] = { 15, 25, CHALL_ANIME_CONTINUE | 13, -1 };
+short AnmCHallFphs_Opt[] = { 15, 26, CHALL_ANIME_CONTINUE | 13, -1 };
+short AnmCHallFphs_RepRet[] = { 15, 27, CHALL_ANIME_CONTINUE | 13, -1 };
+short AnmCHallFphs_Rep[] = { 15, 28, CHALL_ANIME_CONTINUE | 13, -1 };
+short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
+short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
+short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
 
 static u_char *UserName_InitialStr  = (u_char*)"AAAAAAAA";
 static u_char *UserName_InitialStr2 = (u_char*)"        ";

@@ -4,6 +4,11 @@
 
 #include <stdio.h>
 
+/*
+ * The task stacks and mtcTaskConB are global in the original. They are kept
+ * static: an uninitialized global becomes a common symbol, which the linker
+ * would place elsewhere in .bss.
+ */
 static char mtcStack_CTRL[MTC_TASK_SIZE_CTRL] PR_ALIGNED(16);
 static char mtcStack_MAIN[MTC_TASK_SIZE_MAIN] PR_ALIGNED(16);
 static char mtcStack_02[MTC_TASK_SIZE_02] PR_ALIGNED(16);
