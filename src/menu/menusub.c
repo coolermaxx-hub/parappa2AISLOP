@@ -377,14 +377,18 @@ static MNMAPPOS mnmapCityHall[] = {
         },
     },
 };
-static short AnmCHallPara_OptRet[] = { 14, 20, 4108, -1 };
-static short AnmCHallPara_Opt[] = { 14, 21, 4108, -1 };
-static short AnmCHallPara_RepRet[] = { 14, 22, 4108, -1 };
-static short AnmCHallPara_Rep[] = { 14, 23, 4108, -1 };
-static short AnmCHallFphs_OptRet[] = { 15, 25, 4109, -1 };
-static short AnmCHallFphs_Opt[] = { 15, 26, 4109, -1 };
-static short AnmCHallFphs_RepRet[] = { 15, 27, 4109, -1 };
-static short AnmCHallFphs_Rep[] = { 15, 28, 4109, -1 };
+/* City hall animation lists: CityHallAnime indices ended by -1; CHALL_ANIME_CONTINUE
+ * continues that animation instead of restarting it. */
+#define CHALL_ANIME_CONTINUE 0x1000
+
+static short AnmCHallPara_OptRet[] = { 14, 20, CHALL_ANIME_CONTINUE | 12, -1 };
+static short AnmCHallPara_Opt[] = { 14, 21, CHALL_ANIME_CONTINUE | 12, -1 };
+static short AnmCHallPara_RepRet[] = { 14, 22, CHALL_ANIME_CONTINUE | 12, -1 };
+static short AnmCHallPara_Rep[] = { 14, 23, CHALL_ANIME_CONTINUE | 12, -1 };
+static short AnmCHallFphs_OptRet[] = { 15, 25, CHALL_ANIME_CONTINUE | 13, -1 };
+static short AnmCHallFphs_Opt[] = { 15, 26, CHALL_ANIME_CONTINUE | 13, -1 };
+static short AnmCHallFphs_RepRet[] = { 15, 27, CHALL_ANIME_CONTINUE | 13, -1 };
+static short AnmCHallFphs_Rep[] = { 15, 28, CHALL_ANIME_CONTINUE | 13, -1 };
 static short AnmCHallChar_Log[] = { 10, 19, 11, 24, -1, 0, 0, 0 };
 static short AnmCHallChar_Opt[] = { 10, 21, 11, 26, -1, 0, 0, 0 };
 static short AnmCHallChar_Rep[] = { 10, 23, 11, 28, -1, 0, 0, 0 };
@@ -488,9 +492,15 @@ static TSVOICE_TBL TsVoiceTbl[] = {
     { 1, 53, 0, 150 },
     { 1, 22, 0, 120 },
 };
-static u_short VSNDSEQ_Tbl_Seq0[] = { 65535, 360, 52, 65535, 65534 };
-static u_short VSNDSEQ_Tbl_Seq1[] = { 65535, 240, 52, 65535, 65534 };
-static u_short VSNDSEQ_Tbl_Seq2[] = { 36, 100, 37, 100, 65533 };
+/* Voice sequences are (voice, frames) steps; a voice with the top nibble set is a command. */
+#define VSNDSEQ_CMD_MASK 0xf000
+#define VSNDSEQ_REST     0xffff /* play nothing for this step */
+#define VSNDSEQ_LOOP     0xfffe /* restart from the first step */
+#define VSNDSEQ_STOP     0xfffd /* stop the voice and free the channel */
+
+static u_short VSNDSEQ_Tbl_Seq0[] = { VSNDSEQ_REST, 360, 52, 65535, VSNDSEQ_LOOP };
+static u_short VSNDSEQ_Tbl_Seq1[] = { VSNDSEQ_REST, 240, 52, 65535, VSNDSEQ_LOOP };
+static u_short VSNDSEQ_Tbl_Seq2[] = { 36, 100, 37, 100, VSNDSEQ_STOP };
 static TSVSNDSEQ VSNDSEQ_Tbl[] = {
     { 1, VSNDSEQ_Tbl_Seq2 },
     { 3, VSNDSEQ_Tbl_Seq0 },
@@ -2397,20 +2407,20 @@ static void TsSndFlow(int flg) {
                 }
     
                 switch (pCur[0]) {
-                case 0xffff:
+                case VSNDSEQ_REST:
                     break;
-                case 0xfffe:
+                case VSNDSEQ_LOOP:
                     pchan->sqIdx = 0;
                     pCur = pSeq;
                     break;
-                case 0xfffd:
+                case VSNDSEQ_STOP:
                     pchan->sqIdx = 0;
                     MenuVoiceStop(i);
                     memset(pchan, 0, sizeof(*pchan));
                     continue;
                 }
                 
-                if (!pchan->bMsk && !(pCur[0] & 0xf000)) {
+                if (!pchan->bMsk && !(pCur[0] & VSNDSEQ_CMD_MASK)) {
                     MenuVoicePlay(i, pCur[0]);
                 }
             }
@@ -4832,8 +4842,8 @@ static int MpCityHall_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 
     while ((n = *ptr) != -1) {
-        if (n & 0x1000) {
-            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+        if (n & CHALL_ANIME_CONTINUE) {
+            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
             MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
         }
@@ -4895,8 +4905,8 @@ static void MpCityHallFPHSSoundMask(int flg) {
 
     TSSNDPLAY(0x34);
     while ((n = *ptr) != -1) {
-        if (n & 0x1000) {
-            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~0x1000]);
+        if (n & CHALL_ANIME_CONTINUE) {
+            MNScene_ContinueAnime(&MNS_CityHall, -1, &CityHallAnime[n & ~CHALL_ANIME_CONTINUE]);
         } else {
             MNScene_StartAnime(&MNS_CityHall, -1, &CityHallAnime[n]);
         }
@@ -5988,7 +5998,7 @@ void TsMCAMes_SetMes(int no) {
 
     pmesw->selflg = 0;
     pmesw->seltim = 0;
-    pmesw->line = _PkMCMsgGetLine(pmesw->mesflg & 0xffff);
+    pmesw->line = _PkMCMsgGetLine(pmesw->mesflg & MCMES_ID_MASK);
 }
 
 static void TsMCAMes_Flow(u_int tpad) {
@@ -6147,7 +6157,7 @@ static void TsMCAMes_Flow(u_int tpad) {
                 col = 0x807f7f7f;
             }
         }
-        _PkMCMsgPut(pk, spr, pmesw->mesflg & 0xffff, px, y, col);
+        _PkMCMsgPut(pk, spr, pmesw->mesflg & MCMES_ID_MASK, px, y, col);
     }
 }
 
@@ -6186,7 +6196,7 @@ static void TsCMPMes_Draw(SPR_PKT pk, SPR_PRM *spr) {
     }
 
     if (pmesw->mesflg < 0x1000u) {
-        _PkSubMsgPut(pk, spr, pmesw->mesflg & 0xffff, pmesw->px, pmesw->py, 0x807f7f7f);
+        _PkSubMsgPut(pk, spr, pmesw->mesflg & MCMES_ID_MASK, pmesw->px, pmesw->py, 0x807f7f7f);
     }
 }
 
@@ -8249,7 +8259,7 @@ static int TsJukeObjAnime2(int isOut) {
         state = 0x3020;
         /* fallthrough */
     case 0x3020:
-        if (!TsJukeIsObjAnime(1) && (tpad & 0x840)) {
+        if (!TsJukeIsObjAnime(1) && (tpad & (SCE_PADstart | SCE_PADRdown))) {
             pfw->exitflg = 1;
             TSSNDPLAY(VSND_CANCEL);
             state = 0x6000;
@@ -8274,7 +8284,7 @@ static int TsJukeObjAnime2(int isOut) {
             pfw->timeV++;
             if (pfw->timeV >= JukeBgmTbl[pfw->selno].endV) {
                 state = 0x6000;
-            } else if (pfw->timeV + 60 < JukeBgmTbl[pfw->selno].endV && (tpad & 0x840)) {
+            } else if (pfw->timeV + 60 < JukeBgmTbl[pfw->selno].endV && (tpad & (SCE_PADstart | SCE_PADRdown))) {
                 pfw->exitflg = 1;
                 TSSNDPLAY(VSND_CANCEL);
                 state = 0x5000;
@@ -9779,7 +9789,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
 
         if (sel < 8) {
             sel = pfw->curchrmode;
-            if (tpad & 0x100) {
+            if (tpad & SCE_PADselect) {
                 sel++;
             }
             if (pfw->curchrmode != sel) {
@@ -9812,7 +9822,7 @@ static void TsNAMEINBox_GetName(NAMEINW *pfw, u_char *name) {
             state = 0xff20;
             TSSNDPLAY(9);
         }
-        if (tpad & 0x80) {
+        if (tpad & SCE_PADRleft) {
             for (i = 0; i < 8; i++) {
                 TsNAMEINBox_SetName(pfw, UserName_InitialStr2);
                 pfw->curnpos = 0;

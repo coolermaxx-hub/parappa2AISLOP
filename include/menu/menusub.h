@@ -180,6 +180,7 @@ typedef struct { // 0x8
 #define MCMES_KIND_CONFIRM   MCMES_BIT_CONFIRM
 #define MCMES_KIND_MASK      0xff000000
 #define MCMES(kind, id)  (((kind) << 24) | (id))
+#define MCMES_ID_MASK    0xffff /* selects the text */
 #define MCMES_NOPLATE    0x10000 /* no back plate and no button prompt */
 #define MCMES_COLOR      0x20000 /* alternate text colour */
 
