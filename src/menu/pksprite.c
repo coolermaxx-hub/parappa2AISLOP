@@ -374,8 +374,14 @@ u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
+    /*
+     * MMI version of the clamp-and-pack above. Like the original, it uses
+     * $2, $4 (or $9) and $8 as scratch without declaring them as clobbers;
+     * declaring them changes the surrounding register allocation. The
+     * three tone colour helpers share this block.
+     */
     asm(
         "pcpyld  $2, %4, %3       \n\t"
         "pcpyld  $4, %2, %1       \n\t"
@@ -412,7 +418,7 @@ u_int GetToneColorA(u_int abgr, int tona, int tonb, int tong, int tonr) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
     asm(
         "pcpyld  $2, %4, %3       \n\t"
@@ -450,7 +456,7 @@ u_int GetToneColorH(u_int abgr, int tona, int tonb, int tong, int tonr) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
     asm(
         "pcpyld  $2, %4, %3       \n\t"
