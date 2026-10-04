@@ -58,13 +58,13 @@ void memc_setDirName(char *name) {
     memc_stat.saveDir[63] = '\0';
 }
 
-void memc_setSaveTitle(char *name, int nLFPos) {
-    int length = strlen(name);
+void memc_setSaveTitle(char *title, int nLFPos) {
+    int length = strlen(title);
     if (length > 64) {
         length = 64;
     }
 
-    memcpy(memc_iconsys.TitleName, name, 64);
+    memcpy(memc_iconsys.TitleName, title, 64);
     memc_iconsys.TitleName[length + 1] = '\0';
     memc_iconsys.OffsLF = nLFPos;
 }

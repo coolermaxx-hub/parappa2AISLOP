@@ -120,7 +120,7 @@ typedef struct { // 0x18
 void memc_init(void);
 
 void memc_setDirName(char *name);
-void memc_setSaveTitle(char *name, int nLFPos);
+void memc_setSaveTitle(char *title, int nLFPos);
 void memc_setIconSysHed(void *pIhData, int IhSize);
 void memc_setSaveIcon(int no, void *pIconData, int nIconSize);
 

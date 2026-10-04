@@ -6776,121 +6776,124 @@ void TsPopCusFlow(POPCTIM *pfw) {
     }
 }
 
-void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int flg, POPCTIM *pfw, int bPut, int i, PATPOS *ppos, int px, int py) {
-    float rt3;
-    float rt = 0.0f;
-    u_int mode;
+/*
+ * Draws one pop-up button. bPut: 0 idle, 1 in the cursor's column (swings),
+ * 2 chosen (flashes), 3 the cursor just moved onto it (bounces), 4 dimmed,
+ * 5 and 6 the computer level row. dflg picks the pass: 0 draws only dimmed
+ * buttons, bit 0 modes 0, 1 and 3, bit 1 the chosen one, bit 2 the level row.
+ */
+void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int dflg, POPCTIM *pfw, int bPut, int idx, PATPOS *ppat, int px, int py) {
+    float fSRate = 0.0f;
 
-    mode = bPut;
-    if (pfw->bDim[i]) {
-        mode = 4;
+    if (pfw->bDim[idx]) {
+        bPut = 4;
     }
 
-    switch (mode) {
+    switch (bPut) {
     case 0:
-        if (!(flg & 1)) {
+        if (!(dflg & 1)) {
             return;
         }
-        if (pfw->offinf[i].time) {
-            rt   = pfw->offinf[i].time * 0.06666667f;
-            mode = 1;
+        if (pfw->offinf[idx].time) {
+            fSRate = pfw->offinf[idx].time * 0.06666667f;
+            bPut   = 1;
         }
         break;
     case 1:
-        if (!(flg & 1)) {
+        if (!(dflg & 1)) {
             return;
         }
-        rt = 1.0f;
-        if (pfw->srTNo == i && pfw->srTim) {
-            rt = 1.0f - pfw->srTim * 0.125f;
+        fSRate = 1.0f;
+        if (pfw->srTNo == idx && pfw->srTim) {
+            fSRate = 1.0f - pfw->srTim * 0.125f;
         }
         break;
     case 2:
-        if (!(flg & 2)) {
+        if (!(dflg & 2)) {
             return;
         }
-        pfw->srTNo = i;
+        pfw->srTNo = idx;
         pfw->srTim = 8;
         break;
     case 3:
-        if (!(flg & 1)) {
+        if (!(dflg & 1)) {
             return;
         }
-        pfw->srTNo = i;
+        pfw->srTNo = idx;
         pfw->srTim = 8;
         break;
     case 4:
-        if (flg) {
+        if (dflg) {
             return;
         }
         spr->rgba0 = 0x40808080;
         break;
     case 5:
-        if (!(flg & 4)) {
+        if (!(dflg & 4)) {
             return;
         }
         spr->rgba0 = 0x80707070;
         break;
     case 6:
-        if (!(flg & 4)) {
+        if (!(dflg & 4)) {
             return;
         }
         break;
     }
 
-    if (mode < 2 || mode == 5) {
-        if (pfw->offinf[i].cltm) {
-            float ct = pfw->offinf[i].cltm * 0.06666667f;
-            spr->rgba0 = GetDToneColor(pfw->nabgr, pfw->habgr, ct * 240.0f * ct);
+    if (bPut == 0 || bPut == 1 || bPut == 5) {
+        if (pfw->offinf[idx].cltm) {
+            float fCRate = pfw->offinf[idx].cltm * 0.06666667f;
+            spr->rgba0 = GetDToneColor(pfw->nabgr, pfw->habgr, fCRate * 240.0f * fCRate);
         }
     }
 
-    switch (mode) {
+    switch (bPut) {
     case 2:
     {
         float drt = pfw->okTim / 25.0f;
         float zrt = sinf(drt * 9.424778f);
-        rt3 = sinf(drt * 6.2831855f);
+        fSRate = sinf(drt * 6.2831855f);
         zrt *= drt * 0.9f * drt + 0.1f;
-        spr->rgba0 = GetDToneColor(0xffffff, MN_COLOR_WHITE, rt3 * 256.0f * rt3);
+        spr->rgba0 = GetDToneColor(0xffffff, MN_COLOR_WHITE, fSRate * 256.0f * fSRate);
 
         TsPatTexFnc(2);
-        TsPatPutMZoom(pk, spr, ppos, px, py, 1.0 - zrt * 0.2, zrt * 0.6 + 1.0, 8, 4, zrt * -0.2, zrt * 0.6);
+        TsPatPutMZoom(pk, spr, ppat, px, py, 1.0 - zrt * 0.2, zrt * 0.6 + 1.0, 8, 4, zrt * -0.2, zrt * 0.6);
         TsPatTexFnc(0);
 
         pfw->srTim = 8;
-        pfw->srTNo = i;
-        pfw->offinf[i].bCur = 1;
+        pfw->srTNo = idx;
+        pfw->offinf[idx].bCur = 1;
     }
         break;
     case 1:
-        TsPatPutSwing(pk, spr, ppos, px, py, 2, 8, pfw->fswing * rt);
-        if (pfw->offinf[i].time == 0) {
-            pfw->offinf[i].bCur = 1;
+        TsPatPutSwing(pk, spr, ppat, px, py, 2, 8, pfw->fswing * fSRate);
+        if (pfw->offinf[idx].time == 0) {
+            pfw->offinf[idx].bCur = 1;
         }
         break;
     case 3:
     {
         float zrt = sinf(pfw->onTim * 2.1991148f * 0.1f);
-        pfw->srTNo = i;
+        pfw->srTNo = idx;
         pfw->srTim = 8;
-        TsPatPutMZoom(pk, spr, ppos, px, py, zrt * 0.05f + 1.0f, zrt * 0.14f + 1.0f, 8, 4, zrt * -0.05f, zrt * -0.3f);
-        pfw->offinf[i].bCur = 1;
+        TsPatPutMZoom(pk, spr, ppat, px, py, zrt * 0.05f + 1.0f, zrt * 0.14f + 1.0f, 8, 4, zrt * -0.05f, zrt * -0.3f);
+        pfw->offinf[idx].bCur = 1;
     }
         break;
     case 5:
     case 6:
     {
         float zrat = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
-        pfw->srTNo = i;
+        pfw->srTNo = idx;
         pfw->srTim = 8;
-        TsPatPutMZoom(pk, spr, ppos, px, py, zrat * 0.1f + 0.95f, zrat * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
-        pfw->offinf[i].bCur = 1;
+        TsPatPutMZoom(pk, spr, ppat, px, py, zrat * 0.1f + 0.95f, zrat * 0.1f + 0.95f, 4, 4, 0.0f, 0.0f);
+        pfw->offinf[idx].bCur = 1;
     }
         break;
     default:
-        TsPatPut(pk, spr, ppos, px, py);
-        pfw->offinf[i].bCur = 0;
+        TsPatPut(pk, spr, ppat, px, py);
+        pfw->offinf[idx].bCur = 0;
         break;
     }
 }
