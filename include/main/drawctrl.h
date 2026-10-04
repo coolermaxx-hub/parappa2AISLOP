@@ -200,6 +200,9 @@ typedef struct { // 0x10
     /* 0x4 */ OBJACTPRG *objactprg[3];
 } OBJACTPRG_CTRL;
 
+/* tap_id of a request that applies to every scene object */
+#define DR_TAP_ID_ALL 0xfe
+
 typedef struct { // 0xc
     /* 0x0 */ short tap_id;
     /* 0x2 */ short req_no;

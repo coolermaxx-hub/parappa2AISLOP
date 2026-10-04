@@ -2192,7 +2192,7 @@ void DrawObjTapCtrl(SCENE_OBJDATA *sod_pp, DR_TAP_REQ *tap_pp, int tap_num) {
     WorkClear(sod_pp->objactprg_ctrl.objactprg[OBJACTPRG_TAP], max_num * sizeof(OBJACTPRG));
 
     for (i = 0; i < tap_num; i++) {
-        if (tap_pp[i].tap_id == 0xfe || sod_pp->tap_id == tap_pp[i].tap_id) {
+        if (tap_pp[i].tap_id == DR_TAP_ID_ALL || sod_pp->tap_id == tap_pp[i].tap_id) {
             if (tap_pp[i].req_no >= sod_pp->objtapstr_size) {
                 printf(" TAP REQ Table over!! ID:%d num:%d\n", tap_pp[i].tap_id, tap_pp[i].req_no);
                 continue;

@@ -505,6 +505,10 @@ int selPlayDisp(int sel_stage, int sel_disp, int firstf) {
     return ret;
 }
 
+/* Analog stick axis (0..255, centre ~0x80) beyond which the hat changes. */
+#define HAT_STICK_LOW  0x40
+#define HAT_STICK_HIGH 0xc0
+
 static void SpHatChangeSub(void) {
     PADD *pad_pp;
 
@@ -516,13 +520,13 @@ static void SpHatChangeSub(void) {
 
     pad_pp = &pad[0];
 
-    if (pad_pp->ana[1] < 0x40) {
+    if (pad_pp->ana[1] < HAT_STICK_LOW) {
         hat_change_enum = HCNG_R1;
-    } else if (pad_pp->ana[0] >= 0xc0) {
+    } else if (pad_pp->ana[0] >= HAT_STICK_HIGH) {
         hat_change_enum = HCNG_R2;
-    } else if (pad_pp->ana[1] >= 0xc0) {
+    } else if (pad_pp->ana[1] >= HAT_STICK_HIGH) {
         hat_change_enum = HCNG_R3;
-    } else if (pad_pp->ana[0] < 0x40) {
+    } else if (pad_pp->ana[0] < HAT_STICK_LOW) {
         hat_change_enum = HCNG_R4;
     }
 
