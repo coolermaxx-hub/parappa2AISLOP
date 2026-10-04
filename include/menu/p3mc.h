@@ -6,6 +6,11 @@
 #include <eetypes.h>
 #include <libmc.h>
 
+/* File numbers per save kind: LOG000-LOG079 and REP000-REP079. */
+#define P3MC_FILE_MAX      80
+/* Entries read from the card directory in one listing. */
+#define P3MC_DIR_ENTRY_MAX 80
+
 typedef struct { // 0x14
     /* 0x00 */ u_int scDate[2];
     /* 0x08 */ u_char name[8];
@@ -87,15 +92,15 @@ typedef struct { // 0x1c
 
 typedef struct { // 0xc2980
     /* 0x00000 */ int nGetUser;
-    /* 0x00004 */ USER_DATA getUser[81];
+    /* 0x00004 */ USER_DATA getUser[P3MC_FILE_MAX + 1]; /* + 1: room for the user being saved */
     /* 0xc25a8 */ int logPage_flg;
     /* 0xc25ac */ int repPage_flg;
     /* 0xc25b0 */ int nLogGet;
     /* 0xc25b4 */ int nRepGet;
-    /* 0xc25b8 */ USER_DATA *plog_user[80];
-    /* 0xc26f8 */ USER_DATA *prep_user[80];
+    /* 0xc25b8 */ USER_DATA *plog_user[P3MC_FILE_MAX];
+    /* 0xc26f8 */ USER_DATA *prep_user[P3MC_FILE_MAX];
     /* 0xc2838 */ int nUserMax;
-    /* 0xc283c */ USER_DATA *pUserTbl[81];
+    /* 0xc283c */ USER_DATA *pUserTbl[P3MC_FILE_MAX + 1];
 } P3MC_USRLST;
 
 typedef struct { // 0x20
@@ -145,7 +150,7 @@ typedef struct { // 0x3b00
     /* 0x0014 */ MCRWDATA_HDL chkData;
     /* 0x0030 */ P3MC_USRLST *pUserLst;
     /* 0x0034 */ u_char UserHeadTmp[9860];
-    /* 0x26c0 */ sceMcTblGetDir dirTable[81];
+    /* 0x26c0 */ sceMcTblGetDir dirTable[P3MC_DIR_ENTRY_MAX + 1];
 } GETUSER_WORK;
 
 int P3MC_InitReady(void);
@@ -166,6 +171,11 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave);
 int P3MC_CheckBrokenUser(P3MC_USRLST *pUser, int mode);
 void P3MC_OpeningCheckStart(void);
 void P3MC_OpeningCheckEnd(void);
+/* P3MC_OpeningCheck result: P3MC_RES_BUSY while working, -P3MC_RES_UNFORMATTED or
+ * -P3MC_RES_NO_CARD, otherwise a mask of the saves that will fit on the card (free
+ * space, or an existing file that can be overwritten). */
+#define P3MC_OPEN_LOG_FITS    1
+#define P3MC_OPEN_REPLAY_FITS 2
 int P3MC_OpeningCheck(void);
 int P3MC_LoadUser(int mode, int fileNo, MCRWDATA_HDL *pdhdl, int flg);
 int P3MC_LoadCheck(void);

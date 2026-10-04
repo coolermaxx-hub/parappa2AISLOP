@@ -1667,6 +1667,13 @@ static int   _MapGetMovableDir(MAPPOS *mpw);
 /* static */ int   McErrorMess(int err);
 static void  McInitFlow(void);
 /* static */ int   McStartCheckFlow(int flg);
+/* McStartCheckFlow results: the boot-time card check. */
+enum {
+    MCSTART_RUNNING  = -1,
+    MCSTART_DONE     = 0,
+    MCSTART_NO_SPACE = 1, /* no room for a log save: warn, keep checking */
+    MCSTART_NO_CARD  = 2  /* no card inserted: warn, keep checking */
+};
 /* McUserCheckFlow check types: which operation the card check prepares for. */
 enum {
     MCCHECK_BROWSE = 0, /* list the saved users only */
@@ -3506,7 +3513,7 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
     switch (state) {
     case 0:
         ret = McStartCheckFlow(0);
-        if (ret == 0) {
+        if (ret == MCSTART_DONE) {
             state = 0x1000;
             return 0;
         }
@@ -3516,15 +3523,16 @@ static int TsMemCardCheck_Flow(int flg, u_int tpad) {
                 mesNo = ret;
 
                 switch (ret) {
-                case 1:
+                case MCSTART_NO_SPACE:
                     TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 1) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
-                case 2:
+                case MCSTART_NO_CARD:
                     TsMCAMes_SetMes(MCMES(MCMES_KIND_OK, 0) | MCMES_NOPLATE | MCMES_COLOR);
                     break;
                 }
             }
 
+            /* The player may dismiss the warning and continue without saving. */
             if (TsMCAMes_GetSelect()) {
                 state = 0x1000;
             }
@@ -5376,6 +5384,15 @@ static void McInitFlow(void) {
     waitTime  = 0;
 }
 
+/* McStartCheckFlow states (subStatus). */
+enum {
+    MCSTART_ST_START    = 0,
+    MCSTART_ST_CHECK    = 1,
+    MCSTART_ST_NO_SPACE = 0x10,
+    MCSTART_ST_NO_CARD  = 0x20,
+    MCSTART_ST_DONE     = 0x100
+};
+
 static int McStartCheckFlow(/* a0 4 */ int flg) {
     /* v1 3 */ int ret;
 
@@ -5390,14 +5407,15 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         return 0;
     }
 
+    /* Non-negative opening check results become 0 when a log save fits, 1 when not. */
     switch (subStatus) {
-    case 0:
-        subStatus = 1;
+    case MCSTART_ST_START:
+        subStatus = MCSTART_ST_CHECK;
         break;
-    case 1:
+    case MCSTART_ST_CHECK:
         ret = P3MC_OpeningCheck();
         if (ret >= 0) {
-            if (ret & 1) {
+            if (ret & P3MC_OPEN_LOG_FITS) {
                 ret = 0;
             } else {
                 ret = 1;
@@ -5405,75 +5423,75 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         }
 
         switch (ret) {
-        case -2:
-            subStatus = 0x100;
+        case -P3MC_RES_UNFORMATTED:
+            subStatus = MCSTART_ST_DONE;
             break;
         case 0:
-            subStatus = 0x100;
+            subStatus = MCSTART_ST_DONE;
             break;
         case 1:
-            subStatus = 0x10;
+            subStatus = MCSTART_ST_NO_SPACE;
             break;
-        case -3:
-            subStatus = 0x20;
+        case -P3MC_RES_NO_CARD:
+            subStatus = MCSTART_ST_NO_CARD;
             break;
         }
     
         break;
-    case 0x10:
+    case MCSTART_ST_NO_SPACE:
         ret = P3MC_OpeningCheck();
         if (ret >= 0) {
-            ret = (ret & 0x1) ^ 0x1;
+            ret = (ret & P3MC_OPEN_LOG_FITS) ^ 0x1;
         }
 
         switch (ret) {
-        case -3:
-            subStatus = 0x20;
+        case -P3MC_RES_NO_CARD:
+            subStatus = MCSTART_ST_NO_CARD;
             break;
-        case -2:
+        case -P3MC_RES_UNFORMATTED:
         case 0:
-            subStatus = 0x100;
+            subStatus = MCSTART_ST_DONE;
             break;
-        case -1:
+        case P3MC_RES_BUSY:
         case 1:
         default:
             break;
         }
 
         break;
-    case 0x20:
+    case MCSTART_ST_NO_CARD:
         ret = P3MC_OpeningCheck();
         if (ret >= 0) {
-            ret = (ret & 0x1) ^ 0x1;
+            ret = (ret & P3MC_OPEN_LOG_FITS) ^ 0x1;
         }
 
         switch (ret) {
-        case -2:
+        case -P3MC_RES_UNFORMATTED:
         case 0:
-            subStatus = 0x100;
+            subStatus = MCSTART_ST_DONE;
             break;
         case 1:
-            subStatus = 0x10;
+            subStatus = MCSTART_ST_NO_SPACE;
             break;
-        case -3:
-        case -1:
+        case -P3MC_RES_NO_CARD:
+        case P3MC_RES_BUSY:
         default:
             break;
         }
 
         break;
-    case 0x100:
-        return 0;
+    case MCSTART_ST_DONE:
+        return MCSTART_DONE;
     }
 
     switch (subStatus) {
-    case 0x10:
-        return 1;
-    case 0x20:
-        return 2;
+    case MCSTART_ST_NO_SPACE:
+        return MCSTART_NO_SPACE;
+    case MCSTART_ST_NO_CARD:
+        return MCSTART_NO_CARD;
     }
 
-    return -1;
+    return MCSTART_RUNNING;
 }
 
 /* static */ int McUserCheckFlow(int type, int mode, int *bError) {

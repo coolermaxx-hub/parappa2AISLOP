@@ -21,8 +21,8 @@ static P3MC_WORK P3MC_Work;
 static char filePath[64];
 static MEMC_INFO mcmenu_info;
 static sceMcTblGetDir p3mcTblGetDir[8];
-static u_char McLogFileFlg[80];
-static u_char McReplayFileFlg[80];
+static u_char McLogFileFlg[P3MC_FILE_MAX];
+static u_char McReplayFileFlg[P3MC_FILE_MAX];
 static int FreeSizeFlg;
 static int portCheckFlg;
 static int NeedSize[2];
@@ -565,9 +565,9 @@ static int _P3MC_freesize_chk(void) {
     if (!memc_checkFormat()) {
         flg = -1;
     } else {
-        flg = (free >= NeedSize[0]);
+        flg = (free >= NeedSize[0]); /* P3MC_OPEN_LOG_FITS */
         if (free >= NeedSize[1]) {
-            flg |= 2;
+            flg |= P3MC_OPEN_REPLAY_FITS;
         }
     }
 
@@ -794,13 +794,13 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
         isFileFlgCash = 0;
         memset(McLogFileFlg, 0, sizeof(McLogFileFlg));
         memset(McReplayFileFlg, 0, sizeof(McReplayFileFlg));
-        memset(pDirTable, 0, sizeof(sceMcTblGetDir) * 81);
+        memset(pDirTable, 0, sizeof(sceMcTblGetDir) * (P3MC_DIR_ENTRY_MAX + 1));
 
-        if (memc_get_dir(0, _P3MC_GetFilePath(P3MC_MODE_ALL, -1), pDirTable, 80) == 0) {
+        if (memc_get_dir(0, _P3MC_GetFilePath(P3MC_MODE_ALL, -1), pDirTable, P3MC_DIR_ENTRY_MAX) == 0) {
             portCheckFlg = flag;
         }
     } else if (portCheckFlg == 2) {
-        for (i = 0; i < 80; i++) {
+        for (i = 0; i < P3MC_DIR_ENTRY_MAX; i++) {
             char *name = &pDirTable[i].EntryName[0];
             char *type = &pDirTable[i].EntryName[12];
             char *num = &pDirTable[i].EntryName[15];
@@ -810,7 +810,7 @@ static int _P3MC_MemcCheck(int mode, sceMcTblGetDir *pDirTable) {
             }
 
             fileNo = _P3MCStrNum(num, 3);
-            if (fileNo < 80) {
+            if (fileNo < P3MC_FILE_MAX) {
                 if (_P3MCStrCmpLen(type, "LOG", 3) == 0) {
                     McLogFileFlg[fileNo] = 1;
                 } else if (_P3MCStrCmpLen(type, "REP", 3) == 0) {
@@ -916,7 +916,7 @@ int P3MC_GetUserCheck(void) {
     if (pcw->curState == 1) {
         flgl = 0;
         if (pcw->curUserMode & P3MC_MODE_LOG) {
-            for (i = 0; i < 80; i++) {
+            for (i = 0; i < P3MC_FILE_MAX; i++) {
                 if (McLogFileFlg[i]) {
                     flgl |= 1;
                 }
@@ -929,7 +929,7 @@ int P3MC_GetUserCheck(void) {
 
         flgr = 0;
         if (pcw->curUserMode & P3MC_MODE_REPLAY) {
-            for (i = 0; i < 80; i++) {
+            for (i = 0; i < P3MC_FILE_MAX; i++) {
                 if (McReplayFileFlg[i]) {
                     flgr |= 1;
                 }
@@ -949,7 +949,7 @@ int P3MC_GetUserCheck(void) {
     }
 
     while (1) {
-        if (pcw->curFno > 0 && pcw->curFno <= 80) {
+        if (pcw->curFno > 0 && pcw->curFno <= P3MC_FILE_MAX) {
             re = _P3MC_loadCheck(pw, 0);
             if (re < 0) {
                 return P3MC_RES_BUSY;
@@ -974,7 +974,7 @@ int P3MC_GetUserCheck(void) {
 
         loadPending = 0;
         while (!loadPending) {
-            while (pcw->curFno < 80) {
+            while (pcw->curFno < P3MC_FILE_MAX) {
                 isLoad = 0;
                 switch (pcw->curMode) {
                 case P3MC_MODE_LOG:
@@ -1133,7 +1133,7 @@ int P3MC_SortUser(P3MC_USRLST *pUser, int mode, int isSave) {
     int         isNew;
     int         nmuser;
     USER_DATA **pmuser;
-    u_char      map[80];
+    u_char      map[P3MC_FILE_MAX];
 
     if (mode == P3MC_MODE_LOG) {
         pmuser = pUser->plog_user;
@@ -1272,7 +1272,7 @@ int P3MC_OpeningCheck(void) {
     pcw = pUChkWork;
 
     if (pcw == NULL) {
-        return 1;
+        return P3MC_OPEN_LOG_FITS;
     }
 
     if (pcw->curState == 0) {
@@ -1292,22 +1292,22 @@ int P3MC_OpeningCheck(void) {
     if (pcw->curState == 1) {
         chk = _P3MC_freesize_chk();
 
-        for (flg = 0, i = 0; i < 80; i++) {
+        for (flg = 0, i = 0; i < P3MC_FILE_MAX; i++) {
             if (McReplayFileFlg[i] != 0) {
                 flg++;
             }
         }
 
         if (flg != 0) {
-            chk |= 0x2;
+            chk |= P3MC_OPEN_REPLAY_FITS;
         }
 
-        if (chk & 0x1) {
+        if (chk & P3MC_OPEN_LOG_FITS) {
             pcw->curState = 0;
             return chk;
         }
 
-        for (flg = 0, i = 0; i < 80; i++) {
+        for (flg = 0, i = 0; i < P3MC_FILE_MAX; i++) {
             if (McLogFileFlg[i] != 0) {
                 flg++;
             }
@@ -1315,7 +1315,7 @@ int P3MC_OpeningCheck(void) {
 
         if (flg == 0 || flg >= 4) {
             if (flg != 0) {
-                chk |= 0x1;
+                chk |= P3MC_OPEN_LOG_FITS;
             }
 
             pcw->curState = 0;
@@ -1331,7 +1331,7 @@ int P3MC_OpeningCheck(void) {
 
         n = pcw->curFno;
 
-        for (fno = 0; fno < 80; fno++) {
+        for (fno = 0; fno < P3MC_FILE_MAX; fno++) {
             if (McLogFileFlg[fno] != 0) {
                 if (n == 0) {
                     break;
@@ -1341,7 +1341,7 @@ int P3MC_OpeningCheck(void) {
             }
         }
 
-        if (fno >= 80) {
+        if (fno >= P3MC_FILE_MAX) {
             pcw->curState = 0;
             return 0;
         }
@@ -1392,7 +1392,7 @@ int P3MC_OpeningCheck(void) {
 
             if (!isErr) {
                 pcw->curState = 0;
-                return 1;
+                return P3MC_OPEN_LOG_FITS;
             }
         }
 
