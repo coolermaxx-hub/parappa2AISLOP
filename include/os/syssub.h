@@ -8,6 +8,12 @@
 #include <libgraph.h>
 #include <libgifpk.h>
 
+/* Controller terminal types reported by scePadInfoMode(INFO_CURID). */
+enum {
+    PAD_TERM_DIGITAL = 4,
+    PAD_TERM_ANALOG = 7
+};
+
 /* Steps of the per-port pad setup state machine in GPadSysRead (PAD_SYSD::phase). */
 enum {
     PAD_PHASE_DETECT = 0,        /* read the pad id and pick a setup path */

@@ -82,10 +82,10 @@ void GPadSysRead(void) {
                     sysP_pp->pad_id = id;
 
                     switch (id) {
-                    case 4: /* Standard */
+                    case PAD_TERM_DIGITAL:
                         sysP_pp->phase = PAD_PHASE_STD_QUERY;
                         break;
-                    case 7: /* Analog */
+                    case PAD_TERM_ANALOG:
                         sysP_pp->phase = PAD_PHASE_ANA_QUERY;
                         break;
                     default:
