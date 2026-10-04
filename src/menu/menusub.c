@@ -5452,18 +5452,18 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
         UCheckSaveError = 0;
         UCheckLoadError = 0;
         if ((type & MCCHECK_SAVE) || type == MCCHECK_BROWSE) {
-            if (errorNo == 2) {
-                errorNo = 0;
-                UCheckLoadError = 4;
+            if (errorNo == P3MC_RES_UNFORMATTED) {
+                errorNo = P3MC_RES_OK;
+                UCheckLoadError = P3MC_RES_NO_SAVE_DATA;
             }
-            if (type == MCCHECK_BROWSE && (errorNo == 3 || errorNo == 4 || errorNo == 5)) {
+            if (type == MCCHECK_BROWSE && (errorNo == P3MC_RES_NO_CARD || errorNo == P3MC_RES_NO_SAVE_DATA || errorNo == P3MC_RES_CARD_SWAPPED)) {
                 memset(UserLst, 0, sizeof(*UserLst));
                 errorNo = 0;
             }
         }
-        if ((type & MCCHECK_SAVE) && errorNo == 4) {
-            errorNo = 0;
-            UCheckLoadError = 4;
+        if ((type & MCCHECK_SAVE) && errorNo == P3MC_RES_NO_SAVE_DATA) {
+            errorNo = P3MC_RES_OK;
+            UCheckLoadError = P3MC_RES_NO_SAVE_DATA;
             if (P3MC_CheckIsNewSave(mode) == 0) {
                 if (mode == P3MC_MODE_REPLAY) {
                     UCheckSaveError = 15;
@@ -5487,14 +5487,14 @@ static int McStartCheckFlow(/* a0 4 */ int flg) {
                 break;
             }
         }
-        if (errorNo == 1) {
+        if (errorNo == P3MC_RES_FILE_ERROR) {
             if (type == MCCHECK_BROWSE) {
                 errorNo = 70;
             } else {
                 errorNo = 12;
             }
         }
-        if (errorNo == 3) {
+        if (errorNo == P3MC_RES_NO_CARD) {
             subStatus = 0xe000;
         } else {
             subStatus = 0x160;
