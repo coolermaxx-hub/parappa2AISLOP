@@ -459,7 +459,7 @@ lero_tim2_pt                        = 0x00183c10;
 lero_pos_str                        = 0x00183c68;
 scr_snd_dbuff                       = 0x00183d58;
 score_str                           = 0x00183d70; // size:0x14
-vs_tapdat_tmp                       = 0x00183d88; // size:0xE00
+vs_tapdat_work                       = 0x00183d88; // size:0xE00
 
 titleStartKey                       = 0x00399438;
 fadeoutStartKey                     = 0x0039943c;
@@ -467,7 +467,7 @@ gameEndWaitLoop                     = 0x00399440;
 replayGuiOffFlag                    = 0x00399444;
 jimakuWakuOff                       = 0x00399448;
 currentTblNumber                    = 0x0039944c;
-vs_tapdat_tmp_cnt                   = 0x00399450;
+vs_tapdat_work_cnt                   = 0x00399450;
 scrJimakuLine                       = 0x00399454;
 scrDrawLine                         = 0x00399458;
 scrMbarLine                         = 0x0039945c;
@@ -921,7 +921,7 @@ wipe_scratch_ctrl                   = 0x001871b8; // size:0x30
 ldmap                               = 0x001871e8; // size:0xA0
 jimaku_str                          = 0x001872a8; // size:0x8
 wipe_para_str                       = 0x001872b0; // size:0x10
-sceGsDrawEnv1_tmp                   = 0x001872c0; // size:0x80
+wipe_draw_env                   = 0x001872c0; // size:0x80
 
 D_00393680                          = 0x00393680; // type:u32 size:0x10 can_reference:false
 
