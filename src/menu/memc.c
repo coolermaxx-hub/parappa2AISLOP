@@ -986,14 +986,14 @@ static int memc_manager_save(int result) {
 
         if (!sceMcWrite(result, pmw->buf, pmw->size)) {
             if (pmw->seek > 0) {
-                pmw->cmd = 0x1000e;
+                pmw->cmd = MEMC_CMD_WRITE_SEEK;
             } else {
                 pmw->cmd = sceMcFuncNoWrite;
             }
         }
 
         break;
-    case 0x1000e:
+    case MEMC_CMD_WRITE_SEEK:
         if (result == sceMcResSucceed) {
             if (!pmw->format) {
                 result = sceMcResNoFormat;
@@ -1010,9 +1010,9 @@ static int memc_manager_save(int result) {
         }
 
         sceMcSeek(pmw->fd, pmw->seek, 0);
-        pmw->cmd = 0x1000f;
+        pmw->cmd = MEMC_CMD_WRITE_TAIL;
         break;
-    case 0x1000f:
+    case MEMC_CMD_WRITE_TAIL:
         if (result == sceMcResSucceed) {
             if (!pmw->format) {
                 result = sceMcResNoFormat;

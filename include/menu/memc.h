@@ -70,6 +70,10 @@
 #define MEMC_ERR_DIR_TOO_MANY     (19) /* too many files */
 #define MEMC_ERR_SWAP_UNFORMATTED (48)
 
+/* Private cmd values for the split write of a save file with a seek offset (not SDK sceMcFunc*). */
+#define MEMC_CMD_WRITE_SEEK  (0x1000e) /* seek to pmw->seek before the second write */
+#define MEMC_CMD_WRITE_TAIL  (0x1000f) /* write the remaining pmw->size2 bytes */
+
 typedef struct { // 0x340
     /* 0x000 */ u_int flag;
     /* 0x004 */ u_int stat;
