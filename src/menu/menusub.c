@@ -4099,6 +4099,36 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
     }
 }
 
+/* MpSave_Flow: pick log or replay, check the card, choose a slot in the user list, write. */
+enum {
+    MPSAVE_START              = 0,
+    MPSAVE_MENU_OPEN          = 0x1000,
+    MPSAVE_MENU               = 0x1010,
+    MPSAVE_CARD_INIT          = 0x2000,
+    MPSAVE_CARD_CHECK         = 0x2010,
+    MPSAVE_MAKE_WORK          = 0x2020,
+    MPSAVE_LIST_FADE_OUT      = 0x2030,
+    MPSAVE_LIST_OPEN          = 0x2040,
+    MPSAVE_LIST_FADE_IN       = 0x2050,
+    MPSAVE_LIST               = 0x2060,
+    MPSAVE_CARD_CHANGED       = 0x2200,
+    MPSAVE_CARD_CHANGED_RETRY = 0x2210,
+    MPSAVE_WRITE_BEGIN        = 0x3100,
+    MPSAVE_WRITE              = 0x3110,
+    MPSAVE_SAVED              = 0x4000,
+    MPSAVE_SAVED_UNUSED       = 0x4010,
+    MPSAVE_SAVED_WAIT         = 0x4020,
+    MPSAVE_CLOSE_FADE_OUT     = 0x5000,
+    MPSAVE_CLOSE_FADE_IN      = 0x5020,
+    MPSAVE_EXIT               = 0xf000,
+    MPSAVE_EXIT_FADE          = 0xf005,
+    MPSAVE_EXIT_DONE          = 0xf010,
+};
+
+/* Save menu choice: TsSaveMenu_Flow returns these, anything else leaves the menu. */
+#define MPSAVE_SEL_LOG    1
+#define MPSAVE_SEL_REPLAY 2
+
 static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
     static int state;
     static int saveSel;
@@ -4108,7 +4138,7 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
 
     if (flg == 1) {
         if (tpad == 0) {
-            saveSel = 1;
+            saveSel = MPSAVE_SEL_LOG;
         } else {
             saveSel = tpad;
         }
@@ -4117,77 +4147,84 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         MNScene_DispSw(&MNS_StageMap, 1);
         TsMENU_SetMapScreen(0);
         TsCMPMes_SetMes(-1);
-        state = 0;
+        state = MPSAVE_START;
         return 0;
     }
 
     switch (state) {
-    case 0:
-        state = 0x1000;
-    case 0x1000:
+    case MPSAVE_START:
+        state = MPSAVE_MENU_OPEN;
+        /* fallthrough */
+    case MPSAVE_MENU_OPEN:
         TsSaveMenu_Flow(1, saveSel - 1);
         TsUserList_Flow(1, 0, 0);
-        state = 0x1010;
-    case 0x1010:
+        state = MPSAVE_MENU;
+        /* fallthrough */
+    case MPSAVE_MENU:
         ret = TsSaveMenu_Flow(0, tpad);
         if (ret != 0) {
             saveSel = ret;
             if (ret >= 3) {
-                state = 0xf000;
+                state = MPSAVE_EXIT;
             } else if (ret <= 0) {
-                state = 0xf000;
+                state = MPSAVE_EXIT;
             } else {
-                state = 0x2000;
+                state = MPSAVE_CARD_INIT;
             }
         }
         break;
-    case 0x2000:
+    case MPSAVE_CARD_INIT:
         TsCMPMes_SetMes(-1);
         McInitFlow();
-        state = 0x2010;
-    case 0x2010:
-        chkMode = (saveSel != 1) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
+        state = MPSAVE_CARD_CHECK;
+        /* fallthrough */
+    case MPSAVE_CARD_CHECK:
+        chkMode = (saveSel != MPSAVE_SEL_LOG) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
         ret = McUserCheckFlow(MCCHECK_SAVE, chkMode, NULL);
         if (ret < 0) {
             break;
         }
-        if (ret == 1 || ret == 2) {
+        if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
             TsMENU_GetMapTimeState(1);
             MpSave_Flow(1, saveSel, 0);
             if (UserList_Sw != 0) {
-                state = 0x5000;
+                state = MPSAVE_CLOSE_FADE_OUT;
             } else {
-                state = 0;
+                state = MPSAVE_START;
             }
         } else {
-            state = 0x2020;
+            state = MPSAVE_MAKE_WORK;
         }
         break;
-    case 0x2020:
-        chkMode = (saveSel != 1) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
+    case MPSAVE_MAKE_WORK:
+        chkMode = (saveSel != MPSAVE_SEL_LOG) ? P3MC_MODE_REPLAY : P3MC_MODE_LOG;
         TsMakeUserWork(chkMode);
-        state = 0x2030;
-    case 0x2030:
+        state = MPSAVE_LIST_FADE_OUT;
+        /* fallthrough */
+    case MPSAVE_LIST_FADE_OUT:
         if (TsSCFADE_Set(2, 20, 0) != 0) {
             break;
         }
-        state = 0x2040;
-    case 0x2040:
+        state = MPSAVE_LIST_OPEN;
+        /* fallthrough */
+    case MPSAVE_LIST_OPEN:
         MNScene_DispSw(&MNS_CityHall, 0);
         MNScene_DispSw(&MNS_StageMap, 0);
-        if (saveSel == 1) {
+        if (saveSel == MPSAVE_SEL_LOG) {
             TsUserList_SetType(&ULTypeT_SAVE_LOG, pP3GameState->nMode, 0);
         } else {
             TsUserList_SetType(&ULTypeT_SAVE_REPLAY, pP3GameState->nMode, 0);
         }
         UserList_Sw = 1;
-        state = 0x2050;
-    case 0x2050:
+        state = MPSAVE_LIST_FADE_IN;
+        /* fallthrough */
+    case MPSAVE_LIST_FADE_IN:
         if (TsSCFADE_Set(1, 20, 0) >= 9) {
             break;
         }
-        state = 0x2060;
-    case 0x2060:
+        state = MPSAVE_LIST;
+        /* fallthrough */
+    case MPSAVE_LIST:
         ret = TsUserList_Flow(0, tpad, tpad2);
         if (ret != 0) {
             McInitFlow();
@@ -4196,24 +4233,26 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
                     if (ret != -3) {
                         return 0;
                     }
-                    state = 0x2200;
+                    state = MPSAVE_CARD_CHANGED;
                 } else if (ret == 1) {
-                    state = 0x3100;
+                    state = MPSAVE_WRITE_BEGIN;
                 }
             } else {
-                state = 0x5000;
+                state = MPSAVE_CLOSE_FADE_OUT;
             }
         }
         break;
-    case 0x2200:
-        state = 0x2210;
-    case 0x2210:
-        state = 0x2000;
+    case MPSAVE_CARD_CHANGED:
+        state = MPSAVE_CARD_CHANGED_RETRY;
+        /* fallthrough */
+    case MPSAVE_CARD_CHANGED_RETRY:
+        state = MPSAVE_CARD_INIT;
         break;
-    case 0x3100:
+    case MPSAVE_WRITE_BEGIN:
         UserWork->fileNo = TsUserList_GetCurFileNo(NULL);
-        state = 0x3110;
-    case 0x3110:
+        state = MPSAVE_WRITE;
+        /* fallthrough */
+    case MPSAVE_WRITE:
         ret = McUserSaveFlow(UserWork);
         if (ret < 0) {
             TsUserList_SetCurDispUserData(UserWork);
@@ -4221,34 +4260,37 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         }
         if (ret != 0) {
             if (ret == MCFLOW_BROKEN) {
-                state = 0x2020;
+                state = MPSAVE_MAKE_WORK;
             }
             if (ret == MCFLOW_FAILED) {
-                state = 0x5000;
+                state = MPSAVE_CLOSE_FADE_OUT;
             }
             if (ret == MCFLOW_CARD_CHANGED) {
-                state = 0x2200;
+                state = MPSAVE_CARD_CHANGED;
             }
             break;
         }
-    case 0x4000:
-    case 0x4010:
-        if (saveSel == 1) {
-            saveSel = 2;
+        /* fallthrough */
+    case MPSAVE_SAVED:
+    case MPSAVE_SAVED_UNUSED:
+        if (saveSel == MPSAVE_SEL_LOG) {
+            saveSel = MPSAVE_SEL_REPLAY;
         } else {
-            saveSel = 1;
+            saveSel = MPSAVE_SEL_LOG;
         }
         TsSaveSuccessProc();
         waitTime = 0;
-        state = 0x4020;
-    case 0x4020:
+        state = MPSAVE_SAVED_WAIT;
+        /* fallthrough */
+    case MPSAVE_SAVED_WAIT:
         TsCMPMes_SetMes(-1);
         if (++waitTime < 35) {
             break;
         }
         waitTime = 0;
-        state = 0x5000;
-    case 0x5000:
+        state = MPSAVE_CLOSE_FADE_OUT;
+        /* fallthrough */
+    case MPSAVE_CLOSE_FADE_OUT:
         if (TsSCFADE_Set(2, 20, 0) != 0) {
             break;
         }
@@ -4256,23 +4298,26 @@ static int MpSave_Flow(int flg, u_int tpad, u_int tpad2) {
         UserList_Sw = 0;
         TsMENU_GetMapTimeState(1);
         MpSave_Flow(1, saveSel, 0);
-        state = 0x5020;
-    case 0x5020:
+        state = MPSAVE_CLOSE_FADE_IN;
+        /* fallthrough */
+    case MPSAVE_CLOSE_FADE_IN:
         if (TsSCFADE_Set(1, 20, 0) < 9) {
-            state = 0;
+            state = MPSAVE_START;
         }
         break;
-    case 0xf000:
+    case MPSAVE_EXIT:
         if (pP3GameState->pAutoMove == NULL) {
             TsBGMMute(20);
         }
-        state = 0xf005;
-    case 0xf005:
+        state = MPSAVE_EXIT_FADE;
+        /* fallthrough */
+    case MPSAVE_EXIT_FADE:
         if (TsSCFADE_Set(2, 30, 0) >= 2) {
             break;
         }
-        state = 0xf010;
-    case 0xf010:
+        state = MPSAVE_EXIT_DONE;
+        /* fallthrough */
+    case MPSAVE_EXIT_DONE:
         if (pP3GameState->pLog->name[0] != '\0') {
             TsSetRankingName(pCStageRank, pP3GameState->pLog->name);
             TsSetRanking2UData(UserWork, pCStageRank);
@@ -6826,7 +6871,7 @@ int TsPUPCheckMove(int nbtn, int bank, POPCTIM *pfw) {
         if (ret < 0) {
             break;
         }
-        if (ret == 1 || ret == 2) {
+        if (ret == MCFLOW_BROKEN || ret == MCFLOW_FAILED) {
             pfw->isRankOn = 0;
             state = 0x1010;
         } else {
