@@ -37,6 +37,13 @@
 #define AUTO_MOVE_STOP        -1
 #define AUTO_MOVE_RECORD_SHOP -2
 
+/* Stage map music tracks (MapBgmTbl) */
+#define BGM_TRACK_MOVE        0 /* the two-beat loop played while the cursor moves between places */
+#define BGM_TRACK_MAP(pos)    ((pos) + 1)
+#define BGM_TRACK_RECORD_SHOP BGM_TRACK_MAP(MAP_POS_RECORD_SHOP)
+/* Frames per beat of the map music; track changes wait for a beat boundary. */
+#define BGM_BEAT_FRAMES       36
+
 /* ABGR colours. GS texture modulation treats 0x80 as 1.0, so this is "draw the texture unchanged". */
 #define MN_COLOR_NEUTRAL 0x80808080
 #define MN_COLOR_WHITE   0x80ffffff
@@ -442,7 +449,7 @@ static char *_MONTH_STR[] = {
     "", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JLY", "AUG", "SEP", "", "", "", "", "", "",
     "OCT", "NOV", "DEC", NULL,
 };
-static MAPBGM MapBgmTbl[] = {
+static MAPBGM MapBgmTbl[BGM_TRACK_MAX] = {
     { 4, 24, 72, 144 },
     { 5, 25, 576, 1728 },
     { 6, 26, 1152, 1728 },
@@ -2078,7 +2085,7 @@ static void tsBGMONEflow(void) {
     BGMONE *wbgm = TsBGMState.wbgm;
     int     i;
 
-    for (i = 0; i < 11; i++, wbgm++) {
+    for (i = 0; i < BGM_TRACK_MAX; i++, wbgm++) {
         if (wbgm->bPause || wbgm->pbgm == NULL) {
             continue;
         }
@@ -2114,7 +2121,7 @@ static void TsBGMPlay(int no, int time) {
     int       i;
     int       isCurPlay = FALSE;
 
-    if (no >= 11) {
+    if (no >= BGM_TRACK_MAX) {
         return;
     }
 
@@ -2122,21 +2129,21 @@ static void TsBGMPlay(int no, int time) {
         pbgm->wtNo = no;
         pbgm->ctim = 0;
         pbgm->wtTim = time;
-        pbgm->state = 1;
+        pbgm->state = BGMST_ON;
         pbgm->chgReq = 0;
         pbgm->cstate = 0;
         pbgm->wtLoad = 1;
         return;
     }
 
-    if ((pbgm->state & 1) && pbgm->wtLoad == 0) {
-        if (pbgm->sndno == no && pbgm->vol == 0x100) {
+    if ((pbgm->state & BGMST_ON) && pbgm->wtLoad == 0) {
+        if (pbgm->sndno == no && pbgm->vol == BGM_VOL_MAX) {
             pbgm->sndno = no;
-            pbgm->vol = 0x100;
-            pbgm->state = 1;
+            pbgm->vol = BGM_VOL_MAX;
+            pbgm->state = BGMST_ON;
             pbgm->ttim0 = 0;
             pbgm->ttim = 0;
-            tsBGMONEVol(pbgm->sndno, 0x100);
+            tsBGMONEVol(pbgm->sndno, BGM_VOL_MAX);
             return;
         }
         isCurPlay = TRUE;
@@ -2149,12 +2156,12 @@ static void TsBGMPlay(int no, int time) {
 
     if (time > 0) {
         pbgm->ttim0 = time;
-        pbgm->state = 7;
+        pbgm->state = BGMST_ON | BGMST_FADE | BGMST_FADE_IN;
         pbgm->sndno = no;
         pbgm->vol = 0;
     } else {
-        pbgm->vol = 0x100;
-        pbgm->state = 1;
+        pbgm->vol = BGM_VOL_MAX;
+        pbgm->state = BGMST_ON;
         pbgm->sndno = no;
         pbgm->ttim0 = 0;
     }
@@ -2162,7 +2169,7 @@ static void TsBGMPlay(int no, int time) {
 
     if (!isCurPlay) {
         MNSceneMusicFitTimerClear();
-        for (i = 0; i < 11; i++) {
+        for (i = 0; i < BGM_TRACK_MAX; i++) {
             tsBGMONEPlay(i);
         }
     }
@@ -2178,12 +2185,13 @@ static void TsBGMStop(int time) {
         pbgm->ttim0 = 0;
         pbgm->ttim = 0;
 
+        /* The time only selects this branch: nothing fades, the music carries on at full volume. */
         if (time > 0) {
-            pbgm->state = 3;
-            pbgm->vol = 0x100;
+            pbgm->state = BGMST_ON | BGMST_FADE;
+            pbgm->vol = BGM_VOL_MAX;
 
             if (pbgm->ctim == 0) {
-                tsBGMONEVol(pbgm->sndno, 0x100);
+                tsBGMONEVol(pbgm->sndno, BGM_VOL_MAX);
             }
         } else {
             pbgm->chgReq = 0;
@@ -2193,7 +2201,7 @@ static void TsBGMStop(int time) {
             pbgm->state = 0;
             pbgm->vol = 0;
 
-            for (i = 0; i < 11; i++) {
+            for (i = 0; i < BGM_TRACK_MAX; i++) {
                 tsBGMONEStop(i);
             }
         }
@@ -2209,12 +2217,12 @@ static void TsBGMMute(int time) {
         pbgm->ctim = 0;
 
         if (time > 0) {
-            pbgm->state = 11;
-            pbgm->vol = 0x100;
+            pbgm->state = BGMST_ON | BGMST_FADE | BGMST_MUTE;
+            pbgm->vol = BGM_VOL_MAX;
             pbgm->ttim0 = time;
             pbgm->ttim = 0;
         } else {
-            pbgm->state = 9;
+            pbgm->state = BGMST_ON | BGMST_MUTE;
             pbgm->vol = 0;
             pbgm->ttim0 = 0;
             pbgm->ttim = 0;
@@ -2242,16 +2250,30 @@ static void TsBGMPause(int flg) {
 void TsBGMChangePos(int no) {
     BGMSTATE *pbgm = &TsBGMState;
 
-    if (no >= 11) {
+    if (no >= BGM_TRACK_MAX) {
         return;
     }
 
-    pbgm->vol    = 256;
-    pbgm->state  = 1;
+    pbgm->vol    = BGM_VOL_MAX;
+    pbgm->state  = BGMST_ON;
     pbgm->ttim0  = 0;
     pbgm->ttim   = 0;
     pbgm->chgReq = no + 1;
 }
+
+/*
+ * BGMSTATE::ctim steps of a track change, which starts on a beat. The old track is cut and
+ * the move loop plays for two beats; then the sting plays, the new track starts from its
+ * top and the sting is faded out over three frames.
+ */
+enum {
+    BGMCHG_CUT = 1,
+    BGMCHG_ARRIVE = 72,
+    BGMCHG_DONE = 75
+};
+/* The sting is the record shop's voice, played on its own channel. */
+#define BGMCHG_STING_CHAN 3
+#define BGMCHG_STING_VSET 23
 
 /* static */ void TsBGMPoll(void) {
     BGMSTATE *pbgm = &TsBGMState;
@@ -2273,44 +2295,44 @@ void TsBGMChangePos(int no) {
 
     tsBGMONEflow();
 
-    if (pbgm->chgReq && (pbgm->wbgm[0].tim % 36) == 0) {
+    if (pbgm->chgReq && (pbgm->wbgm[BGM_TRACK_MOVE].tim % BGM_BEAT_FRAMES) == 0) {
         pbgm->oldno = pbgm->sndno;
         pbgm->sndno = pbgm->chgReq - 1;
-        pbgm->ctim = 1;
+        pbgm->ctim = BGMCHG_CUT;
         pbgm->cstate = 0;
         pbgm->chgReq = 0;
     } else if (pbgm->ctim) {
-        if (pbgm->ctim == 75) {
-            tsBGMONEVol(0, 0);
-            MenuVoiceSetVol(3, 23, 0);
+        if (pbgm->ctim == BGMCHG_DONE) {
+            tsBGMONEVol(BGM_TRACK_MOVE, 0);
+            MenuVoiceSetVol(BGMCHG_STING_CHAN, BGMCHG_STING_VSET, 0);
             tsBGMONEVol(pbgm->oldno, 0);
             tsBGMONEVol(pbgm->sndno, pbgm->vol);
             pbgm->ctim = 0;
         } else {
-            if (pbgm->ctim < 2) {
+            if (pbgm->ctim <= BGMCHG_CUT) {
                 ct = pbgm->ctim;
-                tsBGMONEVol(0, ct * pbgm->vol);
-            } else if (pbgm->ctim == 72) {
-                tsBGMONEVol(0, 0);
-                MenuVoicePlay(3, 23);
-            } else if (pbgm->ctim > 72) {
-                ct = 75 - pbgm->ctim;
-                MenuVoiceSetVol(3, 23, (ct * pbgm->vol) / 3);
+                tsBGMONEVol(BGM_TRACK_MOVE, ct * pbgm->vol);
+            } else if (pbgm->ctim == BGMCHG_ARRIVE) {
+                tsBGMONEVol(BGM_TRACK_MOVE, 0);
+                MenuVoicePlay(BGMCHG_STING_CHAN, BGMCHG_STING_VSET);
+            } else if (pbgm->ctim > BGMCHG_ARRIVE) {
+                ct = BGMCHG_DONE - pbgm->ctim;
+                MenuVoiceSetVol(BGMCHG_STING_CHAN, BGMCHG_STING_VSET, (ct * pbgm->vol) / (BGMCHG_DONE - BGMCHG_ARRIVE));
             }
 
-            if (pbgm->ctim < 2) {
-                ct = 1 - pbgm->ctim;
+            if (pbgm->ctim <= BGMCHG_CUT) {
+                ct = BGMCHG_CUT - pbgm->ctim;
                 tsBGMONEVol(pbgm->oldno, ct * pbgm->vol);
-            } else if (pbgm->ctim == 72) {
-                if (pbgm->sndno == 10) {
+            } else if (pbgm->ctim == BGMCHG_ARRIVE) {
+                if (pbgm->sndno == BGM_TRACK_RECORD_SHOP) {
                     tsBGMONETop(pbgm->sndno, pbgm->vol);
                 } else {
                     tsBGMONETop(pbgm->sndno, 0);
                 }
-            } else if (pbgm->ctim > 72) {
-                if (pbgm->sndno != 10) {
-                    ct = pbgm->ctim - 72;
-                    tsBGMONEVol(pbgm->sndno, (ct * pbgm->vol) / 72);
+            } else if (pbgm->ctim > BGMCHG_ARRIVE) {
+                if (pbgm->sndno != BGM_TRACK_RECORD_SHOP) {
+                    ct = pbgm->ctim - BGMCHG_ARRIVE;
+                    tsBGMONEVol(pbgm->sndno, (ct * pbgm->vol) / BGMCHG_ARRIVE);
                 }
             }
 
@@ -2323,30 +2345,31 @@ void TsBGMChangePos(int no) {
         if (pbgm->ttim > pbgm->ttim0) {
             pbgm->ttim0 = 0;
             pbgm->ttim = 0;
-            if (pbgm->state & 4) {
-                pbgm->vol = 0x100;
-                pbgm->state = 1;
+            if (pbgm->state & BGMST_FADE_IN) {
+                pbgm->vol = BGM_VOL_MAX;
+                pbgm->state = BGMST_ON;
                 pbgm->cstate = 0;
                 pbgm->ctim = 0;
-                tsBGMONEVol(pbgm->sndno, 0x100);
+                tsBGMONEVol(pbgm->sndno, BGM_VOL_MAX);
             } else {
                 pbgm->vol = 0;
                 pbgm->ttim0 = 0;
                 pbgm->ttim = 0;
                 pbgm->cstate = 0;
                 pbgm->ctim = 0;
-                if (!(pbgm->state & 9)) {
+                /* Only a mute fades down, so this always takes the mute branch. */
+                if (!(pbgm->state & (BGMST_ON | BGMST_MUTE))) {
                     pbgm->state = 0;
                     TsBGMStop(0);
                 } else {
-                    pbgm->state = 9;
+                    pbgm->state = BGMST_ON | BGMST_MUTE;
                     tsBGMONEVol(pbgm->sndno, 0);
                 }
             }
         } else {
-            pbgm->vol = (pbgm->ttim << 8) / pbgm->ttim0;
-            if (!(pbgm->state & 4)) {
-                pbgm->vol = 0x100 - pbgm->vol;
+            pbgm->vol = (pbgm->ttim * BGM_VOL_MAX) / pbgm->ttim0;
+            if (!(pbgm->state & BGMST_FADE_IN)) {
+                pbgm->vol = BGM_VOL_MAX - pbgm->vol;
             }
             if (pbgm->ctim == 0) {
                 tsBGMONEVol(pbgm->sndno, pbgm->vol);
@@ -3753,7 +3776,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
             break;
         case TSMAP_ENTER_STAGE_END:
             MenuVoiceBankSet(0);
-            TsBGMPlay(1, 0x14);
+            TsBGMPlay(BGM_TRACK_MAP(MAP_POS_CITY_HALL), 20);
             state = TSMAP_SAVE;
             break;
         case TSMAP_ENTER_MAP:
@@ -3823,7 +3846,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         TsCMPMes_SetMes(-1);
         TsSet_ParappaCapColor();
         if (pP3GameState->pAutoMove == NULL) {
-            TsBGMPlay(MapCity.curPos + 1, 0xa);
+            TsBGMPlay(BGM_TRACK_MAP(MapCity.curPos), 10);
         }
         state = TSMAP_SHOW;
         /* fallthrough */
@@ -3890,7 +3913,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
                 MpMapMenu_Flow(MAPMENU_STEP_TO, &MapCity, mn);
 
                 if (MapCity.sndtrg == MAPSND_MOVE) {
-                    TsBGMChangePos(MapCity.curPos + 1);
+                    TsBGMChangePos(BGM_TRACK_MAP(MapCity.curPos));
                 }
 
                 pP3GameState->pAutoMove++;
@@ -3924,7 +3947,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
 
         switch (MapCity.sndtrg) {
         case MAPSND_MOVE:
-            TsBGMChangePos(MapCity.curPos + 1);
+            TsBGMChangePos(BGM_TRACK_MAP(MapCity.curPos));
             break;
         case MAPSND_CANCEL:
             TSSNDPLAY(VSND_CANCEL);
@@ -3963,7 +3986,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_STAGE_MENU_OPEN;
         break;
     case TSMAP_TO_TITLE:
-        TsBGMStop(0x26);
+        TsBGMStop(38);
         _MNwaitTime = 40;
         TsCMPMes_SetMes(-1);
         pP3GameState->nStage = MapCity.curPos;
@@ -4049,7 +4072,7 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         break;
     case TSMAP_PLAY:
         TsCheckEnding(pP3GameState);
-        TsBGMStop(0x20);
+        TsBGMStop(32);
         _MNwaitTime = 32;
         TsCMPMes_SetMes(-1);
         state = TSMAP_PLAY_WAIT;
@@ -4099,13 +4122,13 @@ static int TsMap_Flow(int flg, u_int tpad, u_int tpad2) {
         state = TSMAP_HALL_OPEN;
         /* fallthrough */
     case TSMAP_HALL_OPEN:
-        TsBGMPlay(1, 0x14);
+        TsBGMPlay(BGM_TRACK_MAP(MAP_POS_CITY_HALL), 20);
         TsSCFADE_Set(SCFADE_FROM_BLACK, 20, SCFADE_LAYER_TOP);
         MpCityHall_Flow(MNFLOW_INIT, CHALL_ENTER_DOOR, 0);
         state = TSMAP_HALL_MENU;
         break;
     case TSMAP_HALL_FROM_REPLAY:
-        TsBGMPlay(1, 0x14);
+        TsBGMPlay(BGM_TRACK_MAP(MAP_POS_CITY_HALL), 20);
         MpCityHall_Flow(MNFLOW_INIT, CHALL_ENTER_FROM_REPLAY, 0);
         state = TSMAP_HALL_WIPE_WAIT;
         /* fallthrough */
@@ -8732,7 +8755,7 @@ enum {
         TsJukeObjAnime2(1);
         scstPos = JKCAM_TO_MENU;
         TsBGMPause(0);
-        TsBGMPlay(pP3GameState->nStage + 1, 20);
+        TsBGMPlay(BGM_TRACK_MAP(pP3GameState->nStage), 20);
         /* fallthrough */
     case JUKE_STOP_WAIT:
         if (!TsJukeIsObjAnime(1)) {
@@ -8753,7 +8776,7 @@ enum {
         MNScene_StartAnime(&MNS_StageMap, -1, StageMapAnimeSEA);
         scstPos = JKCAM_TO_MENU;
         TsBGMPause(0);
-        TsBGMPlay(pP3GameState->nStage + 1, 60);
+        TsBGMPlay(BGM_TRACK_MAP(pP3GameState->nStage), 60);
         break;
     }
     case JUKE_END_WAIT:

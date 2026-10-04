@@ -374,3 +374,52 @@ code; whether it is a latent bug in the shipped game or is harmless (the
 EE-core path may only run with defaults that make the shifted values inert)
 is *not known*. A port should verify this on hardware or in an emulator
 before copying the behaviour or fixing it.
+
+## Stage map music (2026-10-04)
+
+Provenance: direct reading of the `TsBGM*` / `tsBGMONE*` functions in
+`src/menu/menusub.c` and `MenuVoice*` in `src/menu/menudata.c` (all matching
+C; only names were added).
+
+**All eleven map tracks play at once, and the current one is the only one
+unmuted.** `MapBgmTbl` holds one voice per track: track 0 is a two-beat loop
+heard while the cursor moves (`BGM_TRACK_MOVE`), tracks 1-10 belong to map
+positions 0-9 (`BGM_TRACK_MAP(pos)`; 10 is the record shop). `TsBGMPlay`
+starts every track together (`tsBGMONEPlay`), and `tsBGMONEflow` restarts each
+voice from a frame counter: first after `lpTimeF` frames, then every `lpTime`
+frames (0: never, the record shop's voice plays once). All loop lengths are
+multiples of 144 frames, so the tracks stay on a common beat of 36 frames
+(`BGM_BEAT_FRAMES`, 100 BPM at 60 fps). The clock is the frame count, not the
+SPU, so a port has to advance it once per game frame.
+
+**A place change waits for the beat, then follows a fixed 75-frame script.**
+`TsBGMChangePos` only records the request; `TsBGMPoll` acts when track 0's
+counter is a multiple of 36. On the next frame (`BGMCHG_CUT`) the old track is
+silenced and the move loop plays at the current volume. At frame 72
+(`BGMCHG_ARRIVE`) the move loop is silenced, the sting (voice set 23, the
+record shop's voice, on channel 3) plays, and the new track restarts from its
+top at volume 0, except the record shop's, which starts at full volume. On the
+two following frames the sting drops to 2/3 and 1/3 and the new track rises
+to 1/72 and 2/72 (the divisor is 72, not 3, so the rise is barely audible);
+at frame 75 both jump to their final volumes.
+
+**Fades:** `TsBGMPlay(no, time)` fades in linearly over `time` frames,
+`TsBGMMute(time)` fades out over `time` frames and leaves the tracks running
+silenced (`BGMST_MUTE`). Volumes are on a 0-256 scale and scale each voice's
+own volume (`MenuVoiceSetVol`: `volume * vol >> 8`).
+
+Original quirks, kept as they are:
+
+- `TsBGMStop(time)` with `time > 0` does not fade or stop anything. It sets
+  the state to `BGMST_ON | BGMST_FADE` and restores full volume; `time` is
+  never stored. Callers still wait as if it faded (`TsBGMStop(38)` then a
+  40-frame wait before the title, `TsBGMStop(32)` before a stage). The music
+  is cut later by whatever stops the sound system.
+- When a fade down ends, `TsBGMPoll` stops the music only if the state has
+  neither `BGMST_ON` nor `BGMST_MUTE`. Only `TsBGMMute` starts a fade down,
+  and its state has both, so the stop branch never runs.
+- The voice bank mechanism is inert in this build: `MenuVoiceBankSet` only
+  records the request and always returns 0, and every `VoiceSet` entry is in
+  bank 0 (`menudata.c`), so the bank checks in `MenuVoicePlayVol` never skip a
+  voice. `TsBGMLoadCheck` is therefore always false and the deferred start in
+  `TsBGMPlay` (`wtLoad`) never runs.

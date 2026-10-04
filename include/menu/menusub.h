@@ -83,11 +83,15 @@ typedef struct { // 0x8
     /* 0x4 */ int len;
 } USERNAME_CSET;
 
+/*
+ * One stage map music track: a voice that is restarted every lpTime frames (the
+ * first restart after lpTimeF) so that every track keeps the same beat.
+ */
 typedef struct { // 0xc
     /* 0x0 */ u_short chan;
-    /* 0x2 */ u_short tapNo;
-    /* 0x4 */ int lpTimeF;
-    /* 0x8 */ int lpTime;
+    /* 0x2 */ u_short tapNo;  /* VoiceSet index */
+    /* 0x4 */ int lpTimeF;    /* frames until the first restart */
+    /* 0x8 */ int lpTime;     /* frames between later restarts; 0: plays once */
 } MAPBGM;
 
 typedef struct { // 0x8
@@ -192,28 +196,41 @@ typedef struct { // 0x8
 #define MCMES_COLOR      0x20000 /* alternate text colour */
 
 
+/* Stage map music: every track plays at once, muted but the current one, so a change stays on the beat. */
+#define BGM_TRACK_MAX 11
+/* Full volume. MenuVoicePlayVol and MenuVoiceSetVol scale the voice's own volume by vol / 256. */
+#define BGM_VOL_MAX   0x100
+
+/* BGMSTATE::state bits */
+enum {
+    BGMST_ON = 0x1,
+    BGMST_FADE = 0x2,
+    BGMST_FADE_IN = 0x4, /* the fade goes up to full volume (otherwise down to silence) */
+    BGMST_MUTE = 0x8     /* the tracks keep running, silenced */
+};
+
 typedef struct { // 0xc
     /* 0x0 */ u_short vol;
     /* 0x2 */ short bPause;
-    /* 0x4 */ int tim;
+    /* 0x4 */ int tim;     /* frames until the voice is restarted */
     /* 0x8 */ MAPBGM *pbgm;
 } BGMONE;
 
 typedef struct { // 0xa0
-    /* 0x00 */ u_short vol;
-    /* 0x02 */ u_short state;
-    /* 0x04 */ u_short ttim;
-    /* 0x06 */ u_short ttim0;
-    /* 0x08 */ u_short wtLoad;
+    /* 0x00 */ u_short vol;    /* volume of the current track */
+    /* 0x02 */ u_short state;  /* BGMST_* */
+    /* 0x04 */ u_short ttim;   /* fade frame counter */
+    /* 0x06 */ u_short ttim0;  /* fade length in frames; 0: no fade running */
+    /* 0x08 */ u_short wtLoad; /* a TsBGMPlay(wtNo, wtTim) waits for the voice bank */
     /* 0x0a */ u_short wtNo;
     /* 0x0c */ u_short wtTim;
     /* 0x0e */ u_short pad;
-    /* 0x10 */ u_short chgReq;
-    /* 0x12 */ u_short sndno;
-    /* 0x14 */ u_short oldno;
-    /* 0x16 */ u_short cstate;
-    /* 0x18 */ u_short ctim;
-    /* 0x1c */ BGMONE wbgm[11];
+    /* 0x10 */ u_short chgReq; /* track to change to on the next beat, plus 1; 0: none */
+    /* 0x12 */ u_short sndno;  /* current track */
+    /* 0x14 */ u_short oldno;  /* track being changed from */
+    /* 0x16 */ u_short cstate; /* only ever cleared */
+    /* 0x18 */ u_short ctim;   /* frame of the running track change (BGMCHG_*); 0: none */
+    /* 0x1c */ BGMONE wbgm[BGM_TRACK_MAX];
 } BGMSTATE;
 
 typedef struct { // 0xc25a4
