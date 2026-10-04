@@ -14,6 +14,7 @@
 #include <nalib/namatrix.h>
 
 #define SPM_MAGIC   (0x18df540a)
+#define PR_MODEL_OBJECT_MAGIC (0x55668899) /* PrModelObject::m_magic, set by the constructor */
 #define SPM_VERSION (5)
 
 class PrModelObject;

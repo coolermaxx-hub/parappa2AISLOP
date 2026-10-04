@@ -13,6 +13,8 @@
 class PrModelObject;
 class SpcFileHeader;
 
+#define PR_SCENE_SIGNATURE (0x19832B1A) /* PrSceneObject::m_signature, set by the constructor */
+
 class PrSceneObject {
 public:
     PrSceneObject(sceGsDrawEnv1 *arg0, const char *name, u_int arg2);

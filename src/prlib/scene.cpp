@@ -12,7 +12,7 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int ar
     m_list.next = NULL;
     m_list.prev = NULL;
     m_obj_set = NULL;
-    m_signature = 0x19832B1A;
+    m_signature = PR_SCENE_SIGNATURE;
 
     m_camera = NULL;
     m_camera_time = 0.0f;

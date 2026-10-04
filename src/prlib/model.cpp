@@ -47,7 +47,7 @@ PrModelObject::PrModelObject(SpmFileHeader *spm) {
 
     m_matrix = NaMATRIX<float, 4, 4>::IDENT;
 
-    m_magic = 0x55668899;
+    m_magic = PR_MODEL_OBJECT_MAGIC;
     m_user_data = NULL;
     m_spm_image = spm;
     m_flags = 0;
