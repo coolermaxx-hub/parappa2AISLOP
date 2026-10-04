@@ -77,7 +77,7 @@ void PrSceneObject::Render() {
     model = m_model_set.m_head;
     if (model != NULL) {
         if (model->m_spm_image->m_flags & eSpmFileBackgroundLayer) {
-            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk4)->m_tag);
+            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Background)->m_tag);
             do {
                 if (model->m_flags & ePrModelEnabled) {
                     if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
@@ -86,11 +86,11 @@ void PrSceneObject::Render() {
                     }
                 }
                 model = model->m_list.next;
-            } while (model != m_flag400ModelList);
+            } while (model != m_preSceneModelList);
         }
 
         if (model != NULL && (model->m_spm_image->m_flags & eSpmFilePreSceneLayer)) {
-            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk5)->m_tag);
+            prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_PreScene)->m_tag);
             do {
                 if (model->m_flags & ePrModelEnabled) {
                     if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
@@ -103,7 +103,7 @@ void PrSceneObject::Render() {
         }
     }
 
-    prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk0)->m_tag);
+    prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_SceneModel)->m_tag);
     for (; model != m_screen_model_list; model = model->m_list.next) {
         if (model->m_flags & ePrModelEnabled) {
             if (!awful || (model->m_spm_image->m_flags & eSpmFileDrawnInAwful)) {
@@ -127,7 +127,7 @@ void PrSceneObject::Render() {
     prRenderStuff.m_statistics.render_time4 = *T3_COUNT;
 
     if (prCurrentStage != 19) {
-        prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_Unk1)->m_tag);
+        prRenderStuff.AppendDmaTag(&PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite)->m_tag);
     }
 
     FlushCache(WRITEBACK_DCACHE);
@@ -156,7 +156,7 @@ void PrSceneObject::PrepareScreenModelRender() {
     prRenderStuff.StartRender(this);
     prRenderStuff.m_transmit_array_size = 0;
 
-    PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk3);
+    PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_ScreenModel);
     prRenderStuff.AppendDmaTag(&strip->m_tag);
 
     for (PrModelObject *model = m_screen_model_list; model != NULL; model = model->m_list.next) {
@@ -166,7 +166,7 @@ void PrSceneObject::PrepareScreenModelRender() {
         }
     }
 
-    strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk1);
+    strip = PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite);
     prRenderStuff.AppendDmaTag(&strip->m_tag);
 
     prRenderStuff.SortTransmitDmaArray();

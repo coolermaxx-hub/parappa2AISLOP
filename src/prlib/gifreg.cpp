@@ -42,7 +42,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
         strip.Initialize();
 
         switch (i) {
-        case eGifRegisterMode_Unk4:
+        case eGifRegisterMode_Background:
             zbuf.ZMSK = 1;
 
             strip.Append(SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
@@ -51,7 +51,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
             strip.Append(SCE_GS_FBA_1, SCE_GS_SET_FBA_1(0));
             break;
-        case eGifRegisterMode_Unk0:
+        case eGifRegisterMode_SceneModel:
             zbuf.ZMSK = 0;
 
             strip.Append(SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 2));
@@ -60,7 +60,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
             strip.Append(SCE_GS_FBA_1, SCE_GS_SET_FBA_1(0));
             break;
-        case eGifRegisterMode_Unk1:
+        case eGifRegisterMode_NoZWrite:
             zbuf.ZMSK = 1;
 
             strip.Append(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
@@ -68,7 +68,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 128));
             strip.Append(SCE_GS_ALPHA_2, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 128));
             break;
-        case eGifRegisterMode_Unk2:
+        case eGifRegisterMode_DebugQuad:
             strip.Append(SCE_GS_PRIM, SCE_GS_SET_PRIM(4, 1, 0, 0, 0, 0, 1, 0, 0));
 
             strip.Append(SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(255, 0, 0, 128, 0x00000001));
@@ -83,7 +83,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(0, 255, 255, 128, 0x00000001));
             strip.Append(SCE_GS_XYZ2, GS_X_COORD(370) | (GS_Y_COORD(162) << 16));
             break;
-        case eGifRegisterMode_Unk3:
+        case eGifRegisterMode_ScreenModel:
             zbuf.ZMSK = 0;
 
             strip.Append(SCE_GS_ZBUF_1, *(u_long*)&zbuf);
@@ -96,7 +96,7 @@ void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf) {
             strip.Append(SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA_1(0, 1, 0, 1, 128));
             strip.Append(SCE_GS_TEX1_1, SCE_GS_SET_TEX1_1(1, 0, 1, 1, 0, 0, 0));
             break;
-        case eGifRegisterMode_Unk5:
+        case eGifRegisterMode_PreScene:
             zbuf.ZMSK = 0;
 
             strip.Append(SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 0, 0, 2, 0, 0, 1, 1));

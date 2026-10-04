@@ -39,7 +39,7 @@ PrSceneObject::PrSceneObject(sceGsDrawEnv1 *draw_env, const char *name, u_int wo
 
     m_normalModelList = NULL;
     m_screen_model_list = NULL;
-    m_flag400ModelList = NULL;
+    m_preSceneModelList = NULL;
 }
 
 PrSceneObject::~PrSceneObject() {
@@ -192,9 +192,9 @@ void PrSceneObject::PreprocessModel() {
     }
 
     if (prescene_list != NULL) {
-        this->m_flag400ModelList = prescene_list;
+        this->m_preSceneModelList = prescene_list;
     } else {
-        this->m_flag400ModelList = this->m_normalModelList;
+        this->m_preSceneModelList = this->m_normalModelList;
     }
 
     PrModelObject *node = background_list;

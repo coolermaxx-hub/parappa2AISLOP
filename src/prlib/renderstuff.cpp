@@ -196,7 +196,7 @@ void PrRenderStuff::MergeRender() {
 
     for (int i = 0; i < m_transmit_array_size; i++) {
         if (!first && m_transmit_array[i].sortGroup == -1) {
-            PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk1);
+            PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite);
             AppendDmaTag(&strip->m_tag);
             first = true;
         }
@@ -205,7 +205,7 @@ void PrRenderStuff::MergeRender() {
     }
 
     if (prCurrentStage == 19) {
-        PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_Unk1);
+        PrDmaStripForSetGifRegister *strip = PrGetDmaStripGifRegister(eGifRegisterMode_NoZWrite);
         AppendDmaTag(&strip->m_tag);
     }
 }

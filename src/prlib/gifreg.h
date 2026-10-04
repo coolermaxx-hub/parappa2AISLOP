@@ -39,13 +39,14 @@ public:
     PR_PADDING(unk128, 0x8);
 };
 
+/* Register setups sent between the render passes (built in PrInitializeDmaStripGifRegister). */
 enum PrSetGifRegisterMode {
-    eGifRegisterMode_Unk0 = 0,
-    eGifRegisterMode_Unk1 = 1,
-    eGifRegisterMode_Unk2 = 2,
-    eGifRegisterMode_Unk3 = 3,
-    eGifRegisterMode_Unk4 = 4,
-    eGifRegisterMode_Unk5 = 5,
+    eGifRegisterMode_SceneModel = 0,  /* normal models: depth test GEQUAL with Z writes */
+    eGifRegisterMode_NoZWrite = 1,    /* Z writes masked on both contexts (translucent entries, end of frame) */
+    eGifRegisterMode_DebugQuad = 2,   /* a four-colour test quad, never selected */
+    eGifRegisterMode_ScreenModel = 3, /* clears Z to 0 with a full-screen Z-only sprite before screen models */
+    eGifRegisterMode_Background = 4,  /* background layer: depth test ALWAYS, Z writes masked */
+    eGifRegisterMode_PreScene = 5,    /* pre-scene layer: depth only (alpha test NEVER, AFAIL=ZB_ONLY), test ALWAYS */
 };
 
 void PrInitializeDmaStripGifRegister(sceGsZbuf zbuf);

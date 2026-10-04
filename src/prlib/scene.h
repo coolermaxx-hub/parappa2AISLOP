@@ -54,7 +54,7 @@ public:
     u_int m_default_depth_level;
     sceGsDBuffDc *m_dbuff;
     u_int m_workFbp;
-    PrModelObject *m_flag400ModelList;
+    PrModelObject *m_preSceneModelList;
     PrModelObject *m_normalModelList;
     PrModelObject *m_screen_model_list;
     PR_PADDING(unkA4, 0x8);
