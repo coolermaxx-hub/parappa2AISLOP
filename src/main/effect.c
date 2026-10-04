@@ -195,7 +195,7 @@ void UG_MozaikuDisp(MOZAIKU_STR *moz_pp, sceGsFrame *frame_pp, sceGifPacket *moz
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, 0, 0, 0, 0, 0));
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(6, 0, 1, 0, 0, 0, 1, 0, 0));
 
-    sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, 0xe002800);
+    sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, SCE_GS_SET_UV(0x2800, 0xe00));
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(640), GS_Y_COORD(224), 0));
 
     sceGifPkAddGsAD(mozPkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
@@ -218,7 +218,7 @@ void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *te
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEXFLUSH, 0);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_PRMODECONT, 1);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, 5);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_CLAMP_1, SCE_GS_SET_CLAMP(1, 1, 0, 0, 0, 0));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_COLCLAMP, 1);
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_PABE, 0);
 
@@ -231,7 +231,7 @@ void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *te
         return;
     }
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, 0x3000d);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEST_1, SCE_GS_SET_TEST(1, 6, 0, 0, 0, 0, 1, 1));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, fade_pp->alp, 0));
 
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(texFr_pp->FBP << 5, texFr_pp->FBW, 0, 10, 8, 0, 1, 0, 0, 0, 0, 0));
@@ -240,7 +240,7 @@ void UG_FadeDisp(FADE_MAKE_STR *fade_pp, sceGifPacket *fadePkSpr, sceGsFrame *te
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
 
-    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, 0xe002800);
+    sceGifPkAddGsAD(fadePkSpr, SCE_GS_UV, SCE_GS_SET_UV(0x2800, 0xe00));
     sceGifPkAddGsAD(fadePkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(640), GS_Y_COORD(224), 1));
 }
 

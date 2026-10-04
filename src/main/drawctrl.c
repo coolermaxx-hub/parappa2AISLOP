@@ -764,7 +764,7 @@ void BallThrowPoll(void) {
 
                 CmnGifADPacketMake(&gifP, DrawGetFrameP(DNUM_DRAW));
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 0x80));
-                sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, 0x44);
+                sceGifPkAddGsAD(&gifP, SCE_GS_ALPHA_1, SCE_GS_SET_ALPHA(0, 1, 0, 1, 0));
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, SCE_GS_SET_TEST_1(1, 6, 0, 0, 0, 0, 1, 1));
 
                 for (j = 0; j < bthrow_ctrl[i].bthrow_str_cnt; j++, bts_pp++) {
@@ -822,7 +822,7 @@ void BallThrowPoll(void) {
                         h = info.picturH->ImageHeight * 16;
 
                         sceGifPkAddGsAD(&gifP, SCE_GS_TEX0_1, info.picturH->GsTex0);
-                        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, 0x156);
+                        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0));
 
                         px = ((int)(bts_pp->xp * 16.0f) - (w) + 27648);
                         py = ((int)(bts_pp->yp * 16.0f) - (h / 2) + 30976);

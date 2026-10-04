@@ -2147,7 +2147,7 @@ static void* TsCmnPkOpen(sceGifPacket *pgifpk) {
 
     sceGifPkAddGsAD(pgifpk, SCE_GS_PABE, 0);
     sceGifPkAddGsAD(pgifpk, SCE_GS_FBA_1, 0);
-    sceGifPkAddGsAD(pgifpk, SCE_GS_TEST_1, 0x30000);
+    sceGifPkAddGsAD(pgifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(0, 0, 0, 0, 0, 0, 1, 1));
 
     sceGifPkCloseGifTag(pgifpk);
     return pgifpk->pCurrent;
