@@ -930,7 +930,7 @@ HOSI_TYPE hTypeTable[17] = {
     { 3, 0, 64, 240, 1, 100 },
 };
 static TSTEX_INF *tblTex = NULL;
-static u_int RPPadBit[] = { 4096, 16384, 8192, 32768 };
+static u_int RPPadBit[] = { SCE_PADLup, SCE_PADLdown, SCE_PADLright, SCE_PADLleft };
 static MCDATA_TBL McVoiceTbl[23] = {
     { 3, 22 },
     { 7, 39 },
