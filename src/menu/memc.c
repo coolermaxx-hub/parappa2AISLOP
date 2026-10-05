@@ -59,19 +59,19 @@ static int memc_manager_chk(int mode);
         }                                          \
     }
 
-/* Clusters (1 KiB) the system files need: the icons, one directory cluster
+/* Clusters the system files need: the icons, one directory cluster
  * for every two of the nfile entries the save writes besides the icons, and 3. */
 #define MEMC_SET_SYSFILE_SIZE(pmw, nfile)                          \
     {                                                              \
         int n = (nfile);                                           \
-        int isize = ((pmw)->iconSize1 + 1023) / 1024;              \
+        int isize = MEMC_CLUSTERS((pmw)->iconSize1);               \
                                                                    \
         if (memc_getfilename(MEMC_FILE_ICON2) != NULL) {           \
-            isize += ((pmw)->iconSize2 + 1023) / 1024;             \
+            isize += MEMC_CLUSTERS((pmw)->iconSize2);              \
             n++;                                                   \
         }                                                          \
         if (memc_getfilename(MEMC_FILE_ICON3) != NULL) {           \
-            isize += ((pmw)->iconSize3 + 1023) / 1024;             \
+            isize += MEMC_CLUSTERS((pmw)->iconSize3);              \
             n++;                                                   \
         }                                                          \
                                                                    \
@@ -227,10 +227,10 @@ static int memc_SaveFileClust(void) {
 
     if (pmw->seek != 0) {
         size = pmw->seek + pmw->size2;
-        return (size + 1023) / 1024;
+        return MEMC_CLUSTERS(size);
     } else {
         size = pmw->size;
-        return (size + 1023) / 1024;
+        return MEMC_CLUSTERS(size);
     }
 }
 
@@ -827,7 +827,7 @@ static int memc_manager_save(int result) {
 
             for (i = 0; i < result; i++) {
                 if (pmw->curDir[i].EntryName[0] != '.') {
-                    iscls += ((pmw->curDir[i].FileSizeByte + 1023) / 1024);
+                    iscls += MEMC_CLUSTERS(pmw->curDir[i].FileSizeByte);
                     isfn++;
                 }
             }

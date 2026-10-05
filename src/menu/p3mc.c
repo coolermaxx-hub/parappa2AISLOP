@@ -477,10 +477,10 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
         }
 
         if (flg) {
-            /* Blocks (1 KiB) the new data needs beyond what the old file already takes. */
+            /* Clusters the new data needs beyond what the old file already takes. */
             int need0;
 
-            need0 = ((size + 1023) / 1024) - ((pTblDir[i].FileSizeByte + 1023) / 1024);
+            need0 = MEMC_CLUSTERS(size) - MEMC_CLUSTERS(pTblDir[i].FileSizeByte);
             if (need0 < 0) {
                 need0 = 0;
             }
@@ -504,7 +504,7 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
 
     if (!flg) {
         if (need != NULL) {
-            *need += (size + 1023) / 1024;
+            *need += MEMC_CLUSTERS(size);
         }
         return P3MC_FILE_MISSING;
     }
@@ -545,7 +545,7 @@ int P3MC_GetSaveSize(int size, int mode) {
     int dataAsize = _P3MC_GetSaveDataSize(size);
     int icsize = P3MC_GetIconSize(mode);
 
-    size = ((icsize + 1023) / 1024) + ((dataAsize + 1023) / 1024);
+    size = MEMC_CLUSTERS(icsize) + MEMC_CLUSTERS(dataAsize);
     return size + 5;
 }
 

@@ -6,6 +6,10 @@
 #include <eetypes.h>
 #include <libmc.h>
 
+/* Memory card space is counted in 1 KiB clusters. */
+#define MEMC_CLUSTER_SIZE    1024
+#define MEMC_CLUSTERS(bytes) (((bytes) + MEMC_CLUSTER_SIZE - 1) / MEMC_CLUSTER_SIZE)
+
 #define MEMC_ICON_VIEW (0)
 #define MEMC_ICON_COPY (1)
 #define MEMC_ICON_DEL  (2)
