@@ -1089,6 +1089,10 @@ static void DrawObjStrReq(SCENE_OBJDATA *scn_pp, int num, u_int time) {
     scn_pp->objstr_pp[num].PRtimeOld = -1;
 }
 
+/* Pad button pressure (0-255) thresholds for tap-driven animations. */
+#define PAD_PRESS_HELD 100
+#define PAD_PRESS_HARD 180
+
 static void DrawObjStrTapReq(SCENE_OBJDATA *scn_pp, int num, u_int time, u_char *prs_adr) {
     if (scn_pp->tapstr_size <= num) {
         return;
@@ -1610,12 +1614,14 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
 
         objstr_pp->current_pp = objctrl_pp;
     } else {
+        /* A pressure-sensitive press drives the animation: past PAD_PRESS_HELD the
+         * button counts as held and the clock runs at 2x, past PAD_PRESS_HARD at 3x. */
         if (objstr_pp->PRpress != NULL) {
-            if (*objstr_pp->PRpress > 100) {
+            if (*objstr_pp->PRpress > PAD_PRESS_HELD) {
                 objstr_pp->PRflag |= OBJSTR_PRESSON;
                 objstr_pp->PRtime++;
             }
-            if (*objstr_pp->PRpress > 180) {
+            if (*objstr_pp->PRpress > PAD_PRESS_HARD) {
                 objstr_pp->PRtime++;
             }
         }

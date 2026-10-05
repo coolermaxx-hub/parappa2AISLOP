@@ -140,6 +140,14 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   (below 0x40 or above 0xBF counts as pressed). **Only the menu code reads
   these** (`src/menu/menusub.c:847`); the rhythm code (`tapEventCheck`) uses the
   plain digital `shot` and `one`, so the stick never taps notes.
+- Pressure has one gameplay effect: a tap passes `&press[key]` to the draw
+  side (`tapEventCheck` → `DrawTapReqTbl`), and while the tap's animation runs
+  `DrawObjStrDispTap` (`drawctrl.c`, `PAD_PRESS_HELD` 100 / `PAD_PRESS_HARD`
+  180) advances its clock by 2 per frame above 100 and 3 above 180, and marks it
+  held so a hold animation keeps going. On a pad without pressure the bytes are
+  0 or 1, so those animations always run at 1x. Scoring does not read pressure.
+  (`GetPadbit2PressPad` in `syssub.c` would index `press[]` with the button mask;
+  it is never called.)
 - Vibration is requested by writing `padvib[]` during the frame; `padActSet`
   copies it to the next report and `padActClear` zeroes it afterwards, so a
   rumble lasts for the frames it is re-requested.

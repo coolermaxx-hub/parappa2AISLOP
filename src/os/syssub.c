@@ -461,6 +461,8 @@ PAD_PRESS_ENUM GetPadbit2PressId(u_short padbit) {
     return ret;
 }
 
+/* BUG: indexes press[] with the button mask instead of GetPadbit2PressId's
+ * result, reading far past the 12 entries. Nothing calls it. */
 u_char GetPadbit2PressPad(PADD *pad_pp, u_short padbit) {
     if (GetPadbit2PressId(padbit) == PAD_PR_None) {
         return 0;
