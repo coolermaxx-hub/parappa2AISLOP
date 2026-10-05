@@ -47,6 +47,8 @@
 
 /* ALPHA that subtracts the source from the frame, Cd - Cs * As. */
 #define GS_ALPHA_SUBTRACT SCE_GS_SET_ALPHA(SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_CS, SCE_GS_ALPHA_AS, SCE_GS_ALPHA_CD, 0)
+/* FRAME.FBMSK keeps the bits set to 1, so this writes the alpha channel only. */
+#define GS_FBMSK_ALPHA_ONLY 0x00ffffff
 
 /* CLAMP that repeats both texture axes, the GS default. */
 #define GS_CLAMP_REPEAT SCE_GS_SET_CLAMP(/*WMS*/SCE_GS_REPEAT, /*WMT*/SCE_GS_REPEAT, 0, 0, 0, 0)

@@ -818,7 +818,7 @@ static void WipeParaInDisp(void *x) {
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_DRAW);
 
         wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
-        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env.frame1.FBMSK = GS_FBMSK_ALPHA_ONLY;
 
         CmnGifADPacketMake(&gifP, &wipe_draw_env.frame1);
         sceGifPkAddGsAD(&gifP, SCE_GS_FRAME_1, GS_REG_WORD(wipe_draw_env.frame1));
@@ -884,7 +884,7 @@ static void WipeParaInDispMove(void *x) {
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_VRAM2);
 
         wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
-        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env.frame1.FBMSK = GS_FBMSK_ALPHA_ONLY;
 
         WipeInitPrDataPara(&wipe_draw_env.frame1);
         WipeDispPrDataPara(timer, &wipe_draw_env);
@@ -935,7 +935,7 @@ static void WipeParaOutDisp(void *x) {
         DrawVramClear(&vclr_para_disp, 0, 0, DNUM_NON, DNUM_VRAM2);
 
         wipe_draw_env = *DrawGetDrawEnvP(DNUM_VRAM2);
-        wipe_draw_env.frame1.FBMSK = 0x00ffffff; /* Mask alpha */
+        wipe_draw_env.frame1.FBMSK = GS_FBMSK_ALPHA_ONLY;
 
         WipeInitPrDataPara(&wipe_draw_env.frame1);
         WipeDispPrDataPara(60 - timer, &wipe_draw_env);

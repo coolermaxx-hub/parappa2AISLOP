@@ -396,6 +396,11 @@ int Tim2TransX(void *adrs, int ofs_num) {
     return ret;
 }
 
+/* Largest single image transfer, 0x7fff quadwords. */
+#define TIM2_TRANS_MAX_BYTES 0x7fff0
+
+/* Rows of a w-pixel image (TIM2 pixel mode) that fit in one transfer, rounded
+ * down to a multiple of 16. */
 static int GetModeMaxH(int w, int mode, int *trsize_pp) {
     int line1_size = w;
     int ret;
@@ -409,7 +414,7 @@ static int GetModeMaxH(int w, int mode, int *trsize_pp) {
         line1_size /= 2;
     }
         
-    ret = 0x7fff0 / line1_size & ~15u;
+    ret = TIM2_TRANS_MAX_BYTES / line1_size & ~15u;
 
     if (trsize_pp) {
         *trsize_pp = ret * line1_size;
