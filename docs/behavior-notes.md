@@ -4,6 +4,33 @@ These notes come from reading the decompiled source. Each says whether it was
 checked or only inferred. Confirm anything marked *inferred* on hardware or in
 an emulator before relying on it.
 
+Contents:
+
+- [Rhythm clock (first pass, 2026-10-02)](#rhythm-clock-first-pass-2026-10-02)
+- [Judgement and line scores](#judgement-and-line-scores)
+- [Versus play](#versus-play)
+- [Bonus game](#bonus-game)
+- [Adaptive difficulty](#adaptive-difficulty)
+- [Pad input, tap sounds and cheats](#pad-input-tap-sounds-and-cheats)
+- [Per-frame RNG call](#per-frame-rng-call)
+- [Authoritative clock: GlobalTimeJob (2026-10-03)](#authoritative-clock-globaltimejob-2026-10-03)
+- [Replay log and memory card (2026-10-03)](#replay-log-and-memory-card-2026-10-03)
+- [Play results and progression](#play-results-and-progression)
+- [Random number generators (2026-10-03)](#random-number-generators-2026-10-03)
+- [CD, file loading and the WP2 stream container (2026-10-03)](#cd-file-loading-and-the-wp2-stream-container-2026-10-03)
+- [Frame loop, task scheduler and GS/DMA submission (2026-10-03)](#frame-loop-task-scheduler-and-gsdma-submission-2026-10-03)
+- [Boundary inventory](#boundary-inventory)
+- [Readable renderer reconstruction (source/disassembly, 2026-10-03)](#readable-renderer-reconstruction-sourcedisassembly-2026-10-03)
+- [EE-core init packet register slots (2026-10-03)](#ee-core-init-packet-register-slots-2026-10-03)
+- [Stage map music (2026-10-04)](#stage-map-music-2026-10-04)
+- [Screen noodle warp grid (2026-10-04)](#screen-noodle-warp-grid-2026-10-04)
+- [32-bit pointer assumptions (2026-10-04)](#32-bit-pointer-assumptions-2026-10-04)
+- [nalib matrix products (2026-10-04)](#nalib-matrix-products-2026-10-04)
+- [Matrix inverse is a rigid inverse (2026-10-05)](#matrix-inverse-is-a-rigid-inverse-2026-10-05)
+- [Axis-angle rotation (2026-10-05)](#axis-angle-rotation-2026-10-05)
+- [Vector helpers](#vector-helpers)
+- [Subtitles (2026-10-05)](#subtitles-2026-10-05)
+
 ## Rhythm clock (first pass, 2026-10-02)
 
 **The song clock has two sources, chosen per score line.** Each line has a time
@@ -75,6 +102,8 @@ every score line:
 So a tap's timestamp (`Ttime`) is a tick value taken from the audio sample
 counter (streamed lines) or the VBlank counter (VSYNC lines), sampled once per
 frame.
+
+## Judgement and line scores
 
 **Judgement windows (checked in source; reading of the bit tables is mine,
 2026-10-03).** Grading does not use millisecond windows. It quantises ticks into
@@ -170,6 +199,8 @@ position window 2k falls on depends on `ofs_tick` and was not traced.
 - Hook exam (the chorus practice): the line passes after ten scoring lines (`exam_tbl_up >= 10`), otherwise it loops if the script has a loop job.
 - Hook result: when the hook step ends, `selPlayDispSetPlay` (`main.c`) stores `exam_tbl_up - exam_tbl_dw / 2`, clamped to 0..10, as `HookClrCnt`. A bonus exam (`EXAM_BONUS`) repeats its line until it has been checked more than `HookClrCnt` times, so a better hook practice gives more repeats. Only the bonus game step resets that counter (`bonusGameInit`), so the bonus exam is inferred to belong to the bonus game; the stage scripts were not checked. The skip cheat (`selPlayDispSetPlayOne`) plays only the last step, so `HookClrCnt` stays at its cleared 0 and the bonus line passes on its first check.
 
+## Versus play
+
 **Versus exchanges (checked in source, 2026-10-05).** In versus play the COOL threshold of a line is just `exp`, the score for copying the opponent's pattern exactly. The opening line of an exchange (`TAPSCODE_ANSWER_F`) sets the player's score to `VS_START_SCORE` (500) plus the line score. On each answer line (`TAPSCODE_ANSWER`) the difference `now_score - exp` is applied: a negative difference comes off the player's own score, a positive one off the opponent's, both clamped at 0. The exchange is judged when the script says so or when either side reaches 0: equal scores draw, otherwise the higher wins, with the shutout and both-over-`VS_ROUND_HIGH_SCORE` variants picking the reaction (see `SCREX_AR_*` in `scrctrl.h`). The battle ends early once one side has more wins than the other could still catch up with (best of five; `SCREX_AB_*`). `SCRSUBJ_VS_RESET` puts both sides back to 500. After a versus answer line, a player who beat the copy score and has a non-zero second exam sub-score (`exam_score[1]`, the "original" program `exh_str_original`, i.e. something of their own) hands their pattern to the other side as the next one to answer (`vsTapdatSet`). The pattern keeps only presses inside a `CK_TH_NORMAL` window, snapped to their step, one per step and within the tap window; if those presses miss any key the line uses, the previous pattern stays. The pattern in force is logged with the replay (`vsTapdatSetMemorySave`), and replays load it from the log instead (`vsTapdatSetMemoryLoad`).
 
 **Computer opponent (`commake.c`, checked in source, 2026-10-05).** In versus against the computer, the computer's answer is built once, on the first score update of its tap set (`tapEventCheck`), by `computerMaking`. It snaps two patterns to step slots (`time / TICKS_PER_STEP`, truncated, at most `CM_STEP_MAX` = 32): the line's own tap set (`cm_str_mt`) and the pattern it must answer (`cm_str_now`, from `vs_tapdat_work`: the opponent's presses that `vsTapdatSet` kept, one per step and only those inside a judgement window, or the script's question pattern after `vsTapdatSetMoto`). `maxBox` is the number of steps in the tap window minus one. The versus level (`level_vs_enumL`) picks a table and `randMakeMax` picks one strategy from it with equal odds per entry:
@@ -191,7 +222,11 @@ position window 2k falls on depends on `ofs_tick` and was not traced.
 
 "Most" and "least used" count the opponent's keys; ties go to the lower key for the most used and to the higher key for the least used. Offsets are added in ticks on top of the step time and stay under half a step, so presses never change order. The computer presses the result in slot order, and each press is logged like a player tap, so replays reproduce it. The strategy and jitter come from the shared `rand()` stream, so they are not reproducible from the taps alone. `computerMaking` ignores its output-size argument; the answer fits because it has at most 32 presses. The helpers loop over `maxBox` slots of 32-entry arrays, so a tap window longer than 33 steps would overrun them (inferred from the code; stage data not checked).
 
+## Bonus game
+
 **Bonus game (checked in source, 2026-10-05).** `bonusGameCtrl` (`scrctrl.c`) runs once per score update while the script's `SCRSUBJ_BONUS_GAME` job is active, from tick 0 to `BONUS_GAME_END_TICKS` (18048, 188 beats). Four targets map to triangle, circle, cross and square (`KiTR`..`KiSQ`, pad 0's newly pressed buttons). Each target waits `10 + max(0, rand() % 130 - streak)` updates, then with even odds shows the item (`BNGKA_LIFTED`, which stays until pressed) or a decoy (`BNGKA_LIFT_NG`, 24 updates). Pressing a shown item adds 26, 15, 9 or 5 points for a reaction under 3, 6, 9 or more updates and extends the streak; pressing during the wait or on a decoy costs 9, 13, 18 or 24 points (waited under 8, 13, 20 or more updates), resets the streak and knocks the target back for 180 updates. A longer streak shortens the waits. `bonusPointSave` stores points won minus points lost, clamped at 0, as `BonusScore`; presses on a target that is knocked back or broken score nothing. The bonus is added to the stage score that unlocked the game for the single-play ranking (`game_status.bonusG`, `menusub.c` ranking update). The two `rand()` calls are on the shared C generator (see the RNG section), so the pattern is not reproducible from the taps alone.
+
+## Adaptive difficulty
 
 **Adaptive difficulty (checked in source, 2026-10-05).** Only the player's own slot (`GPLAY_TBLCNG_REQ`, set for Parappa in `etc.c`) adapts. There are two levels: a control level `global_data.tap_ctrl_level` (`TCT_LV00`..`TCT_LV15`) and the pattern level `global_data.tapLevel` actually played.
 
@@ -200,6 +235,8 @@ position window 2k falls on depends on `ofs_tick` and was not traced.
 3. `tapLevelChangeSub` then draws the pattern level from the stage's `TAPLVL_DAT` for that control level (one table set per round, easy mode after the normal ones): `per[0..16]` are percentages walked against `randMakeMax(100)` (see the RNG section). The hook step picks one hook line at random (`inCmnHookSet`) and stores the level it was played at (`inCmnHook2GameSave`); when that sound line comes up in the game, `inCmnHook2GameCheck` reuses the stored level. Stage 8 keeps the previous level on sound lines 24-26. Replays read the recorded level instead (`mccReqLvlGet`). A changed level restarts the line's tap pattern (`selectIndvTapResetPlay`).
 
 With `tapLevelCtrl != LM_AUTO` the pattern level stays fixed. A port must keep the counter comparisons and rule tables exactly, since the pattern the player sees next depends on them.
+
+## Pad input, tap sounds and cheats
 
 **Pad input (checked in source, 2026-10-03).** `GPadSysRead()` (`src/os/syssub.c:55`)
 runs the libpad state machine for each port (identify the pad, switch a standard
@@ -292,6 +329,8 @@ pure function of consecutive frames, a port can replace this layer with
 `{held mask per frame}` and recompute `one`/`off` itself. A rollback netcode
 only needs that 16-bit mask per player per frame.
 
+## Per-frame RNG call
+
 **RNG (checked).** `osFunc()` calls `rand()` once every frame and discards the
 result, so the RNG state depends on how many frames have elapsed. Netplay or
 replays must reproduce the frame count, not just the inputs.
@@ -359,6 +398,8 @@ Provenance: direct reading of `src/main/mcctrl.c`, `include/main/mcctrl.h`, `src
 **Save sequencer states (named 2026-10-04).** `_P3MC_proc` (`p3mc.c`) drives saves and loads through the `P3MC_SAVE_*` / `P3MC_LOAD_*` states listed at the top of the file and maps the card manager's `MEMC_ERR_*` results onto them. The menu sees only the `P3MC_RES_*` codes from `P3MC_SaveCheck` / `P3MC_LoadCheck` (`include/menu/p3mc.h`). A port that replaces the transport keeps that result contract and can drop the state machine.
 
 **Damaged-file check (`_P3MC_file_chk`, `p3mc.c`).** A save file counts as damaged only when its size differs from the expected one. The check also reads the card's "closed" attribute (`sceMcFileAttrClosed`), but tests it as `!closed || closed`, so a file left unclosed by an interrupted write passes. A port that wants to detect torn saves needs its own check; matching the original means ignoring that state.
+
+## Play results and progression
 
 **COOL crown history (`P3LOG_VAL.logCOOL`, `include/menu/menu.h`).** Each stage keeps the rounds of its last four COOL clears as nibbles, newest in the low nibble. `TsClearSet` (`menusub.c`) shifts the word left by 4, masks it to 16 bits and ORs in the round (1..4). The stage map draws one crown per non-zero nibble, coloured by that round. A port keeps the 16-bit packing so old logs still show the same crowns.
 
@@ -467,13 +508,13 @@ Every boundary found by the original keyword search now has a section above.
 
 | Boundary | Files | Where it is covered |
 | --- | --- | --- |
-| Pad reads | `src/os/syssub.c` (`scePadRead`), `src/os/system.c` | Pad input, in the rhythm clock section |
+| Pad reads | `src/os/syssub.c` (`scePadRead`), `src/os/system.c` | Pad input, tap sounds and cheats |
 | VBlank / frame | `src/os/system.c`, `src/os/mtc.c`, `src/main/etc.c` | Authoritative clock; frame loop |
 | Hardware timers (`T0..T3_COUNT`) | `src/os/system.c`, `src/main/cdctrl.c`, `src/prlib/*` | Below |
 | Audio stream (WP2) and SE (TapCt) | `src/main/cdctrl.c`, `src/iop_mdl/*`, `src/main/scrctrl.c` | CD, file loading and the WP2 stream container |
-| Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` | Rhythm clock section (yaku, line score, rank meter, versus, bonus game, adaptive difficulty) |
+| Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` | Judgement and line scores; Versus play; Bonus game; Adaptive difficulty |
 | CD / files | `src/main/cdctrl.c`, `src/main/p3str.c`, `src/os/system.c` | CD, file loading and the WP2 stream container |
-| Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` | Replay log and memory card |
+| Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` | Replay log and memory card; Play results and progression |
 | RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` | Random number generators |
 | GS / DMA / VU | `src/os/system.c`, `src/os/cmngifpk.c`, `src/prlib/*` | Frame loop; renderer reconstruction |
 
@@ -746,6 +787,8 @@ native C++98 executable and fails when the expected rotation is reversed.
 g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/rotate_matrix.cpp -o /tmp/rotate-matrix
 /tmp/rotate-matrix
 ```
+
+## Vector helpers
 
 **Vector helpers (read from the VU code, 2026-10-05).** `NaVECTOR::Cross3`
 (`src/nalib/navector.h`) is the ordinary cross product `lhs x rhs` with `w` set
