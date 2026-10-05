@@ -276,12 +276,16 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   or above `PAD_ANA_HIGH` 0xC0 on either axis, checked in the order Y-low, X-high,
   Y-high, X-low). A port with more than one local player must still take this
   from player 1, and netplay must send the two axis bytes with the mask.
-- `urawazaKeyCheck` (main.c) is a level-select cheat: with R3 held, the right
-  stick's direction picks one of 17 tap levels (`TLL_*`), or `randMakeMax(17)`
-  picks one if the stick is centred (so it consumes RNG). It is inert in this
-  build: only the debug loop `ura_check` calls it, nothing ever sets
-  `urawaza_levelsel_bottun` to a level or `urawaza_skip_bottun` to TRUE, so the
-  `LM_FIX` branch in the stage start and `selPlayDispSetPlayOne` never run from it.
+- Three button cheats are read from pad 0's held buttons on the frame the menu
+  hands over to a play (`mainStart`, `main.c`; corrected 2026-10-05, an
+  earlier note called them inert). L1+L2 sets `urawaza_skip_bottun`, so only
+  the stage's last step is played (`selPlayDispSetPlayOne`: no cutscenes or
+  hook practice). R1+R2 in single play selects one-button "shuriken" play
+  (`PLAY_TYPE_ONE`). In single, normal (not one-button, not easy) play from
+  circuit 4 on, `urawazaKeyCheck` reads R3: with R3 held the right stick's
+  direction picks one of 17 tap levels (`TLL_*`), or `randMakeMax(17)` picks
+  one if the stick is centred (so it consumes RNG), and the play then runs at
+  that fixed level (`LM_FIX`, set in `gamePlayDisp`).
 
 Because `GPadRead` runs once per frame in `osFunc` and edge detection is a
 pure function of consecutive frames, a port can replace this layer with
