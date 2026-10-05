@@ -147,7 +147,7 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
             fbp_tmp = -1;
         }
         
-        p3o_pp->pad2 = (u_int)PrInitializeScene(&DBufDc.draw01, scnname, fbp_tmp);
+        p3o_pp->scene = (u_int)PrInitializeScene(&DBufDc.draw01, scnname, fbp_tmp);
     }
 
     for (i = 0; i < adrd_cnt; i++) {
@@ -162,7 +162,7 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
             switch (adrd_tmp->ftype) {
             case AF_SPM:
                 if (p3sd_pp->type == OD_SCENE) {
-                    handle_tmp = (u_int)PrInitializeModel((PR_MODELHANDLE)adrd_tmp->adrs, (PR_SCENEHANDLE)p3o_pp->pad2);
+                    handle_tmp = (u_int)PrInitializeModel((PR_MODELHANDLE)adrd_tmp->adrs, (PR_SCENEHANDLE)p3o_pp->scene);
                 }
                 break;
             case AF_SPA:
@@ -189,7 +189,7 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
     }
 
     if (p3sd_pp->type == OD_SCENE) {
-        PrPreprocessSceneModel((PR_SCENEHANDLE)p3o_pp->pad2);
+        PrPreprocessSceneModel((PR_SCENEHANDLE)p3o_pp->scene);
     }
 
     printf("init end\n");
@@ -240,8 +240,8 @@ int p3StrQuitSdEach(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp) {
     }
 
     if (p3sd_pp->type == OD_SCENE) {
-        PrCleanupScene((PR_SCENEHANDLE)p3o_pp->pad2);
-        p3o_pp->pad2 = NULL;
+        PrCleanupScene((PR_SCENEHANDLE)p3o_pp->scene);
+        p3o_pp->scene = NULL;
     }
 
     p3o_pp->first = 0;
@@ -257,7 +257,7 @@ void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
         int       cur_time;
 
         ChangeDrawArea(DrawGetDrawEnvP(p3o_pp->draw));
-        PrSetSceneEnv((PR_SCENEHANDLE)p3o_pp->pad2, DrawGetDrawEnvP(p3o_pp->draw));
+        PrSetSceneEnv((PR_SCENEHANDLE)p3o_pp->scene, DrawGetDrawEnvP(p3o_pp->draw));
 
         for (i = 0; i < p3sd_pp->Dcnt; i++, scn_pp++) {
             if (subtime >= scn_pp->start) {
@@ -287,14 +287,14 @@ void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
                     break;
                 case STE_CAM:
                     if (tmp_time > 0) {
-                        PrSelectCamera((PR_CAMERAHANDLE)adrd_pp[scn_pp->adr1num].handle, (PR_SCENEHANDLE)p3o_pp->pad2);
-                        PrAnimateSceneCamera((PR_SCENEHANDLE)p3o_pp->pad2, cur_time);
+                        PrSelectCamera((PR_CAMERAHANDLE)adrd_pp[scn_pp->adr1num].handle, (PR_SCENEHANDLE)p3o_pp->scene);
+                        PrAnimateSceneCamera((PR_SCENEHANDLE)p3o_pp->scene, cur_time);
                     }
                     break;
                 case STE_TM2:
-                    if (!scn_pp->pad1) {
+                    if (!scn_pp->sent) {
                         Tim2TransX((void*)adrd_pp[scn_pp->adr1num].handle, scn_pp->top);
-                        scn_pp->pad1 = 1;
+                        scn_pp->sent = 1;
                     }
                     break;
                 case STE_CL2:
@@ -308,7 +308,7 @@ void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
             }
         }
 
-        PrRender((PR_SCENEHANDLE)p3o_pp->pad2);
+        PrRender((PR_SCENEHANDLE)p3o_pp->scene);
         PrWaitRender();
     }
 
@@ -327,7 +327,7 @@ void p3StrDispDs(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
     }
 
     if (p3o_pp->od_type == OD_VRAMCLR) {
-        DrawVramClear(&p3o_pp->pad1, subtime, 0, p3o_pp->use, p3o_pp->draw);
+        DrawVramClear(&p3o_pp->vclr, subtime, 0, p3o_pp->use, p3o_pp->draw);
     }
 }
 

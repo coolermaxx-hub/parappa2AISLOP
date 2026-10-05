@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include "main/sprite.h"
+
 #include <eetypes.h>
 
 #define STR(x)  ((P3STR*)x)
@@ -23,8 +25,8 @@ typedef struct { // 0x20
     /* 0x0c */ short use;
     /* 0x0e */ short draw;
     /* 0x10 */ u_int pri;
-    /* 0x14 */ u_int pad1;
-    /* 0x18 */ u_int pad2;
+    /* 0x14 */ VCLR_PARA vclr; /* OD_VRAMCLR: the clear colour (pad1 in the original) */
+    /* 0x18 */ u_int scene;    /* OD_SCENE: the PR_SCENEHANDLE, set at load (pad2) */
     /* 0x1c */ u_int adr;
 } P3SRT_OD;
 
@@ -99,7 +101,7 @@ typedef struct { // 0x20
     /* 0x0c */ int adr2num;
     /* 0x10 */ u_int top;
     /* 0x14 */ u_int end;
-    /* 0x18 */ u_int pad1;
+    /* 0x18 */ u_int sent; /* STE_TM2: the texture has been transferred (pad1) */
     /* 0x1c */ u_int pad2;
 } SD_SCENE;
 
