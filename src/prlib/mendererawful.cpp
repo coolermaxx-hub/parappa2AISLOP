@@ -29,7 +29,7 @@ static PrFadeFramePacket mendererFadeData = {
     { 0, SCE_GS_RGBAQ },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 0, 0, 0), SCE_GS_PRIM },
     { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
-    { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0), SCE_GS_XYZ2 },
 };
 
 static PrAwfulBackgroundPacket awfulBackgroundPacket = {
@@ -46,14 +46,14 @@ static PrAwfulBackgroundPacket awfulBackgroundPacket = {
     {
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
         { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(0), 0), SCE_GS_XYZ2 } },
-        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x6C00, 0x8700, 0), SCE_GS_XYZ2 } },
-        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(0x9400, 0x8700, 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0), SCE_GS_XYZ2 } },
+        { { 0, SCE_GS_UV }, { SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0), SCE_GS_XYZ2 } },
     },
     { PR_TEST_Z_ONLY, SCE_GS_TEST_2 },
     { 0, SCE_GS_ZBUF_2 },
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 1, 1, 0), SCE_GS_PRIM },
     { SCE_GS_SET_XYZ(GS_X_COORD(256), GS_Y_COORD(0), 0), SCE_GS_XYZ2 },
-    { SCE_GS_SET_XYZ(0x8D00, 0x7B00, 0), SCE_GS_XYZ2 },
+    { SCE_GS_SET_XYZ(GS_X_COORD(528), GS_Y_COORD(32), 0), SCE_GS_XYZ2 },
     { PR_TEST_NO_ALPHA(SCE_GS_ZGEQUAL), SCE_GS_TEST_2 },
 };
 
