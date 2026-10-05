@@ -965,6 +965,9 @@ static void ScrLincChangTbl(int line) {
 /* Set on a line number while the line is drawn from a reference time (scrRefLineTime). */
 #define SCR_LINE_REF_MODE 0x8000
 
+/* Scoring lines needed to pass the hook (chorus) practice. */
+#define HOOK_PASS_LINES 10
+
 static void ScrLincChangTblRef(int line, int ck_time) {
     scrDrawLine |= SCR_LINE_REF_MODE;
     scrMbarLine |= SCR_LINE_REF_MODE;
@@ -3292,14 +3295,14 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         MbarNikoSet(sindv_pp->global_ply->exam_tbl_up * 2, 0);
 
                         if (!nexton) {
-                            if (sindv_pp->global_ply->exam_tbl_up >= 10) {
+                            if (sindv_pp->global_ply->exam_tbl_up >= HOOK_PASS_LINES) {
                                 scex_pp->exam_do = EXAM_DO_END_GO;
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[0];
 
                                 printf("hook end job\n");
                             }
                         } else {
-                            if (sindv_pp->global_ply->exam_tbl_up >= 10) {
+                            if (sindv_pp->global_ply->exam_tbl_up >= HOOK_PASS_LINES) {
                                 scex_pp->exam_do = EXAM_DO_END_GO;
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[0];
 
