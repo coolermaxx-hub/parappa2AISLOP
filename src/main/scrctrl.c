@@ -3353,13 +3353,13 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                             printf("first !!hantei[%d]\n", hantei_flag);
 
                             if (sindv_pp->global_ply->now_score > 0) {
-                                pointx = sindv_pp->global_ply->now_score + 500;
+                                pointx = sindv_pp->global_ply->now_score + VS_START_SCORE;
                                 ScrTapReq(SCR_TAP_COMMON, 0, 0);
-                                vsAnimationReq(my_ply, 500, pointx, VSMT_UP);
+                                vsAnimationReq(my_ply, VS_START_SCORE, pointx, VSMT_UP);
                             } else {
-                                pointx = sindv_pp->global_ply->now_score + 500;
+                                pointx = sindv_pp->global_ply->now_score + VS_START_SCORE;
                                 ScrTapReq(SCR_TAP_COMMON, 0, 1);
-                                vsAnimationReq(my_ply, 500, pointx, VSMT_DW);
+                                vsAnimationReq(my_ply, VS_START_SCORE, pointx, VSMT_DW);
                             }
 
                             sindv_pp->global_ply->score = pointx;
@@ -3847,15 +3847,15 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
 
             cngSindv_pp = GetSindvPcodeLine(PCODE_TEACHER);
             if (cngSindv_pp != NULL) {
-                cngSindv_pp->global_ply->score = 500;
+                cngSindv_pp->global_ply->score = VS_START_SCORE;
             }
-            vsAnimationReset(1, 500);
+            vsAnimationReset(1, VS_START_SCORE);
 
             cngSindv_pp = GetSindvPcodeLine(PCODE_PARA);
             if (cngSindv_pp != NULL) {
-                cngSindv_pp->global_ply->score = 500;
+                cngSindv_pp->global_ply->score = VS_START_SCORE;
             }
-            vsAnimationReset(0, 500);
+            vsAnimationReset(0, VS_START_SCORE);
             break;
         }
         case SCRSUBJ_CDSND_READY:

@@ -571,8 +571,8 @@ void vsAnimationReset(int ply, long scr) {
 }
 
 static int vsScr2Move(long scr) {
-    if (scr > 500) {
-        scr = 500;
+    if (scr > VS_START_SCORE) {
+        scr = VS_START_SCORE;
     }
 
     return scr * 2;

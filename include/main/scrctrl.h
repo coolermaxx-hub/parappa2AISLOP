@@ -320,6 +320,8 @@ typedef enum {
  * battle (WIN1/LOSE1: three or more wins against at most one loss;
  * WIN2/LOSE2: the battle ended with only one or two wins). */
 #define VS_ROUND_HIGH_SCORE 250
+/* Each side's score at the start of a versus exchange; the meter shows up to this. */
+#define VS_START_SCORE 500
 
 enum {
     SCREX_UP = 0,
