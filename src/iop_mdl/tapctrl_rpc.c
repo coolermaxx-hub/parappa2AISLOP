@@ -32,8 +32,8 @@ int TapCtInit(void) {
 int TapCt(int command, int data1, int data2) {
     int rsize = 0;
 
-    if (command & 0x8000) {
-        rsize = 64;
+    if (command & TAPCT_REPLY) {
+        rsize = sizeof(sbuff);
     }
 
     sbuff[0] = data1;

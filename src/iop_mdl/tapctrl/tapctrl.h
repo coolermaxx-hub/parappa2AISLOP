@@ -8,6 +8,9 @@
 /* TapCtrl commands */
 #define TAPCT_NONE (0)
 
+/* Commands with this bit set send a reply back to the EE. */
+#define TAPCT_REPLY           (0x8000)
+
 #define TAPCT_INIT            (0x0000) /* TapInit(allocsize)                */
 #define TAPCT_CHANCLOSE       (0x0050) /* TapChanClose(ch)                  */
 #define TAPCT_QUIT            (0x0060) /* TapQuit()                         */
