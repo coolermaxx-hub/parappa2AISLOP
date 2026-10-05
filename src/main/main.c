@@ -693,14 +693,19 @@ void xtrView(FILE_STR *file_str_pp) {
     p3StrQuitSd();
 }
 
+#define LOGO_FADE_FRAMES 30
+#define LOGO_HOLD_FRAMES 120
+
+/* Shows one boot logo: fade in, hold for two seconds, fade out. Each
+ * countdown loop redraws the logo once per frame. */
 void logoDispOne(SPR_PRIM *sprm_pp, TIM2_DAT *tmd_pp) {
     int timer;
 
     sprm_pp->w = tmd_pp->w;
     sprm_pp->h = tmd_pp->h;
-    FadeCtrlReq(FMODE_BLACK_IN, 30);
+    FadeCtrlReq(FMODE_BLACK_IN, LOGO_FADE_FRAMES);
 
-    timer = 29;
+    timer = LOGO_FADE_FRAMES - 1;
     while (timer != -1) {
         timer--;
 
@@ -712,7 +717,7 @@ void logoDispOne(SPR_PRIM *sprm_pp, TIM2_DAT *tmd_pp) {
         MtcWait(1);
     }
 
-    timer = 119;
+    timer = LOGO_HOLD_FRAMES - 1;
     while (timer != -1) {
         timer--;
 
@@ -724,9 +729,9 @@ void logoDispOne(SPR_PRIM *sprm_pp, TIM2_DAT *tmd_pp) {
         MtcWait(1);
     }
 
-    FadeCtrlReq(FMODE_BLACK_OUT, 30);
+    FadeCtrlReq(FMODE_BLACK_OUT, LOGO_FADE_FRAMES);
 
-    timer = 29;
+    timer = LOGO_FADE_FRAMES - 1;
     while (timer != -1) {
         timer--;
 
@@ -1253,7 +1258,7 @@ void titleDisp(int firstf) {
         game_status.demo_flagG = DEMOF_OFF;
         GlobalLobcalCopy();
 
-        stdat_dat_pp = stdat_rec[19].stdat_dat_pp;
+        stdat_dat_pp = stdat_rec[STDAT_STAGE_TITLE].stdat_dat_pp;
 
         fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
         fsize = CD_SECTOR_ROUND(fsize);
@@ -1276,7 +1281,7 @@ void titleDisp(int firstf) {
         game_status.demo_flagG = DEMOF_OFF;
         GlobalLobcalCopy();
 
-        if (selPlayDispTitleDisp(19, deramode, loop)) {
+        if (selPlayDispTitleDisp(STDAT_STAGE_TITLE, deramode, loop)) {
             SetBackColor(0, 0, 0);
             break;
         }
