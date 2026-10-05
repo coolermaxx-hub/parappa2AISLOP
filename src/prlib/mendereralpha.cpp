@@ -89,8 +89,8 @@ void PrInitializeAlphaModulation() {
         }
     }
 
-    u_long tw = PrGetBitSize(640);
-    u_long th = PrGetBitSize(224);
+    u_long tw = PrGetBitSize(SCREEN_WIDTH);
+    u_long th = PrGetBitSize(SCREEN_FIELD_HEIGHT);
     u_long zbp = prRenderStuff.m_zbuf.ZBP;
 
     alphaModulationGsPacket.frame.value = PR_FRAME_CT32(zbp);
