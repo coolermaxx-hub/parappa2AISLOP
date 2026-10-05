@@ -1760,7 +1760,7 @@ void tapReqGroupPoll(void) {
             continue;
         }
 
-        for (j = 0; j < 4; j++) {
+        for (j = 0; j < TAPCT_MAX; j++) {
             if (tgs_pp->tapct_pp[j].frame == -1) {
                 continue;
             }

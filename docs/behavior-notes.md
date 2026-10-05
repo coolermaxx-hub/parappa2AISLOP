@@ -243,6 +243,14 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   gets `resT`), and holding right stops presses from advancing the count (so
   they repeat the current sound; the tap gets `holdT`). Replays turn these back
   into `KC_FLAG_RESET` / `KC_FLAG_HOLD`.
+- What a press then does (`tapReqGroup` / `tapReqGroupPoll`). Each tap-set
+  entry carries up to `TAPCT_MAX` (4) timed effects: after `frame` updates,
+  start an actor animation and/or a sound. Each player has one active group, so
+  a new press restarts it and drops the previous press's pending effects. The
+  poll runs once per frame in the score task. On-pattern sounds come from the
+  line's sound bank (`scr_snd_dbuff.bank[sndId & 1]`, double-buffered between
+  lines), off-pattern ones from the common bank (`SCR_TAP_COMMON`); the SPU
+  "box" is the player index, so each player has one voice slot.
 - Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
   demo) press each key of their tap set at its exact time, except in "follow"
   lines. A score line whose script sets `TAP_FOLLOW_SAVE` copies the player's

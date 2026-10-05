@@ -29,16 +29,20 @@ typedef enum {
     TAPSCODE_MAX
 } TAPSCODE_ENUM;
 
+/* One timed effect of a tap: after `frame` updates, start an actor animation
+ * and/or a sound (-1 for none, frame -1 for an unused slot). */
 typedef struct { // 0xc
     /* 0x0 */ int frame;
     /* 0x4 */ int actor;
     /* 0x8 */ short sound;
 } TAPCT;
 
+#define TAPCT_MAX 4
+
 typedef struct { // 0x38
     /* 0x00 */ int time;
     /* 0x04 */ short KeyIndex;
-    /* 0x08 */ TAPCT tapct[4];
+    /* 0x08 */ TAPCT tapct[TAPCT_MAX];
 } TAPDAT;
 
 typedef struct { // 0x34
