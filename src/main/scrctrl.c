@@ -1175,7 +1175,7 @@ int getLvlTblRand(TAPLVL_DAT *taplvl_dat_pp) {
     rand_tmp = randMakeMax(100);
     check = 0;
 
-    for (i = 0; i < 17; i++, ret++) {
+    for (i = 0; i < PR_ARRAYSIZE(taplvl_dat_pp->per); i++, ret++) {
         check += taplvl_dat_pp->per[i];
         if (check > rand_tmp) {
             break;
@@ -1239,7 +1239,7 @@ void tapLevelChange(SCORE_INDV_STR *sindv_pp) {
     if (add_move < 0) {
         add_move = TCT_LV00;
     }
-    if (add_move > 15) {
+    if (add_move > TCT_LV15) {
         add_move = TCT_LV15;
     }
 
@@ -3232,7 +3232,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     scex_pp->exam_point = sindv_pp->global_ply->now_score;
 
                     if (tapset_pp == NULL) {
-                        scex_pp->exam_coolP = 11111;
+                        scex_pp->exam_coolP = 11111; /* no tap set: a COOL threshold no line reaches */
                     } else {
                         exp = ExamScoreCheckSame(sindv_pp);
                         if (global_data.play_step != PSTEP_VS) {
