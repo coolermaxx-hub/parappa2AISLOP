@@ -2964,6 +2964,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
                 bRecJacket = nStage;
             }
             pLog->clrCOOL[nStage] = nRound + 1;
+            /* push this clear's round onto the four-entry crown history */
             clog = pLog->logCOOL[nStage];
             pLog->logCOOL[nStage] = ((clog << 4) & 0xfff0) | ((nRound + 1 < 5) ? nRound + 1 : 4);
         }

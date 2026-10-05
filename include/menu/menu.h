@@ -113,7 +113,9 @@ typedef struct { // 0x188
     /* 0x038 */ int clrCount[8];
     /* 0x058 */ int clrVSCOM1[8];
     /* 0x078 */ int clrCOOL[8];
-    /* 0x098 */ u_int logCOOL[8];
+    /* 0x098 */ u_int logCOOL[8]; /* per stage: the last four COOL clears, one nibble each
+                                   * (the round, 1-4), newest in the low nibble; the map
+                                   * shows one crown per entry */
     /* 0x0b8 */ GAME_STATUS game_status;
 } P3LOG_VAL;
 
