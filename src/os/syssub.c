@@ -285,7 +285,7 @@ void padAnaRead0Clear(PADD *pad_pp) {
     int i;
 
     for (i = 0; i < PR_ARRAYSIZE(pad_pp->ana); i++) {
-        pad_pp->ana[i] = 0x80;
+        pad_pp->ana[i] = PAD_ANA_CENTER;
     }
 }
 
@@ -357,18 +357,18 @@ void padAnaMixPad(PADD *pad_pp) {
     pad_pp->mshot = pad_pp->shot;
 
     /* Analog X axis */
-    if (pad_pp->ana[PAD_ANA_LX] < 0x40) {
+    if (pad_pp->ana[PAD_ANA_LX] < PAD_ANA_LOW) {
         pad_pp->mshot |= SCE_PADLleft;
     }
-    if (pad_pp->ana[PAD_ANA_LX] > 0xbf) {
+    if (pad_pp->ana[PAD_ANA_LX] >= PAD_ANA_HIGH) {
         pad_pp->mshot |= SCE_PADLright;
     }
 
     /* Analog Y axis */
-    if (pad_pp->ana[PAD_ANA_LY] < 0x40) {
+    if (pad_pp->ana[PAD_ANA_LY] < PAD_ANA_LOW) {
         pad_pp->mshot |= SCE_PADLup;
     }
-    if (pad_pp->ana[PAD_ANA_LY] > 0xbf) {
+    if (pad_pp->ana[PAD_ANA_LY] >= PAD_ANA_HIGH) {
         pad_pp->mshot |= SCE_PADLdown;
     }
 

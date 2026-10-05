@@ -526,10 +526,6 @@ int selPlayDisp(int sel_stage, int sel_disp, int firstf) {
     return ret;
 }
 
-/* Analog stick axis (0..255, centre ~0x80) beyond which the hat changes. */
-#define HAT_STICK_LOW  0x40
-#define HAT_STICK_HIGH 0xc0
-
 static void SpHatChangeSub(void) {
     PADD *pad_pp;
 
@@ -541,13 +537,13 @@ static void SpHatChangeSub(void) {
 
     pad_pp = &pad[0];
 
-    if (pad_pp->ana[1] < HAT_STICK_LOW) {
+    if (pad_pp->ana[PAD_ANA_RY] < PAD_ANA_LOW) {
         hat_change_enum = HCNG_R1;
-    } else if (pad_pp->ana[0] >= HAT_STICK_HIGH) {
+    } else if (pad_pp->ana[PAD_ANA_RX] >= PAD_ANA_HIGH) {
         hat_change_enum = HCNG_R2;
-    } else if (pad_pp->ana[1] >= HAT_STICK_HIGH) {
+    } else if (pad_pp->ana[PAD_ANA_RY] >= PAD_ANA_HIGH) {
         hat_change_enum = HCNG_R3;
-    } else if (pad_pp->ana[0] < HAT_STICK_LOW) {
+    } else if (pad_pp->ana[PAD_ANA_RX] < PAD_ANA_LOW) {
         hat_change_enum = HCNG_R4;
     }
 
@@ -1319,10 +1315,10 @@ int urawazaKeyCheck(void) {
         float pos;
 
         /* With the right stick tilted, its direction picks one of 17 sectors; otherwise pick at random. */
-        if (pad_pp->ana[PAD_ANA_RY] <  (128 - 64) || pad_pp->ana[PAD_ANA_RX] >= (64 + 128) ||
-            pad_pp->ana[PAD_ANA_RY] >= (64 + 128) || pad_pp->ana[PAD_ANA_RX] <  (128 - 64)) {
-            short rx = pad_pp->ana[PAD_ANA_RX] - 128;
-            short ry = pad_pp->ana[PAD_ANA_RY] - 128;
+        if (pad_pp->ana[PAD_ANA_RY] < PAD_ANA_LOW || pad_pp->ana[PAD_ANA_RX] >= PAD_ANA_HIGH ||
+            pad_pp->ana[PAD_ANA_RY] >= PAD_ANA_HIGH || pad_pp->ana[PAD_ANA_RX] < PAD_ANA_LOW) {
+            short rx = pad_pp->ana[PAD_ANA_RX] - PAD_ANA_CENTER;
+            short ry = pad_pp->ana[PAD_ANA_RY] - PAD_ANA_CENTER;
 
             pos = atan2(-rx, ry);
             pos = (pos + PR_PI);

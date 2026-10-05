@@ -47,6 +47,12 @@ typedef enum {
     PAD_ANA_MAX = 4 
 } PAD_ANA;
 
+/* Analog stick axes read 0..255 with the centre near PAD_ANA_CENTER; a value
+ * below PAD_ANA_LOW or at least PAD_ANA_HIGH counts as pushed. */
+#define PAD_ANA_CENTER 0x80
+#define PAD_ANA_LOW    0x40
+#define PAD_ANA_HIGH   0xc0
+
 typedef enum {
     PAD_PR_None = -1,
     PAD_PR_Lright = 0,
