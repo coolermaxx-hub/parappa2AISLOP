@@ -16,6 +16,9 @@
 /* The WP2 stream clock counts 256-sample units at 48 kHz, 48 samples a millisecond. */
 #define WP2_MS_TO_UNITS(ms) (((ms) * 48) / 256)
 
+/* Stage music level on CdctrlWP2SetVolume's 0-127 scale. */
+#define CD_BGM_VOLUME 120
+
 typedef enum {
     FRMODE_PC = 0,
     FRMODE_CD = 1,

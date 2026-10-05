@@ -3735,7 +3735,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
 
         switch (j) {
         case SCRSUBJ_CDSND_ON:
-            CdctrlWP2SetVolume(120);
+            CdctrlWP2SetVolume(CD_BGM_VOLUME);
             break;
         case SCRSUBJ_CDSND_OFF:
             CdctrlWP2SetVolume(0);
@@ -4227,7 +4227,7 @@ void ScrCtrlMainLoop(void *x) {
 
     if (GetTimeType(global_data.draw_tbl_top) != GTIME_VSYNC) {
         CdctrlWP2Play();
-        CdctrlWP2SetVolume(120);
+        CdctrlWP2SetVolume(CD_BGM_VOLUME);
     } else {
         TimeCallbackTimeSet(0);
         allTimeCallbackTimeSetChanTempo(0);
