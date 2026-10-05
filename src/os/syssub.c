@@ -206,7 +206,7 @@ void GPadSysRead(void) {
                 sysP_pp->act_align[3] = 0xff;
                 sysP_pp->act_align[4] = 0xff;
                 sysP_pp->act_align[5] = 0xff;
-                WorkClear(sysP_pp->act_direct, 6);
+                WorkClear(sysP_pp->act_direct, sizeof(sysP_pp->act_direct));
 
                 if (scePadSetActAlign(i, 0, sysP_pp->act_align) == 0) {
                     break;
