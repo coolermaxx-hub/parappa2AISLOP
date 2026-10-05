@@ -3417,11 +3417,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->vsWin++;
                                     gplay_enemy->vsLost++;
 
-                                    if (gplay_my->score > 250 && gplay_enemy->score == 0) {
+                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score == 0) {
                                         jobnum = SCREX_AR_WIN1;
                                     }
 
-                                    if (gplay_my->score > 250 && gplay_enemy->score > 250) {
+                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score > VS_ROUND_HIGH_SCORE) {
                                         jobnum = SCREX_AR_WIN2;
                                     }
                                 } else {
@@ -3430,11 +3430,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->vsLost++;
                                     gplay_enemy->vsWin++;
 
-                                    if (gplay_enemy->score > 250 && gplay_my->score == 0) {
+                                    if (gplay_enemy->score > VS_ROUND_HIGH_SCORE && gplay_my->score == 0) {
                                         jobnum = SCREX_AR_LOSE1;
                                     }
 
-                                    if (gplay_my->score > 250 && gplay_enemy->score > 250) {
+                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score > VS_ROUND_HIGH_SCORE) {
                                         jobnum = SCREX_AR_LOSE2;
                                     }
                                 }

@@ -314,6 +314,13 @@ typedef enum {
     TAP_FOLLOW_MAX
 } TAP_FOLLOW_ENUM;
 
+/* Exam jobs. In versus play, SCREX_AR_* pick the reaction to one exchange
+ * (WIN1/LOSE1: the winner scored over VS_ROUND_HIGH_SCORE and the loser
+ * nothing; WIN2/LOSE2: both scored over it) and SCREX_AB_* the result of the
+ * battle (WIN1/LOSE1: three or more wins against at most one loss;
+ * WIN2/LOSE2: the battle ended with only one or two wins). */
+#define VS_ROUND_HIGH_SCORE 250
+
 enum {
     SCREX_UP = 0,
     SCREX_DOWN = 1,
