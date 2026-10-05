@@ -10829,7 +10829,7 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
         float lx, rx;
 
         lx = sinf(flx + ((float)y / mesh->mh) * PR_PI) * 1.5f + 0.75f;
-        rx = -sinf(frx - ((float)y / mesh->mh) * 4.712389f) * 1.5f + 0.75f;
+        rx = -sinf(frx - ((float)y / mesh->mh) * (PR_PI * 1.5f)) * 1.5f + 0.75f;
         PkMesh_SetHLinOfsLRX(mesh, y, lx * dr, rx * dr);
     }
 
@@ -10837,7 +10837,7 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
         float uy, dy;
 
         uy = cosf(flx + ((float)x / mesh->mw) * PR_PI) * 0.7f;
-        dy = -cosf(fdy - ((float)x / mesh->mw) * 4.712389f) * 0.7f;
+        dy = -cosf(fdy - ((float)x / mesh->mw) * (PR_PI * 1.5f)) * 0.7f;
         PkMesh_SetVLinOfsUDY(mesh, x, uy * dr, dy * dr);
     }
 
