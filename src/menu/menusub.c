@@ -3059,7 +3059,7 @@ void TsMENU_InitSystem(void) {
     memset(&MNS_StageMap, 0, sizeof(MNS_StageMap));
     memset(&MNS_StageMap2, 0, sizeof(MNS_StageMap2));
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(MNS_StgCounter); i++) {
         memset(&MNS_StgCounter[i], 0, sizeof(MNS_StgCounter[i]));
     }
 
@@ -3070,7 +3070,7 @@ void TsMENU_InitSystem(void) {
     UserWork = (USER_DATA*)memalign(16, sizeof(USER_DATA));
     memset(UserWork, 0, sizeof(*UserWork));
 
-    pCStageRank = (P3MC_STAGERANK*)memalign(16, sizeof(P3MC_STAGERANK[8]));
+    pCStageRank = (P3MC_STAGERANK*)memalign(16, sizeof(P3MC_STAGERANK[P3MC_STAGE_MAX]));
     memset(pCStageRank, 0, sizeof(P3MC_STAGERANK[8]));
 
     memset(&CurFileInfo, 0, sizeof(CurFileInfo));
@@ -3092,7 +3092,7 @@ void TsMenu_RankingClear(void) {
     int             i;
     P3MC_STAGERANK *pRank = pCStageRank;
 
-    for (i = 0; i < 8; i++, pRank++) {
+    for (i = 0; i < P3MC_STAGE_MAX; i++, pRank++) {
         memset(pRank, 0, sizeof(*pRank));
     }
 }
@@ -3127,7 +3127,7 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
         MNScene_DispSw(&MNS_RepCounter, 0);
         MNScene_DispSw(&MNS_JimakuBak, 0);
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(MNS_StgCounter); i++) {
             MNScene_DispSw(&MNS_StgCounter[i], 0);
         }
 
@@ -3198,7 +3198,7 @@ void TsMenu_End(void) {
     MNScene_End(&MNS_RepCounter);
     MNScene_End(&MNS_OptCounter);
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(MNS_StgCounter); i++) {
         MNScene_End(&MNS_StgCounter[i]);
     }
 
@@ -3367,7 +3367,7 @@ static void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
     int             i, k, l;
     P3MC_STAGERANK *pRank = pRankTop;
 
-    for (l = 0; l < 8; l++, pRank++) {
+    for (l = 0; l < P3MC_STAGE_MAX; l++, pRank++) {
         for (i = 0; i < pRank->nSplay; i++) {
             if (pRank->splay[i].name[0] == '\0') {
                 memcpy(pRank->splay[i].name, name, sizeof(pRank->splay[i].name));

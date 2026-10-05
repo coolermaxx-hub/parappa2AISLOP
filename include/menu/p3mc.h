@@ -28,6 +28,9 @@ typedef struct { // 0x14
 #define P3MC_RANK_SINGLE_MAX 20
 #define P3MC_RANK_VS_MAX     10
 
+/* Stages with rankings (stages 1-8). */
+#define P3MC_STAGE_MAX 8
+
 typedef struct { // 0x4c4
     /* 0x000 */ int nSplay;
     /* 0x004 */ P3MC_RANKSCORE splay[P3MC_RANK_SINGLE_MAX];
@@ -89,7 +92,7 @@ typedef struct { // 0x2664
     /* 0x0037 */ u_char pads;
     /* 0x0038 */ u_int pad[1];
     /* 0x003c */ P3MC_DATE date;
-    /* 0x0044 */ P3MC_STAGERANK stageRank[8];
+    /* 0x0044 */ P3MC_STAGERANK stageRank[P3MC_STAGE_MAX];
 } USER_DATA;
 
 typedef struct { // 0x2684
