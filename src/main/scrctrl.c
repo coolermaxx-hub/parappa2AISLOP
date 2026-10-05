@@ -764,8 +764,8 @@ void vsTapdatSetMemorySave(void) {
     WorkClear(vsothsave_tmp, sizeof(vsothsave_tmp));
 
     for (i = 0; i < vs_tapdat_work_cnt; i++, tapdat_pp++) {
-        int time = tapdat_pp->time / 24;
-        if (time >= 32) {
+        int time = tapdat_pp->time / TICKS_PER_STEP;
+        if (time >= PR_ARRAYSIZE(vsothsave_tmp)) {
             printf("OTH SAVE OVER\n");
         } else {
             vsothsave_tmp[time] = (u_char)tapdat_pp->KeyIndex;
@@ -784,9 +784,9 @@ void vsTapdatSetMemoryLoad(void) {
     if (mccReqVSOTHSAVEget(&vsothsave_tmp)) {
         vs_tapdat_work_cnt = 0;
 
-        for (i = 0; i < 32; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(vsothsave_tmp); i++) {
             if (vsothsave_tmp[i] != 0) {
-                vs_tapdat_work[vs_tapdat_work_cnt].time = i * 24;
+                vs_tapdat_work[vs_tapdat_work_cnt].time = i * TICKS_PER_STEP;
                 vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].actor = -1;
                 vs_tapdat_work[vs_tapdat_work_cnt].tapct[0].sound = -1;
                 vs_tapdat_work[vs_tapdat_work_cnt].KeyIndex = vsothsave_tmp[i];
@@ -815,7 +815,7 @@ void vsTapdatSet(SCORE_INDV_STR *sindv_pp) {
         tapset_pp = IndvGetTapSetAdrs(sindv_pp);
         tapdat_pp = tapset_pp->tapdat_pp;
 
-        endlng = ((tapset_pp->taptimeEnd / 24) - (tapset_pp->taptimeStart / 24)) * 24;
+        endlng = ((tapset_pp->taptimeEnd / TICKS_PER_STEP) - (tapset_pp->taptimeStart / TICKS_PER_STEP)) * TICKS_PER_STEP;
 
         for (i = 0; i < tapset_pp->tapdat_size; i++, tapdat_pp++) {
             if (tapdat_pp->KeyIndex != KiNO) {
@@ -2291,8 +2291,8 @@ static void on_th_make(EXAM_CHECK *ec_pp, CK_TH_ENUM ckth) {
 
     ec_pp->ckth = ckth;
 
-    ofsT = ec_pp->ofs_tick % 96;
-    ofsT += 96;
+    ofsT = ec_pp->ofs_tick % TICKS_PER_BEAT;
+    ofsT += TICKS_PER_BEAT;
 
     ofsTend = ofsT + ec_pp->tapset_pp->taptimeEnd - ec_pp->tapset_pp->taptimeStart;
 
@@ -2622,7 +2622,7 @@ static int exh_renda_out(EXAM_CHECK *ec_pp) {
     int renda_ck;
 
     renda_ck = ec_pp->tapset_pp->taptimeEnd - ec_pp->tapset_pp->taptimeStart;
-    renda_ck = ((renda_ck + 23) / 24);
+    renda_ck = ((renda_ck + TICKS_PER_STEP - 1) / TICKS_PER_STEP);
     renda_ck += 3;
 
     if (ec_pp->ted_num >= renda_ck) {

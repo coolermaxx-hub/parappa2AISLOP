@@ -3,8 +3,12 @@
 
 #include <eetypes.h>
 
+/* Song time is counted in ticks: 96 to a beat, 24 to a step (a sixteenth note). */
+#define TICKS_PER_BEAT 96
+#define TICKS_PER_STEP 24
+
 /*
- * Song time is counted in ticks, 96 to a beat; tempo is in beats per minute
+ * Tempo is in beats per minute
  * and the frame clock runs at 60 Hz (3600 frames a minute). Both conversions
  * round to the nearest unit (the caller truncates the float).
  */

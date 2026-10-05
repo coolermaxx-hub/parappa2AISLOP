@@ -21,7 +21,7 @@ static void setMakinDataMoto(TAPDAT *tapdat_pp, int size, CM_STR *cm_str_pp) {
 
     for (i = 0; i < size; i++, tapdat_pp++) {
         if (tapdat_pp->KeyIndex != KiNO && tapdat_pp->time >= 0) {
-            time = tapdat_pp->time / 24;
+            time = tapdat_pp->time / TICKS_PER_STEP;
             if (time < 32) {
                 cm_str_pp[time].keyId = tapdat_pp->KeyIndex;
             }
@@ -81,11 +81,11 @@ static int setMakingDataCOMMAKE_STR(COMMAKE_STR *com_pp, CM_STR *moto_pp) {
 
     ret = 0;
 
-    /* Key slots are 24 ticks (a quarter of a beat) apart. */
+    /* Key slots are a step (a quarter of a beat) apart. */
     for (i = 0; i < 32; i++, moto_pp++) {
         if (moto_pp->keyId != 0) {
             com_pp->KeyIndex = moto_pp->keyId;
-            com_pp->time = i * 24 + moto_pp->timeOfs;
+            com_pp->time = i * TICKS_PER_STEP + moto_pp->timeOfs;
 
             ret++;
             com_pp++;
@@ -487,7 +487,7 @@ static CM_STR_CTRL cm_str_ctrl;
 int computerMaking(COMMAKE_STR *com_pp, int com_cnt, TAPDAT *moto_pp, int moto_cnt, TAPSET *tapset_pp, LEVEL_VS_ENUM clvl) {
     WorkClear(&cm_str_ctrl, sizeof(cm_str_ctrl));
 
-    cm_str_ctrl.maxBox = ((tapset_pp->taptimeEnd - tapset_pp->taptimeStart) / 24) - 1;
+    cm_str_ctrl.maxBox = ((tapset_pp->taptimeEnd - tapset_pp->taptimeStart) / TICKS_PER_STEP) - 1;
 
     setMakinDataMoto(tapset_pp->tapdat_pp, tapset_pp->tapdat_size, cm_str_ctrl.cm_str_mt);
     setMakinDataMoto(moto_pp, moto_cnt, cm_str_ctrl.cm_str_now);
