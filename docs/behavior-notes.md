@@ -29,8 +29,9 @@ recomputes the clock:
 - For seeks, the game converts a tick time back to a stream position with
   `CdctrlSndTime2WP2sample` and subtracts a per-line offset
   (`GetTimeOfset(line) * 48 / 256`).
-- *Inferred:* the 16/1875 factor equals 256/30000, so the WP2 position is
-  probably counted in 256-sample units of a 48 kHz stream. This is not checked.
+- The WP2 position is counted in 256-sample units of a 48 kHz stream (derived
+  from three formulas that agree; see the WP2 stream section below). The audio
+  data itself was not inspected.
 
 **Input sampling (inferred).** `osFunc()` (`src/os/system.c`) runs once per
 frame from the system thread. It waits for VBlank (`sceGsSyncV`), resets
