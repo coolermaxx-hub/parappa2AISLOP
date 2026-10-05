@@ -2535,7 +2535,7 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
         u_char ymin; /* first the number of pressed shapes present, then the rarest one's count */
 
         for (i = 0; i < PR_ARRAYSIZE(yaku_tmp_buf); i++) {
-            for (j = 0; j < 4; j++) {
+            for (j = 0; j < PR_ARRAYSIZE(yaku_map); j++) {
                 if (yaku_tmp_buf[i] == yaku_map[j]) {
                     yaku_cnt[j]++;
                 }
@@ -2576,7 +2576,7 @@ static int exh_yaku(EXAM_CHECK *ec_pp, int hane_flag) {
 
         ret = 0;
 
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(yaku_cnt); i++) {
             ret += yaku_cnt[i] * yaku_scr[i];
         }
 
@@ -3905,7 +3905,7 @@ static void ScrCtrlIndvJob(void) {
 
     sindv_pp = score_indv_str;
 
-    for (i = 0; i < 5; i++, sindv_pp++) {
+    for (i = 0; i < PR_ARRAYSIZE(score_indv_str); i++, sindv_pp++) {
         if (!(sindv_pp->status & SCS_USE)) {
             continue;
         }
@@ -3968,7 +3968,7 @@ static void ScrCtrlIndvJob(void) {
 
     sindv_pp = score_indv_str;
 
-    for (i = 0; i < 5; i++, sindv_pp++) {
+    for (i = 0; i < PR_ARRAYSIZE(score_indv_str); i++, sindv_pp++) {
         int indvTime;
 
         if (!(sindv_pp->status & SCS_USE)) {
@@ -4816,7 +4816,7 @@ static void bonusGameCtrl(int time) {
         int         i;
         BNG_KOTAMA *bng_kotama_pp = bng_str.bng_kotama;
 
-        for (i = 0; i < 4; i++, bng_kotama_pp++) {
+        for (i = 0; i < PR_ARRAYSIZE(bng_str.bng_kotama); i++, bng_kotama_pp++) {
             bng_kotama_pp->wait_time++;
 
             switch (bng_kotama_pp->bng_kotama_act_enum) {
@@ -5011,7 +5011,7 @@ static void LessonRoundDisp(SCRRJ_LESSON_ROUND_ENUM type) {
         sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, tim2_dat_pp->GsTex1);
         sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(lero_pos_str[type]); i++) {
             set_lero_gifset(&gifpk, &lero_tim2_pt[lero_pos_str[type][i].tim2_num], lero_pos_str[type][i].posx, lero_pos_str[type][i].posy);
         }
 
