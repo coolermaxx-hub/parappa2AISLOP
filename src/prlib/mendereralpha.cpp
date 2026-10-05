@@ -49,8 +49,9 @@ static PrNoodleAlphaFramePacket alphaModulationFramePacket = {
     { SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 1, 1, 0, 0, 0, 1, 0, 0), SCE_GS_PRIM },
     { SCE_GS_SET_UV(0, 0), SCE_GS_UV },
     { SCE_GS_SET_XYZ(0, 0, 0), SCE_GS_XYZ2 },
-    { SCE_GS_SET_UV(0x180, 0x100), SCE_GS_UV },
-    { SCE_GS_SET_XYZ(0x2800, 0xE00, 0), SCE_GS_XYZ2 },
+    // Stretch the 24x16 texel alpha map over the whole field (12.4 fixed point).
+    { SCE_GS_SET_UV(24 << 4, 16 << 4), SCE_GS_UV },
+    { SCE_GS_SET_XYZ(SCREEN_WIDTH << 4, SCREEN_FIELD_HEIGHT << 4, 0), SCE_GS_XYZ2 },
     { 0, SCE_GS_FRAME_1 },
     { SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)), SCE_GS_XYOFFSET_1 },
 };
@@ -171,13 +172,14 @@ void PrBlendNoodleImage(bool clear) {
     packet.primitive.address = SCE_GS_PRIM;
     packet.color.value = SCE_GS_SET_RGBAQ(0x80, 0x80, 0x80, 0x80, 0);
     packet.color.address = SCE_GS_RGBAQ;
+    // Texel centres: half a texel in from each corner of the field.
     packet.firstUv.value = SCE_GS_SET_UV(8, 8);
     packet.firstUv.address = SCE_GS_UV;
     packet.firstPosition.value = SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 0);
     packet.firstPosition.address = SCE_GS_XYZ2;
-    packet.secondUv.value = SCE_GS_SET_UV(0x2808, 0xE08);
+    packet.secondUv.value = SCE_GS_SET_UV((SCREEN_WIDTH << 4) + 8, (SCREEN_FIELD_HEIGHT << 4) + 8);
     packet.secondUv.address = SCE_GS_UV;
-    packet.secondPosition.value = SCE_GS_SET_XYZ(0x9400, 0x8700, 0);
+    packet.secondPosition.value = SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 0);
     packet.secondPosition.address = SCE_GS_XYZ2;
 
     PrSendMfifo(&packet.dma);
