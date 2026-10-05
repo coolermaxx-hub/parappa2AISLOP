@@ -547,9 +547,12 @@ void ClearFrameBufferGifTag(sceGsFrame *draw_pp, sceGifPacket *gifpk_pp, u_char 
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_FRAME_1, GS_REG_WORD(*draw_pp));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_COLOR_ONLY);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(r, g, b, a, 0));
+    /* The scissor bounds are inclusive, so this one is a pixel wider and taller
+     * than the field; the sprite below covers exactly the field anyway. The
+     * offset is set so the sprite's GS_X/Y_COORD corners land on the field. */
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_SCISSOR_1, SCE_GS_SET_SCISSOR(0, SCREEN_WIDTH, 0, SCREEN_FIELD_HEIGHT));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0))); // ???
+    sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYOFFSET_1, SCE_GS_SET_XYOFFSET(GS_X_COORD(0), GS_Y_COORD(0)));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRIM, SCE_GS_PRIM_SPRITE);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
