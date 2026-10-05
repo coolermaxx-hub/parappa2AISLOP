@@ -336,7 +336,7 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
 }
 
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
-    rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;
+    rot = (rot - floorf(rot)) * 2.0f * PR_PI;
     matrix = NaMATRIX<float, 4, 4>::RotateMatrix(2, rot);
     matrix = NaMATRIX<float, 4, 4>::TranslateMatrix(0.5f, 0.5f, 0.0f) * matrix;
     matrix = NaMATRIX<float, 4, 4>::ScaleMatrix(10240.0f, 3584.0f, 0.0f) * matrix;

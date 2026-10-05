@@ -132,7 +132,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     float x = data->position[0] * sync * Maximum(ratio, 1.0f);
     float z = data->position[2] * sync;
 
-    float angle = (float)n * 6.2831855f / 115.0f + z;
+    float angle = (float)n * (PR_PI * 2) / 115.0f + z;
     float c = cosf(angle);
     float s = sinf(angle);
     NaMATRIX<float, 2, 2> rot(c, s, -s, c);

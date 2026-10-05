@@ -109,12 +109,12 @@ void PrCreateAlphaModulation(float alpha) {
         float phase = parameters.phase[i] + prMendererSpeed * mendererDeltaRotation[i];
         parameters.phase[i] = phase;
 
-        if (phase > 1.5707964f) {
-            parameters.phase[i] = 3.1415927f - phase;
+        if (phase > (PR_PI / 2)) {
+            parameters.phase[i] = PR_PI - phase;
             mendererDeltaRotation[i] = -mendererDeltaRotation[i];
             parameters.signedWeight[i] = -parameters.signedWeight[i];
-        } else if (phase < -1.5707964f) {
-            parameters.phase[i] = -3.1415927f - phase;
+        } else if (phase < -(PR_PI / 2)) {
+            parameters.phase[i] = -PR_PI - phase;
             mendererDeltaRotation[i] = -mendererDeltaRotation[i];
             parameters.signedWeight[i] = -parameters.signedWeight[i];
         }

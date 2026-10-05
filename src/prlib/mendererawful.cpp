@@ -196,11 +196,11 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
 
 void PrUpdateAwfulMenderer() {
     float angle = awfulAngle + prMendererSpeed * GetAwfulRotation();
-    if (angle >= 6.2831855f) {
-        angle -= 6.2831855f;
+    if (angle >= (PR_PI * 2)) {
+        angle -= (PR_PI * 2);
     }
     if (angle < 0.0f) {
-        angle += 6.2831855f;
+        angle += (PR_PI * 2);
     }
     awfulAngle = angle;
 

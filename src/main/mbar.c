@@ -1249,7 +1249,7 @@ void MbarSclRotMake(MBARR_CHR *mbarr_pp, int mbtime) {
     }
 
     if (mbtime < MBAR_TICKS_PER_BAR) {
-        tmp_rate = cosf(mbtime * 6.2831855f / (float)MBAR_TICKS_PER_BAR);
+        tmp_rate = cosf(mbtime * (PR_PI * 2) / (float)MBAR_TICKS_PER_BAR);
         mbarr_pp->sclx *= tmp_rate;
     }
 }

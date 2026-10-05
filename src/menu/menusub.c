@@ -6371,7 +6371,7 @@ static void TsMCAMes_Flow(u_int tpad) {
             float fRate;
 
             fRate = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
-            fRate *= 6.2831855f;
+            fRate *= (PR_PI * 2);
             fRate = cosf(fRate);
             fRate = ((fRate * fRate) * 1228.8f);
             pmesw->Dline += (int)fRate;
@@ -6891,7 +6891,7 @@ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int dflg, POPCTIM *pfw, int bPut, int
     {
         float drt = pfw->okTim / 25.0f;
         float zrt = sinf(drt * 9.424778f);
-        fSRate = sinf(drt * 6.2831855f);
+        fSRate = sinf(drt * (PR_PI * 2));
         zrt *= drt * 0.9f * drt + 0.1f;
         spr->rgba0 = GetDToneColor(0xffffff, MN_COLOR_WHITE, fSRate * 256.0f * fSRate);
 
@@ -6923,7 +6923,7 @@ void TsPopCusPut(SPR_PKT pk, SPR_PRM *spr, int dflg, POPCTIM *pfw, int bPut, int
     case 6:
     {
         /* Pulse in time with the music, once every 45 frames. */
-        float zrat = sinf((MNSceneGetMusicFitTimer() % 45) * 3.1415927f / 45.0f);
+        float zrat = sinf((MNSceneGetMusicFitTimer() % 45) * PR_PI / 45.0f);
 
         zrat = zrat * 0.1f + 0.95f;
         pfw->srTNo = idx;
@@ -7400,7 +7400,7 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     int         x, y, sy;
     int         i, n;
 
-    pfw->cani.fswing = -cosf((MNSceneGetMusicFitTimer() % 72) / 72.0f * 6.2831855f);
+    pfw->cani.fswing = -cosf((MNSceneGetMusicFitTimer() % 72) / 72.0f * (PR_PI * 2));
     uneri = (MNSceneGetMusicFitTimer() % 180) / 180.0f;
 
     spr->zx = 1.0f;
@@ -7487,7 +7487,7 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     for (i = 0; i < n; i++) {
         if (rt != 0.0f) {
-            float f = sinf(rt * 6.2831855f);
+            float f = sinf(rt * (PR_PI * 2));
 
             TsPatPutMZoom(pk, spr, &pat[i], px, py, f * 0.2f + 1.0f, f * 0.2f + 1.0f, 8, 8, f * 0.3f, f * 0.3f);
             pfw->urTim = 20;
@@ -7564,7 +7564,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
         pfw->cani.habgr = hicol;
         pfw->cani.nabgr = nmcol;
 
-        spr->ofsy = bofsy + sinf((MNSceneGetMusicFitTimer() % 480) * 6.2831855f * 0.0020833334f + POPSel2Btn[i] * 2.5132742f) * 3.3f;
+        spr->ofsy = bofsy + sinf((MNSceneGetMusicFitTimer() % 480) * (PR_PI * 2) * 0.0020833334f + POPSel2Btn[i] * 2.5132742f) * 3.3f;
 
         if (i == pfw->selno && pfw->cani.okTim) {
             bPut = 2;
@@ -7615,7 +7615,7 @@ void TsPopMenCus_Draw(SPR_PKT pk, SPR_PRM *spr, POPUP_MENU *pfw, int px, int py,
                 if (pfw->isSelLev) {
                     bPut0 = 6;
                     if (i == pfw->selLev) {
-                        spr->rgba0 = GetDToneColor(MN_COLOR_WHITE, 0x80606060, sinf((MNSceneGetMusicFitTimer() % 30) * 3.1415927f / 30.0f) * 256.0f);
+                        spr->rgba0 = GetDToneColor(MN_COLOR_WHITE, 0x80606060, sinf((MNSceneGetMusicFitTimer() % 30) * PR_PI / 30.0f) * 256.0f);
                         pt = &VSComMenuSelH_Pat[i];
                     } else {
                         spr->rgba0 = 0x80707070;
@@ -7778,7 +7778,7 @@ static void TsSaveMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     float      rt0, rt1, rt2;
 
     fswing = (MNSceneGetMusicFitTimer() % 72) / 72.0f;
-    fswing = -cosf(fswing * 6.2831855f);
+    fswing = -cosf(fswing * (PR_PI * 2));
     arate = MNSceneGetMusicFitTimer() % 180;
     pfw->cani.fswing = fswing;
 
@@ -7933,7 +7933,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
             pw->state = TSJKCUS_CUR;
         }
 
-        fx = rt * 3.1415927f;
+        fx = rt * PR_PI;
         abgrs = 0x30808080;
         zm = (sinf(fx) * 0.2f + 1.0f) * (rt * 0.25f + 1.0f);
         pw->vrate = sinf(fx) * 0.1f;
@@ -7947,7 +7947,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
             pw->state = TSJKCUS_DEF;
         }
 
-        fx = rt * 3.1415927f;
+        fx = rt * PR_PI;
         abgrs = 0x30808080;
         zm = (1.0 - sinf(fx) * 0.25) * ((1.0f - rt) * 0.25f + 1.0f);
         pw->vrate = sinf(fx) * -0.08f;
@@ -7980,7 +7980,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         pw->innm = TSNumMov(pw->innm, 0, 5);
         rt = 1.0f - pw->innm / 512.0f;
 
-        jrot = (1.0f - rt) * 6.2831855f;
+        jrot = (1.0f - rt) * (PR_PI * 2);
         addx = (1.0f - rt) * (pw->dir ? 200.0f : -200.0f);
         if (pw->dir2) {
             addy = (1.0f - rt) * 20.0f;
@@ -8099,7 +8099,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         rabgr = abgr;
         rabgrs = abgrs;
 
-        fx = rt * 0.5f * 3.1415927f;
+        fx = rt * 0.5f * PR_PI;
         pw->rox = (1.0f - cosf(fx)) * rpx * zm * jzr;
         pw->roy = sinf(fx) * rpy * zm * jzr;
 
@@ -8126,8 +8126,8 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         } else {
             pw->atime++;
             pw->rrot += ((pw->atime > 110) ? 110 : pw->atime) * 0.0023f;
-            if (pw->rrot > 6.2831855f) {
-                pw->rrot -= 6.2831855f;
+            if (pw->rrot > (PR_PI * 2)) {
+                pw->rrot -= (PR_PI * 2);
             }
         }
 
@@ -8241,7 +8241,7 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
     spr->ofsy += addy + pw->oy;
 
     rt = (anmtime % 240) * 2.0f / 240.0f;
-    spr->ofsy += sinf((rt + JUKEWAV_INITBL[pw->patNo]) * 3.1415927f) * 8.0f * swing;
+    spr->ofsy += sinf((rt + JUKEWAV_INITBL[pw->patNo]) * PR_PI) * 8.0f * swing;
 
     if (pw->anime == TSJKANM_ROTATE || pw->anime == TSJKANM_ROTSTOP) {
         _TsJkJacketPut(pk, spr, pw, px, py, jz, jrot, abgr, abgrs);
@@ -8949,7 +8949,7 @@ static void TsCmnCell_CusorDraw(SPR_PKT pk, SPR_PRM *spr, int n, CELLOBJ *obj, i
                 obj->state = 0;
                 obj->flg = 1;
             } else {
-                float ft = sinf((obj->tim % 8) * 0.125f * 3.1415927f);
+                float ft = sinf((obj->tim % 8) * 0.125f * PR_PI);
                 obj->flg = 1;
                 obj->ton = (int)(ft * 256.0f) + 0x100;
             }
@@ -9195,7 +9195,7 @@ static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
                 zr = 1.0f;
             }
 
-            TsPatPutRZoom(pk, spr, ppat, 0, 0, zr, (l == 0) ? -1.5707964f : 1.5707964f);
+            TsPatPutRZoom(pk, spr, ppat, 0, 0, zr, (l == 0) ? -(PR_PI / 2) : (PR_PI / 2));
         }
     }
 
@@ -10423,9 +10423,9 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
 
     rt0 = (MNSceneGetMusicFitTimer() % 360) / 360.0f;
     if (side) {
-        rt0 = sinf((rt0 + rt0) * 3.1415927f - 1.5707964f) * 4.0f;
+        rt0 = sinf((rt0 + rt0) * PR_PI - (PR_PI / 2)) * 4.0f;
     } else {
-        rt0 = sinf((rt0 + rt0) * 3.1415927f) * 4.0f;
+        rt0 = sinf((rt0 + rt0) * PR_PI) * 4.0f;
     }
 
     spr->ofsy += rt0;
@@ -10478,7 +10478,7 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
         TsPatPut(pk, spr, &pbox[i], px, py);
     }
 
-    rt = sinf((MNSceneGetMusicFitTimer() % 12) / 12.0f * 3.1415927f) * 256.0f;
+    rt = sinf((MNSceneGetMusicFitTimer() % 12) / 12.0f * PR_PI) * 256.0f;
     if (pfw->onTime) {
         curcol = GetDToneColor(0x800a6ec8, MN_COLOR_WHITE, rt);
     } else {
@@ -10775,8 +10775,8 @@ void TsSetCTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx, float zy
             rx = (float)(cx - x) / cx;
             ry = (float)(cy - y) / cy;
 
-            sx = cosf(rx * 1.5707964f);
-            pt->ofsx += rw * (1.0f - cosf(ry * 1.5707964f)) * rx;
+            sx = cosf(rx * (PR_PI / 2));
+            pt->ofsx += rw * (1.0f - cosf(ry * (PR_PI / 2))) * rx;
             pt->ofsy += rh * (1.0f - sx) * ry;
         }
     }
@@ -10794,16 +10794,16 @@ void TsSetSLTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float zx) {
 
     boy = spr->ofsy;
 
-    zy = (1.08f - sinf((zx + 1.0f) * 3.1415927f * 0.5f) * 0.08f) * spr->zy;
+    zy = (1.08f - sinf((zx + 1.0f) * PR_PI * 0.5f) * 0.08f) * spr->zy;
     spr->ofsy += spr->sh * spr->zy - spr->sh * zy;
-    rw = spr->sh * spr->zy * cosf(zx * 0.31415927f + 1.5707964f);
+    rw = spr->sh * spr->zy * cosf(zx * 0.31415927f + (PR_PI / 2));
 
     mesh = PkMesh_Create(mx, my);
     PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * zy);
     PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
 
     for (y = 0; y < mesh->mh + 1; y++) {
-        PkMesh_SetHLinOfs(mesh, y, rw * cosf(((float)y / mesh->mh) * 1.5707964f), 0.0f);
+        PkMesh_SetHLinOfs(mesh, y, rw * cosf(((float)y / mesh->mh) * (PR_PI / 2)), 0.0f);
     }
 
     PkFTMesh_Add(pk, spr, mesh);
@@ -10818,17 +10818,17 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
     float   fdy;
     float   flx, frx;
 
-    flx = wr * 6.2831855f;
+    flx = wr * (PR_PI * 2);
     mesh = PkMesh_Create(mx, my);
-    frx = flx - 3.1415927f;
-    fdy = flx + 3.1415927f;
+    frx = flx - PR_PI;
+    fdy = flx + PR_PI;
     PkMesh_SetXYWH(mesh, spr->px, spr->py, spr->sw * spr->zx, spr->sh * spr->zy);
     PkMesh_SetUVWH(mesh, spr->ux, spr->uy, spr->uw, spr->uh);
 
     for (y = 0; y < mesh->mh + 1; y++) {
         float lx, rx;
 
-        lx = sinf(flx + ((float)y / mesh->mh) * 3.1415927f) * 1.5f + 0.75f;
+        lx = sinf(flx + ((float)y / mesh->mh) * PR_PI) * 1.5f + 0.75f;
         rx = -sinf(frx - ((float)y / mesh->mh) * 4.712389f) * 1.5f + 0.75f;
         PkMesh_SetHLinOfsLRX(mesh, y, lx * dr, rx * dr);
     }
@@ -10836,7 +10836,7 @@ void TsSetPNTransSpr(SPR_PKT pk, SPR_PRM *spr, int mx, int my, float wr, float d
     for (x = 0; x < mesh->mw + 1; x++) {
         float uy, dy;
 
-        uy = cosf(flx + ((float)x / mesh->mw) * 3.1415927f) * 0.7f;
+        uy = cosf(flx + ((float)x / mesh->mw) * PR_PI) * 0.7f;
         dy = -cosf(fdy - ((float)x / mesh->mw) * 4.712389f) * 0.7f;
         PkMesh_SetVLinOfsUDY(mesh, x, uy * dr, dy * dr);
     }
@@ -10935,11 +10935,11 @@ static void TsPatPutRZoom(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy
     spr->ofsx -= spr->sw * (spr->zx - zx) * 0.5f;
     spr->ofsy -= spr->sh * (spr->zy - zy) * 0.5f;
 
-    while (rot > 3.1415927f) {
-        rot -= 6.2831855f;
+    while (rot > PR_PI) {
+        rot -= (PR_PI * 2);
     }
-    while (rot < -3.1415927f) {
-        rot += 6.2831855f;
+    while (rot < -PR_PI) {
+        rot += (PR_PI * 2);
     }
 
     spr->rot = rot;
@@ -11170,7 +11170,7 @@ static void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *c
                     spr->rgba0 = GetDToneColor(abgr, abgr | 0x80000000, ton);
 
                     zf = (float)(obj->tim % t) / t;
-                    zf = cosf(zf * 6.2831855f) * 0.1 + 0.9;
+                    zf = cosf(zf * (PR_PI * 2)) * 0.1 + 0.9;
 
                     t   = type->dispTime >> 1;
                     rt  = (float)(obj->tim % t) / t;
@@ -11180,7 +11180,7 @@ static void _TsCELBackObjDraw(SPR_PKT pk, SPR_PRM *spr, int sw, int sh, u_int *c
 
                     obj->px -= obj->vx;
                     obj->py -= obj->vy;
-                    TsHosiPut(pk, spr, ptex, obj->px, obj->py, zf, rt * 6.2831855f);
+                    TsHosiPut(pk, spr, ptex, obj->px, obj->py, zf, rt * (PR_PI * 2));
                 }
             }
         }
@@ -11209,11 +11209,11 @@ static void TsHosiPut(SPR_PKT pk, SPR_PRM *spr, TSTEX_INF *ptex, float px, float
     spr->ofsx = ofx - spr->sw * (spr->zx - zx) * 0.5f + px;
     spr->ofsy = ofy - spr->sh * (spr->zy - zy) * 0.5f + py;
 
-    while (rot > 3.1415927f) {
-        rot -= 6.2831855f;
+    while (rot > PR_PI) {
+        rot -= (PR_PI * 2);
     }
-    while (rot < -3.1415927f) {
-        rot += 6.2831855f;
+    while (rot < -PR_PI) {
+        rot += (PR_PI * 2);
     }
 
     spr->rot = rot;
