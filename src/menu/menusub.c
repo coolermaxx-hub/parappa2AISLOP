@@ -2907,7 +2907,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     nStage = pstate->nStage - 1;
     nRound = pLog->nRound;
 
-    if (nStage < 0 || nStage >= 8) {
+    if (nStage < 0 || nStage >= PR_ARRAYSIZE(pLog->clrCount)) {
         return;
     }
     if (pstate->nMode == PLAY_MODE_VS_MAN) {
@@ -2924,7 +2924,8 @@ static void TsClearSet(P3GAMESTATE *pstate) {
                     flg++;
                 }
             }
-            if (flg == 7) {
+            /* This win completes level 4 on every stage. */
+            if (flg == PR_ARRAYSIZE(pLog->clrVSCOM1) - 1) {
                 bGoRecShop = TRUE;
                 bRecJacket = 9;
             }
@@ -2946,7 +2947,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
             pstate->pAutoMove = pstate->autoMovePos;
         }
 
-        flg = (nRound < 4);
+        flg = (nRound < PR_ARRAYSIZE(pLog->clrFlg));
         if (flg) {
             pLog->clrFlg[nRound] |= 1 << nStage;
         }
