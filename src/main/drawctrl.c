@@ -698,20 +698,23 @@ void BallThrowInitDare(int dare) {
     WorkClear(&bthrow_ctrl[dare], sizeof(BTHROW_CTRL));
 }
 
+/* In versus play a thrown ball ends in a 12-frame explosion (the vs06 bomb textures). */
+#define VS_BOMB_FRAMES 12
+
 static void* vs06BomAdr(OBJBTHROW_TYPE thtype, int time) {
-    u_short bomdat_tea[12] = {
+    u_short bomdat_tea[VS_BOMB_FRAMES] = {
         0x178, 0x177, 0x176, 0x175,
         0x174, 0x173, 0x172, 0x171,
         0x170, 0x16f, 0x16e, 0x16d,
     };
-    u_short bomdat_pa[12] = {
+    u_short bomdat_pa[VS_BOMB_FRAMES] = {
         0x184, 0x183, 0x182, 0x181,
         0x180, 0x17f, 0x17e, 0x17d,
         0x17c, 0x17b, 0x17a, 0x179,
     };
     u_short *bomdat;
 
-    if (global_data.play_step != PSTEP_VS || time >= 12) {
+    if (global_data.play_step != PSTEP_VS || time >= VS_BOMB_FRAMES) {
         return NULL;
     }
 
@@ -801,7 +804,7 @@ void BallThrowPoll(void) {
                             bts_pp->yp = pos_pp[1] + -16.0f;
                             bts_pp->mdl_adr = NULL;
 
-                            if (global_data.play_step == PSTEP_VS && bts_pp->endTime < 12) {
+                            if (global_data.play_step == PSTEP_VS && bts_pp->endTime < VS_BOMB_FRAMES) {
                                 bts_pp->xp = bthrow_ctrl[i].targetX;
                                 bts_pp->yp = bthrow_ctrl[i].targetY;
                             }
@@ -809,18 +812,18 @@ void BallThrowPoll(void) {
                             float tmp; /* frames left until the ball arrives */
 
                             if (global_data.play_step == PSTEP_VS) {
-                                if (bts_pp->endTime < 12) {
+                                if (bts_pp->endTime < VS_BOMB_FRAMES) {
                                     if (bts_pp->endTime == 0) {
                                         bts_pp->use = 0;
                                     }
-                                    if (bts_pp->endTime == 11) {
+                                    if (bts_pp->endTime == VS_BOMB_FRAMES - 1) {
                                         bts_pp->xp = bthrow_ctrl[i].targetX;
                                         bts_pp->yp = bthrow_ctrl[i].targetY;
                                     }
 
                                     bts_pp->tim2_dat_pp = vs06BomAdr(i, bts_pp->endTime);
-                                } else if (bts_pp->endTime != 12) {
-                                    tmp = bts_pp->endTime - 12;
+                                } else if (bts_pp->endTime != VS_BOMB_FRAMES) {
+                                    tmp = bts_pp->endTime - VS_BOMB_FRAMES;
                                     bts_pp->xp += (bthrow_ctrl[i].targetX - bts_pp->xp) / tmp;
                                     bts_pp->yp += (bthrow_ctrl[i].targetY - bts_pp->yp) / tmp;
                                 } else {
