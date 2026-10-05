@@ -249,8 +249,9 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   a new press restarts it and drops the previous press's pending effects. The
   poll runs once per frame in the score task. On-pattern sounds come from the
   line's sound bank (`scr_snd_dbuff.bank[sndId & 1]`, double-buffered between
-  lines), off-pattern ones from the common bank (`SCR_TAP_COMMON`); the SPU
-  "box" is the player index, so each player has one voice slot.
+  lines), off-pattern ones from the common bank (`SCR_TAP_COMMON`). The TapCt
+  "box" is the player index (inferred to be one voice slot per player; the IOP
+  side was not checked).
 - Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
   demo) press each key of their tap set at its exact time, except in "follow"
   lines. A score line whose script sets `TAP_FOLLOW_SAVE` copies the player's
