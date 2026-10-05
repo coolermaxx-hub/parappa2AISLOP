@@ -4656,7 +4656,7 @@ int ScrEndWaitLoop(void) {
     return gameEndWaitLoop;
 }
 
-/* The bonus game takes input for 188 bars (96 ticks each). */
+/* The bonus game takes input for 188 beats (96 ticks each). */
 #define BONUS_GAME_END_TICKS 18048
 
 static void bonusGameInit(void) {

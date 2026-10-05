@@ -1132,11 +1132,12 @@ void MbarWindowSet(MBWINDOW_ENUM wenum) {
     }
 }
 
-/* Bar timing: 24 ticks to a beat, four beats to a bar. The bar draws 25 pixels
- * per 24 ticks, five bars on the first row; the second row starts one bar in. */
-#define MBAR_TICKS_PER_BEAT 24
-#define MBAR_TICKS_PER_BAR  (4 * MBAR_TICKS_PER_BEAT)
-#define MBAR_ROW_TICKS      (5 * MBAR_TICKS_PER_BAR)
+/* Bar timing: 96 ticks to a beat, split into 24-tick steps (sixteenth notes).
+ * The bar draws 25 pixels per step, five beats on the first row; the second
+ * row starts one beat in. */
+#define MBAR_TICKS_PER_STEP 24
+#define MBAR_TICKS_PER_BEAT (4 * MBAR_TICKS_PER_STEP)
+#define MBAR_ROW_TICKS      (5 * MBAR_TICKS_PER_BEAT)
 
 static int MbarGetDispPosX(int tick) {
     int pos;
@@ -1148,7 +1149,7 @@ static int MbarGetDispPosX(int tick) {
     if (tick < MBAR_ROW_TICKS) {
         pos = (tick * 25 / 24);
     } else {
-        pos = ((tick - (MBAR_ROW_TICKS - MBAR_TICKS_PER_BAR)) * 25 / 24);
+        pos = ((tick - (MBAR_ROW_TICKS - MBAR_TICKS_PER_BEAT)) * 25 / 24);
     }
 
     return pos + 13;
@@ -1214,9 +1215,9 @@ static int MbarGetTimeArea2(MBAR_REQ_STR *mr_pp) {
 int MbarGetStartTime(MBAR_REQ_STR *mr_pp) {
     int ret;
 
-    /* Start of the bar that holds the beat before the line's first tap. */
-    ret = mr_pp->current_time + mr_pp->tapset_pp->taptimeStart - MBAR_TICKS_PER_BEAT;
-    ret = (ret / MBAR_TICKS_PER_BAR) * MBAR_TICKS_PER_BAR;
+    /* Start of the beat that holds the step before the line's first tap. */
+    ret = mr_pp->current_time + mr_pp->tapset_pp->taptimeStart - MBAR_TICKS_PER_STEP;
+    ret = (ret / MBAR_TICKS_PER_BEAT) * MBAR_TICKS_PER_BEAT;
     return ret;
 }
 
@@ -1228,7 +1229,7 @@ static int MbarGetStartTap(MBAR_REQ_STR *mr_pp) {
     int ret;
 
     ret = mr_pp->current_time + mr_pp->tapset_pp->taptimeStart;
-    ret = (ret / MBAR_TICKS_PER_BEAT - 1) * MBAR_TICKS_PER_BEAT;
+    ret = (ret / MBAR_TICKS_PER_STEP - 1) * MBAR_TICKS_PER_STEP;
     return -1 < ret ? ret : 0;
 }
 
@@ -1238,18 +1239,18 @@ void MbarSclRotMake(MBARR_CHR *mbarr_pp, int mbtime) {
     mbarr_pp->sclx = 1.0f;
     mbarr_pp->scly = 1.0f;
 
-    if (mbtime >= (u_int)MBAR_TICKS_PER_BAR) {
+    if (mbtime >= (u_int)MBAR_TICKS_PER_BEAT) {
         return;
     }
 
-    if (mbtime < MBAR_TICKS_PER_BEAT) {
-        tmp_rate = (MBAR_TICKS_PER_BEAT - mbtime) / (float)MBAR_TICKS_PER_BEAT + 1.0f;
+    if (mbtime < MBAR_TICKS_PER_STEP) {
+        tmp_rate = (MBAR_TICKS_PER_STEP - mbtime) / (float)MBAR_TICKS_PER_STEP + 1.0f;
         mbarr_pp->sclx = tmp_rate;
         mbarr_pp->scly = tmp_rate;
     }
 
-    if (mbtime < MBAR_TICKS_PER_BAR) {
-        tmp_rate = cosf(mbtime * (PR_PI * 2) / (float)MBAR_TICKS_PER_BAR);
+    if (mbtime < MBAR_TICKS_PER_BEAT) {
+        tmp_rate = cosf(mbtime * (PR_PI * 2) / (float)MBAR_TICKS_PER_BEAT);
         mbarr_pp->sclx *= tmp_rate;
     }
 }
@@ -1257,8 +1258,8 @@ void MbarSclRotMake(MBARR_CHR *mbarr_pp, int mbtime) {
 void MbarGuideLightMake(MBARR_CHR *mbarr_pp, int mbtime) {
     u_char col = 128;
 
-    if (mbtime >= 0 && mbtime < 6 * MBAR_TICKS_PER_BEAT) {
-        col = (6 * MBAR_TICKS_PER_BEAT - mbtime) * 128 / (6 * MBAR_TICKS_PER_BEAT) + 128u;
+    if (mbtime >= 0 && mbtime < 6 * MBAR_TICKS_PER_STEP) {
+        col = (6 * MBAR_TICKS_PER_STEP - mbtime) * 128 / (6 * MBAR_TICKS_PER_STEP) + 128u;
     }
 
     mbarr_pp->r = mbarr_pp->g = mbarr_pp->b = col;
