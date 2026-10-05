@@ -296,14 +296,16 @@ TCL_CTRL tcl_ctrl[4][33] = {
     },
 };
 
+/* One program per exam sub-score (exam_score[0..2]), judged on the
+ * CK_TH_NORMAL, CK_TH_NORMAL and CK_TH_HANE windows (ExamScoreCheck). */
 static SCRPRGSTR scrprgstr[] = {
-    { .size = 0xa, .exh_str_pp = exh_str_normal },
-    { .size = 0x7, .exh_str_pp = exh_str_original },
-    { .size = 0x6, .exh_str_pp = exh_str_hane },
+    { .size = PR_ARRAYSIZE(exh_str_normal),   .exh_str_pp = exh_str_normal },
+    { .size = PR_ARRAYSIZE(exh_str_original), .exh_str_pp = exh_str_original },
+    { .size = PR_ARRAYSIZE(exh_str_hane),     .exh_str_pp = exh_str_hane },
 };
 
 static SCRPRGSTR scrprgstr_hook[] = {
-    { .size = 0x2, .exh_str_pp = exh_str_hook },
+    { .size = PR_ARRAYSIZE(exh_str_hook), .exh_str_pp = exh_str_hook },
 };
 
 static TIM2_DAT tim2spr_tbl[] = {
@@ -2791,7 +2793,7 @@ static void ExamScoreCheck(SCORE_INDV_STR *sindv_pp) {
 
     WorkClear(exam_check, sizeof(exam_check));
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(exam_check); i++) {
         exam_check[i].tapstr_level = global_data.tapLevel;
         exam_check[i].tapset_level = sindv_pp->tapset_pos;
         exam_check[i].scrdat_pp = sindv_pp->scrdat_pp;
@@ -2858,7 +2860,7 @@ static void ExamScoreCheck(SCORE_INDV_STR *sindv_pp) {
         EXAM_CHECK *exam_check_pp;
         SCRPRGSTR  *scrprgstr_pp;
 
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(exam_check); i++) {
             exam_check_pp = &exam_check[i];
             scrprgstr_pp  = &scrprgstr[i];
 
@@ -3502,6 +3504,8 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                         printf("vs cool point:%d  now point:%d\n", scex_pp->exam_coolP, scex_pp->exam_point);
 
+                        /* Beating the copy score with some original play makes this
+                         * pattern the next one to answer. */
                         if (scex_pp->exam_point > scex_pp->exam_coolP) {
                             if (gplay_my->exam_score[1] != 0) {
                                 vsTapdatSet(sindv_pp);
