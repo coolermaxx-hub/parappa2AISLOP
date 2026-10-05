@@ -77,7 +77,7 @@ void CmnGifFlush(void) {
 }
 
 int CmnGifSetData(sceGifPacket *gifpk_pp, int pri) {
-    if (cmngif_pri_cnt >= 64) {
+    if (cmngif_pri_cnt >= PR_ARRAYSIZE(cmngif_pri)) {
         printf("common packet set over\n");
         return 1;
     }
@@ -112,6 +112,9 @@ int CmnGifOpenCmnPk(sceGifPacket *gifpk_pp) {
     return 0;
 }
 
+/* Queues the packet for CmnGifFlush, which sends queued packets in ascending
+ * pri order, so a higher pri draws later (on top). Its exchange sort is not
+ * stable: packets with equal pri can come out in a different order. */
 int CmnGifCloseCmnPk(sceGifPacket *gifpk_pp, int pri) {
     sceGifPkCloseGifTag(gifpk_pp);
     cmnGifPkCurrent = sceGifPkTerminate(gifpk_pp);
