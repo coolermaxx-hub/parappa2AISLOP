@@ -12,15 +12,20 @@ typedef struct { // 0x4
     /* 0x2 */ short timeOfs;
 } CM_STR;
 
+/* Patterns are laid out on step slots (TICKS_PER_STEP apart), eight beats' worth. */
+#define CM_STEP_MAX 32
+
+/* The computer's versus answer (see behavior-notes.md). keyCnt_* count each key
+ * by KEY_INDEX_ENUM, with slot KiNO holding the total. */
 typedef struct { // 0x1c4
-    /* 0x000 */ CM_STR cm_str_mt[32];
-    /* 0x080 */ CM_STR cm_str_now[32];
-    /* 0x100 */ CM_STR cm_str_make[32];
-    /* 0x180 */ int keyKind;
-    /* 0x184 */ int keyKindNum;
-    /* 0x188 */ int keyCnt_mt[7];
-    /* 0x1a4 */ int keyCnt_now[7];
-    /* 0x1c0 */ int maxBox;
+    /* 0x000 */ CM_STR cm_str_mt[CM_STEP_MAX];   /* the line's own tap set */
+    /* 0x080 */ CM_STR cm_str_now[CM_STEP_MAX];  /* the pattern to answer (vs_tapdat_work) */
+    /* 0x100 */ CM_STR cm_str_make[CM_STEP_MAX]; /* the answer being built */
+    /* 0x180 */ int keyKind;    /* key code mask used by cm_str_mt */
+    /* 0x184 */ int keyKindNum; /* number of keys in keyKind */
+    /* 0x188 */ int keyCnt_mt[KiMAX];
+    /* 0x1a4 */ int keyCnt_now[KiMAX];
+    /* 0x1c0 */ int maxBox;     /* steps in the tap window, minus one */
 } CM_STR_CTRL;
 
 typedef struct { // 0x8

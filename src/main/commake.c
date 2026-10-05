@@ -22,7 +22,7 @@ static void setMakinDataMoto(TAPDAT *tapdat_pp, int size, CM_STR *cm_str_pp) {
     for (i = 0; i < size; i++, tapdat_pp++) {
         if (tapdat_pp->KeyIndex != KiNO && tapdat_pp->time >= 0) {
             time = tapdat_pp->time / TICKS_PER_STEP;
-            if (time < 32) {
+            if (time < CM_STEP_MAX) {
                 cm_str_pp[time].keyId = tapdat_pp->KeyIndex;
             }
         }
@@ -33,8 +33,8 @@ static int getMakingDataKeyKind(CM_STR *cm_str_pp) {
     int i;
     int ret = 0;
 
-    for (i = 0; i < 32; i++, cm_str_pp++) {
-        if (cm_str_pp->keyId != 0) {
+    for (i = 0; i < CM_STEP_MAX; i++, cm_str_pp++) {
+        if (cm_str_pp->keyId != KiNO) {
             ret |= GetIndex2KeyCode(cm_str_pp->keyId);
         }
     }
@@ -45,14 +45,14 @@ static int getMakingDataKeyKind(CM_STR *cm_str_pp) {
 static void getMakingDataKeyCnt(CM_STR *cm_str_pp, int *dat_pp) {
     int i;
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < KiMAX; i++) {
         dat_pp[i] = 0;
     }
 
-    for (i = 0; i < 32; i++, cm_str_pp++) {
-        if (cm_str_pp->keyId != 0) {
+    for (i = 0; i < CM_STEP_MAX; i++, cm_str_pp++) {
+        if (cm_str_pp->keyId != KiNO) {
             dat_pp[cm_str_pp->keyId]++;
-            (*dat_pp)++;
+            dat_pp[KiNO]++; /* total */
         }
     }
 }
@@ -60,7 +60,7 @@ static void getMakingDataKeyCnt(CM_STR *cm_str_pp, int *dat_pp) {
 static void setMakingDataCopy(CM_STR *saki_pp, CM_STR *moto_pp) {
     int i;
 
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < CM_STEP_MAX; i++) {
         *saki_pp = *moto_pp;
         saki_pp++, moto_pp++;
     }
@@ -82,8 +82,8 @@ static int setMakingDataCOMMAKE_STR(COMMAKE_STR *com_pp, CM_STR *moto_pp) {
     ret = 0;
 
     /* Key slots are a step (a quarter of a beat) apart. */
-    for (i = 0; i < 32; i++, moto_pp++) {
-        if (moto_pp->keyId != 0) {
+    for (i = 0; i < CM_STEP_MAX; i++, moto_pp++) {
+        if (moto_pp->keyId != KiNO) {
             com_pp->KeyIndex = moto_pp->keyId;
             com_pp->time = i * TICKS_PER_STEP + moto_pp->timeOfs;
 
@@ -116,7 +116,8 @@ static int comMakeSSmaxCntGet(int *dat_pp) {
     maxCnt = 0;
     ret    = 0;
 
-    for (i = 1; i < 7; i++) {
+    /* The first key with the highest count; KiNO if no key is used. */
+    for (i = KiTR; i < KiMAX; i++) {
         if (maxCnt < dat_pp[i]) {
             maxCnt = dat_pp[i];
             ret = i;
@@ -134,7 +135,8 @@ static int comMakeSSminCntGet(int *dat_pp) {
     minCnt = 100;
     ret    = 0;
 
-    for (i = 1; i < 7; i++) {
+    /* The last used key with the lowest count; KiNO if no key is used. */
+    for (i = KiTR; i < KiMAX; i++) {
         if (dat_pp[i] != 0) {
             if (minCnt >= dat_pp[i]) {
                 minCnt = dat_pp[i];
@@ -146,12 +148,13 @@ static int comMakeSSminCntGet(int *dat_pp) {
     return ret;
 }
 
+/* Moves every key by a random offset in [min, max) ticks, on top of any earlier offset. */
 void comMakeSubYure(CM_STR *cms_pp, int cnt, int min, int max) {
     int i;
     int rnd_cnt;
 
     for (i = 0; i < cnt; i++, cms_pp++) {
-        if (cms_pp->keyId != 0) {
+        if (cms_pp->keyId != KiNO) {
             rnd_cnt = randMakeMax(max - min) + min;
             cms_pp->timeOfs += rnd_cnt;
         }
@@ -162,7 +165,7 @@ void comMakeSubYureReset(CM_STR *cms_pp, int cnt) {
     int i;
 
     for (i = 0; i < cnt; i++, cms_pp++) {
-        if (cms_pp->keyId != 0) {
+        if (cms_pp->keyId != KiNO) {
             cms_pp->timeOfs = 0;
         }
     }
@@ -175,7 +178,7 @@ void comMakeSubChangeKey(CM_STR *cms_pp, int cnt, int motoKey, int sakiKey, int 
     yari_cnt = 0;
 
     for (i = 0; i < cnt; i++, cms_pp++) {
-        if (cms_pp->keyId != 0) {
+        if (cms_pp->keyId != KiNO) {
             if (cms_pp->keyId == motoKey) {
                 cms_pp->keyId = sakiKey;
                 yari_cnt++;
@@ -218,24 +221,26 @@ void comMakeSubSwapCntKey(CM_STR *cms_pp, int cnt, int swKey1, int swKey2, int p
     }
 }
 
+/* Repeats each key on the following step when that step is empty. */
 void comMakeSubDoubleKey(CM_STR *cms_pp, int cnt) {
     int i;
     int currentKey;
 
-    currentKey = 0;
+    currentKey = KiNO;
 
     for (i = 0; i < cnt; i++, cms_pp++) {
-        if (currentKey == 0) {
+        if (currentKey == KiNO) {
             currentKey = cms_pp->keyId;
-        } else if (cms_pp->keyId == 0) {
+        } else if (cms_pp->keyId == KiNO) {
             cms_pp->keyId = currentKey;
-            currentKey = 0;
+            currentKey = KiNO;
         } else {
             currentKey = cms_pp->keyId;
         }
     }
 }
 
+/* Finds the first run of three empty steps and returns its middle step. */
 CM_STR* comMakeSubSpaceSearch(CM_STR *cms_pp, int cnt) {
     int     i;
     int     cntK;
@@ -245,7 +250,7 @@ CM_STR* comMakeSubSpaceSearch(CM_STR *cms_pp, int cnt) {
     cntK = 0;
 
     for (i = 0; i < cnt; i++, cms_pp++) {
-        if (cms_pp->keyId == 0) {
+        if (cms_pp->keyId == KiNO) {
             cntK++;
 
             if (cntK == 3) {
@@ -267,7 +272,7 @@ int comMakeSubUseKeyCode(CM_STR *cms_pp, int cnt) {
     ret = 0;
 
     for (i = 0; i < cnt; i++) {
-        if (cms_pp[i].keyId != 0) {
+        if (cms_pp[i].keyId != KiNO) {
             ret |= GetIndex2KeyCode(cms_pp[i].keyId);
         }
     }
@@ -285,8 +290,9 @@ void comMakingNo0(CM_STR_CTRL *cmstr_pp) {
         moto_code = comMakeSSmaxCntGet(cmstr_pp->keyCnt_mt);
         saki_code = comMakeSSminCntGet(cmstr_pp->keyCnt_mt);
 
+        /* Never true: both codes would have to be KiNO and differ. */
         if (moto_code != saki_code) {
-            if (saki_code == 0 && moto_code == 0) {
+            if (saki_code == KiNO && moto_code == KiNO) {
                 comMakeSubChangeKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, 0, 0, 1);
             }
         }
@@ -462,19 +468,19 @@ static void comSelection(LEVEL_VS_ENUM lvl, CM_STR_CTRL *cmstr_pp) {
     switch (lvl) {
     default:
     case LVS_1:
-        tblcnt = 8;
+        tblcnt = PR_ARRAYSIZE(comMakeingTblLevel0);
         comMakeingTbl_tmp = comMakeingTblLevel0;
         break;
     case LVS_2:
-        tblcnt = 7;
+        tblcnt = PR_ARRAYSIZE(comMakeingTblLevel1);
         comMakeingTbl_tmp = comMakeingTblLevel1;
         break;
     case LVS_3:
-        tblcnt = 6;
+        tblcnt = PR_ARRAYSIZE(comMakeingTblLevel2);
         comMakeingTbl_tmp = comMakeingTblLevel2;
         break;
     case LVS_4:
-        tblcnt = 4;
+        tblcnt = PR_ARRAYSIZE(comMakeingTblLevel3);
         comMakeingTbl_tmp = comMakeingTblLevel3;
         break;
     }
@@ -484,6 +490,8 @@ static void comSelection(LEVEL_VS_ENUM lvl, CM_STR_CTRL *cmstr_pp) {
 
 static CM_STR_CTRL cm_str_ctrl;
 
+/* Builds the computer's answer to the opponent's pattern (moto_pp) and returns
+ * its key count. com_cnt is not checked; the answer has at most CM_STEP_MAX keys. */
 int computerMaking(COMMAKE_STR *com_pp, int com_cnt, TAPDAT *moto_pp, int moto_cnt, TAPSET *tapset_pp, LEVEL_VS_ENUM clvl) {
     WorkClear(&cm_str_ctrl, sizeof(cm_str_ctrl));
 
