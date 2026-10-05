@@ -2390,7 +2390,12 @@ static int exh_nombar_sub(EXAM_CHECK *ec_pp) {
         }
     }
 
-    /* Scale by how many different keys the example uses. */
+    /*
+     * Scale by how many keys the example uses. BUG: only the low four key-code
+     * bits are counted (L2, R2, L1, R1), so this really counts the example's
+     * shoulder buttons: one gives x3, two give x2, none leaves the penalty as
+     * is, and the 5 and 6 cases never happen.
+     */
     {
         int bai    = 0;
         int otehon = ec_pp->otehon_all;
@@ -2627,7 +2632,7 @@ static int exh_renda_out(EXAM_CHECK *ec_pp) {
 
     renda_ck = ec_pp->tapset_pp->taptimeEnd - ec_pp->tapset_pp->taptimeStart;
     renda_ck = ((renda_ck + TICKS_PER_STEP - 1) / TICKS_PER_STEP);
-    renda_ck += 3;
+    renda_ck += 3; /* mashing: three more presses than the window has steps */
 
     if (ec_pp->ted_num >= renda_ck) {
         return -1;
@@ -2705,12 +2710,13 @@ static int exh_all_add(EXAM_CHECK *ec_pp) {
 
     total = 0;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(ec_pp->each_point); i++) {
         if (i != EXH_TOTAL) {
             total += ec_pp->each_point[i];
         }
     }
 
+    /* Missing one of the example's keys voids the sub-score; mashing costs 100. */
     if (ec_pp->each_point[EXH_ALLKEY_OUT] != 0) {
         total = 0;
     }

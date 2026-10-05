@@ -94,13 +94,49 @@ result means the cell is inside a window and an odd one means it is in a gap;
 `(ofs + ofsT) / 4`, where `ofsT = ofs_tick % 96 + 96`, and does the same for the
 teacher's pattern (LATE adds 2 cells). The `exh_*` functions then score the
 comparison: `exh_normal_add`/`exh_normal_sub` count presses inside or outside a
-window, `exh_nombar_sub` penalises keys not in the teacher's key set (scaled by
-how many keys the teacher uses), `exh_mbar_*_out` compare first key, first
+window, `exh_nombar_sub` penalises keys not in the teacher's key set (scaled
+oddly, see below), `exh_mbar_*_out` compare first key, first
 window and press count, and `exh_yaku` scores window patterns with weights
 6, 9, 15 and 18. The final rank thresholds are the `TCL_*` tables near the top of
 the file. A port that reproduces `{cell index per press, key per press}` and
 these tables reproduces judgement.
 *Inferred, not tested:* the exact meaning of the `yaku` pattern codes.
+
+**Exam sub-scores (checked in source, 2026-10-05).** `ExamScoreCheck` grades a
+line three times and `now_score` is the sum of the three `EXH_TOTAL` results
+(`exam_score[0..2]`): `exh_str_normal` and `exh_str_original` on `CK_TH_NORMAL`
+windows and `exh_str_hane` on `CK_TH_HANE`. Hook lines run only
+`manemane_check`. Each program's raw value is multiplied by its `bairitu` and
+divided by 16 (truncating), so 48 means x3, 32 x2, 24 x1.5 and 8 x0.5.
+"In set" below means a key the teacher's pattern uses (`otehon_all`).
+
+| Program | Raw value | normal | original | hane |
+| --- | --- | --- | --- | --- |
+| `exh_normal_add` | +1 per in-set press inside a window | 48 | | |
+| `exh_normal_sub` | -1 per in-set press outside a window | 48 | | |
+| `exh_nombar_sub` | -1 per press of a key not in set, then scaled (bug below) | 48 | 48 | 48 |
+| `exh_mbar_key_out` | minus the teacher's press count unless the first keys match (0 if the teacher has none; always 0 in one-button play) | 48 | 16 | 16 |
+| `exh_mbar_time_out` | the same for the first press's window | 48 | | |
+| `exh_mbar_num_out` | minus the difference in press counts | 32 | | |
+| `exh_allkey_out(_nh)` | -1 if some in-set key was never pressed (original and hane count only presses inside windows) | 32 | 48 | 16 |
+| `exh_renda_out` | -1 for mashing: at least three more presses than the window has steps | 32 | 48 | 16 |
+| `exh_mane` | copying: 2 x the (teacher press, player press) pairs in the same window with the same key, minus the player's presses; the better of normal and late windows | 8 | | |
+| `exh_yaku_*` | window patterns, see above | | 16 | 24 |
+| `exh_command` | always 0 | | 16 | |
+
+`exh_all_add` then totals the slots, except that a missed key (`EXH_ALLKEY_OUT`
+non-zero) makes the sub-score 0 and mashing makes it -100. At COOL and
+COOL/GOOD rank the copy checks (missed key, press count, first key, first
+window, copying) are forced to 0 and every key counts as in set, so freestyle
+is not marked down for differing from the teacher. In one-button play only
+triangle is in set.
+
+`exh_nombar_sub` (BUG, matched code): the scaling was meant to follow how many
+keys the teacher uses (x3 for one, x2 for two, halved for five or six), but the
+loop counts only the four low key-code bits, which are L2, R2, L1 and R1. So
+the penalty is x3 when the teacher uses exactly one of L1/R1, x2 when it uses
+both, and unscaled otherwise; the halving never happens. A port that wants the
+original scores keeps the bug.
 
 **Yaku (pattern) score (checked in source, 2026-10-04).** `exh_yaku`
 (`scrctrl.c`) grades up to 72 judgement windows, two per byte of
