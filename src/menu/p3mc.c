@@ -111,16 +111,23 @@ enum {
     P3MC_LOAD_DONE         = 0x1401
 };
 
+/* Memory card icon files in the menu package: one per stage for replays,
+ * four for logs. */
+#define P3MC_REPLAY_ICON_FILE(stage) (0x159 + (stage) - 1)
+#define P3MC_LOG_ICON_FILE(n)        (0x161 + (n) - 1)
+#define P3MC_REPLAY_ICON_SIZE 0x1e360
+#define P3MC_LOG_ICON_SIZE    0x1ccb0
+
 static int P3MC_GetIconSize(int mode) {
     int isize;
 
     switch (mode) {
     case P3MC_MODE_REPLAY:
-        isize = 0x1e360;
+        isize = P3MC_REPLAY_ICON_SIZE;
         break;
     case P3MC_MODE_LOG:
     default:
-        isize = 0x1ccb0;
+        isize = P3MC_LOG_ICON_SIZE;
         break;
     }
 
@@ -133,44 +140,44 @@ static void* P3MC_GetIconPtr(int mode, int stageNo) {
     if (mode == P3MC_MODE_LOG) {
         switch (stageNo) {
         case 1:
-            fn = 0x161;
+            fn = P3MC_LOG_ICON_FILE(1);
             break;
         case 2:
-            fn = 0x162;
+            fn = P3MC_LOG_ICON_FILE(2);
             break;
         case 3:
-            fn = 0x163;
+            fn = P3MC_LOG_ICON_FILE(3);
             break;
         default:
-            fn = 0x164;
+            fn = P3MC_LOG_ICON_FILE(4);
             break;
         }
     } else {
         switch (stageNo) {
         case 1:
-            fn = 0x159;
+            fn = P3MC_REPLAY_ICON_FILE(1);
             break;
         case 2:
-            fn = 0x15a;
+            fn = P3MC_REPLAY_ICON_FILE(2);
             break;
         case 3:
-            fn = 0x15b;
+            fn = P3MC_REPLAY_ICON_FILE(3);
             break;
         case 4:
-            fn = 0x15c;
+            fn = P3MC_REPLAY_ICON_FILE(4);
             break;
         case 5:
-            fn = 0x15d;
+            fn = P3MC_REPLAY_ICON_FILE(5);
             break;
         case 6:
-            fn = 0x15e;
+            fn = P3MC_REPLAY_ICON_FILE(6);
             break;
         case 7:
-            fn = 0x15f;
+            fn = P3MC_REPLAY_ICON_FILE(7);
             break;
         case 8:
         default:
-            fn = 0x160;
+            fn = P3MC_REPLAY_ICON_FILE(8);
             break;
         }
     }
