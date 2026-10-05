@@ -49,6 +49,11 @@
 #define WP2_MODE_FADE            (0x4000)
 #define WP2_MODE_TERMINATE       (0x8000)
 
+/* IOP side only: the low 12 bits keep the flags set by WP2_SETMODE, and a
+ * file is open for streaming while WP2_MODE_STREAMING is set. */
+#define WP2_MODE_SET_MASK        (0x0fff)
+#define WP2_MODE_STREAMING       (0x0800)
+
 /* WaveP2 module ID */
 #define WP2CD_DEV                (0x8800)
 

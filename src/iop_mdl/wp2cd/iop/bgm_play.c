@@ -12,7 +12,8 @@
 #include <stdio.h>
 
 #define KB(x) (x*1024)
-#define SCTORS(x) (x/2048)
+#define CD_SECTOR_SIZE 2048
+#define SCTORS(x) (x/CD_SECTOR_SIZE)
 
 int  _PreLoadBack(int status);
 void _BgmStop(void);
@@ -55,7 +56,7 @@ int Wp2CdStRead(u_int sectors, u_int *buf, u_int mode, u_int *err) {
     read_sectors = sectors;
 
     while (1) {
-        if (!(BgmMode & 0x800)) {
+        if (!(BgmMode & WP2_MODE_STREAMING)) {
             return ret;
         }
 
@@ -302,7 +303,7 @@ int BgmInit(int block_size) {
         CpuResumeIntr(oldstat);
 
         /* buf_pos[1] -> Next 22KB */
-        sbuf.buf_pos[1] = sbuf.buf_pos[0] + 0x5800;
+        sbuf.buf_pos[1] = sbuf.buf_pos[0] + KB(22);
         sbuf.TrackSize = 44;
     }
 
@@ -412,7 +413,7 @@ int BgmOpen(char *filename) {
     ReadOutCnt = 0;
     gBgmIntr = 0;
 
-    wavep2.size = fpCd.size / 2048;
+    wavep2.size = fpCd.size / CD_SECTOR_SIZE;
     wavep2.ofs = 0;
     wavep2.pos = 0;
     wavep2.StartTrPos = 0;
@@ -422,7 +423,7 @@ int BgmOpen(char *filename) {
         while (!sceCdStStart(fpCd.lsn, &modeCd));
     }
 
-    BgmMode |= 0x800;
+    BgmMode |= WP2_MODE_STREAMING;
     ReadOddEven = 0;
 
     CpuSuspendIntr(&oldstat);
@@ -476,7 +477,7 @@ int BgmOpenFLoc(sceCdlFILE *fpLoc) {
 
     ReadOutCnt = 0;
 
-    wavep2.size = fpCd.size / 2048;
+    wavep2.size = fpCd.size / CD_SECTOR_SIZE;
     wavep2.ofs = 0;
     wavep2.pos = 0;
     wavep2.StartTrPos = 0;
@@ -486,7 +487,7 @@ int BgmOpenFLoc(sceCdlFILE *fpLoc) {
         while (!sceCdStStart(fpCd.lsn, &modeCd));
     }
 
-    BgmMode |= 0x800;
+    BgmMode |= WP2_MODE_STREAMING;
     ReadOddEven = 0;
 
     CpuSuspendIntr(&oldstat);
@@ -506,7 +507,7 @@ void BgmClose(int status) {
     sceSdSetTransIntrHandler(1, IntFuncEnd, NULL);
     CpuResumeIntr(oldstat);
 
-    BgmMode &= ~0x800;
+    BgmMode &= ~WP2_MODE_STREAMING;
 
     if (bgmPlayReadMode == RDMODE_CD) {
         while (!sceCdStStop());
@@ -554,7 +555,7 @@ static void TransBufSet_SUB(void) {
     which    = 1 - (wavep2.TransPos / (wavep2.TransMax / 2));
     tmp_size = (wavep2.TransMax * wavep2.Tr1Size) / 2;
     remain   = wavep2.size - wavep2.pos;
-    remain  *= 2048;
+    remain  *= CD_SECTOR_SIZE;
 
     if (remain > tmp_size) {
         remain = tmp_size;
@@ -564,12 +565,12 @@ static void TransBufSet_SUB(void) {
             *addr++ = 0;
         }
 
-        BgmMode &= 0xfff;
-        BgmMode |= 0x8000;
+        BgmMode &= WP2_MODE_SET_MASK;
+        BgmMode |= WP2_MODE_TERMINATE;
     }
 
     if (bgmPlayReadMode == RDMODE_CD) {
-        if (Wp2CdStRead(remain / 2048, (u_int*)((which * tmp_size) + ReadBuff), 1, &CdErrCode) != (remain / 2048)) {
+        if (Wp2CdStRead(remain / CD_SECTOR_SIZE, (u_int*)((which * tmp_size) + ReadBuff), 1, &CdErrCode) != (remain / CD_SECTOR_SIZE)) {
             /* Empty */
         }
     } else {
@@ -581,26 +582,26 @@ static void TransBufSet_SUB(void) {
         /* Empty */
     }
 
-    wavep2.pos += (remain / 2048);
+    wavep2.pos += (remain / CD_SECTOR_SIZE);
 }
 
 int BgmPreLoad(void) {
     if (bgmPlayReadMode == RDMODE_CD) {
-        Wp2CdStRead((wavep2.TransMax * wavep2.Tr1Size) / 2048, (u_int*)ReadBuff, 1, &CdErrCode);
+        Wp2CdStRead((wavep2.TransMax * wavep2.Tr1Size) / CD_SECTOR_SIZE, (u_int*)ReadBuff, 1, &CdErrCode);
     } else {
         readPC(fp_pc, (u_char*)ReadBuff, wavep2.TransMax * wavep2.Tr1Size);
         CdErrCode = 0;
     }
 
-    if (!(BgmMode & 0x800)) {
+    if (!(BgmMode & WP2_MODE_STREAMING)) {
         return 0;
     }
 
     wavep2.TransPos = 0;
 
-    ReadOutCnt = ((wavep2.pos * 2048) / wavep2.Tr1Size) + wavep2.TransPos;
+    ReadOutCnt = ((wavep2.pos * CD_SECTOR_SIZE) / wavep2.Tr1Size) + wavep2.TransPos;
 
-    wavep2.pos += (wavep2.TransMax * wavep2.Tr1Size) / 2048;
+    wavep2.pos += (wavep2.TransMax * wavep2.Tr1Size) / CD_SECTOR_SIZE;
 
     sbuf.dbuf_flg = 0;
 
@@ -614,7 +615,7 @@ int _PreLoadBack(int status) {
     while (1) {
         WaitSema(gSem_Tr);
 
-        if (BgmMode & 0x800) {
+        if (BgmMode & WP2_MODE_STREAMING) {
             BgmPreLoad();
         } else {
             /* Empty */
@@ -660,8 +661,8 @@ int BgmStart(void) {
         printf(" sceSdBlockTrans ERROR!!\n");
     }
 
-    BgmMode &= 0xfff;
-    BgmMode |= 0x1000;
+    BgmMode &= WP2_MODE_SET_MASK;
+    BgmMode |= WP2_MODE_RUNNING;
     return ret;
 }
 
@@ -669,10 +670,10 @@ void _BgmStop(void) {
     int ret         = 0;
     int BgmMode_tmp = BgmMode;
 
-    BgmMode &= 0xfff;
-    BgmMode &= ~0x800;
+    BgmMode &= WP2_MODE_SET_MASK;
+    BgmMode &= ~WP2_MODE_STREAMING;
 
-    if ((BgmMode_tmp &= 0x1000) != 0) {
+    if ((BgmMode_tmp &= WP2_MODE_RUNNING) != 0) {
         while (1) {
             CpuSuspendIntr(&oldstat);
             ret = sceSdBlockTrans(1, SD_TRANS_MODE_STOP, NULL, 0);
@@ -695,10 +696,10 @@ void BgmStop(unsigned int vol) {
 
     BgmSetVolumeDirect(0);
 
-    BgmMode &= 0xfff;
-    BgmMode &= ~0x800;
+    BgmMode &= WP2_MODE_SET_MASK;
+    BgmMode &= ~WP2_MODE_STREAMING;
 
-    if ((BgmMode_tmp &= 0x1000) != 0) {
+    if ((BgmMode_tmp &= WP2_MODE_RUNNING) != 0) {
         while (1) {
             CpuSuspendIntr(&oldstat);
             ret = sceSdBlockTrans(1, SD_TRANS_MODE_STOP, NULL, 0);
@@ -786,7 +787,7 @@ int BgmSeek(unsigned int ofs) {
 
     next_ofs = ofs % line_cnt;
     ofs -= next_ofs;
-    ofs_size = (ofs * wavep2.Tr1Size) / 2048;
+    ofs_size = (ofs * wavep2.Tr1Size) / CD_SECTOR_SIZE;
 
     wavep2.StartTrPos = ofs;
     wavep2.TransPos = 0;
@@ -796,17 +797,17 @@ int BgmSeek(unsigned int ofs) {
             ret = sceCdStSeekF(fpCd.lsn + ofs_size);
         } while (ret == 0);
     } else {
-        lseek(fp_pc, (ofs_size * 2048), SEEK_SET);
+        lseek(fp_pc, (ofs_size * CD_SECTOR_SIZE), SEEK_SET);
     }
 
     wavep2.ofs = ofs_size;
     wavep2.pos = wavep2.ofs;
 
-    ReadOutCnt = ((wavep2.pos * 2048) / wavep2.Tr1Size) + wavep2.TransPos;
+    ReadOutCnt = ((wavep2.pos * CD_SECTOR_SIZE) / wavep2.Tr1Size) + wavep2.TransPos;
 
     gBgmIntr = 0;
     wavep2.readBackFlag = FALSE;
-    BgmMode |= 0x800;
+    BgmMode |= WP2_MODE_STREAMING;
     return ret;
 }
 
@@ -845,14 +846,14 @@ int BgmSeekFLoc(sceCdlFILE *fpLoc) {
     gBgmIntr = 0;
     ReadOutCnt = 0;
 
-    wavep2.size = fpCd.size / 2048;
+    wavep2.size = fpCd.size / CD_SECTOR_SIZE;
     wavep2.ofs = 0;
     wavep2.pos = 0;
     wavep2.StartTrPos = 0;
     wavep2.TransPos = 0;
     wavep2.readBackFlag = FALSE;
 
-    BgmMode |= 0x800;
+    BgmMode |= WP2_MODE_STREAMING;
     return 1;
 }
 
@@ -882,7 +883,7 @@ int BgmGetTime(void) {
         }
     }
 
-    if (BgmMode & 0x1000) {
+    if (BgmMode & WP2_MODE_RUNNING) {
         /*
          * Mask the IOP address.
          */
@@ -901,7 +902,7 @@ int BgmGetTime(void) {
 }
 
 int BgmGetTSample(void) {
-    int fsize = (wavep2.size * 2048);
+    int fsize = (wavep2.size * CD_SECTOR_SIZE);
     return fsize / wavep2.Tr1Size;
 }
 
@@ -957,7 +958,7 @@ int _BgmPlay(int status) {
         }
 
         which = 1 - (wavep2.TransPos / (wavep2.TransMax / 2));
-        if (BgmMode & 0x8000) {
+        if (BgmMode & WP2_MODE_TERMINATE) {
             WaitSema(gSem);
             BgmSetVolumeDirect(0);
             _BgmStop();
@@ -966,7 +967,7 @@ int _BgmPlay(int status) {
 
         tmp_size = (wavep2.TransMax * wavep2.Tr1Size) / 2;
         remain = wavep2.size - wavep2.pos;
-        remain *= 2048;
+        remain *= CD_SECTOR_SIZE;
 
         if (remain > tmp_size) {
             remain = tmp_size;
@@ -977,12 +978,12 @@ int _BgmPlay(int status) {
                 *addr++ = 0;
             }
             
-            BgmMode &= 0xfff;
-            BgmMode |= 0x8000;
+            BgmMode &= WP2_MODE_SET_MASK;
+            BgmMode |= WP2_MODE_TERMINATE;
         }
 
         if (bgmPlayReadMode == 0) {
-            if (Wp2CdStRead(remain / 2048, (u_int*)((which * tmp_size) + ReadBuff), 1, &CdErrCode) != (remain / 2048)) {
+            if (Wp2CdStRead(remain / CD_SECTOR_SIZE, (u_int*)((which * tmp_size) + ReadBuff), 1, &CdErrCode) != (remain / CD_SECTOR_SIZE)) {
                 /* Empty */
             }
         } else {
@@ -994,7 +995,7 @@ int _BgmPlay(int status) {
             /* Empty */
         }
         
-        wavep2.pos += (remain / 2048);
+        wavep2.pos += (remain / CD_SECTOR_SIZE);
     }
 
     return 0;
