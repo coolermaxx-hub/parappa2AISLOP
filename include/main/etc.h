@@ -3,6 +3,14 @@
 
 #include <eetypes.h>
 
+/*
+ * Song time is counted in ticks, 96 to a beat; tempo is in beats per minute
+ * and the frame clock runs at 60 Hz (3600 frames a minute). Both conversions
+ * round to the nearest unit (the caller truncates the float).
+ */
+#define TICKS_TO_FRAMES(ticks, tempo) (((ticks) * 3600.0f + (tempo) * 96.0f * 0.5f) / ((tempo) * 96.0f))
+#define FRAMES_TO_TICKS(frames, tempo) (((frames) * 96.0f * (tempo) + 1800.0f) / 3600.0f)
+
 typedef struct { // 0x18
     /* 0x00 */ u_char per[17];
     /* 0x14 */ int pls_point;

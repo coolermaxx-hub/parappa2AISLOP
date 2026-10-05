@@ -997,7 +997,7 @@ int ScrDrawTimeGet(int line) {
 
 int ScrDrawTimeGetFrame(int line) {
     if (line & SCR_LINE_REF_MODE) {
-        return (scrRefLineTime * 3600.0f + GetLineTempo(line) * 96.0f * 0.5f) / (GetLineTempo(line) * 96.0f);
+        return TICKS_TO_FRAMES(scrRefLineTime, GetLineTempo(line));
     }
 
     return score_str.stdat_dat_pp->scr_pp->scr_ctrl_pp[line].lineTimeFrame;
@@ -3607,7 +3607,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 TimeCallbackTimeSetChanTempo(goto_line, goto_time, GetLineTempo(goto_line));
 
                 sindv_pp->top_scr_ctrlpp[goto_line].lineTime = goto_time;
-                sindv_pp->top_scr_ctrlpp[goto_line].lineTimeFrame = ((goto_time * 3600.0f) + (GetLineTempo(goto_line) * 96.0f * 0.5f)) / (GetLineTempo(goto_line) * 96.0f);
+                sindv_pp->top_scr_ctrlpp[goto_line].lineTimeFrame = TICKS_TO_FRAMES(goto_time, GetLineTempo(goto_line));
 
                 ScrLincChangTbl(goto_line);
                 return -1;
@@ -3823,7 +3823,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
         case SCRSUBJ_STOP_MENDERER: {
             int next_time = ScrCtrlIndvNextTime(sindv_pp, 1) - sindv_pp->current_time;
 
-            PrDecelerateMenderer(((next_time * 3600.0f) + (GetLineTempo(sindv_pp->useLine) * 96.0f * 0.5f)) / (GetLineTempo(sindv_pp->useLine) * 96.0f));
+            PrDecelerateMenderer(TICKS_TO_FRAMES(next_time, GetLineTempo(sindv_pp->useLine)));
             printf("SCRSUBJ_STOP_MENDERER req\n");
             break;
         }
@@ -3926,7 +3926,7 @@ static void ScrCtrlIndvJob(void) {
 
                 ctime_next = sindv_pp->wakeUpGoTime;
                 sindv_pp->top_scr_ctrlpp[sindv_pp->useLine].lineTime = ctime_next;
-                sindv_pp->top_scr_ctrlpp[sindv_pp->useLine].lineTimeFrame = (((ctime_next * 3600.0f) + ((GetLineTempo(sindv_pp->useLine) * 96.0f) * 0.5f)) / (GetLineTempo(sindv_pp->useLine) * 96.0f));
+                sindv_pp->top_scr_ctrlpp[sindv_pp->useLine].lineTimeFrame = TICKS_TO_FRAMES(ctime_next, GetLineTempo(sindv_pp->useLine));
                 sindv_pp->status &= ~SCS_WAIT;
 
                 allIndvNextContinue();
@@ -4016,7 +4016,8 @@ static void ScrTimeRenew(SCR_MAIN *scr_main_pp) {
 
     for (i = 0; i < scr_main_pp->scr_ctrl_num; i++) {
         if (scr_main_pp->scr_ctrl_pp[i].gtime_type == GTIME_VSYNC) {
-            scr_main_pp->scr_ctrl_pp[i].lineTime =  ((TimeCallbackTimeGetChan(i) * 96.0f * GetLineTempo(i) + 1800.0f)  / 3600.0f);
+            scr_main_pp->scr_ctrl_pp[i].lineTime = FRAMES_TO_TICKS(TimeCallbackTimeGetChan(i), GetLineTempo(i));
+            /* plus the line's offset, ofsCdtime milliseconds, in ticks */
             scr_main_pp->scr_ctrl_pp[i].lineTime += ((GetLineTempo(i) * 96.0f * scr_main_pp->scr_ctrl_pp[i].ofsCdtime) / 60000.0f);
 
             if (scr_main_pp->scr_ctrl_pp[i].lineTime < 0) {
@@ -4122,7 +4123,7 @@ void allTimeCallbackTimeSetChanTempo(int time) {
             scr_main_pp->scr_ctrl_pp[i].lineTime = time;
             TimeCallbackTimeSetChanTempo(i, time, GetLineTempo(i));
 
-            scr_main_pp->scr_ctrl_pp[i].lineTimeFrame = (time * 3600.0f + GetLineTempo(i) * 96.0f * 0.5f) / (GetLineTempo(i) * 96.0f);
+            scr_main_pp->scr_ctrl_pp[i].lineTimeFrame = TICKS_TO_FRAMES(time, GetLineTempo(i));
         }
     }
 }
@@ -4264,7 +4265,7 @@ void ScrCtrlMainLoop(void *x) {
                 int rtime = nextExamTime();
 
                 if (rtime >= 0) {
-                    BallThrowSetFrame(((rtime * 3600.0f) + (score_str.stdat_dat_pp->tempo * 96.0f * 0.5f)) / (score_str.stdat_dat_pp->tempo * 96.0f));
+                    BallThrowSetFrame(TICKS_TO_FRAMES(rtime, score_str.stdat_dat_pp->tempo));
                 }
             }
 
@@ -4289,7 +4290,7 @@ void ScrCtrlMainLoop(void *x) {
                 }
             }
 
-            tmp_time = ((ScrDrawTimeGet(scrJimakuLine) * 3600.0f) + (score_str.stdat_dat_pp->tempo * 96.0f * 0.5f)) / (score_str.stdat_dat_pp->tempo * 96.0f);
+            tmp_time = TICKS_TO_FRAMES(ScrDrawTimeGet(scrJimakuLine), score_str.stdat_dat_pp->tempo);
 
             {
                 int subtline = GetSubtLine(scrJimakuLine);

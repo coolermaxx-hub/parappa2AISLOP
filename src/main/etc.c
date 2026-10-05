@@ -74,7 +74,7 @@ void GlobalTimeJob(void) {
         global_data.vsyncTime = TimeCallbackTimeGet();
 
         global_data.currentTime = global_data.vsyncTime;
-        global_data.Snd_vsyncTime = (((global_data.currentTime * 96.0f * global_data.tempo) + 1800.0f) / 3600.0f);
+        global_data.Snd_vsyncTime = FRAMES_TO_TICKS(global_data.currentTime, global_data.tempo);
         global_data.Snd_currentTime = global_data.Snd_vsyncTime;
 
         global_data.Snd_cdSampleCnt = CdctrlSndTime2WP2sample(global_data.tempo, global_data.Snd_vsyncTime);
@@ -84,7 +84,7 @@ void GlobalTimeJob(void) {
         global_data.Snd_cdTime = CdctrlWp2GetSndTimeTmp(global_data.tempo);
 
         global_data.Snd_currentTime = global_data.Snd_cdTime;
-        global_data.cdTime = ((global_data.Snd_currentTime * 3600.0f + global_data.tempo * 96.0f * 0.5f) / (global_data.tempo * 96.0f));
+        global_data.cdTime = TICKS_TO_FRAMES(global_data.Snd_currentTime, global_data.tempo);
         global_data.currentTime = global_data.cdTime;
 
         global_data.Snd_cdSampleCnt = CdctrlWp2GetSampleTmp();
@@ -426,10 +426,7 @@ void TimeCallbackTimeSetChanTempo(int chan, u_int time, float tempo) {
         return;
     }
 
-    vsync_time[chan] = (int)
-    (
-        ((time * 3600.0f) + (tempo * 96.0f * 0.5f)) / (tempo * 96.0f)
-    );
+    vsync_time[chan] = (int)TICKS_TO_FRAMES(time, tempo);
 }
 
 u_int TimeCallbackTimeGet(void) {
