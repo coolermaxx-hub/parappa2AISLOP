@@ -228,6 +228,13 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
 - Vibration is requested by writing `padvib[]` during the frame; `padActSet`
   copies it to the next report and `padActClear` zeroes it afterwards, so a
   rumble lasts for the frames it is re-requested.
+- Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
+  demo) press each key of their tap set at its exact time, except in "follow"
+  lines. A score line whose script sets `TAP_FOLLOW_SAVE` copies the player's
+  key presses at the end of their tap set (`followTapSave`); a later line set to
+  `TAP_FOLLOW_LOAD` makes its scripted player repeat those presses at the same
+  offsets, in order (`followTapLoad`), so that character echoes what the player
+  actually did. Which stages use it was not checked against stage data.
 - The only gameplay rumble is a turn cue (`tapEventCheck`, `scrctrl.c`,
   checked 2026-10-05). From one step before a human player's tap set opens,
   `scr_tap_vib_on` counts the score updates spent in it: the first one does the
