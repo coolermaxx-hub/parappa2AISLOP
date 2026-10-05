@@ -489,9 +489,11 @@ static int _P3MC_file_chk(char *name, int size, int *need) {
                 *need += need0;
             }
 
+            /* The closed-file test always passes (closeFlagSw is the same bit), so
+             * only a size mismatch marks the file damaged. */
             closeFlagSw = (pTblDir[i].AttrFile >> 7) & 1;
             if (size == 0 || pTblDir[i].FileSizeByte == size) {
-                if (!closeFlagSw || pTblDir[i].AttrFile & 0x80) {
+                if (!closeFlagSw || pTblDir[i].AttrFile & sceMcFileAttrClosed) {
                     break;
                 }
             }
