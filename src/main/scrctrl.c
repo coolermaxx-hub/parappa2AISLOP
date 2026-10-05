@@ -4330,7 +4330,8 @@ void ScrCtrlMainLoop(void *x) {
                 DbgMsgClearUserPkt(&dbgPk);
                 DbgMsgPrintUserPkt(dbg_tbl_msg[global_data.tapLevel], 1730, 1948, &dbgPk);
                 drtime = ScrDrawTimeGet(scrMbarLine);
-                sprintf(timemsg, "%2d.%d.%2d", (drtime / 384) + 1, ((drtime / 96) % 4) + 1, (drtime % 96) + 1);
+                /* bar.beat.tick, counting from 1, four beats to the bar */
+                sprintf(timemsg, "%2d.%d.%2d", (drtime / (4 * TICKS_PER_BEAT)) + 1, ((drtime / TICKS_PER_BEAT) % 4) + 1, (drtime % TICKS_PER_BEAT) + 1);
                 DbgMsgPrintUserPkt(timemsg, 1730, 1938, &dbgPk);
                 CmnGifCloseCmnPk(&dbgPk, 0xf);
             }
