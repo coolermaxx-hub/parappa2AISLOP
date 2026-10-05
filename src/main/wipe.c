@@ -42,6 +42,8 @@ static SNDTAP sndtap_wipe[] = {
 };
 
 static WIPE_TYPE wipe_type = WIPE_TYPE_LOADING;
+/* Nonzero once the wipe may end. Two wipes set 2 after a longer wait, which
+ * every WipeEndCheck caller treats the same as TRUE. */
 static int wipe_end_flag = TRUE;
 static int loading_wipe_switch = FALSE;
 
@@ -828,7 +830,7 @@ static void WipeParaInDisp(void *x) {
         sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
         sceGifPkAddGsAD(&gifP, SCE_GS_RGBAQ, 0);
         sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
-        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(37888, 34560, 1));
+        sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
         CmnGifADPacketMakeTrans(&gifP);
 
         WipeInitPrDataPara(&wipe_draw_env.frame1);
