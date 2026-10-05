@@ -3,6 +3,7 @@
 
 #include "navector.h"
 
+#include <float.h>
 #include <libvu0.h>
 #include <math.h>
 
@@ -307,7 +308,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(const NaVECTOR<float, 4>
     const float radius = sqrtf(yz);
     float p, q;
 
-    if (radius < 1.1920929e-07f) {
+    if (radius < FLT_EPSILON) {
         p = 0.0f;
         q = 1.0f;
     } else {
