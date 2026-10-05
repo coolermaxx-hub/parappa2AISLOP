@@ -429,10 +429,11 @@ static u_char UserName_AsciiSetS[] = "abcdefghijklmnopqrstuvwxyz.,-:;#$%\"'()- "
 #define USERNAME_CHAR_SET_SHIFT 12
 #define USERNAME_CHAR_INDEX_MASK 0xfff
 #define USERNAME_CHAR(set, idx) ((idx) | ((set) << USERNAME_CHAR_SET_SHIFT))
+#define USERNAME_CHAR_SPACE USERNAME_CHAR(0, 39) /* the space in UserName_AsciiSetB */
 
 USERNAME_CSET UserName_CharSet[] = {
-    { UserName_AsciiSetB, 41 },
-    { UserName_AsciiSetS, 41 },
+    { UserName_AsciiSetB, sizeof(UserName_AsciiSetB) },
+    { UserName_AsciiSetS, sizeof(UserName_AsciiSetS) },
 };
 static u_char *TeachersName_Tbl[] = { "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER" };
 static u_char *UserName_RankingNoSave = (u_char*)"";
@@ -453,7 +454,7 @@ static MAPBGM MapBgmTbl[BGM_TRACK_MAX] = {
     { 13, 33, 576, 1152 },
     { 14, 23, 0, 0 },
 };
-static TSVOICE_TBL TsVoiceTbl[] = {
+static TSVOICE_TBL TsVoiceTbl[VSND_MAXNUM] = {
     { 0, 0, 0, 0 },
     { 0, 1, 0, 0 },
     { 0, 2, 0, 0 },
@@ -1954,7 +1955,7 @@ static void TSSNDPLAY(int n) {
 
             pchan->pSeq = pSeq->pSeqTop;
             pchan->bMsk = bMsk;
-        } else if (n < 0x38) {
+        } else if (n < VSND_MAXNUM) {
             ptap  = &TsVoiceTbl[n];
             pchan = &TsSndChan[ptap->chanNo];
 
@@ -1986,7 +1987,7 @@ static void TSSND_SKIPSTOP(int n) {
     TSVOICE_TBL *ptap;
     TSSND_CHAN  *pchan;
 
-    if (n >= 0x38) {
+    if (n >= VSND_MAXNUM) {
         return;
     }
 
@@ -2003,7 +2004,7 @@ static void TSSND_SKIPPLAY(int n) {
     TSVOICE_TBL *ptap;
     TSSND_CHAN  *pchan;
 
-    if (n >= 0x38) {
+    if (n >= VSND_MAXNUM) {
         return;
     }
 
@@ -6253,6 +6254,13 @@ static int McUserLoadFlow(int fileNo, int mode, int bBroken) {
     return MCFLOW_RUNNING;
 }
 
+/* The screen behind a card message dims to this alpha, MCMES_DIM_STEP per frame. */
+#define MCMES_DIM_ALPHA 0x40
+#define MCMES_DIM_STEP  7
+/* A timed message closes once its voice has stopped and this many frames have
+ * passed since it opened. */
+#define MCMES_TIMED_FRAMES 0x79
+
 static void TsMCAMes_Init(void) {
     memset(&MCMesWork, 0, sizeof(MCMesWork));
     MCMesWork.mesflg = -1;
@@ -6272,7 +6280,7 @@ static int TsMCAMes_GetSelect(void) {
 
 static int TsMCAMes_IsON(void) {
     MCMES_WORK *pmesw = &MCMesWork;
-    return (u_int)~pmesw->mesflg >> 0x1f;
+    return pmesw->mesflg >= 0; /* -1 means no message */
 }
 
 void TsMCAMes_SetPos(int x, int y) {
@@ -6373,15 +6381,15 @@ static void TsMCAMes_Flow(u_int tpad) {
     }
 
     if (pmesw->btflg != 0) {
-        if (pmesw->btton < 0x40) {
-            pmesw->btton += 7;
-            if (pmesw->btton > 0x40) {
-                pmesw->btton = 0x40;
+        if (pmesw->btton < MCMES_DIM_ALPHA) {
+            pmesw->btton += MCMES_DIM_STEP;
+            if (pmesw->btton > MCMES_DIM_ALPHA) {
+                pmesw->btton = MCMES_DIM_ALPHA;
             }
         }
     } else {
         if (pmesw->btton > 0) {
-            pmesw->btton -= 7;
+            pmesw->btton -= MCMES_DIM_STEP;
             if (pmesw->btton < 0) {
                 pmesw->btton = 0;
             }
@@ -6431,7 +6439,7 @@ static void TsMCAMes_Flow(u_int tpad) {
 
         if (pmesw->mesflg & ((MCMES_BIT_TIMED | MCMES_BIT_CANCEL_OK) << 24)) {
             pmesw->seltim++;
-            if (pmesw->seltim >= 0x79) {
+            if (pmesw->seltim >= MCMES_TIMED_FRAMES) {
                 pmesw->selflg = 1;
             }
         }
@@ -10180,7 +10188,7 @@ static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
         USERNAME_CSET *cset;
 
         if (*name == '\0') {
-            *pcode = 0x27;
+            *pcode = USERNAME_CHAR_SPACE;
             continue;
         }
 
@@ -10200,7 +10208,7 @@ static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
         }
 
         if (j >= 2) {
-            *pcode = 0x27;
+            *pcode = USERNAME_CHAR_SPACE;
         } else {
             *pcode = USERNAME_CHAR(j, l);
         }
@@ -10732,7 +10740,7 @@ void TsMenu_CaptureVram(SPR_PKT pk, SPR_PRM *spr) {
     spr->uh = spr->sh;
 
     PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
-    PkTEX1_Add(pk, 0x2020);
+    PkTEX1_Add(pk, PK_TEX1_MAG_LINEAR);
 
     PkSprPkt_SetDrawEnv(pk, spr, DrawGetDrawEnvP(DNUM_DRAW));
     PkSprPkt_SetTexVram(pk, spr, DrawGetDrawEnvP(DNUM_VRAM2));

@@ -183,7 +183,7 @@ typedef struct { // 0x8
 #define MCMES_BIT_OK         0x01 /* confirm button accepted */
 #define MCMES_BIT_CANCEL     0x02 /* cancel button accepted */
 #define MCMES_BIT_CANCEL_OK  0x04 /* accepts both buttons, cancel plays the confirm sound */
-#define MCMES_BIT_TIMED      0x08 /* dismisses itself after 0x79 frames, waits for the voice to stop */
+#define MCMES_BIT_TIMED      0x08 /* closes itself after its voice and MCMES_TIMED_FRAMES (menusub.c) */
 #define MCMES_BIT_CONFIRM    0x10 /* accepts both buttons */
 #define MCMES_KIND_OK        MCMES_BIT_OK
 #define MCMES_KIND_CANCEL    MCMES_BIT_CANCEL

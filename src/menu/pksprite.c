@@ -591,8 +591,7 @@ void PkSprPkt_SetDefault(SPR_PKT pk, SPR_PRM *spr, sceGsDrawEnv1 *pdenv) {
     PkCLAMP_Add(pk, GS_CLAMP_REPEAT);
     PkCCLAMP_Add(pk, SCE_GS_SET_COLCLAMP(1));
     PkDefSCISSOR_Add(pk);
-    /* note: undocumented bit on TEX1. useless? */
-    PkTEX1_Add(pk, SCE_GS_SET_TEX1(0, 0, 1, 0, 0, 0, 0) | (1<<13));
+    PkTEX1_Add(pk, PK_TEX1_MAG_LINEAR);
 }
 
 void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {

@@ -89,6 +89,10 @@ typedef struct { // 0x90
 #define PKSPR_ZOOM      0x2 /* apply SPR_PRM::zoom when it is switched on */
 #define PKSPR_ANTIALIAS 0x4 /* antialiased line */
 
+/* TEX1 for the menu packets: linear magnification, nearest minification. Bit 13
+ * is also set; it falls in a part of TEX1 the GS does not use. */
+#define PK_TEX1_MAG_LINEAR (SCE_GS_SET_TEX1(0, 0, SCE_GS_LINEAR, SCE_GS_NEAREST, 0, 0, 0) | (1 << 13))
+
 typedef struct { // 0x18
     /* 0x00 */ float u;
     /* 0x04 */ float v;
