@@ -91,7 +91,7 @@ void GPadSysRead(void) {
 
     for (i = 0; i < PAD_NUM; i++) {
         state = scePadGetState(i, 0);
-        WorkClear(sysP_pp->rdata, 32);
+        WorkClear(sysP_pp->rdata, sizeof(sysP_pp->rdata));
 
         switch (state) {
         case scePadStateFindCTP1:
