@@ -146,9 +146,16 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
 
 - One gameplay read of the sticks exists: `SpHatChangeSub` (`src/main/main.c`)
   samples **pad 0 only** and, from round 4 on, picks the hat variant from
-  `ana[0..1]` (below 0x40 or at/above 0xC0 on either axis, checked in the order
-  Y-low, X-high, Y-high, X-low). A port with more than one local player must still
-  take this from player 1, and netplay must send the two axis bytes with the mask.
+  `ana[0..1]`, the right stick (`PAD_ANA_RX/RY`: below `PAD_ANA_LOW` 0x40 or at
+  or above `PAD_ANA_HIGH` 0xC0 on either axis, checked in the order Y-low, X-high,
+  Y-high, X-low). A port with more than one local player must still take this
+  from player 1, and netplay must send the two axis bytes with the mask.
+- `urawazaKeyCheck` (main.c) is a level-select cheat: with R3 held, the right
+  stick's direction picks one of 17 tap levels (`TLL_*`), or `randMakeMax(17)`
+  picks one if the stick is centred (so it consumes RNG). It is inert in this
+  build: only the debug loop `ura_check` calls it, nothing ever sets
+  `urawaza_levelsel_bottun` to a level or `urawaza_skip_bottun` to TRUE, so the
+  `LM_FIX` branch in the stage start and `selPlayDispSetPlayOne` never run from it.
 
 Because `GPadRead` runs once per frame in `osFunc` and edge detection is a
 pure function of consecutive frames, a port can replace this layer with
