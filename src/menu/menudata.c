@@ -4,6 +4,7 @@
 #include "main/subt.h"
 
 #include "menu/menufont.h"
+#include "menu/p3mc.h"
 
 #include "os/mtc.h"
 #include "os/system.h"
@@ -18,7 +19,7 @@ static int _BankChan1Stat = 0;
 
 MenuMcIcon menumciconL[] = {
     {
-        .fileId = 0x161,
+        .fileId = P3MC_LOG_ICON_FILE(1),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -47,7 +48,7 @@ MenuMcIcon menumciconL[] = {
         },
     },
     {
-        .fileId = 0x162,
+        .fileId = P3MC_LOG_ICON_FILE(2),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -76,7 +77,7 @@ MenuMcIcon menumciconL[] = {
         },
     },
     {
-        .fileId = 0x163,
+        .fileId = P3MC_LOG_ICON_FILE(3),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -105,7 +106,7 @@ MenuMcIcon menumciconL[] = {
         },
     },
     {
-        .fileId = 0x164,
+        .fileId = P3MC_LOG_ICON_FILE(4),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -137,7 +138,7 @@ MenuMcIcon menumciconL[] = {
 
 MenuMcIcon menumciconR[] = {
     {
-        .fileId = 0x159,
+        .fileId = P3MC_REPLAY_ICON_FILE(1),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -166,7 +167,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15a,
+        .fileId = P3MC_REPLAY_ICON_FILE(2),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -195,7 +196,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15b,
+        .fileId = P3MC_REPLAY_ICON_FILE(3),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -224,7 +225,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15c,
+        .fileId = P3MC_REPLAY_ICON_FILE(4),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -253,7 +254,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15d,
+        .fileId = P3MC_REPLAY_ICON_FILE(5),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -282,7 +283,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15e,
+        .fileId = P3MC_REPLAY_ICON_FILE(6),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -311,7 +312,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x15f,
+        .fileId = P3MC_REPLAY_ICON_FILE(7),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,
@@ -340,7 +341,7 @@ MenuMcIcon menumciconR[] = {
         },
     },
     {
-        .fileId = 0x160,
+        .fileId = P3MC_REPLAY_ICON_FILE(8),
         .iconSys = {
             .Head = {'P', 'S', '2', 'D'},
             .Reserv1 = 0,

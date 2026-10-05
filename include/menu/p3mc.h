@@ -6,6 +6,13 @@
 #include <eetypes.h>
 #include <libmc.h>
 
+/* Memory card icon files in the menu package: one per stage for replays,
+ * four for logs. */
+#define P3MC_REPLAY_ICON_FILE(stage) (0x159 + (stage) - 1)
+#define P3MC_LOG_ICON_FILE(n)        (0x161 + (n) - 1)
+#define P3MC_REPLAY_ICON_SIZE 0x1e360
+#define P3MC_LOG_ICON_SIZE    0x1ccb0
+
 /* File numbers per save kind: LOG000-LOG079 and REP000-REP079. */
 #define P3MC_FILE_MAX      80
 /* Entries read from the card directory in one listing. */

@@ -15,6 +15,10 @@
 #define PK_REG_XYZF2(slot) ((u_long)4 << ((slot) * 4))
 #define PK_REG_AD(slot)    ((u_long)SCE_GIF_PACKED_AD << ((slot) * 4))
 
+/* Largest piece one REF tag sends: the DMA tag's QWC field is 16 bits, so the
+ * packet goes out in pieces just under 64K quadwords. */
+#define PK_DMA_REF_MAX_QWC 0xfff0
+
 /*
  * The register helpers below emit a PACKED GIF tag followed by A+D
  * quadwords, each holding one register value and its address.
@@ -132,14 +136,14 @@ void TsDrawUPacket(TsUSERPKT *up) {
     top = pk->PaketTop;
 
     while (1) {
-        if (qwc < 0xfff0) {
+        if (qwc < PK_DMA_REF_MAX_QWC) {
             sceDmaAddRef(&tp, qwc, (void*)top);
             break;
         }
 
-        sceDmaAddRef(&tp, 0xfff0, (void*)top);
-        qwc -= 0xfff0;
-        top += (0xfff0 * 16);
+        sceDmaAddRef(&tp, PK_DMA_REF_MAX_QWC, (void*)top);
+        qwc -= PK_DMA_REF_MAX_QWC;
+        top += PK_DMA_REF_MAX_QWC * sizeof(u_long128);
     }
 
     sceDmaAddEnd(&tp, 0, NULL);
