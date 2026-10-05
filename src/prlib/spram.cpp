@@ -39,6 +39,7 @@ void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     u_int width = scene->m_width;
     u_int height = scene->m_height;
     float zmax = (float)(0xFFFFFFFF >> (37 - prRenderStuff.GetZbufBits()));
+    // Keep depth inside the buffer's range: zmin = 2e-6 * zmax, zmax *= 1 - 2e-6.
     float zmin = zmax * 1.99999999e-06f;
     zmax *= 0.999997973f;
     float aspect = (float)width / (float)height * 3.0f / 4.0f;
@@ -61,6 +62,7 @@ void PrSPRAM_DATA::Initialize(PrSceneObject *scene) {
     m_worldGuardMatrix = m_viewGuardMatrix * m_camera_matrix;
 
     screenClipMatrix = NaMATRIX<float, 4, 4>::TranslateMatrix(width * 0.5f, -(float)height * 0.5f, 5010.0f);
+    // 1.01 / 2048 on x and y (the clip matrix's 1% margin), 1 / 5010 on z.
     screenClipMatrix.Scale(0.000493164058f, 0.000493164058f, 0.000199600792f);
 
     screenPrimitiveMatrix = NaMATRIX<float, 4, 4>::ScaleMatrix(1.0f, -0.5f, zmax / 10020.0f);
