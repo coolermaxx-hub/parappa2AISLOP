@@ -543,7 +543,7 @@ typedef struct { // 0xed4
     /* 0x008 */ SCR_CTRL *top_scr_ctrlpp;
     /* 0x00c */ SCRREC *current_scrrec_pp;
     /* 0x010 */ GLOBAL_PLY *global_ply;
-    /* 0x014 */ int keyCnt[7];
+    /* 0x014 */ int keyCnt[KiMAX]; /* presses of each key in this tap set, -1 before the first */
     /* 0x030 */ int keyCntCom;
     /* 0x034 */ int scr_tap_vib_on;
     /* 0x038 */ int scr_tap_memory_cnt;

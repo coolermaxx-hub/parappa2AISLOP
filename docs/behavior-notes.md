@@ -228,6 +228,20 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
 - Vibration is requested by writing `padvib[]` during the frame; `padActSet`
   copies it to the next report and `padActClear` zeroes it afterwards, so a
   rumble lasts for the frames it is re-requested.
+- Which sound a press plays (`tapEventCheck`, checked 2026-10-05). Each newly
+  pressed face or shoulder button (`one`) counts as a press of that key, and
+  `keyCnt[key]` counts the presses of each key in the current tap set (from -1,
+  so the first is 0). The press plays the tap-set entry that is the n-th
+  occurrence of that key, wrapping round when the player presses it more often
+  than the pattern has it; in one-button play every press counts as triangle and
+  walks through all entries. A key the pattern does not use plays the n-th
+  entry of that key in the tap set's "NG" list (`tapdatNG`) and is recorded as
+  off-pattern (`onKey` FALSE). A key in neither list makes no sound and is not
+  recorded for grading at all, although it still goes into the replay log.
+  Two D-pad controls change the counting: holding left resets every key's count
+  each frame (so presses replay each key's first sound; logged as
+  `KC_FLAG_RESET`), and holding right stops presses from advancing the count
+  (so they repeat the current sound; logged as `KC_FLAG_HOLD`).
 - Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
   demo) press each key of their tap set at its exact time, except in "follow"
   lines. A score line whose script sets `TAP_FOLLOW_SAVE` copies the player's

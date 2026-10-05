@@ -1010,7 +1010,7 @@ int ScrDrawTimeGetFrame(int line) {
 void KeyCntClear(int *key_pp) {
     int i;
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < KiMAX; i++) {
         *key_pp++ = -1;
     }
 }
