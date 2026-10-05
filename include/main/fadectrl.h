@@ -3,11 +3,16 @@
 
 #include "common.h"
 
+/* A fade mode is a colour in the low byte (0 black, 1 white) plus FADE_OUT to
+ * fade to that colour instead of in from it. */
+#define FADE_COLOR_MASK 0xff
+#define FADE_OUT        0x100
+
 typedef enum {
     FMODE_BLACK_IN = 0,
-    FMODE_BLACK_OUT = 256,
+    FMODE_BLACK_OUT = FADE_OUT | 0,
     FMODE_WHITE_IN = 1,
-    FMODE_WHITE_OUT = 257
+    FMODE_WHITE_OUT = FADE_OUT | 1
 } FADE_MODE;
 
 typedef struct { // 0xc

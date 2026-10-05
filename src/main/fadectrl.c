@@ -14,18 +14,20 @@ void FadeCtrlMain(void *x) {
     int tmp_time;
     FADE_MAKE_STR fade_make_str;
 
-    fade_make_str.r = bgcolor_tmp[fmode_ctrl_str.fmode & 255].R;
-    fade_make_str.g = bgcolor_tmp[fmode_ctrl_str.fmode & 255].G;
-    fade_make_str.b = bgcolor_tmp[fmode_ctrl_str.fmode & 255].B;
+    fade_make_str.r = bgcolor_tmp[fmode_ctrl_str.fmode & FADE_COLOR_MASK].R;
+    fade_make_str.g = bgcolor_tmp[fmode_ctrl_str.fmode & FADE_COLOR_MASK].G;
+    fade_make_str.b = bgcolor_tmp[fmode_ctrl_str.fmode & FADE_COLOR_MASK].B;
 
     if (fmode_ctrl_str.current_time < fmode_ctrl_str.max_time) {
         while (fmode_ctrl_str.current_time < fmode_ctrl_str.max_time) {
             tmp_time = fmode_ctrl_str.current_time;
 
-            if ((fmode_ctrl_str.fmode & FMODE_BLACK_OUT) == 0) {
+            if ((fmode_ctrl_str.fmode & FADE_OUT) == 0) {
                 tmp_time = fmode_ctrl_str.max_time - fmode_ctrl_str.current_time;
             }
 
+            /* 128 is opaque: a fade in starts there, a fade out stops one step
+             * short of it, and nothing is drawn once the task exits. */
             fade_make_str.alp = (tmp_time * 128) / fmode_ctrl_str.max_time;
             CG_FadeDisp(&fade_make_str, 100, NULL);
 
