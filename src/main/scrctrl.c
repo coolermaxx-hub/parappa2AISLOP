@@ -134,6 +134,11 @@ static EXH_STR exh_str_hook[] = {
     { .score_prg = exh_all_add,       .save_p = EXH_TOTAL,         .bairitu = 16 },
 };
 
+/* Judgement quantises ticks into cells; each thnum_tbl entry holds one bit
+ * per cell of a beat, first cell in the high bit (see behavior-notes.md). */
+#define TH_CELL_TICKS 4
+#define TH_CELLS      (TICKS_PER_BEAT / TH_CELL_TICKS)
+
 static u_int thnum_tbl[] = { 0x00e79e79, 0x00f3cf3c, 0x00c1cc1c, 0x00000000 };
 
 TCL_CTRL tcl_ctrl[4][33] = {
@@ -1865,7 +1870,7 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
 
     tapset_pp = &sindv_pp->scrdat_pp->tapstr[global_data.tapLevel].tapset_pp[sindv_pp->tapset_pos];
 
-    if (Ctime < (tapset_pp->taptimeStart - 24)) {
+    if (Ctime < (tapset_pp->taptimeStart - TICKS_PER_STEP)) {
         return;
     }
 
@@ -2185,12 +2190,12 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
             int local_map;
             int xx;
 
-            local_map = MapNormalNumGet(mkey_pp->ofs_frame + 96);
+            local_map = MapNormalNumGet(mkey_pp->ofs_frame + TICKS_PER_BEAT);
 
             mkey_pp->othOn = FALSE;
 
             for (xx = 0; xx < tapset_pp->tapdat_size; xx++) {
-                if (local_map == MapNormalNumGet(tapset_pp->tapdat_pp[xx].time + 96)) {
+                if (local_map == MapNormalNumGet(tapset_pp->tapdat_pp[xx].time + TICKS_PER_BEAT)) {
                     if (global_data.play_typeL == PLAY_TYPE_ONE) {
                         mkey_pp->othOn = TRUE;
                         break;
@@ -2228,8 +2233,8 @@ static int otehon_all_make(EXAM_CHECK *ec_pp) {
 }
 
 static int treateTimeChange(int time) {
-    int thnum_ofs = thnum_get(24, CK_TH_NORMAL);
-    int thnum_now = thnum_get((time + 96) / 4, CK_TH_NORMAL);
+    int thnum_ofs = thnum_get(TH_CELLS, CK_TH_NORMAL);
+    int thnum_now = thnum_get((time + TICKS_PER_BEAT) / TH_CELL_TICKS, CK_TH_NORMAL);
 
     if ((thnum_now % 2) != 0) {
         return -1;
@@ -2240,7 +2245,7 @@ static int treateTimeChange(int time) {
 
     thnum_now -= thnum_ofs;
     thnum_now /= 2;
-    return thnum_now * 24;
+    return thnum_now * TICKS_PER_STEP;
 }
 
 static int thnum_get(int p96_num, CK_TH_ENUM ckth) {
@@ -2254,7 +2259,7 @@ static int thnum_get(int p96_num, CK_TH_ENUM ckth) {
     thnum_data = thnum_tbl[ckth];
 
     for (i = 0; i <= p96_num; i++) {
-        ck_dat = (thnum_data >> (23 - (i % 24))) & 1;
+        ck_dat = (thnum_data >> (TH_CELLS - 1 - (i % TH_CELLS))) & 1;
 
         if (ck_bit < 0) {
             if (ck_dat == 0) {
@@ -2271,7 +2276,7 @@ static int thnum_get(int p96_num, CK_TH_ENUM ckth) {
 }
 
 static int MapNormalNumGet(int time) {
-    return thnum_get(time / 4, CK_TH_NORMAL);
+    return thnum_get(time / TH_CELL_TICKS, CK_TH_NORMAL);
 }
 
 static void on_th_make(EXAM_CHECK *ec_pp, CK_TH_ENUM ckth) {
@@ -2295,15 +2300,15 @@ static void on_th_make(EXAM_CHECK *ec_pp, CK_TH_ENUM ckth) {
 
     for (i = 0; i < ec_pp->ted_num; i++) {
         frame   = ec_pp->stm_pp[i].ofs_frame;
-        p96_num = (frame + ofsT) / 4;
+        p96_num = (frame + ofsT) / TH_CELL_TICKS;
 
         ec_pp->ted[i].p96_num = p96_num;
         ec_pp->ted[i].th_num = thnum_get(p96_num, ckth);
         ec_pp->ted[i].key = ec_pp->stm_pp[i].key;
     }
 
-    ec_pp->top_ofs = thnum_get((ofsT - 24) / 4, ckth);
-    ec_pp->end_ofs = thnum_get(ofsTend / 4, ckth);
+    ec_pp->top_ofs = thnum_get((ofsT - TICKS_PER_STEP) / TH_CELL_TICKS, ckth);
+    ec_pp->end_ofs = thnum_get(ofsTend / TH_CELL_TICKS, ckth);
 
     if (ec_pp->tapset_pp == NULL) {
         printf("score line over!!\n");
@@ -2325,10 +2330,10 @@ static void on_th_make(EXAM_CHECK *ec_pp, CK_TH_ENUM ckth) {
             ec_pp->oth_num++;
 
             frame   = tapdat_pp->time;
-            p96_num = (frame + ofsT) / 4;
+            p96_num = (frame + ofsT) / TH_CELL_TICKS;
 
             if (ckth == CK_TH_LATE) {
-                p96_num += 2;
+                p96_num += 2; /* two cells (8 ticks) later */
             }
 
             ec_pp->oth[i].p96_num = p96_num;
@@ -3063,7 +3068,7 @@ void ScrMoveSetSub(SCORE_INDV_STR *sindv_pp, int Pnum, int sub_job, int sub_time
         printf("file seek\n");
 
         tmp_cdsample = CdctrlSndTime2WP2sample(GetLineTempo(sub_job), goto_time);
-        tmp_cdsample -= (GetTimeOfset(goto_job) * 48) / 256;
+        tmp_cdsample -= WP2_MS_TO_UNITS(GetTimeOfset(goto_job));
         if (tmp_cdsample < 0) {
             tmp_cdsample = 0;
         }
@@ -3685,7 +3690,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     u_char chantmp[2];
 
                     tmp_cdsample  = CdctrlSndTime2WP2sample(GetLineTempo(sub_job), exam_start);
-                    tmp_cdsample -= (GetTimeOfset(sindv_pp->useLine) * 48) / 256;
+                    tmp_cdsample -= WP2_MS_TO_UNITS(GetTimeOfset(sindv_pp->useLine));
                     if (tmp_cdsample < 0) {
                         tmp_cdsample = 0;
                     }
@@ -4015,8 +4020,7 @@ static void ScrTimeRenew(SCR_MAIN *scr_main_pp) {
     for (i = 0; i < scr_main_pp->scr_ctrl_num; i++) {
         if (scr_main_pp->scr_ctrl_pp[i].gtime_type == GTIME_VSYNC) {
             scr_main_pp->scr_ctrl_pp[i].lineTime = FRAMES_TO_TICKS(TimeCallbackTimeGetChan(i), GetLineTempo(i));
-            /* plus the line's offset, ofsCdtime milliseconds, in ticks */
-            scr_main_pp->scr_ctrl_pp[i].lineTime += ((GetLineTempo(i) * 96.0f * scr_main_pp->scr_ctrl_pp[i].ofsCdtime) / 60000.0f);
+            scr_main_pp->scr_ctrl_pp[i].lineTime += MS_TO_TICKS(scr_main_pp->scr_ctrl_pp[i].ofsCdtime, GetLineTempo(i));
 
             if (scr_main_pp->scr_ctrl_pp[i].lineTime < 0) {
                 scr_main_pp->scr_ctrl_pp[i].lineTime = 0;
@@ -4027,7 +4031,7 @@ static void ScrTimeRenew(SCR_MAIN *scr_main_pp) {
             int   samplecnt;
             float tempo;
 
-            samplecnt = GlobalSndSampleGet() + ((scr_main_pp->scr_ctrl_pp[i].ofsCdtime * 48) / 256);
+            samplecnt = GlobalSndSampleGet() + WP2_MS_TO_UNITS(scr_main_pp->scr_ctrl_pp[i].ofsCdtime);
 
             if (global_data.play_step == PSTEP_XTR) {
                 samplecnt = CdctrlWp2GetSampleTmp() - getTopSeekPos();

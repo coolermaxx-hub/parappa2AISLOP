@@ -14,6 +14,8 @@
  */
 #define TICKS_TO_FRAMES(ticks, tempo) (((ticks) * 3600.0f + (tempo) * 96.0f * 0.5f) / ((tempo) * 96.0f))
 #define FRAMES_TO_TICKS(frames, tempo) (((frames) * 96.0f * (tempo) + 1800.0f) / 3600.0f)
+/* Line offsets (ofsCdtime) are in milliseconds; this one is not rounded. */
+#define MS_TO_TICKS(ms, tempo) (((tempo) * 96.0f * (ms)) / 60000.0f)
 
 typedef struct { // 0x18
     /* 0x00 */ u_char per[17];

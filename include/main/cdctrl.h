@@ -13,6 +13,9 @@
 /* Round a byte count up to whole CD sectors, the unit sceCdRead transfers. */
 #define CD_SECTOR_ROUND(size) ((((size) + CD_SECTOR_SIZE - 1) / CD_SECTOR_SIZE) * CD_SECTOR_SIZE)
 
+/* The WP2 stream clock counts 256-sample units at 48 kHz, 48 samples a millisecond. */
+#define WP2_MS_TO_UNITS(ms) (((ms) * 48) / 256)
+
 typedef enum {
     FRMODE_PC = 0,
     FRMODE_CD = 1,
