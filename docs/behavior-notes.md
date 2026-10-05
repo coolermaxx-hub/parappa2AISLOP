@@ -124,6 +124,8 @@ three pressed shapes occur; the "hane" rule (`exh_yaku_hane`, counted at x1.5,
 reward syncopation and rests over pressing on every grid point; which beat
 position window 2k falls on depends on `ofs_tick` and was not traced.
 
+**Line score adjustments (checked in source, 2026-10-05).** After `ExamScoreCheck` grades a line (`ScrExamSetCheck`, `scrctrl.c`), gameplay lines (`PSTEP_GAME`) halve `now_score`, rounding up, once for one-button play (`PLAY_TYPE_ONE`) and again for the easy table (`PLAY_TABLE_EASY`), so both together quarter it. During a replay the computed line score is then thrown away and replaced by the recorded `MC_REP_SCR` (line score and the three exam scores); a missing record gives 0. Outside replays and demos each line's result is recorded. So a replay always shows the recorded scores even if its taps would now grade differently. A positive line score counts toward `exam_tbl_up`, zero or less toward `exam_tbl_dw`, and outside versus play the line score is added to the running `score`.
+
 **Pad input (checked in source, 2026-10-03).** `GPadSysRead()` (`src/os/syssub.c:55`)
 runs the libpad state machine for each port (identify the pad, switch a standard
 pad to analog mode, set vibration alignment) and copies the raw 32-byte report into
