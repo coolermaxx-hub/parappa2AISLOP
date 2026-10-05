@@ -737,6 +737,8 @@ void CdctrlWp2FileEnd(void) {
     WP2Ctrl(WP2_CLOSE, WP2_NONE);
 }
 
+/* WP2 time is counted in 256-sample blocks of the 48 kHz stream, 187.5 a
+ * second: frames = units * 24 / 75, ticks = units * tempo * 16 / 1875. */
 int CdctrlWp2GetSample(void) {
     return WP2Ctrl(WP2_GETTIME, WP2_NONE);
 }

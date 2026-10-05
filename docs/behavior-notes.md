@@ -219,7 +219,7 @@ So the audio stream counter is the master in CD mode, and ticks are the unit the
 
 The IOP side (`BgmGetTime`) builds the value from `ReadOutCnt` (advanced by `TrackSize/2` for every SPU block-transfer interrupt, `gBgmIntr`) plus the position inside the current SPU transfer buffer (`sceSdBlockTransStatus`, `/1024`). It retries until no interrupt fired during the read (`gBgmIntrTime`). The result is therefore the SPU playback position and not a decode or read position.
 
-**Unit.** One WP2 time unit is 256 samples at 48 kHz, i.e. 187.5 units per second. This is derived, not documented in the source, but three places agree: `ticks = units*tempo*16/1875` against `ticks/sec = 96*tempo/60`, `frames = units*24/75` against 60 frames/sec, and `ofsCdtime*48/256` in `scrctrl.c:4000` converts a line offset in 1/48000 s to units.
+**Unit.** One WP2 time unit is 256 samples at 48 kHz, i.e. 187.5 units per second. This is derived, not documented in the source, but three places agree: `ticks = units*tempo*16/1875` against `ticks/sec = 96*tempo/60`, `frames = units*24/75` against 60 frames/sec, and `ofsCdtime*48/256` in `scrctrl.c` converts a line offset in milliseconds to units (48 samples per millisecond; the same offset is turned into ticks as `tempo*96*ms/60000`).
 
 **What a port must keep.**
 - Input sampling is against `Snd_currentTime`, which only advances when `GlobalTimeJob` runs. All taps within one frame see the same tick value (already noted for pads).
