@@ -239,9 +239,10 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   off-pattern (`onKey` FALSE). A key in neither list makes no sound and is not
   recorded for grading at all, although it still goes into the replay log.
   Two D-pad controls change the counting: holding left resets every key's count
-  each frame (so presses replay each key's first sound; logged as
-  `KC_FLAG_RESET`), and holding right stops presses from advancing the count
-  (so they repeat the current sound; logged as `KC_FLAG_HOLD`).
+  each frame (so presses replay each key's first sound; the next logged tap
+  gets `resT`), and holding right stops presses from advancing the count (so
+  they repeat the current sound; the tap gets `holdT`). Replays turn these back
+  into `KC_FLAG_RESET` / `KC_FLAG_HOLD`.
 - Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
   demo) press each key of their tap set at its exact time, except in "follow"
   lines. A score line whose script sets `TAP_FOLLOW_SAVE` copies the player's
