@@ -153,7 +153,7 @@ void mccReqCtrlClr(void) {
 }
 
 void mccReqScrSet(MC_REP_SCR *mcr_scr_pp) {
-    if (mc_rep_str_local.scoreN_cnt >= 256) {
+    if (mc_rep_str_local.scoreN_cnt >= MC_REP_SCORE_MAX) {
         printf("score save over!!\n");
         return;
     }
@@ -165,7 +165,7 @@ void mccReqScrSet(MC_REP_SCR *mcr_scr_pp) {
 MC_REP_SCR* mccReqScrGet(void) {
     MC_REP_SCR *ret;
 
-    if (mc_rep_ctrl.cl_scoreN_cnt >= 256 ||
+    if (mc_rep_ctrl.cl_scoreN_cnt >= MC_REP_SCORE_MAX ||
         mc_rep_ctrl.cl_scoreN_cnt >= mc_rep_str_local.scoreN_cnt) {
         printf("score load over!!\n");
         return NULL;
@@ -177,7 +177,9 @@ MC_REP_SCR* mccReqScrGet(void) {
 }
 
 void mccReqLvlSet(u_int lvl) {
-    if (mc_rep_str_local.levelN_cnt >= 256) {
+    /* BUG: checks against MC_REP_SCORE_MAX (256), not MC_REP_LEVEL_MAX (128), so
+     * a 129th level would overwrite mc_rep_dat_cnt and the tap log after it. */
+    if (mc_rep_str_local.levelN_cnt >= MC_REP_SCORE_MAX) {
         printf("level save over!!\n");
         return;
     }
@@ -189,7 +191,7 @@ void mccReqLvlSet(u_int lvl) {
 u_int mccReqLvlGet(void) {
     u_int ret;
 
-    if (mc_rep_ctrl.cl_levelN_cnt >= 256 ||
+    if (mc_rep_ctrl.cl_levelN_cnt >= MC_REP_SCORE_MAX ||
         mc_rep_ctrl.cl_levelN_cnt >= mc_rep_str_local.levelN_cnt) {
         printf("level load over!!\n");
         return 0;
@@ -203,7 +205,7 @@ u_int mccReqLvlGet(void) {
 void mccReqTapSet(u_int time, u_int useLine, u_int id, PLAYER_ENUM ply) {
     MC_REP_DAT *mcrd_pp;
 
-    if (mc_rep_str_local.mc_rep_dat_cnt >= 2560) {
+    if (mc_rep_str_local.mc_rep_dat_cnt >= MC_REP_TAP_MAX) {
         printf("tap save over!!\n");
         return;
     }
@@ -242,7 +244,7 @@ void mccReqTapHoldSet(PLAYER_ENUM ply) {
 void mccReqVSOTHSAVEset(VSOTHSAVE *sv) {
     int i;
 
-    if (mc_rep_str_local.mc_vsoth_cnt >= 100) {
+    if (mc_rep_str_local.mc_vsoth_cnt >= MC_REP_VSOTH_MAX) {
         printf("vs oth save over!!\n");
         return;
     }
@@ -257,7 +259,7 @@ void mccReqVSOTHSAVEset(VSOTHSAVE *sv) {
 int mccReqVSOTHSAVEget(VSOTHSAVE *sv) {
     int i;
 
-    if (mc_rep_ctrl.cl_vsoth_cnt >= 100 ||
+    if (mc_rep_ctrl.cl_vsoth_cnt >= MC_REP_VSOTH_MAX ||
         mc_rep_ctrl.cl_vsoth_cnt >= mc_rep_str_local.mc_vsoth_cnt) {
         printf("vs oth load over!!\n");
         return 0;
@@ -279,7 +281,7 @@ u_short mccReqTapGet(u_int time, u_int useLine, u_int *time_pp, PLAYER_ENUM ply)
     rep_cnt = &mc_rep_ctrl.cl_mc_rep_dat_cnt[ply];
 
     while (1) {
-        if (*rep_cnt >= 2560 || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
+        if (*rep_cnt >= MC_REP_TAP_MAX || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
             return 0;
         }
 
@@ -323,7 +325,7 @@ void mccReqTapForward(u_int time, u_int useLine) {
 
     for (i = 0; i < 4; i++, rep_cnt++) {
         while (1) {
-            if (*rep_cnt >= 2560 || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
+            if (*rep_cnt >= MC_REP_TAP_MAX || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
                 return;
             }
 
@@ -347,7 +349,7 @@ void mccReqTapForwardOwn(u_int time, u_int useLine, int ply) {
     rep_cnt = &mc_rep_ctrl.cl_mc_rep_dat_cnt[ply];
 
     while (1) {
-        if (*rep_cnt >= 2560 || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
+        if (*rep_cnt >= MC_REP_TAP_MAX || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
             break;
         }
 

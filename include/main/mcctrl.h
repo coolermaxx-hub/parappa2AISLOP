@@ -18,6 +18,12 @@ typedef struct { // 0x4
 
 typedef u_char VSOTHSAVE[32];
 
+/* Capacities of one replay (MC_REP_STR); entries past them are dropped. */
+#define MC_REP_SCORE_MAX 256
+#define MC_REP_LEVEL_MAX 128
+#define MC_REP_TAP_MAX   2560
+#define MC_REP_VSOTH_MAX 100
+
 typedef struct { // 0x10
     /* 0x0 */ int now_score;
     /* 0x4 */ int exam_score[3];
@@ -31,13 +37,13 @@ typedef struct { // 0x4528
     /* 0x0010 */ int play_stageS;
     /* 0x0014 */ LEVEL_VS_ENUM level_vs_enumS;
     /* 0x0018 */ u_int scoreN_cnt;
-    /* 0x001c */ MC_REP_SCR mc_rep_scr[256];
+    /* 0x001c */ MC_REP_SCR mc_rep_scr[MC_REP_SCORE_MAX];
     /* 0x101c */ u_int levelN_cnt;
-    /* 0x1020 */ u_char levelN[128];
+    /* 0x1020 */ u_char levelN[MC_REP_LEVEL_MAX];
     /* 0x10a0 */ u_int mc_rep_dat_cnt;
-    /* 0x10a4 */ MC_REP_DAT mc_rep_dat[2560];
+    /* 0x10a4 */ MC_REP_DAT mc_rep_dat[MC_REP_TAP_MAX];
     /* 0x38a4 */ u_int mc_vsoth_cnt;
-    /* 0x38a8 */ VSOTHSAVE vsothsave[100];
+    /* 0x38a8 */ VSOTHSAVE vsothsave[MC_REP_VSOTH_MAX];
 } MC_REP_STR;
 
 typedef struct { // 0x1c
