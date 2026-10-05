@@ -4477,6 +4477,10 @@ int CheckIndvCdChannel(SCORE_INDV_STR *sindv_pp, u_char *chantmp) {
     return 1;
 }
 
+
+/* GS block address of the noodle renderer's 256x16 work texture. */
+#define NOODLE_TEX_TBP 0x3ded
+
 void ScrCtrlInit(STDAT_DAT *sdat_pp, void *data_top) {
     int i;
 
@@ -4572,7 +4576,7 @@ void ScrCtrlInit(STDAT_DAT *sdat_pp, void *data_top) {
     score_str.mbar_flag = FALSE;
 
     if (GlobalMendererUseCheck()) {
-        PrInitializeMenderer(0x3ded, GetIntAdrsCurrent(INTNUM_NOODLE_TEX), DrawGetFbpPos(DNUM_VRAM2));
+        PrInitializeMenderer(NOODLE_TEX_TBP, GetIntAdrsCurrent(INTNUM_NOODLE_TEX), DrawGetFbpPos(DNUM_VRAM2));
     }
 
     if (score_str.stdat_dat_pp->play_step != PSTEP_SERIAL &&
