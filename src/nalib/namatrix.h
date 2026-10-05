@@ -104,6 +104,8 @@ public:
 
     static NaMATRIX<T, t0, t1>& Multiply(NaMATRIX<T, t0, t1>& out, const NaMATRIX<T, t0, t1>& lhs, const NaMATRIX<T, t1, t1>& rhs);
 
+    // Both left-multiply (this = T * this): the new step applies after the
+    // existing transform.
     NaMATRIX<float, 4, 4>& Translate(const float& x, const float& y, const float& z);
     NaMATRIX<float, 4, 4>& Scale(const float& x, const float& y, const float& z);
 
