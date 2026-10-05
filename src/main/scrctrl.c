@@ -506,6 +506,9 @@ void ScrTapDbuffCtrlInit(void *data_top, int bk0, int bk1) {
     scr_snd_dbuff.sndrec_pp[1] = NULL;
 }
 
+/* Makes sndrec_pp's sounds available for the next line: reuses a channel that
+ * already has them, otherwise loads them into the channel not in use. The
+ * result's low bit picks the channel (ScrTapReq). */
 u_int ScrTapDbuffSet(SNDREC *sndrec_pp) {
     u_int ret;
     u_int id;
@@ -550,6 +553,8 @@ void ScrTapDbuffClear(void) {
     scr_snd_dbuff.sndrec_pp[1] = NULL;
 }
 
+/* TapCt channel 0 holds the common sounds (SCR_TAP_COMMON); score lines
+ * alternate their sound sets between channels 1 and 2. */
 void ScrTapCtrlInit(void *data_top) {
     ScrTapDbuffCtrlInit(data_top, 1, 2);
 }

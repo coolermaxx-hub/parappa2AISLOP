@@ -248,8 +248,11 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
   start an actor animation and/or a sound. Each player has one active group, so
   a new press restarts it and drops the previous press's pending effects. The
   poll runs once per frame in the score task. On-pattern sounds come from the
-  line's sound bank (`scr_snd_dbuff.bank[sndId & 1]`, double-buffered between
-  lines), off-pattern ones from the common bank (`SCR_TAP_COMMON`). The TapCt
+  line's sound bank, off-pattern ones from the common bank on TapCt channel 0
+  (`SCR_TAP_COMMON`). Line banks alternate between channels 1 and 2: when a
+  score line starts, `ScrTapDbuffSet` reuses a channel that already holds its
+  sound set or sends the set (sample data to the SPU, header to the IOP) into
+  the other channel, so the previous line's sounds stay playable. The TapCt
   "box" is the player index (inferred to be one voice slot per player; the IOP
   side was not checked).
 - Scripted players (`PAD_DEMO`: the teacher, Boxy, and Parappa in the attract
