@@ -6658,7 +6658,7 @@ static void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pR
 
                 isSame = TRUE;
                 if (bNameCmp) {
-                    for (n = 0; n < 8; n++) {
+                    for (n = 0; n < PR_ARRAYSIZE(pRank->name); n++) {
                         if (ptRank[k]->name[n] != pRank->name[n]) {
                             isSame = FALSE;
                             break;
@@ -10524,7 +10524,7 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
     }
     col = GetDToneColor(0x808080, col, ton);
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(pfw->curnchr); i++) {
         code   = pfw->curnchr[i];
         str[0] = UserName_CharSet[code >> USERNAME_CHAR_SET_SHIFT].ptbl[code & USERNAME_CHAR_INDEX_MASK];
         str[1] = 0;
