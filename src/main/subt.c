@@ -236,13 +236,14 @@ static MCODE_ASCII mcode_ascii[224] = {
     { 0, 0, 0, 25, 0, 0 }, /* 0xfe */
     { 0, 0, 0, 25, 0, 0 }, /* 0xff */
 };
-int SUBT_POSX = 2048;
-int SUBT_POSY = 2098;
-/* TEX0 for the three subtitle font textures. */
+/* Subtitle anchor in GS pixels: lines are centred on x, the first line starts at y. */
+int SUBT_POSX = GS_X_COORD(SCREEN_WIDTH / 2) >> 4;
+int SUBT_POSY = GS_Y_COORD(162) >> 4;
+/* TEX0 for the three subtitle font textures, indexed by SUBT_FONT. */
 static u_long SubtGsTex0[3] = {
-    SCE_GS_SET_TEX0(0x3f6d, 4, SCE_GS_PSMT4, 8, 8, 1, 0, 0x3fed, SCE_GS_PSMCT32, 0, 0, 1),
-    SCE_GS_SET_TEX0(0x2300, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x2500, SCE_GS_PSMCT16, 0, 0, 1),
-    SCE_GS_SET_TEX0(0x251c, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x27d8, SCE_GS_PSMCT16, 0, 0, 1),
+    /* SUBT_FONT_ASCII      */ SCE_GS_SET_TEX0(0x3f6d, 4, SCE_GS_PSMT4, 8, 8, 1, 0, 0x3fed, SCE_GS_PSMCT32, 0, 0, 1),
+    /* SUBT_FONT_KANJI      */ SCE_GS_SET_TEX0(0x2300, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x2500, SCE_GS_PSMCT16, 0, 0, 1),
+    /* SUBT_FONT_KANJI_WIPE */ SCE_GS_SET_TEX0(0x251c, 4, SCE_GS_PSMT4, 8, 10, 1, 0, 0x27d8, SCE_GS_PSMCT16, 0, 0, 1),
 };
 static int subtSetNum = 0;
 
@@ -421,12 +422,13 @@ void SubtCtrlInit(void *adrs, int ser_f) {
     SubtInit();
     SubtKanjiSet(adrs);
 
+    /* Story-type steps put the subtitles lower. */
     if (ser_f) {
-        SUBT_POSX = 2048;
-        SUBT_POSY = 2122;
+        SUBT_POSX = GS_X_COORD(SCREEN_WIDTH / 2) >> 4;
+        SUBT_POSY = GS_Y_COORD(186) >> 4;
     } else {
-        SUBT_POSX = 2048;
-        SUBT_POSY = 2104;
+        SUBT_POSX = GS_X_COORD(SCREEN_WIDTH / 2) >> 4;
+        SUBT_POSY = GS_Y_COORD(168) >> 4;
     }
 }
 
@@ -590,11 +592,12 @@ void SubtCtrlPrintBoxyWipe(JIMAKU_STR *jstr_pp, int line, int time, int lang, vo
 
             lang_f = (lang == LANG_JAPANESE);
             if (lang_f) {
-                lang_f = 2;
+                lang_f = SUBT_FONT_KANJI_WIPE;
             }
 
             SubtClear();
-            SubtMsgPrint(jstr_tmp_pp->jimaku_dat_pp[i].txtData[lang], 2048, 2122, lang_f, 0);
+            SubtMsgPrint(jstr_tmp_pp->jimaku_dat_pp[i].txtData[lang],
+                GS_X_COORD(SCREEN_WIDTH / 2) >> 4, GS_Y_COORD(186) >> 4, lang_f, 0);
 
             SubtFlash();
             SubtKanjiSet(kanjiset_tmp_pp);

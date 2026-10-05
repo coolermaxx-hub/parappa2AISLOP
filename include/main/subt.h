@@ -48,6 +48,14 @@ typedef struct { // 0x4
 typedef MCODE_DAT MCODE_ASCII;
 typedef u_char *MESS[2];
 
+/* Font texture for SubtMcodeSet / SubtMsgPrint's jap_flag; any non-zero value
+ * also makes the text read as Japanese (EUC, converted to Shift-JIS). */
+typedef enum {
+    SUBT_FONT_ASCII = 0,
+    SUBT_FONT_KANJI = 1,      /* the stage's kanji set */
+    SUBT_FONT_KANJI_WIPE = 2  /* the kanji set in the common wipe file */
+} SUBT_FONT;
+
 void SubtInit(void);
 void* SubtKanjiSet(void *adrs);
 void SubtClear();

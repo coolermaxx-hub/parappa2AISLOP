@@ -712,3 +712,18 @@ in one corner case: `SpcFileHeader::GetCamera` (`camera.cpp`) builds `up` as
 `normalize((direction x Y) x direction)`, which is zero when the camera looks
 straight up or down, and `sceVu0CameraMatrix` then gets a zero up vector. A port
 should make `Normalize3` return zero for a zero input instead of dividing.
+
+## Subtitles (2026-10-05)
+
+`subt.c` draws subtitles only while the subtitle option is on; they never feed
+back into play. Scene subtitles (`SubtCtrlPrint`) are a list per subtitle line
+of `[starTime, endTime)` entries in frames, converted from the draw line's tick
+position with `TICKS_TO_FRAMES`, and the first entry containing the time is
+shown. Lyrics under the rhythm bar (`SubtTapPrintWake`, from `MbarTapSubt`)
+come from the tap set: text of three or more lines is split into two-line pages
+spread evenly over the tap window. `@` (or the full-width Shift-JIS `@`) starts
+a new line. Japanese text is stored as EUC and converted to Shift-JIS with the
+usual `euc2sjis` arithmetic before the glyph lookup; characters without a glyph
+are skipped. Lines are centred on screen, starting at field line 168, or 186
+for story-type steps (`PSTEP_SERIAL`, bonus, hook and XTR scenes) and Boxy's
+wipe. Fonts are chosen by `SUBT_FONT` (`include/main/subt.h`).
