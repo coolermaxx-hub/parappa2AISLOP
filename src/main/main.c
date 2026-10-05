@@ -819,7 +819,7 @@ int selPlayDispType(int sel_stage, int sel_disp, CANCEL_TYPE_ENUM canseltype) {
 
     if (stdat_dat_pp->play_step == PSTEP_XTR) {
         fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
-        fsize = ((fsize + 2047) / 2048) * 2048;
+        fsize = CD_SECTOR_ROUND(fsize);
 
         tmp_area = UsrMemEndAlloc(fsize);
         UsrMemEndFree();
@@ -966,7 +966,7 @@ int selPlayDispSetPlay(int sel_stage) {
 
         if (stdat_dat_pp->play_step != PSTEP_XTR) {
             fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
-            fsize = ((fsize + 2047) / 2048) * 2048;
+            fsize = CD_SECTOR_ROUND(fsize);
 
             CdctrlReadOne(&stdat_dat_pp->intfile, UsrMemEndAlloc(fsize), NULL);
             CdctrlReadWait();
@@ -1049,7 +1049,7 @@ int selPlayDispSetPlayOne(int sel_stage) {
     stdat_dat_pp = &stdat_rec[sel_stage].stdat_dat_pp[i];
 
     fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
-    fsize = ((fsize + 2047) / 2048) * 2048;
+    fsize = CD_SECTOR_ROUND(fsize);
 
     CdctrlReadOne(&stdat_dat_pp->intfile, UsrMemEndAlloc(fsize), NULL);
     CdctrlReadWait();
@@ -1256,7 +1256,7 @@ void titleDisp(int firstf) {
         stdat_dat_pp = stdat_rec[19].stdat_dat_pp;
 
         fsize = CdctrlGetFileSize(&stdat_dat_pp->intfile);
-        fsize = ((fsize + 2047) / 2048) * 2048;
+        fsize = CD_SECTOR_ROUND(fsize);
 
         CdctrlReadOne(&stdat_dat_pp->intfile, UsrMemEndAlloc(fsize), NULL);
         CdctrlReadWait();

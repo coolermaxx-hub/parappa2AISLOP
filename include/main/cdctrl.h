@@ -9,6 +9,10 @@
 #define PACKINT_MAGIC (0x44332211)
 #define PACK(x) ((PACKINT_FILE_STR*)x)
 
+#define CD_SECTOR_SIZE 2048
+/* Round a byte count up to whole CD sectors, the unit sceCdRead transfers. */
+#define CD_SECTOR_ROUND(size) ((((size) + CD_SECTOR_SIZE - 1) / CD_SECTOR_SIZE) * CD_SECTOR_SIZE)
+
 typedef enum {
     FRMODE_PC = 0,
     FRMODE_CD = 1,

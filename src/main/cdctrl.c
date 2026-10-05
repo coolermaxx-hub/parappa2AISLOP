@@ -17,8 +17,6 @@
 
 void *current_intg_adrs = NULL;
 
-#define CD_SECTOR_SIZE 2048
-
 #define N        4096 /* Size of ring buffer */
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
