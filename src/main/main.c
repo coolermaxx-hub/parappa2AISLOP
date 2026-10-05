@@ -656,6 +656,11 @@ int selPlayDispTitleDisp(int sel_stage, int sel_disp, int ovl_load) {
     return ret;
 }
 
+/* Hard stop for an XTR movie: 6540 frames, 1:49 at 60 Hz. */
+#define XTR_VIEW_MAX_FRAMES 6540
+
+/* Plays an XTR movie until START, the stream's end or the time limit.
+ * Nothing in this build calls it. */
 void xtrView(FILE_STR *file_str_pp) {
     int timer;
     int seek_top;
@@ -672,7 +677,7 @@ void xtrView(FILE_STR *file_str_pp) {
     while (1) {
         MtcWait(1);
 
-        if (pad[0].one & SCE_PADstart || CdctrlWP2PlayEndCheck() || timer >= 6540) {
+        if (pad[0].one & SCE_PADstart || CdctrlWP2PlayEndCheck() || timer >= XTR_VIEW_MAX_FRAMES) {
             break;
         }
 
