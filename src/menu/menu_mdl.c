@@ -452,7 +452,7 @@ void MNScene_Init(MN_SCENE *pshdl, MN_SCENETBL *tbl, int bFocus) {
 
     pshdl->nmdl = mn;
 
-    for (mn = 0; mn < 14 && ctbl[mn] != 0; mn++) {
+    for (mn = 0; mn < PR_ARRAYSIZE(pshdl->spc) && ctbl[mn] != 0; mn++) {
         pshdl->spc[mn] = PrInitializeCamera(GetIntAdrsCurrent(ctbl[mn]));
     }
 
