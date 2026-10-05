@@ -63,6 +63,9 @@ public:
     static NaMATRIX<float, 4, 4> TranslateMatrix(const NaVECTOR<float, 4>& translation);
     static NaMATRIX<float, 4, 4> ScaleMatrix(const NaVECTOR<float, 4>& scale);
 
+    // Not a general inverse: sceVu0InversMatrix transposes the 3x3 part and
+    // sets the translation to -(R^T t), so the result is exact only for
+    // rotation plus translation. Scale is not undone.
     NaMATRIX<float, 4, 4> Inverse() const {
         NaMATRIX<float, 4, 4> ret;
         sceVu0InversMatrix((sceVu0FVECTOR*)&ret, (sceVu0FVECTOR*)this);

@@ -562,3 +562,7 @@ The restored cloud workspace has inode numbers too large for the historical
 The build log, original-output hashes and objdiff report are retained outside
 Git as `/workspace/shared/parappa-env/matrix-products-{build.log,before.json,report.json}`.
 No game assets or generated outputs are committed.
+
+## Matrix inverse is a rigid inverse (2026-10-05)
+
+`NaMATRIX::Inverse` (`src/nalib/namatrix.h`) calls `sceVu0InversMatrix`. The SDK routine (`asm/sdk/libvu0.s`) transposes the upper 3x3, zeroes the w of the first three columns and writes the translation as `-(R^T t)`; it keeps the source's `w` of the last column. That is the exact inverse only for rotation plus translation. Its one caller, `CreateBillboardMatrix` (`src/prlib/billboard.cpp`), moves the camera into the node's space and keeps only `atan2(x, z)`, so a uniform scale on the node does not change the result, but a non-uniform one does. A port must reproduce the rigid inverse, not substitute a general 4x4 inverse, or billboards on non-uniformly scaled nodes will face a different way.
