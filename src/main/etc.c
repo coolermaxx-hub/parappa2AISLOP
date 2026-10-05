@@ -380,7 +380,7 @@ PAD_TYPE GetPcode2PadType(PLAYER_CODE player_code) {
     return ret;
 }
 
-static u_int vsync_time[51];
+static u_int vsync_time[TCBK_CHANNEL_MAX];
 
 static int TimeCallback(int x) {
     int i;
@@ -403,7 +403,7 @@ void TimeCallbackSet(void) {
 }
 
 u_int TimeCallbackTimeGetChan(int chan) {
-    if (chan >= 51) {
+    if (chan >= TCBK_CHANNEL_MAX) {
         printf("Time Callback Channel ERROR!!\n");
         return 0;
     }
@@ -412,7 +412,7 @@ u_int TimeCallbackTimeGetChan(int chan) {
 }
 
 void TimeCallbackTimeSetChan(int chan, u_int time) {
-    if (chan >= 51) {
+    if (chan >= TCBK_CHANNEL_MAX) {
         printf("Time Callback Channel ERROR!!\n");
         return;
     }
@@ -421,7 +421,7 @@ void TimeCallbackTimeSetChan(int chan, u_int time) {
 }
 
 void TimeCallbackTimeSetChanTempo(int chan, u_int time, float tempo) {
-    if (chan >= 51) {
+    if (chan >= TCBK_CHANNEL_MAX) {
         printf("Time Callback Channel ERROR!!\n");
         return;
     }
