@@ -350,19 +350,35 @@ So in every frame: VBlank, pad read, game flow, score/judgement, then drawing. A
 
 **What a port must keep.** The slot order and one-cycle-per-VBlank rule are what tie input, clock, judgement and drawing together. The two unstable sorts only affect what is drawn on top, never game state. Nothing in the GS/DMA path writes back into game logic, except `T0_COUNT` thresholds that decide when loads yield.
 
-## Boundary inventory (keyword search, not yet analysed)
+## Boundary inventory
 
-| Boundary | Files |
-| --- | --- |
-| Pad reads | `src/os/syssub.c` (`scePadRead`), `src/os/system.c` |
-| VBlank / frame | `src/os/system.c`, `src/os/mtc.c`, `src/main/etc.c` (analysed above) |
-| Hardware timers (`T0..T3_COUNT`) | `src/os/system.c`, `src/main/cdctrl.c`, `src/prlib/render.cpp`, `src/prlib/renderstuff.cpp`, `src/prlib/menderer.cpp` |
-| Audio stream (WP2) and SE (TapCt) | `src/main/cdctrl.c`, `src/iop_mdl/wp2cd_rpc.c`, `src/iop_mdl/tapctrl_rpc.c`, `src/iop_mdl/wp2cd/iop/*`, `src/main/scrctrl.c` |
-| Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` |
-| CD / files | `src/main/cdctrl.c`, `src/main/p3str.c`, `src/os/system.c` (analysed above) |
-| Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` |
-| RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` |
-| GS / DMA / VU | `src/os/system.c`, `src/os/cmngifpk.c`, `src/prlib/*` (analysed above) |
+Every boundary found by the original keyword search now has a section above.
+
+| Boundary | Files | Where it is covered |
+| --- | --- | --- |
+| Pad reads | `src/os/syssub.c` (`scePadRead`), `src/os/system.c` | Pad input, in the rhythm clock section |
+| VBlank / frame | `src/os/system.c`, `src/os/mtc.c`, `src/main/etc.c` | Authoritative clock; frame loop |
+| Hardware timers (`T0..T3_COUNT`) | `src/os/system.c`, `src/main/cdctrl.c`, `src/prlib/*` | Below |
+| Audio stream (WP2) and SE (TapCt) | `src/main/cdctrl.c`, `src/iop_mdl/*`, `src/main/scrctrl.c` | CD, file loading and the WP2 stream container |
+| Score, judgement, rank | `src/main/scrctrl.c`, `src/main/etc.c`, `src/main/mbar.c`, `src/main/main.c` | Rhythm clock section (yaku, line score, rank meter, versus, bonus game, adaptive difficulty) |
+| CD / files | `src/main/cdctrl.c`, `src/main/p3str.c`, `src/os/system.c` | CD, file loading and the WP2 stream container |
+| Memory card | `src/menu/memc.c`, `src/menu/p3mc.c`, `src/main/mcctrl.c` | Replay log and memory card |
+| RNG | `src/os/system.c`, `src/os/syssub.c`, `src/prlib/random.cpp` | Random number generators |
+| GS / DMA / VU | `src/os/system.c`, `src/os/cmngifpk.c`, `src/prlib/*` | Frame loop; renderer reconstruction |
+
+**Hardware timers (checked in source, 2026-10-05).** No timer feeds game state.
+Both timers count H-blanks. `osFunc` zeroes `T0_COUNT` right after
+`sceGsSyncV`, so it reads as "lines since the last VBlank" (the value read just
+before the reset, `total_h_cnt`, is unused). `cdctrl.c` uses it twice: the
+LZSS decode loop (`PackIntDecodeWait`) yields with `MtcWait(1)` whenever the
+count is past `DECODE_WAIT_HLINE` (230, near the end of the field), so a large
+decode is spread over several frames instead of dropping one, and the
+`WP2_GETTIME` round trip is timed for the `max cd time get` debug print. The
+prlib renderer reads `T3_COUNT` only for its debug render-time statistics, and
+the `SyoriLine*` CPU meter it would feed is stubbed out in this build
+(`src/dbug/syori.c`). A port can drop the statistics and replace the decode
+throttle with any per-frame time budget, as long as loads still report busy for
+at least one frame (see the CD section).
 
 
 ## Readable renderer reconstruction (source/disassembly, 2026-10-03)

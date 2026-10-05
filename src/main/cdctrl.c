@@ -25,6 +25,10 @@ void *current_intg_adrs = NULL;
 #define LZ_FLAG_REFILL 0xff00 /* eight pending flag bits, refilled with the next control byte */
 #define LZ_FLAG_EMPTY  256
 
+/* Background decodes yield to the next frame once TIMER0 (H-blanks since the
+ * last VBlank, reset in osFunc) passes this line, near the end of the field. */
+#define DECODE_WAIT_HLINE 230
+
 static unsigned char RBuff[N + F - 1]; /* Ring buffer for INT decompression */
 
 static int cdctrlReadSub(FILE_STR *fstr_pp, int ofs, int size, int buf);
@@ -336,7 +340,7 @@ void intReadSub(void) {
 
             /* ...and decode it */
             FlushCache(WRITEBACK_DCACHE);
-            PackIntDecodeWait(read_tmp_pp, (u_char*)UsrMemAllocNext(), 230);
+            PackIntDecodeWait(read_tmp_pp, (u_char*)UsrMemAllocNext(), DECODE_WAIT_HLINE);
             FlushCache(WRITEBACK_DCACHE);
 
             if (cdctrl_str.tmp_area == NULL) {
@@ -514,7 +518,7 @@ void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
         /* Check if there's data present */
         if (PACK(head_read_pp)->data_size != 0) {
             /* Decode the data */
-            PackIntDecodeWait((u_char*)next_rp, (u_char*)UsrMemAllocNext(), 230);
+            PackIntDecodeWait((u_char*)next_rp, (u_char*)UsrMemAllocNext(), DECODE_WAIT_HLINE);
             next_rp += PACK(head_read_pp)->data_size;
         }
 
@@ -861,7 +865,7 @@ void CdctrlXTRset(FILE_STR *fstr_pp, u_int usebuf) {
             printf("dec size[%08x]\n", PackIntGetDecodeSize(pr_pp));
             printf("dec info trpos[%08x] read_pos[%08x] press_size[%08x]\n", tb_pp->trpos, tb_pp->read_pos, tb_pp->press_size);
 
-            PackIntDecodeWait(pr_pp, (u_char*)(tb_pp->trpos + usebuf), 230);
+            PackIntDecodeWait(pr_pp, (u_char*)(tb_pp->trpos + usebuf), DECODE_WAIT_HLINE);
         }
     }
 
