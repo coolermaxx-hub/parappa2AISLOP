@@ -524,7 +524,7 @@ static void MbarHookPoll(void) {
         return;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(mbhook_str); i++) {
         if (mbhook_str[i].timer != 0) {
             mbhook_str[i].timer++;
 
@@ -544,7 +544,7 @@ static void MbarHookPoll(void) {
 void vsAnimationInit(void) {
     int i;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(vsScoreMove); i++) {
         vsScoreMove[i] = 0;
         vsScoreAni[i] = 0;
     }
@@ -581,7 +581,7 @@ static int vsScr2Move(long scr) {
 static void vsAnimationPoll(void) {
     int i, score;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(vs_scr_ctrl); i++) {
         if (vs_scr_ctrl[i].animation_time != 0) {
             vsScoreAni[i] = 60 - vs_scr_ctrl[i].animation_time;
 
@@ -655,14 +655,14 @@ static void metColorSet(EXAM_TYPE exam_type, float per) {
 void metFrameInit(void) {
     int i;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(metFrameCnt); i++) {
         metFrameCnt[i] = 140;
         metFrameCntLight[i] = 0;
     }
 
     scoreTentouFlag = 0;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(scr_tenmetu_col_dat); i++) {
         scr_tenmetu_col_dat[i][0] = scr_tenmetu_col[0][0];
         scr_tenmetu_col_dat[i][1] = scr_tenmetu_col[0][1];
         scr_tenmetu_col_dat[i][2] = scr_tenmetu_col[0][2];
@@ -921,7 +921,7 @@ static void examLevelDisp(sceGifPacket *ex_gif_pp) {
     int           old_fr, targ_fr;
     int           i;
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(exam_global_ply); i++) {
         exg_p = exam_global_ply[i];
         if (exg_p != NULL) {
             old_fr  = conditionFramCnt[i];
