@@ -64,7 +64,7 @@ static TsUSERPKT MnLPkt;
 static sceGifPacket FPacket;
 static MCMES_WORK MCMesWork;
 static CMPMES_WORK CmpMesWork;
-static RANKLIST RankLst[20];
+static RANKLIST RankLst[P3MC_RANK_SINGLE_MAX];
 static POPUP_MENU PopupMenu;
 static SAVE_MENU SaveMenu;
 static JUKE_MENU JukeMenu;
@@ -3529,7 +3529,7 @@ static int TsRanking_Set(void) {
     if (pstate->nMode == PLAY_MODE_VS_COM) {
         int vsLev = pstate->vsLev;
 
-        RankMAX = 10;
+        RankMAX = P3MC_RANK_VS_MAX;
         score   = pstate->score;
         pNRank  = &pCStageRank[nStage - 1].nVplay[vsLev];
         pScore  = pCStageRank[nStage - 1].vplay[vsLev];
@@ -3537,7 +3537,7 @@ static int TsRanking_Set(void) {
             return -1;
         }
     } else {
-        RankMAX = 20;
+        RankMAX = P3MC_RANK_SINGLE_MAX;
         score   = pstate->score + pstate->bonusG;
         pNRank  = &pCStageRank[nStage - 1].nSplay;
         pScore  = pCStageRank[nStage - 1].splay;
@@ -6642,9 +6642,9 @@ static void _TsSortSetRanking(P3MC_RANKSCORE **ptRank, int n, P3MC_RANKSCORE *pR
     int l, k, m;
 
     for (l = 0; l < n; l++, pRank++) {
-        for (k = 0; k < 20; k++) {
+        for (k = 0; k < P3MC_RANK_SINGLE_MAX; k++) {
             if (ptRank[k] == NULL || ptRank[k]->score < pRank->score) {
-                for (m = 19; k < m; m--) {
+                for (m = P3MC_RANK_SINGLE_MAX - 1; k < m; m--) {
                     ptRank[m] = ptRank[m - 1];
                 }
                 ptRank[k] = pRank;
@@ -6680,11 +6680,11 @@ static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) 
     int             i;
     int             maxn;
     int             rnkMax;
-    P3MC_RANKSCORE *ptRank[20];
+    P3MC_RANKSCORE *ptRank[P3MC_RANK_SINGLE_MAX];
     int             n;
     P3MC_RANKSCORE *pRank;
 
-    for (i = 0; i < 20; i++) {
+    for (i = 0; i < P3MC_RANK_SINGLE_MAX; i++) {
         ptRank[i] = NULL;
     }
 
@@ -6742,7 +6742,7 @@ static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) 
     }
 
     rnkMax = 0;
-    for (i = 0; i < 20 && ptRank[i] != NULL; i++) {
+    for (i = 0; i < P3MC_RANK_SINGLE_MAX && ptRank[i] != NULL; i++) {
         RankLst[i].score = ptRank[i]->score;
         memcpy(RankLst[i].name, ptRank[i]->name, sizeof(ptRank[i]->name));
         RankLst[i].name[8] = '\0';
@@ -7204,9 +7204,9 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
         pfw->cani.onTNo = pfw->selno;
         if (pfw->selno == POPITEM_SINGLE_RANK) {
             pfw->nTagMax = 1;
-            pfw->nRankMax = 20;
+            pfw->nRankMax = P3MC_RANK_SINGLE_MAX;
         } else {
-            pfw->nRankMax = 10;
+            pfw->nRankMax = P3MC_RANK_VS_MAX;
             pfw->nTagMax = pfw->levMax;
         }
         pfw->rVsLev = 0;

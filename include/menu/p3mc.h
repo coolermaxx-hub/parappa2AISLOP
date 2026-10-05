@@ -24,11 +24,15 @@ typedef struct { // 0x14
     /* 0x10 */ u_int score;
 } P3MC_RANKSCORE;
 
+/* Ranking entries kept per stage: single play, and versus COM per level. */
+#define P3MC_RANK_SINGLE_MAX 20
+#define P3MC_RANK_VS_MAX     10
+
 typedef struct { // 0x4c4
     /* 0x000 */ int nSplay;
-    /* 0x004 */ P3MC_RANKSCORE splay[20];
-    /* 0x194 */ int nVplay[4];
-    /* 0x1a4 */ P3MC_RANKSCORE vplay[4][10];
+    /* 0x004 */ P3MC_RANKSCORE splay[P3MC_RANK_SINGLE_MAX];
+    /* 0x194 */ int nVplay[4]; /* one per LEVEL_VS_ENUM */
+    /* 0x1a4 */ P3MC_RANKSCORE vplay[4][P3MC_RANK_VS_MAX];
 } P3MC_STAGERANK;
 
 /*

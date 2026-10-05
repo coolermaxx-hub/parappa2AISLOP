@@ -451,7 +451,7 @@ PAD_PRESS_ENUM GetPadbit2PressId(u_short padbit) {
     PAD_PRESS_ENUM ret = PAD_PR_None;
     u_int i;
 
-    for (i = 0; i < 12; i++) {
+    for (i = 0; i < PR_ARRAYSIZEU(bit2pr); i++) {
         if ((bit2pr[i].bit & padbit) != 0) {
             ret = bit2pr[i].prn;
             break;
