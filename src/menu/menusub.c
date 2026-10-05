@@ -3130,9 +3130,9 @@ void TsMenu_Init(int iniflg, P3GAMESTATE *pstate) {
             MNScene_DispSw(&MNS_StgCounter[i], 0);
         }
 
-        tblTex = (TSTEX_INF*)malloc(sizeof(TSTEX_INF) * 104);
+        tblTex = (TSTEX_INF*)malloc(sizeof(TSTEX_INF) * PR_ARRAYSIZE(TexTable));
 
-        for (i = 0; i < 104; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(TexTable); i++) {
             void *ptim2;
 
             switch (TexTable[i].flg) {
