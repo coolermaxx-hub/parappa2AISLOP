@@ -2,7 +2,9 @@
 > exact instruction matching. See [the rules](docs/porting-rules.md) and
 > [source reconstruction](docs/source-reconstruction.md). Compiler-generated
 > assembly fallbacks are removed from the active build; validation and matching
-> remain incomplete. Published progress below is a historical matching snapshot.
+> remain incomplete. The progress below measures exact matches on that readable
+> line; the older ROM-matching line (1339 / 1429 functions) is kept on the
+> `main-rom-matching` branch.
 
 # PaRappa the Rapper 2 Decompilation
 ![progress](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/coolermaxx-hub/parappa2AISLOP/main/progress/total_progress.json)
@@ -14,18 +16,18 @@ We are currently targeting the July 12th NTSC-J prototype, but we aim to target 
 
 > **Unofficial AI-assisted fork.** This is not the official project and is not affiliated with parappadev. The official decompilation lives at [parappadev/parappa2](https://github.com/parappadev/parappa2). Please don't take questions about this fork to the upstream maintainers or their Discord servers.
 
-### Historical fork progress compared to upstream
-Measured with objdiff on the July 12th NTSC-J prototype, fork `main` against upstream `main` (45694de). Every number counts only code that builds byte-for-byte identical to the original; functions that still compile from asm, or only have a `NON_MATCHING` C version, do not count. Compiler-emitted helper copies that splat names `func_XXXXXXXX` are paired with their C++ names by `tools/objdiff_symbol_mappings.py` (objdiff still diffs each pair).
+### Fork progress compared to upstream
+Measured with objdiff on the July 12th NTSC-J prototype (2026-10-05), fork `main` against upstream `main` (45694de). The fork trades some exact matches for readable source, so a few functions that matched in assembly-shaped C now build slightly differently; each one is listed with its cause in [binary-differences](docs/binary-differences.md). Every number counts only code that builds byte-for-byte identical to the original; functions that still compile from asm, or only have a `NON_MATCHING` C version, do not count. Compiler-emitted helper copies that splat names `func_XXXXXXXX` are paired with their C++ names by `tools/objdiff_symbol_mappings.py` (objdiff still diffs each pair).
 
 | Folder | Upstream functions | Fork functions | Upstream code bytes | Fork code bytes
 |--------|-------------------:|---------------:|--------------------:|----------------:
 | `dbug` | 21 / 21 (100%) | 21 / 21 (100.0%) | 100% | 100.0%
 | `os` | 100 / 100 (100%) | 100 / 100 (100.0%) | 100% | 100.0%
 | `iop_mdl` | 4 / 4 (100%) | 4 / 4 (100.0%) | 100% | 100.0%
-| `main` | 564 / 570 (98.9%) | 568 / 570 (99.6%) | 95.0% | 97.1%
-| `menu` | 308 / 374 (82.4%) | 362 / 374 (96.8%) | 52.0% | 83.1%
-| `prlib` | 143 / 360 (39.7%) | 284 / 360 (78.9%) | 21.8% | 45.8%
-| **Total** | **1140 / 1429 (79.8%)** | **1339 / 1429 (93.7%)** | **63.3%** | **80.3%**
+| `main` | 564 / 570 (98.9%) | 563 / 570 (98.8%) | 95.0% | 93.0%
+| `menu` | 308 / 374 (82.4%) | 355 / 374 (94.9%) | 52.0% | 82.1%
+| `prlib` | 143 / 360 (39.7%) | 268 / 360 (74.4%) | 21.8% | 34.5%
+| **Total** | **1140 / 1429 (79.8%)** | **1311 / 1429 (91.7%)** | **63.3%** | **75.7%**
 
 ### Progress
 *Badges below show this fork's matched-function percentage. The upstream project's own numbers are on its [decomp(dot)dev page](https://decomp.dev/parappadev/parappa2).*

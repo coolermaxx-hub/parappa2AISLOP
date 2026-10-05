@@ -53,18 +53,19 @@ No runtime rendering equivalence has been claimed.
 
 ## Current exact-match measurement
 
-The 2026-10-04 objdiff report measured **1316 / 1429 exact functions (92.09237%)**
-and **259636 / 342284 exact code bytes (75.853966%)** across 70 units. Its fuzzy
-instruction score was 94.78401%. The full report is retained outside the checkout
-at `/workspace/shared/parappa-env/chunk-report.json`.
+The 2026-10-05 objdiff report (`progress/report.json`, regenerated with
+`./configure.py --objdiff` and `objdiff-cli report generate`) measures
+**1311 / 1429 exact functions (91.74248%)** and **259104 / 342284 exact code
+bytes (75.69854%)** across 70 units, with a fuzzy instruction score of
+94.13218%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
+menu 355/374, prlib 268/360. README and the badge files in `progress/` show the
+same report.
 
 The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
-main-ROM checksum fails. These figures include the accumulated readability changes on `codex-work`
-and do not imply execution equivalence for the new source.
-
-Function matching, source reconstruction and ROM checksums are separate measures.
-The saved historical badges in README are not this reconstruction's measurement.
-Only verified semantic aliases are used by the mapping tool.
+main-ROM checksum fails. These figures include the accumulated readability
+changes and do not imply execution equivalence for the new source. Function
+matching, source reconstruction and ROM checksums are separate measures. Only
+verified semantic aliases are used by the mapping tool.
 
 ## Handwritten kernels retained
 
