@@ -125,6 +125,7 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
 
                 Ct = info_pp->picturH->ClutType & 3;
 
+                /* Every field kept except CPSM's low three bits (bit 3, the 16S flag, stays). */
                 info_pp->picturH->GsTex0 &= SCE_GS_SET_TEX0(0x3fff, 0x3f, 0x3f, 0xf, 0xf, 0x1, 0x3, 0x3fff, 8, 0x1, 0x1f, 0x7);
                 info_pp->picturH->GsTex0 |= SCE_GS_SET_TEX0(0, 0, 0, 0, 0, 0, 0, 0, ct_tbl[Ct], 0, 0, 0);
             }
