@@ -80,7 +80,9 @@ public:
 
     static NaVECTOR<float, 4> Normalize3(const NaVECTOR<float, 4>& value) {
         NaVECTOR<float, 4> result;
-        // Keep the VU sum and reciprocal order, including singular inputs.
+        // Keep the VU sum and reciprocal order, including singular inputs:
+        // VU division by zero gives the largest float, so a zero vector
+        // normalizes to zero rather than NaN.
         asm volatile("\n\
             lqc2         $vf4, 0(%0)\n\
             vmul.xyz     $vf5, $vf4, $vf4\n\

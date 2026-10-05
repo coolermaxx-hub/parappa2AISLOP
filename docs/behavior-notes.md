@@ -638,3 +638,15 @@ native C++98 executable and fails when the expected rotation is reversed.
 g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/rotate_matrix.cpp -o /tmp/rotate-matrix
 /tmp/rotate-matrix
 ```
+
+**Vector helpers (read from the VU code, 2026-10-05).** `NaVECTOR::Cross3`
+(`src/nalib/navector.h`) is the ordinary cross product `lhs x rhs` with `w` set
+to 0. `Normalize3` sums `x*x + y*y` then adds `z*z`, takes the square root and
+multiplies `xyz` by `1 / length`, with `w` set to 0. A zero vector does not give
+NaN on the VU: by the VU manual, division by zero returns the largest float
+rather than infinity, and `0 * max` is 0, so the result is the zero vector
+(inferred from the manual, not run on hardware). The camera code relies on it
+in one corner case: `SpcFileHeader::GetCamera` (`camera.cpp`) builds `up` as
+`normalize((direction x Y) x direction)`, which is zero when the camera looks
+straight up or down, and `sceVu0CameraMatrix` then gets a zero up vector. A port
+should make `Normalize3` return zero for a zero input instead of dividing.
