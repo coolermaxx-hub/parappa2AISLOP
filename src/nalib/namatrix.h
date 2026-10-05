@@ -301,6 +301,9 @@ NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const 
     return *this;
 }
 
+// Right-handed rotation by +angle about axis (any length, w ignored), the same
+// result as Rodrigues' formula; tests/nalib/rotate_matrix.cpp checks this.
+// A zero axis divides by zero.
 template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(const NaVECTOR<float, 4>& axis, const float& angle) {
     const float yz = axis[1] * axis[1] + axis[2] * axis[2];

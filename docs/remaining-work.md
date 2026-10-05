@@ -44,8 +44,10 @@ cannot prove original behavior or complete understanding of the data formats.
    type, with the existing float4 VU code isolated in explicit specializations;
    see [product validation](behavior-notes.md#nalib-matrix-products-2026-10-04).
    `Inverse` is now documented as the SDK's rigid inverse
-   ([notes](behavior-notes.md#matrix-inverse-is-a-rigid-inverse-2026-10-05));
-   transform-only APIs and other hardware interfaces remain to audit.
+   ([notes](behavior-notes.md#matrix-inverse-is-a-rigid-inverse-2026-10-05)),
+   and the axis-angle `RotateMatrix` is checked against Rodrigues' formula
+   ([notes](behavior-notes.md#axis-angle-rotation-2026-10-05));
+   other transform-only APIs and hardware interfaces remain to audit.
 
 The supplied OLM overlays do not contain recognizable SPM records. The retained
 original executable and its built-in `common.ipk` support layout/disassembly

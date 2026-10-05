@@ -616,3 +616,25 @@ No game assets or generated outputs are committed.
 ## Matrix inverse is a rigid inverse (2026-10-05)
 
 `NaMATRIX::Inverse` (`src/nalib/namatrix.h`) calls `sceVu0InversMatrix`. The SDK routine (`asm/sdk/libvu0.s`) transposes the upper 3x3, zeroes the w of the first three columns and writes the translation as `-(R^T t)`; it keeps the source's `w` of the last column. That is the exact inverse only for rotation plus translation. Its one caller, `CreateBillboardMatrix` (`src/prlib/billboard.cpp`), moves the camera into the node's space and keeps only `atan2(x, z)`, so a uniform scale on the node does not change the result, but a non-uniform one does. A port must reproduce the rigid inverse, not substitute a general 4x4 inverse, or billboards on non-uniformly scaled nodes will face a different way.
+
+## Axis-angle rotation (2026-10-05)
+
+`NaMATRIX::RotateMatrix(axis, angle)` (`src/nalib/namatrix.h`) builds the
+rotation from the axis's direction in the yz plane (`p`, `q`) and its angle to
+the x axis (`a`, `b`); the result is the standard right-handed rotation by `+angle` about the
+normalised axis, column-stored like the single-axis overload. The axis length
+does not matter and `w` is ignored; an axis along x takes the `radius <
+FLT_EPSILON` branch and still gives the right matrix, while a zero axis divides
+by zero. The camera roll (`camera.cpp`) and SPA axis-angle keys
+(`spadata.cpp`) use it, so a port can use any standard axis-angle routine,
+accepting float rounding differences.
+
+Validation: `tests/nalib/rotate_matrix.cpp` compares it with Rodrigues' formula
+for seven axes (including both x directions) and four angles, and checks that
+`RotateMatrix(0..2, angle)` agrees with the unit-axis form. It passes as a
+native C++98 executable and fails when the expected rotation is reversed.
+
+```sh
+g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/rotate_matrix.cpp -o /tmp/rotate-matrix
+/tmp/rotate-matrix
+```
