@@ -2883,7 +2883,7 @@ static void ExamScoreCheck(SCORE_INDV_STR *sindv_pp) {
 
     sum = 0;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(sindv_pp->global_ply->exam_score); i++) {
         sindv_pp->global_ply->exam_score[i] = exam_check[i].each_point[EXH_TOTAL];
         sum += exam_check[i].each_point[EXH_TOTAL];
     }
@@ -3138,7 +3138,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 if (mcr_scr_pp != NULL) {
                     sindv_pp->global_ply->now_score = mcr_scr_pp->now_score;
 
-                    for (i = 0; i < 3; i++) {
+                    for (i = 0; i < PR_ARRAYSIZE(sindv_pp->global_ply->exam_score); i++) {
                         sindv_pp->global_ply->exam_score[i] = mcr_scr_pp->exam_score[i];
                     }
                 } else {
@@ -3146,7 +3146,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                     sindv_pp->global_ply->now_score = 0;
 
-                    for (i = 0; i < 3; i++) {
+                    for (i = 0; i < PR_ARRAYSIZE(sindv_pp->global_ply->exam_score); i++) {
                         sindv_pp->global_ply->exam_score[i] = 0;
                     }
                 }
@@ -3157,7 +3157,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                     mcr_scr.now_score = sindv_pp->global_ply->now_score;
 
-                    for (i = 0; i < 3; i++) {
+                    for (i = 0; i < PR_ARRAYSIZE(mcr_scr.exam_score); i++) {
                         mcr_scr.exam_score[i] = sindv_pp->global_ply->exam_score[i];
                     }
 

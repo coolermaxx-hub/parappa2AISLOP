@@ -2807,7 +2807,7 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
     MNScene_StartAnime(pScene, MNANM_TABLE_BANK, &StageMapAnime[gmn + 11]);
     MNScene_StartAnime(pScene, MNANM_TABLE_BANK, StageMapAnimeSEA);
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(pLog->clrCount); i++) {
         int clrno;
         int nCrown;
         int cwCol[4];
@@ -2919,7 +2919,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
 
         if (nRound >= 4 && pLog->clrVSCOM1[nStage] < 4 && vslev + 1 >= 4) {
             flg = 0;
-            for (i = 0; i < 8; i++) {
+            for (i = 0; i < PR_ARRAYSIZE(pLog->clrVSCOM1); i++) {
                 if (pLog->clrVSCOM1[i] >= 4) {
                     flg++;
                 }
@@ -2970,7 +2970,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
         }
 
         flg = TRUE;
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(pLog->clrCount); i++) {
             if (pLog->clrCount[i] < nRound + 1) {
                 flg = FALSE;
             }
@@ -3373,7 +3373,7 @@ static void TsSetRankingName(P3MC_STAGERANK *pRankTop, u_char *name) {
             }
         }
 
-        for (k = 0; k < 4; k++) {
+        for (k = 0; k < PR_ARRAYSIZE(pRank->nVplay); k++) {
             for (i = 0; i < pRank->nVplay[k]; i++) {
                 if (pRank->vplay[k][i].name[0] == '\0') {
                     memcpy(pRank->vplay[k][i].name, name, sizeof(pRank->vplay[k][i].name));
@@ -3456,7 +3456,7 @@ static void TsRestoreSaveData(MCRWDATA_HDL *pDataW, int mode) {
             *pP3GameState->pGameStatus = pP3GameState->pLog->game_status;
             CurFileInfo.logFileNo = pDataW->pHead->user.fileNo;
 
-            for (i = 0; i < 8; i++) {
+            for (i = 0; i < PR_ARRAYSIZE(UserWork->stageRank); i++) {
                 memcpy(&pCStageRank[i], &UserWork->stageRank[i], sizeof(P3MC_STAGERANK));
             }
             break;
@@ -4199,7 +4199,7 @@ static void TsMakeUserWork(int mode) {
         int r = pP3GameState->pLog->nRound;
         int i;
 
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(pP3GameState->pLog->clrCount); i++) {
             if (r < pP3GameState->pLog->clrCount[i]) {
                 break;
             }
@@ -8570,7 +8570,7 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
             }
         }
 
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < PR_ARRAYSIZE(pP3GameState->pLog->clrVSCOM1); i++) {
             if (pP3GameState->pLog->clrVSCOM1[i] < 4) {
                 break;
             }
