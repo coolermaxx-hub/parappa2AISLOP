@@ -17,6 +17,8 @@
 
 void *current_intg_adrs = NULL;
 
+#define CD_SECTOR_SIZE 2048
+
 #define N        4096 /* Size of ring buffer */
 #define F          18 /* Upper limit */
 #define THRESHOLD   2
@@ -228,7 +230,7 @@ int CdctrlSerch(FILE_STR *fstr_pp) {
 static int cdctrlReadSub(FILE_STR *fstr_pp, int ofs, int size, int buf) {
     if (fstr_pp->frmode == FRMODE_CD) {
         sceCdRMode cdmode   = { .spindlctrl = SCECdSpinNom };
-        int        read_lsn = fstr_pp->fpCd.lsn + (ofs / 2048);
+        int        read_lsn = fstr_pp->fpCd.lsn + (ofs / CD_SECTOR_SIZE);
 
         if (!sceCdSeek(read_lsn)) {
             printf("sceCdSeek Error! %s\n", fstr_pp->fname);
@@ -239,7 +241,7 @@ static int cdctrlReadSub(FILE_STR *fstr_pp, int ofs, int size, int buf) {
             MtcWait(1);
         }
 
-        if (!sceCdRead(read_lsn, (size + 2047) / 2048, (void*)buf, &cdmode)) {
+        if (!sceCdRead(read_lsn, (size + CD_SECTOR_SIZE - 1) / CD_SECTOR_SIZE, (void*)buf, &cdmode)) {
             printf("sceCdRead Error! %s\n", fstr_pp->fname);
             return 0;
         }
@@ -293,7 +295,7 @@ void intReadSub(void) {
 
     while (1) {
         /* Read a whole sector into our header buffer */
-        while (!cdctrlReadSub(cdctrl_str.fstr_pp, read_pos, 2048, (int)head_read_pp)) {
+        while (!cdctrlReadSub(cdctrl_str.fstr_pp, read_pos, CD_SECTOR_SIZE, (int)head_read_pp)) {
             MtcWait(1);
         }
 
@@ -307,8 +309,8 @@ void intReadSub(void) {
 
         FlushCache(WRITEBACK_DCACHE);
 
-        if (PACK(head_read_pp)->head_size > 2048) {
-            while (!cdctrlReadSub(cdctrl_str.fstr_pp, read_pos + 2048, ((PACK(head_read_pp)->head_size - 1) / 2048) * 2048, (int)(head_read_pp + 2048))) {
+        if (PACK(head_read_pp)->head_size > CD_SECTOR_SIZE) {
+            while (!cdctrlReadSub(cdctrl_str.fstr_pp, read_pos + CD_SECTOR_SIZE, ((PACK(head_read_pp)->head_size - 1) / CD_SECTOR_SIZE) * CD_SECTOR_SIZE, (int)(head_read_pp + CD_SECTOR_SIZE))) {
                 MtcWait(1);
             }
         }
@@ -809,14 +811,14 @@ void CdctrlXTRset(FILE_STR *fstr_pp, u_int usebuf) {
     while (!CdctrlSerch(cdctrl_str.fstr_pp));
 
     /* Read the XTR's header (1 sector) */
-    while (!cdctrlReadSub(fstr_pp, 0, 2048, usebuf)) {
+    while (!cdctrlReadSub(fstr_pp, 0, CD_SECTOR_SIZE, usebuf)) {
         MtcWait(1);
     }
     
     FlushCache(WRITEBACK_DCACHE);
 
-    if (STR(usebuf)->read_size > 2048) {
-        while (!cdctrlReadSub(fstr_pp, 2048, STR(usebuf)->read_size - 2048, (int)(usebuf + 2048))) {
+    if (STR(usebuf)->read_size > CD_SECTOR_SIZE) {
+        while (!cdctrlReadSub(fstr_pp, CD_SECTOR_SIZE, STR(usebuf)->read_size - CD_SECTOR_SIZE, (int)(usebuf + CD_SECTOR_SIZE))) {
             MtcWait(1);
         }
     }
