@@ -392,6 +392,9 @@ typedef enum {
     HKLV_SNDREC_S8_24 = 30
 } HKLV_SNDREC_ENUM;
 
+/* Scoring lines needed to pass the hook (chorus) practice. */
+#define HOOK_PASS_LINES 10
+
 typedef struct { // 0x28
     /* 0x00 */ long SingleScore;
     /* 0x08 */ long BonusScore;
@@ -399,7 +402,7 @@ typedef struct { // 0x28
     /* 0x14 */ int bonusType;
     /* 0x18 */ HKLV_SNDREC_ENUM HookLine;
     /* 0x1c */ int HookLevel;
-    /* 0x20 */ int HookClrCnt;
+    /* 0x20 */ int HookClrCnt; /* hook practice result, 0..HOOK_PASS_LINES; sets the EXAM_BONUS repeat count */
 } INGAME_COMMON_STR;
 
 typedef struct { // 0x338

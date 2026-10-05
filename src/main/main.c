@@ -1001,8 +1001,8 @@ int selPlayDispSetPlay(int sel_stage) {
                 if (ingame_common_str.HookClrCnt < 0) {
                     ingame_common_str.HookClrCnt = 0;
                 }
-                if (ingame_common_str.HookClrCnt > 10) {
-                    ingame_common_str.HookClrCnt = 10;
+                if (ingame_common_str.HookClrCnt > HOOK_PASS_LINES) {
+                    ingame_common_str.HookClrCnt = HOOK_PASS_LINES;
                 }
 
                 printf("HOOK cnt:%d\n", ingame_common_str.HookClrCnt);
@@ -1118,7 +1118,7 @@ int gamePlayDisp(void) {
     inCmnInit(sel_stage);
 
     if (global_data.play_modeL != PLAY_MODE_SINGLE) {
-        sel_stage += 10;
+        sel_stage += STDAT_STAGE_VS_OFFSET;
     }
 
     if (global_data.demo_flagL != DEMOF_OFF) {

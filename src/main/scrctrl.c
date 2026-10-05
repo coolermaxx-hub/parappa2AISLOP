@@ -965,9 +965,6 @@ static void ScrLincChangTbl(int line) {
 /* Set on a line number while the line is drawn from a reference time (scrRefLineTime). */
 #define SCR_LINE_REF_MODE 0x8000
 
-/* Scoring lines needed to pass the hook (chorus) practice. */
-#define HOOK_PASS_LINES 10
-
 static void ScrLincChangTblRef(int line, int ck_time) {
     scrDrawLine |= SCR_LINE_REF_MODE;
     scrMbarLine |= SCR_LINE_REF_MODE;
@@ -3218,10 +3215,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     }
                 }
             } else if (scex_pp->exam_enum == EXAM_BONUS) {
+                /* Repeat the line once per hook practice point; a skipped hook (0) passes at once. */
                 int bline = ingame_common_str.HookClrCnt;
 
-                if (bline > 10) {
-                    bline = 10;
+                if (bline > HOOK_PASS_LINES) {
+                    bline = HOOK_PASS_LINES;
                 }
 
                 if (bline < bonusGameCntPls()) {

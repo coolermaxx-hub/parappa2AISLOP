@@ -39,6 +39,9 @@ typedef enum {
     STDAT_STAGE_MAX = 20
 } STDAT_STAGE;
 
+/* Stage n's versus version is entry n + STDAT_STAGE_VS_OFFSET. */
+#define STDAT_STAGE_VS_OFFSET (STDAT_STAGE_VS1 - 1)
+
 typedef struct { // 0x38
     /* 0x00 */ FILE_STR ovlfile;
     /* 0x2c */ int stdat_dat_num;
