@@ -173,6 +173,13 @@ pad to analog mode, set vibration alignment) and copies the raw 32-byte report i
 - Vibration is requested by writing `padvib[]` during the frame; `padActSet`
   copies it to the next report and `padActClear` zeroes it afterwards, so a
   rumble lasts for the frames it is re-requested.
+- The only gameplay rumble is a turn cue (`tapEventCheck`, `scrctrl.c`,
+  checked 2026-10-05). From one step before a human player's tap set opens,
+  `scr_tap_vib_on` counts the score updates spent in it: the first one does the
+  tap set's setup (versus copy or computer pattern), and the second and third
+  request `padvib[0]` if vibration is on, so the small motor runs for two
+  updates. The counter is cleared when the next tap set is read or the pattern
+  is reset. The computer player and replays never rumble.
 
 - One gameplay read of the sticks exists: `SpHatChangeSub` (`src/main/main.c`)
   samples **pad 0 only** and, from round 4 on, picks the hat variant from
