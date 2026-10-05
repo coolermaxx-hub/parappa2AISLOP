@@ -200,6 +200,10 @@ static MOZAIKU_POLL_STR mozaiku_poll_str[3] = {
     { 0, 34, mozaiku_str_poll_02 },
 };
 
+/* Noodle warp strength keyframes for the title screen; the last entry's frame
+ * is past any real one, so the search always finds an upper bound. */
+#define MENTITLE_FRAME_END 0xffffffe
+
 static MENTITLE_DAT mentitle_dat[] = {
     { 0, 1.5f },
     { 108, 1.5f },
@@ -208,7 +212,7 @@ static MENTITLE_DAT mentitle_dat[] = {
     { 864, 1.0f },
     { 1216, 1.0f },
     { 1296, 0.0f },
-    { 0xffffffe, 0.0f },
+    { MENTITLE_FRAME_END, 0.0f },
 };
 
 static MENTITLE_DAT mentitle_dat_dera[] = {
@@ -379,7 +383,7 @@ static MENTITLE_DAT mentitle_dat_dera[] = {
     { 13412, 1.0f },
     { 13472, 1.0f },
     { 13532, 0.0f },
-    { 0xffffffe, 0.0f },
+    { MENTITLE_FRAME_END, 0.0f },
 };
 static int bthrow_ctrl_time = 0;
 static DR_TAP_REQ dr_tap_req[16];
@@ -3066,10 +3070,10 @@ static float mendRatioTitleGet(int frame, int dera_f) {
     endp = -1;
 
     if (dera_f) {
-        sizeMen = 168;
+        sizeMen = PR_ARRAYSIZE(mentitle_dat_dera);
         men_pp = mentitle_dat_dera;
     } else {
-        sizeMen = 8;
+        sizeMen = PR_ARRAYSIZE(mentitle_dat);
         men_pp = mentitle_dat;
     }
 
