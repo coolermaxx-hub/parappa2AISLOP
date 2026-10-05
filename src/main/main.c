@@ -83,7 +83,7 @@ static DBG_MODE_STR dbg_mode_str[] = {
 
 /* Stage overlay load address, just past the .mfifo ring (the linker script
  * asserts the two do not overlap). */
-int overlay_loadaddr = 0x01ca0000;
+int overlay_loadaddr = STAGE_OVERLAY_BASE;
 
 static MENU_STR menu_str;
 

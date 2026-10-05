@@ -10,6 +10,11 @@
 
 struct SCR_MAIN;
 
+/* Stage overlays are loaded here (overlay_loadaddr); the STDAT_DAT entries
+ * point at data inside the overlay. */
+#define STAGE_OVERLAY_BASE 0x01ca0000
+#define STAGE_OVERLAY_PTR(type, offset) ((type *)(STAGE_OVERLAY_BASE + (offset)))
+
 typedef struct { // 0xd0
     /* 0x00 */ PLAY_STEP play_step;
     /* 0x04 */ char *ply_name;
