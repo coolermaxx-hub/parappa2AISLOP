@@ -4656,11 +4656,14 @@ int ScrEndWaitLoop(void) {
     return gameEndWaitLoop;
 }
 
+/* The bonus game takes input for 188 bars (96 ticks each). */
+#define BONUS_GAME_END_TICKS 18048
+
 static void bonusGameInit(void) {
     WorkClear(&bng_str, sizeof(bng_str));
 
     bng_str.st_time   = 0;
-    bng_str.end_time  = 18048;
+    bng_str.end_time  = BONUS_GAME_END_TICKS;
     bng_str.bonus_cnt = 0;
 }
 

@@ -636,13 +636,14 @@ typedef enum {
     BNGAKE_H5 = 35
 } BNG_ACT_K_ENUM;
 
+/* Bonus game: the state of one of the four targets (one per face button). */
 typedef enum {
-    BNGKA_NOTHING = 0,
-    BNGKA_LIFT = 1,
-    BNGKA_LIFTED = 2,
-    BNGKA_LIFT_NG = 3,
-    BNGKA_BLOW = 4,
-    BNGKA_BREAK = 5
+    BNGKA_NOTHING = 0, /* about to start a new wait */
+    BNGKA_LIFT = 1,    /* waiting; pressing now is early */
+    BNGKA_LIFTED = 2,  /* showing the item: press now to score; stays until pressed */
+    BNGKA_LIFT_NG = 3, /* showing a decoy for 24 updates; pressing is a miss */
+    BNGKA_BLOW = 4,    /* knocked back after a miss, 180 updates */
+    BNGKA_BREAK = 5    /* item broken after a hit, 36 updates */
 } BNG_KOTAMA_ACT_ENUM;
 
 typedef struct { // 0xc
