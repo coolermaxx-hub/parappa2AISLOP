@@ -102,3 +102,18 @@ original's float/double choices, which a port should keep too: for example
 `TSJukeCDObj_Draw` and `TsPopCusPut` compute in `double` exactly where the
 original does.
 
+## Callee check (2026-10-07)
+
+`tools/dev/audit/callee_sets.py` compares every function's callees with the
+original's, ignoring nalib template instances and per-file helper copies. Only
+four functions differ, all explained:
+
+| Function | Difference | Why |
+| --- | --- | --- |
+| `CalculateCurrentMatrixAnimation`, `CalculateClusterMatrixAnimation` | This build calls `ComposeGlobalMatrixWithoutVisibility` | The original inlines it (see the ROM shortfall above) |
+| `RenderNodeEECore` | The original calls `PrRenderStuff::AppendDmaTag` | The original's per-file copy of the `renderstuff.h` helper; this build inlines it |
+| `TsBGMStop` | The original calls `tsBGMONEVol` | This build tail-calls it with a jump, which the script does not count |
+
+No function in this build calls something the original does not, or skips a
+call the original makes.
+
