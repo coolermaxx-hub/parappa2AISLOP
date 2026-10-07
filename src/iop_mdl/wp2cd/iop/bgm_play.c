@@ -13,6 +13,9 @@
 
 #define KB(x) (x*1024)
 #define CD_SECTOR_SIZE 2048
+/* One channel's block in the stream and in the SPU2 PCM input: 256 16-bit samples.
+ * A stream row holds one block per channel; the SPU buffer takes left then right. */
+#define WP2_BLOCK_SIZE 512
 #define SCTORS(x) (x/CD_SECTOR_SIZE)
 
 int  _PreLoadBack(int status);
@@ -67,7 +70,7 @@ int Wp2CdStRead(u_int sectors, u_int *buf, u_int mode, u_int *err) {
             break;
         }
 
-        buf += (now_read * 512);
+        buf += now_read * (CD_SECTOR_SIZE / sizeof(*buf));
         read_sectors = sectors - ret;
         
         sceCdGetError();
@@ -122,10 +125,10 @@ int TransBufSet(void) {
     spu_pp = sbuf.buf_pos[sbuf.dbuf_flg];
 
     for (i = 0; i < (sbuf.TrackSize / 2); i++) {
-        usrMemcpy((void*)spu_pp, (void*)(((pos * wavep2.Tr1Size) + (wavep2.ReqChan[0] * 512)) + ReadBuff), 512);
-        spu_pp += 512;
-        usrMemcpy((void*)spu_pp, (void*)(((pos * wavep2.Tr1Size) + (wavep2.ReqChan[1] * 512)) + ReadBuff), 512);
-        spu_pp += 512;
+        usrMemcpy((void*)spu_pp, (void*)(((pos * wavep2.Tr1Size) + (wavep2.ReqChan[0] * WP2_BLOCK_SIZE)) + ReadBuff), WP2_BLOCK_SIZE);
+        spu_pp += WP2_BLOCK_SIZE;
+        usrMemcpy((void*)spu_pp, (void*)(((pos * wavep2.Tr1Size) + (wavep2.ReqChan[1] * WP2_BLOCK_SIZE)) + ReadBuff), WP2_BLOCK_SIZE);
+        spu_pp += WP2_BLOCK_SIZE;
 
         if (wavep2.TransEEAdrs != 0) {
             int j;
@@ -136,7 +139,7 @@ int TransBufSet(void) {
                     continue;
                 }
 
-                tr_pp = (P3STR_TRH*)(((pos * wavep2.Tr1Size) + (j * 512)) + ReadBuff);
+                tr_pp = (P3STR_TRH*)(((pos * wavep2.Tr1Size) + (j * WP2_BLOCK_SIZE)) + ReadBuff);
                 if (tr_pp->trSize == 0) {
                     continue;
                 }
@@ -316,10 +319,10 @@ int BgmInit(int block_size) {
     }
 
     CpuSuspendIntr(&oldstat);
-    ReadBuff = (int)AllocSysMemory(SMEM_Low, block_size * 512, NULL);
+    ReadBuff = (int)AllocSysMemory(SMEM_Low, block_size * WP2_BLOCK_SIZE, NULL);
     CpuResumeIntr(oldstat);
 
-    ReadBuffSize = block_size * 512;
+    ReadBuffSize = block_size * WP2_BLOCK_SIZE;
     ReadOutCnt = 0;
 
     return gThid;
@@ -740,8 +743,8 @@ void BgmSetMode(u_int maxChan) {
     wavep2.StartTrPos = 0;
 
     /* Unnecessary div+mult but required to match. */
-    wavep2.TransMax = ((ReadBuffSize / 512) / maxChan) / 2 * 2;
-    wavep2.Tr1Size = maxChan * 512;
+    wavep2.TransMax = ((ReadBuffSize / WP2_BLOCK_SIZE) / maxChan) / 2 * 2;
+    wavep2.Tr1Size = maxChan * WP2_BLOCK_SIZE;
 
     CpuResumeIntr(oldstat);
 }
@@ -782,8 +785,8 @@ int BgmSeek(unsigned int ofs) {
 
     BgmSetVolumeDirect(0);
 
-    line_cnt = GetKoubaisuu(4, wavep2.Tr1Size / 512);
-    line_cnt /= (wavep2.Tr1Size / 512);
+    line_cnt = GetKoubaisuu(4, wavep2.Tr1Size / WP2_BLOCK_SIZE);
+    line_cnt /= (wavep2.Tr1Size / WP2_BLOCK_SIZE);
 
     next_ofs = ofs % line_cnt;
     ofs -= next_ofs;
@@ -898,7 +901,7 @@ int BgmGetTime(void) {
     }
 
     now_cnt += (sbuf.TrackSize / 2) * gBgmIntrTmp;
-    return (now_cnt + (ret / 1024));
+    return (now_cnt + (ret / (2 * WP2_BLOCK_SIZE))); /* stereo rows sent so far */
 }
 
 int BgmGetTSample(void) {
