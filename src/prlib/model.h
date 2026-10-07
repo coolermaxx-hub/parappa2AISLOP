@@ -314,6 +314,9 @@ public:
     float *m_postureWeights[2];
     NaMATRIX<float, 4, 4> *m_postureMatrices[2];
     int m_rendered_once;
+    // Never set in this executable: the constructor clears all three and the
+    // destructor deletes the two pointers; no other code touches 0x88-0x90
+    // (checked against the original, 2026-10-07). Their use is unknown.
     int *unk88;
     int *unk8C;
     int unk90;

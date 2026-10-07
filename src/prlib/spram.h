@@ -48,6 +48,8 @@ public:
     float m_animation_time;
     PrModelObject *m_current_model;
     SpaFileHeader *m_animation;
+    // Cleared by Initialize and never read: the original executable's only
+    // accesses to 0x66C-0x678 are those four zero stores (checked 2026-10-07).
     u_int m_unk66C;
     u_int m_unk670;
     u_int m_unk674;
