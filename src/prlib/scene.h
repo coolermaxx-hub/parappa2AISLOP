@@ -57,6 +57,8 @@ public:
     PrModelObject *m_preSceneModelList;
     PrModelObject *m_normalModelList;
     PrModelObject *m_screen_model_list;
+    // Allocated (PrObjectDatabase::CreateScene news 0xb0 bytes) but never
+    // read or written by the original code.
     PR_PADDING(unkA4, 0x8);
 };
 

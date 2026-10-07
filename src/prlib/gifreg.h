@@ -36,7 +36,7 @@ public:
     PrGifPackedAd m_strip[16];
     int m_strip_len;
     bool m_frozen;
-    PR_PADDING(unk128, 0x8);
+    // sizeof is 0x130: the tag members' 16-byte alignment pads the tail.
 };
 
 /* Register setups sent between the render passes (built in PrInitializeDmaStripGifRegister). */
