@@ -612,7 +612,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     acobj  = anime->anmCobj;
     anmBit = PR_BIT(no);
 
-    for (i = 0; i < 6 && acobj->cflg != 0; i++, acobj++) {
+    for (i = 0; i < PR_ARRAYSIZE(anime->anmCobj) && acobj->cflg != 0; i++, acobj++) {
         int      cflg = acobj->cflg;
         int      ano;
         MN_HMDL *mdl;

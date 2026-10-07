@@ -767,7 +767,7 @@ static void ExamDispOn(void) {
         }
     }
     maxfr = met_time / 30.0f;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < EXAMTYPE_MAX; i++) {
         float lev_tmp;
 
         lev_tmp = examScore2Level(exam_global_ply_current->exam_score[i]);
