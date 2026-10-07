@@ -9860,20 +9860,18 @@ static int TsUserList_Flow(int flg, u_int tpad, u_int tpad2) {
 }
 
 static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
+    int            i, n;
     USERLIST_MENU *pfw = &UserListMenu;
-    u_char         buf[16];
-    int            isScroll;
-    float          ofsy;
-    PATPOS        *scr;
-    STRPOS        *ps;
-    USER_DATA     *user;
+    int            x, y;
+    u_char         sbuf[10];
+    PATPOS        *ppat;
+    STRPOS        *psps;
     int            dispColor;
-    int            i, j, k, n;
-    int            px, py;
-    int            y;
-    int            pflg;
+    int            nUser;
+    int            bScroll;
+    float          bofsy;
 
-    ofsy = spr->ofsy;
+    bofsy = spr->ofsy;
     spr->zx = 1.0f;
     spr->zy = 0.5f;
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
@@ -9882,39 +9880,41 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     dispColor = pfw->dispColor;
     switch (dispColor) {
     case 0:
-        scr = LG_SCROLL_MARK;
+        ppat = LG_SCROLL_MARK;
         break;
     case 1:
-        scr = LLG_SCROLL_MARK;
+        ppat = LLG_SCROLL_MARK;
         break;
     case 2:
     default:
-        scr = RP_SCROLL_MARK;
+        ppat = RP_SCROLL_MARK;
         break;
     }
 
     if (pfw->curPageTop > 0) {
-        TsPatPut(pk, spr, &scr[0], 0, 0);
+        TsPatPut(pk, spr, &ppat[0], 0, 0);
     }
     if (pfw->curPageTop + 5 < pfw->userMax) {
-        TsPatPut(pk, spr, &scr[1], 0, 0);
+        TsPatPut(pk, spr, &ppat[1], 0, 0);
     }
     TsPatPut(pk, spr, &CSSLASH_MARK, 0, 0);
 
-    isScroll = 1;
+    bScroll = 1;
 
-    sprintf(buf, "%d", pfw->curuser + pfw->curPageTop + 1);
-    ps = PAGENO_StrCOD;
-    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, buf);
-    ps++;
-    sprintf(buf, "%d", pfw->userMax);
-    MENUFontPutS(pk, spr, ps->x, ps->y, ps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, buf);
+    sprintf(sbuf, "%d", pfw->curuser + pfw->curPageTop + 1);
+    psps = PAGENO_StrCOD;
+    MENUFontPutS(pk, spr, psps->x, psps->y, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
+    psps++;
+    sprintf(sbuf, "%d", pfw->userMax);
+    MENUFontPutS(pk, spr, psps->x, psps->y, psps->abgr, MNFONT_VALIGN_BOTTOM | MNFONT_HALIGN_CENTER, sbuf);
 
     if (pfw->sline == 0.0f) {
-        isScroll = 0;
+        bScroll = 0;
     }
 
-    if (isScroll) {
+    if (bScroll) {
+        int y;
+
         TsMenu_CaptureVram(pk, spr);
 
         y = 0x29;
@@ -9942,7 +9942,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
             PkNSprite_AddAdj(pk, spr, PKSPR_UV_RECT);
         }
 
-        spr->ofsy = ofsy;
+        spr->ofsy = bofsy;
         spr->zx = 1.0f;
         spr->zy = 0.5f;
         PkALPHA_Add(pk, GS_ALPHA_BLEND);
@@ -9950,46 +9950,51 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
 
     spr->rgba0 = MN_COLOR_NEUTRAL;
 
-    n = 5;
-    if (isScroll) {
-        n = 6;
+    nUser = 5;
+    if (bScroll) {
+        nUser = 6;
         spr->ofsy += pfw->sline;
     }
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < nUser; i++) {
+        int cn;
+
         if (0.0f < pfw->sline) {
-            j = i - 1;
+            cn = i - 1;
         } else {
-            j = i;
+            cn = i;
         }
-        if (j < 0) {
-            TsCmnCell_CusorDraw(pk, spr, j, NULL, 0, 0, 0x20808080);
+        if (cn < 0) {
+            TsCmnCell_CusorDraw(pk, spr, cn, NULL, 0, 0, 0x20808080);
         } else {
-            TsCmnCell_CusorDraw(pk, spr, j, &pfw->cellcs[j], 0, 0, 0x20808080);
+            TsCmnCell_CusorDraw(pk, spr, cn, &pfw->cellcs[cn], 0, 0, 0x20808080);
         }
     }
 
-    spr->ofsy = ofsy;
+    spr->ofsy = bofsy;
 
-    n = 5;
-    if (isScroll) {
-        n = 6;
-        spr->ofsy = ofsy + pfw->sline;
+    nUser = 5;
+    if (bScroll) {
+        nUser = 6;
+        spr->ofsy = bofsy + pfw->sline;
     }
 
-    for (i = 0; i < n; i++) {
-        int jj;
-        if (0.0f < pfw->sline) {
-            jj = i - 1;
-        } else {
-            jj = i;
-        }
-        k  = jj + pfw->curPageTop;
-        px = CellCusPos[jj + 1].x;
-        py = CellCusPos[jj + 1].y;
+    for (i = 0; i < nUser; i++) {
+        USER_DATA *puser;
+        int        pflg;
+        int        cn;
 
-        if (k >= 0 && k < pfw->userMax) {
-            user = &pfw->pusrdspWk->pUserDisp[k];
+        if (0.0f < pfw->sline) {
+            cn = i - 1;
+        } else {
+            cn = i;
+        }
+        n = cn + pfw->curPageTop;
+        x = CellCusPos[cn + 1].x;
+        y = CellCusPos[cn + 1].y;
+
+        if (n >= 0 && n < pfw->userMax) {
+            puser = &pfw->pusrdspWk->pUserDisp[n];
 
             if (pfw->curuser == i) {
                 pflg = (pfw->nameinw[0].nameMsk == NAMEIN_MSK_EDIT) ? 2 : 0;
@@ -9997,27 +10002,27 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
                     pflg |= 4;
                 }
                 if (pfw->nameinw[0].nameMsk || pfw->nameinw[1].nameMsk) {
-                    user = pfw->wuser;
+                    puser = pfw->wuser;
                 }
             } else {
                 pflg = 0;
             }
 
-            TsUser_PanelDraw(pk, spr, user, px, py, pflg, dispColor);
+            TsUser_PanelDraw(pk, spr, puser, x, y, pflg, dispColor);
         }
     }
 
-    spr->ofsy = ofsy;
+    spr->ofsy = bofsy;
     PkDefSCISSOR_Add(pk);
 
-    px = CellCusPos[pfw->curuser + 1].x;
-    py = CellCusPos[pfw->curuser + 1].y;
+    x = CellCusPos[pfw->curuser + 1].x;
+    y = CellCusPos[pfw->curuser + 1].y;
 
     if (pfw->nameinw[0].isOn) {
-        TsNAMEINBox_Draw(pk, spr, px, py, dispColor, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Draw(pk, spr, x, y, dispColor, &pfw->nameinw[0], 0);
     }
     if (pfw->nameinw[1].isOn) {
-        TsNAMEINBox_Draw(pk, spr, px, py, dispColor, &pfw->nameinw[1], 1);
+        TsNAMEINBox_Draw(pk, spr, x, y, dispColor, &pfw->nameinw[1], 1);
     }
 }
 
