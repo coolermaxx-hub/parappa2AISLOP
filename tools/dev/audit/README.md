@@ -11,6 +11,7 @@ Helpers used during the readability pass. Run them from the repository root afte
 | `spm_packets.py <common.ipk-or-model.spm> [--format auto\|ipk\|spm]` | Check unrelocated version-5 SPM DMA/VIF upload bounds, clipping tags and contour source/destination records without extracting assets; independent of the build. See [packet evidence](../../../docs/spm-packet-layout.md). |
 | `stale_stack_reads.py [dir]` | List loads from a function's own stack frame that precede any store to those bytes, across every object in `dir` (default `obj/`, the original units from `./configure.py --objdiff`). Heuristic; check each hit by hand. |
 | `spm_reserved_fields.py <common.ipk-or-model.spm>` | Count the values of the unnamed SPM node and header fields across every model; see [unnamed node fields](../../../docs/spm-geometry-layout.md#unnamed-node-fields-in-real-models-2026-10-07). |
+| `hoisted_vector_reads.py <object-or-elf> [lo hi]` | List float loads from a stack slot that precede a later 16-byte store to it: the shape of the sort-depth bug, including slots written earlier. |
 | `symcmp.py new.elf expected.elf <symbols...>` | Compare symbol bytes between two ELFs. |
 | `layout2.py <lo> <hi>` | Show symbol address deltas against `symbol_addrs`; all deltas in a section must be one constant. |
 | `layout_orig.py [sections]` | Compare every data symbol's offset within `.data`, `.sdata`, `.sbss` and `.bss` with the original executable. The only way to check `.bss`, which is not in the ROM image. |

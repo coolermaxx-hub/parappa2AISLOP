@@ -904,6 +904,20 @@ unaligned `sdl`/`sdr` struct copies, indexed addresses, or, in `tapEventCheck`,
 `time_tmp` filled through a pointer by `mccReqTapGet`, which writes it on every
 path that returns non-zero.
 
+**A third case: `SpmComplexNode::RenderContour`** (`contour.cpp`, found
+2026-10-07 by `tools/dev/audit/hoisted_vector_reads.py`, which also reports
+slots written earlier in the function). The contour depth sort reads `8(sp)`
+and `12(sp)` at `0x154284`/`0x154288`, before the projected sort position is
+stored there at `0x154390`, and divides with them at `0x1543a0`. Here the slot
+is not always leftover memory. When the node matrix is not the identity, the
+vertex loop before it routes each transformed contour vertex through `sp+0`.
+So the original sorts the contour packet by the last contour vertex's z/w in
+node space, not by the projected sort point. With an identity matrix, or no
+contour vertices, it is leftover stack data. Removing the nalib clobbers
+reproduces the early reads in this tree's `RenderContour` as well. Over the
+whole executable that scan finds only these three functions, and nothing in
+this tree's build.
+
 ## Subtitles (2026-10-05)
 
 `subt.c` draws subtitles only while the subtitle option is on; they never feed

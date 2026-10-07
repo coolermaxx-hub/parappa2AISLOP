@@ -52,7 +52,7 @@ cannot prove original behavior or complete understanding of the data formats.
    most are functions that never matched as C. The causes previously marked
    inferred (render.cpp, billboard.cpp) were traced against the original
    objects on 2026-10-07. That trace found one behaviour difference: the
-   original's context-2 and shape-node sort depth reads stale stack data
+   original's context-2, shape-node and contour sort depth reads stale stack data
    ([notes](behavior-notes.md#stale-sort-depth-in-context-2-and-shape-nodes-2026-10-07));
    whether a port should emulate it is an open decision. The main-ROM checksum
    currently fails. Do not restore compiler steering or change expected hashes.
