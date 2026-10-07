@@ -562,9 +562,10 @@ void GGsSetLocalMoveImage(
     sceGsMoveImage *lp, short dbp, short dbw, short dpsm,
     short dx, short dy, short sbp, short sbw,
     short spsm, short sx, short sy, short w, short h, short dir) {
-    lp->giftag.NLOOP = 4;
+    /* BITBLTBUF, TRXPOS, TRXREG and TRXDIR as A+D */
+    lp->giftag.NLOOP = (sizeof(*lp) - sizeof(lp->giftag)) / sizeof(u_long128);
     lp->giftag.EOP = 1;
-    lp->giftag.FLG = 0;
+    lp->giftag.FLG = SCE_GIF_PACKED;
     lp->giftag.NREG = 1;
     lp->giftag.REGS0 = SCE_GIF_PACKED_AD;
     
@@ -592,7 +593,8 @@ void GGsSetLocalMoveImage(
 }
 
 void GGsExecLocalMoveImage(sceGsMoveImage *lp) {
-    exl_dmatag.qwc = 5;
+    /* refe: send the whole sceGsMoveImage, then end */
+    exl_dmatag.qwc = sizeof(*lp) / sizeof(u_long128);
     exl_dmatag.id = 0;
     exl_dmatag.next = (sceDmaTag*)lp;
 

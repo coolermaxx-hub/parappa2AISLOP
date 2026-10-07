@@ -113,13 +113,14 @@ int SetIopModule(void) {
 static void firstClrFrameBuffer(void) {
     CLEAR_VRAM_DMA vclr_dma;
 
-    vclr_dma.dmatag.qwc = 15;
+    /* refe: send the GIF tag and its A+D data, then end */
+    vclr_dma.dmatag.qwc = (sizeof(vclr_dma) - sizeof(vclr_dma.dmatag)) / sizeof(u_long128);
     vclr_dma.dmatag.id = 0;
     vclr_dma.dmatag.next = (sceDmaTag*)&vclr_dma.giftag;
 
-    vclr_dma.giftag.NLOOP = 14;
+    vclr_dma.giftag.NLOOP = (sizeof(vclr_dma.drEnv) + sizeof(vclr_dma.clear)) / sizeof(u_long128);
     vclr_dma.giftag.EOP = 1;
-    vclr_dma.giftag.FLG = 0;
+    vclr_dma.giftag.FLG = SCE_GIF_PACKED;
     vclr_dma.giftag.NREG = 1;
     vclr_dma.giftag.REGS0 = SCE_GIF_PACKED_AD;
 
