@@ -7,6 +7,7 @@
 #include <libgraph.h>
 #include <math.h>
 
+#include "dma.h"
 #include "microprogram.h"
 #include "renderstuff.h"
 #include "noodlepacket.h"
@@ -135,12 +136,11 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
         param.phaseTime[2] = 0.0f;
         param.bandOffset = (float)(i * 16);
 
-        /* 8 A+D registers */
-        packet.stateTag.NLOOP = 8;
+        packet.stateTag.NLOOP = PR_ARRAYSIZE(packet.state);
         packet.stateTag.EOP = 0;
-        packet.stateTag.FLG = 0;
+        packet.stateTag.FLG = SCE_GIF_PACKED;
         packet.stateTag.NREG = 1;
-        packet.stateTag.REGS0 = 0xE;
+        packet.stateTag.REGS0 = SCE_GIF_PACKED_AD;
 
         packet.state[0].value = frame;
         packet.state[0].address = SCE_GS_FRAME_1;
@@ -162,20 +162,20 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
         /* 64 sprites: ST, RGBAQ, XYZ2 x 2 */
         packet.spriteTag.NLOOP = 0x40;
         packet.spriteTag.EOP = 1;
-        packet.spriteTag.FLG = 0;
+        packet.spriteTag.FLG = SCE_GIF_PACKED;
         packet.spriteTag.NREG = 6;
-        packet.spriteTag.REGS0 = 2;
-        packet.spriteTag.REGS1 = 1;
-        packet.spriteTag.REGS2 = 5;
-        packet.spriteTag.REGS3 = 2;
-        packet.spriteTag.REGS4 = 1;
-        packet.spriteTag.REGS5 = 5;
+        packet.spriteTag.REGS0 = SCE_GS_ST;
+        packet.spriteTag.REGS1 = SCE_GS_RGBAQ;
+        packet.spriteTag.REGS2 = SCE_GS_XYZ2;
+        packet.spriteTag.REGS3 = SCE_GS_ST;
+        packet.spriteTag.REGS4 = SCE_GS_RGBAQ;
+        packet.spriteTag.REGS5 = SCE_GS_XYZ2;
     }
 
     /* Packet that uploads the noodle parameters to VU1 and runs the microprogram */
     sceDmaTag *dmaTag = &mendererCreatePacket.stateDma;
     dmaTag->qwc = 3;
-    dmaTag->id = 0x10;                        /* cnt */
+    dmaTag->id = PR_DMA_TAG_CNT;
     dmaTag->next = NULL;
     dmaTag->p[0] = SCE_VIF1_SET_FLUSH(0);
     dmaTag->p[1] = SCE_VIF1_SET_DIRECT(3, 0);
@@ -183,27 +183,29 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     sceGifTag *gifTag = &mendererCreatePacket.stateGif;
     gifTag->NLOOP = 2;
     gifTag->EOP = 1;
-    gifTag->FLG = 0;
+    gifTag->FLG = SCE_GIF_PACKED;
     gifTag->NREG = 1;
-    gifTag->REGS0 = 0xE;
+    gifTag->REGS0 = SCE_GIF_PACKED_AD;
 
-    mendererCreatePacket.state[0].value = 0x30000; /* TEST_1: ZTE, ZTST ALWAYS */
+    mendererCreatePacket.state[0].value = PR_TEST_NO_ALPHA(SCE_GS_ZALWAYS);
     mendererCreatePacket.state[0].address = SCE_GS_TEST_1;
-    mendererCreatePacket.state[1].value = NaGifPacketWrapper::EncodeRegister(zbuf) | (u_long(1) << 32);
+    sceGsZbuf maskedZbuf = zbuf;
+    maskedZbuf.ZMSK = 1; /* test against Z without writing it */
+    mendererCreatePacket.state[1].value = NaGifPacketWrapper::EncodeRegister(maskedZbuf);
     mendererCreatePacket.state[1].address = SCE_GS_ZBUF_1;
 
     /* All band parameter sets go to VU1 memory from address 0 */
     const u_int parameterQwords = sizeof(noodleParameter) / sizeof(u_long128);
     dmaTag = &mendererCreatePacket.parameterDma;
     dmaTag->qwc = parameterQwords;
-    dmaTag->id = 0x30;                        /* ref */
+    dmaTag->id = PR_DMA_TAG_REF;
     dmaTag->next = (sceDmaTag*)noodleParameter;
     dmaTag->p[0] = 0;
     dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, parameterQwords, PR_VIF_UNPACK_V4_32(0), 0);
 
     dmaTag = &mendererCreatePacket.endDma;
     dmaTag->qwc = 0;
-    dmaTag->id = 0x70;                        /* end */
+    dmaTag->id = PR_DMA_TAG_END;
     dmaTag->next = NULL;
     dmaTag->p[0] = SCE_VIF1_SET_FLUSH(0);
     dmaTag->p[1] = SCE_VIF1_SET_MSCAL(PrGetMendererCreateTextureAddress(), 0);
@@ -212,9 +214,9 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     sceGifTag *texTag = &mendererTexturePacket.tag;
     texTag->NLOOP = 13;
     texTag->EOP = 1;
-    texTag->FLG = 0;
+    texTag->FLG = SCE_GIF_PACKED;
     texTag->NREG = 1;
-    texTag->REGS0 = 0xE;
+    texTag->REGS0 = SCE_GIF_PACKED_AD;
 
     mendererTexturePacket.state[0].value = SCE_GS_SET_BITBLTBUF(zbpBlocks, 10, SCE_GS_PSMCT32, tbp, 4, SCE_GS_PSMCT32);
     mendererTexturePacket.state[0].address = SCE_GS_BITBLTBUF;
@@ -222,7 +224,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     mendererTexturePacket.state[1].address = SCE_GS_TRXPOS;
     mendererTexturePacket.state[2].value = SCE_GS_SET_TRXREG(256, 80);
     mendererTexturePacket.state[2].address = SCE_GS_TRXREG;
-    mendererTexturePacket.state[3].value = 2; /* local to local */
+    mendererTexturePacket.state[3].value = SCE_GS_SET_TRXDIR(2); /* local to local */
     mendererTexturePacket.state[3].address = SCE_GS_TRXDIR;
     mendererTexturePacket.state[4].address = SCE_GS_SCISSOR_1; /* data filled at draw time */
     mendererTexturePacket.state[5].value = 0;

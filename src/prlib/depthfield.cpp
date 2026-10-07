@@ -59,9 +59,9 @@ void PrSceneObject::ApplyDepthOfField() {
     tag.NLOOP = 0;
     tag.EOP = 1;
     tag.PRE = 0;
-    tag.FLG = 0;
+    tag.FLG = SCE_GIF_PACKED;
     tag.NREG = 1;
-    tag.REGS0 = 0xe;
+    tag.REGS0 = SCE_GIF_PACKED_AD;
     packet.OpenGifTag(tag);
 
     zbuf.ZMSK = 1;
