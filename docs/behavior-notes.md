@@ -32,6 +32,7 @@ Contents:
 - [Transform constructors and transposed apply (2026-10-07)](#transform-constructors-and-transposed-apply-2026-10-07)
 - [Stale sort depth in context-2 and shape nodes (2026-10-07)](#stale-sort-depth-in-context-2-and-shape-nodes-2026-10-07)
 - [Subtitles (2026-10-05)](#subtitles-2026-10-05)
+- [Sprite texture rectangle flag (2026-10-07)](#sprite-texture-rectangle-flag-2026-10-07)
 
 ## Rhythm clock (first pass, 2026-10-02)
 
@@ -932,3 +933,21 @@ usual `euc2sjis` arithmetic before the glyph lookup; characters without a glyph
 are skipped. Lines are centred on screen, starting at field line 168, or 186
 for story-type steps (`PSTEP_SERIAL`, bonus, hook and XTR scenes) and Boxy's
 wipe. Fonts are chosen by `SUBT_FONT` (`include/main/subt.h`).
+
+## Sprite texture rectangle flag (2026-10-07)
+
+`PKSPR_UV_RECT` is meant to take a sprite's texture rectangle from
+`SPR_PRM::ux/uy/uw/uh` instead of its screen rectangle `px/py/sw/sh`. In the
+four sprite helpers (`PkNSprite_Add`, `PkNSprite_Add2`, `PkNSprite_AddAdj`,
+`PkRSprite_Add`, `src/menu/pksprite.c`) the flag does nothing. Each loads the
+selected rectangle into `$t1`, then copies the `ux/uy/uw/uh` quadword over
+`$t1` before using it. That holds in the original executable (for example
+`lq $t1, 0x20($a1)` or `lq $t1, 0x0($a1)` at 0x13e8ec/0x13e8f8, then
+`daddu $t1, $zero, $t0` at 0x13e904 in `PkNSprite_Add`) and is kept here.
+
+The visible result is the same either way: every call site in `main` and `menu`
+passes `PKSPR_UV_RECT`. A port can treat the texture rectangle of these
+helpers as always `ux/uy/uw/uh`; the path without the flag never worked. The
+line helper `PkCLine2_Add` does use the flag (it changes how the end point is
+formed).
+

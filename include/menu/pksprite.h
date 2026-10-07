@@ -85,7 +85,8 @@ typedef struct { // 0x90
 } PR_ALIGNED(16) SPR_PRM; /* 16-byte aligned in the original debug info (sizeof 0x90) */
 
 /* Flags for the Pk*Sprite/Line _Add functions. */
-#define PKSPR_UV_RECT   0x1 /* texture rectangle comes from ux/uy/uw/uh instead of px/py/sw/sh */
+#define PKSPR_UV_RECT   0x1 /* texture rectangle comes from ux/uy/uw/uh instead of px/py/sw/sh;
+                             * the N/R sprite helpers use ux/uy/uw/uh either way (PkNSprite_Add) */
 #define PKSPR_ZOOM      0x2 /* apply SPR_PRM::zoom when it is switched on */
 #define PKSPR_ANTIALIAS 0x4 /* antialiased line */
 

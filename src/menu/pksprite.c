@@ -607,6 +607,13 @@ void PkNSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
+    /*
+     * As in the original, this loads the flag-selected rectangle (ux/uy/uw/uh
+     * or px/py/sw/sh) into $9, but the next block overwrites $9 with a copy of
+     * ux/uy/uw/uh before reading it. The texture rectangle is therefore always
+     * ux/uy/uw/uh. Every caller passes PKSPR_UV_RECT, so nothing draws
+     * differently; the other path never worked.
+     */
     if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
@@ -677,6 +684,7 @@ void PkNSprite_Add2(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
+    /* Dead load: the rectangle is always ux/uy/uw/uh (see PkNSprite_Add). */
     if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
@@ -747,6 +755,7 @@ void PkNSprite_AddAdj(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = GS_PRIM_TEX_SPRITE(TRUE);
     sp->rgba = ppspr->rgba0;
 
+    /* Dead load: the rectangle is always ux/uy/uw/uh (see PkNSprite_Add). */
     if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
@@ -995,6 +1004,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/0, /*TME*/1, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
+    /* Dead load: the rectangle is always ux/uy/uw/uh (see PkNSprite_Add). */
     if (flg & PKSPR_UV_RECT) {
         asm volatile("lq $9, 0x20(%0)" : : "r"(ppspr) : "$9", "memory");
     } else {
