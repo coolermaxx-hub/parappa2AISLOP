@@ -237,6 +237,9 @@ public:
     PR_PADDING(unk54, 0x8);
     int m_vertex_num;
     PR_PADDING(unk60, 0x4);
+    // Relocated by ChangePointer and apparently unused: in the original
+    // executable no function of, or taking, this class reads that offset
+    // (checked 2026-10-07). Purpose unknown.
     int *unk64;
     u_int m_node_num;
     u_int m_shapeWeightCount;

@@ -27,6 +27,9 @@ public:
     PR_PADDING(unk8, 0xC);
     float m_duration;
     char m_name[32];
+    // Relocated by ChangePointer and apparently unused: in the original
+    // executable no function of, or taking, this class reads that offset
+    // (checked 2026-10-07). Purpose unknown.
     int *unk38;
     PrLinkedList<SpaFileHeader> m_list;
     PrObjectSet<SpaFileHeader> *m_obj_set;

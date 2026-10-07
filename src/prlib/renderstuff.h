@@ -66,6 +66,7 @@ public:
     PrTransmitEntry *m_transmit_array;
     PrSceneObject *m_scene;
     sceGsZbuf m_zbuf;
+    // Cleared by Initialize; no code in the original executable reads it.
     int unk28;
     PrRENDERING_STATISTICS m_statistics;
 };

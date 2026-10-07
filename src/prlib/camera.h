@@ -50,6 +50,9 @@ public:
     float m_aspect;
     float m_nearClip;
     float m_farClip;
+    // Relocated by ChangePointer and apparently unused: in the original
+    // executable no function of, or taking, this class reads that offset
+    // (checked 2026-10-07). Purpose unknown.
     int *unk74;
     PrLinkedList<SpcFileHeader> m_list;
     PrObjectSet<SpcFileHeader> *m_obj_set;
