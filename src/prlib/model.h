@@ -42,9 +42,10 @@ struct PrVuNodeHeaderDmaPacket {
     float m_eeColorScale;
     float m_contour_blur_alpha[2];
     PrMICRO_PROGRAM_MODULE m_microprogram;
-    // VU quadword 45 y. 0xd in every built-in packet; neither the EE nor any
-    // microprogram reads it.
-    PR_PADDING(unk64, 0x4);
+    // VU quadword 45 y: the module's PrGetInputVertexParameterSet value (13 in
+    // every primary packet, 5 in every contour packet), stored by the exporter.
+    // Neither the EE nor any microprogram reads it.
+    u_int m_inputVertexParameterSet;
     float m_disturbance;
     // VU quadword 45 w, read only by vump_refmap: non-zero measures the
     // reflection's view vector from (0, 0, 1) instead of the camera position.

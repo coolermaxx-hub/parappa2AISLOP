@@ -181,7 +181,7 @@ quadwords 40-63, and the last DMA quadword holds FLUSH and the MSCAL that
 | `m_matrix` | 40-43 | | `preset_registers` (all programs) |
 | depth bias, colour scale, contour blur alphas | 44 | | `preset_registers` |
 | `m_microprogram` | 45 x | | EE `ChangePointer` only |
-| `unk64` | 45 y | 0xd in all 229 | Nothing |
+| `m_inputVertexParameterSet` (was `unk64`) | 45 y | 13 in all 229 primary packets (modules 0, 1, 4), 5 in the 3 contour packets: `PrGetInputVertexParameterSet` for each module | Nothing |
 | `m_disturbance` | 45 z | | normal, both-face, contour, refmap |
 | `m_reflectionFixedEye` (was `unk6C`) | 45 w | 0 in all 229 | `vump_refmap` (`ILW.w VI09, 45(VI00)`) |
 | `m_textureOffsetU`/`V` | 46 x-y | | `vump_refmap` |
@@ -192,6 +192,14 @@ the eye point loaded from display-header quadword 12 (the camera position).
 When `m_reflectionFixedEye` is non-zero, `MR32.xyz VF09, VF00` replaces that
 eye point with (0, 0, 1). No built-in model sets it and no EE code writes it;
 stage models may, which needs their assets to check.
+
+`m_inputVertexParameterSet` matches `PrGetInputVertexParameterSet` for the
+packet's module in every built-in packet. Its bit count equals the module's
+input quadwords (13, 5 and 15 have 3, 2 and 4 bits;
+`PrGetInputVertexParameterNum` returns 3, 2 and 4), and contour vertices are
+position and colour pairs. So it is most likely a vertex attribute mask:
+1 position, 2 normal, 4 colour, 8 texture coordinates (inferred). Nothing in
+the game calls either function.
 
 `vump_refmap` loads quadword 46 whole but passes only x and y on to the
 texture coordinates (`MADDi.xy`). No `VI00`-relative access in any

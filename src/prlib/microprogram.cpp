@@ -65,6 +65,11 @@ u_int PrGetInputVertexParameterNum(PrMICRO_PROGRAM_MODULE module) {
     return ParameterTable[module];
 }
 
+// Apparently a vertex attribute mask: its bit count is the parameter number
+// above (13, 5 and 15 have 3, 2 and 4 bits), and contour vertices carry
+// position and colour only. Inferred bits: 1 position, 2 normal (reflection
+// map only), 4 colour, 8 texture coordinates. No game code calls this; SPM
+// packets store the same value (PrVuNodeHeaderDmaPacket::m_inputVertexParameterSet).
 u_int PrGetInputVertexParameterSet(PrMICRO_PROGRAM_MODULE module) {
     static u_int ParameterTable[] = {
         13, /* NORMAL   */

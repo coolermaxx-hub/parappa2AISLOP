@@ -33,13 +33,15 @@ cannot prove original behavior or complete understanding of the data formats.
      ([evidence](spm-geometry-layout.md#unnamed-node-fields-in-real-models-2026-10-07));
      the SPA/SPC header, node and transform words
      ([evidence](spa-animation-layout.md#reserved-header-words-2026-10-07));
-     the display header's spare quadwords and the node packet's `unk64`/`unk78`
+     the display header's spare quadwords and the node packet's `unk78`
      ([display](spm-packet-layout.md#display-header-spare-space-2026-10-07),
      [packet](spm-packet-layout.md#node-packet-header-fields-2026-10-07)).
    - **Only cleared or relocated**: the scratchpad, model and render-state
      fields and the relocated file pointers (comments at each field).
-   - **Named from the microcode**: packet offset 0x6c is now
-     `m_reflectionFixedEye`, which `vump_refmap` reads.
+   - **Named from evidence**: packet offset 0x6c is now
+     `m_reflectionFixedEye`, which `vump_refmap` reads; 0x64 is
+     `m_inputVertexParameterSet`, the module's vertex attribute set, stored by
+     the exporter and never read.
 
    What remains is the two chunk quadwords' original purpose, any use of
    these fields in stage assets, and PS2 execution.
