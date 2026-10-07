@@ -260,10 +260,12 @@ three C structs that differ from the original debug info, all intentional.
 the code uses (each has a comment). `USER_DATA` groups the original's flat date
 fields into `P3MC_DATE`.
 
-`tools/dev/audit/stabs_scopes.py` reports 45 C functions whose locals or block
-nesting differ: 16 add named locals, 9 drop locals the original had, and 20
-differ only in scope or order. These come from the readability pass. Treat a
-rise in that count as a regression to explain.
+`tools/dev/audit/stabs_scopes.py` reports 41 C functions whose locals or block
+nesting differ: 17 add named locals, 10 drop locals the original had, 6 do
+both (mostly renamed locals in functions that never matched) and 8 differ
+only in scope or order. These come from the readability pass; the count fell
+from 45 as functions took back the original's names and blocks. Treat a rise
+in that count as a regression to explain.
 
 ## Data sections still in asm
 
