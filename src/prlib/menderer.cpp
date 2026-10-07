@@ -244,7 +244,7 @@ static const sceGifTag noodleQuadGifTag = {
 void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
 
 void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
-    u_int count = 115;
+    u_int count = PR_NOODLE_POLYGON_COUNT;
 
     if (prCurrentStage == 6 || prCurrentStage == 16) {
         float ratio = prMendererRatio;
@@ -262,19 +262,20 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
             t = 0.0f;
         }
 
-        count = (u_int)(t * (t * t) * 114.0f + 0.5f) + 1;
-        if (count > 115) {
-            count = 115;
+        count = (u_int)(t * (t * t) * static_cast<float>(PR_NOODLE_POLYGON_COUNT - 1) + 0.5f) + 1;
+        if (count > PR_NOODLE_POLYGON_COUNT) {
+            count = PR_NOODLE_POLYGON_COUNT;
         } else if (count == 0) {
             count = 1;
         }
     }
 
-    u_int per_block = (115 + 4) / 5;
+    // Spread the quads evenly over the texture bands, rounding up.
+    u_int per_block = (PR_NOODLE_POLYGON_COUNT + PR_NOODLE_TEXTURE_BANDS - 1) / PR_NOODLE_TEXTURE_BANDS;
     u_int index = 0;
     noodleRandomSeed = 0;
 
-    for (u_int block = 0; block < 5 && index < count; block++) {
+    for (u_int block = 0; block < PR_NOODLE_TEXTURE_BANDS && index < count; block++) {
         u_int next = block + 1;
 
         u_long128 *buf = prSpramData->m_noodle_buffer[0];

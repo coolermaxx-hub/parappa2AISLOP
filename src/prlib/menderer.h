@@ -3,6 +3,10 @@
 
 #include <eetypes.h>
 
+// Number of noodle polygons; each has its own drifting position
+// (mendererdata.cpp) and the strip pass draws up to this many quads.
+static const u_int PR_NOODLE_POLYGON_COUNT = 115;
+
 // Noodle ("menderer") renderer state shared by the menderer*.cpp files.
 // The definitions and their initial values live in menderer.cpp.
 extern float prMendererRatio;

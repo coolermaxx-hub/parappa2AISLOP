@@ -38,6 +38,11 @@ struct PrNoodleTextureDrawPacket {
     sceGifTag spriteTag;
 };
 
+// The generated noodle texture is 256x80: five 16-row bands, one per parameter
+// set, each drawn from three summed sine waves.
+static const u_int PR_NOODLE_TEXTURE_BANDS = 5;
+static const u_int PR_NOODLE_WAVES = 3;
+
 // VU texture input: three sine waves in XYZ, with W reserved. Amplitudes are
 // normalized by their sum; spatialCycles counts cycles across 256 texels.
 // See docs/noodle-texture-model.md for the microprogram derivation.
@@ -46,7 +51,7 @@ struct PrNoodleTextureParameters {
     float spatialCycles[4];
     float temporalFrequency[4];
     float phaseOffsetCycles[4];
-    float phaseTime[3];
+    float phaseTime[PR_NOODLE_WAVES];
     float bandOffset;
     PrNoodleTextureDrawPacket packet;
 };

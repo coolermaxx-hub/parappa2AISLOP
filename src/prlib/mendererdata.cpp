@@ -16,11 +16,8 @@ struct PrNoodlePositionData {
 };
 
 
-// Number of noodle polygons that get an independent drifting position.
-static const u_int NOODLE_POLYGON_COUNT = 115;
-
-static PrNoodlePositionData noodlePositionData[NOODLE_POLYGON_COUNT];
-static u_int noodlePolygonIndex[NOODLE_POLYGON_COUNT + 1];
+static PrNoodlePositionData noodlePositionData[PR_NOODLE_POLYGON_COUNT];
+static u_int noodlePolygonIndex[PR_NOODLE_POLYGON_COUNT + 1];
 
 void SetNextTarget(PrNoodlePositionData *data);
 void UpdateNoodlePositionData(PrNoodlePositionData *data);
@@ -60,11 +57,11 @@ void SetNextTarget(PrNoodlePositionData *data) {
 void InitializeNoodlePositionData() {
     PrNoodlePositionData *data = noodlePositionData;
 
-    for (u_int i = 0; i < NOODLE_POLYGON_COUNT; i++, data++) {
+    for (u_int i = 0; i < PR_NOODLE_POLYGON_COUNT; i++, data++) {
         data->position[0] = (PrFloatRandom() - 0.5f) * 2.0f * 0.1f;
         data->position[1] = (PrFloatRandom() - 0.5f) * 2.0f * 0.04f;
         data->position[2] = (PrFloatRandom() - 0.5f) * 2.0f * 0.1f;
-        data->index = ((i * 2) % NOODLE_POLYGON_COUNT) / static_cast<float>(NOODLE_POLYGON_COUNT);
+        data->index = ((i * 2) % PR_NOODLE_POLYGON_COUNT) / static_cast<float>(PR_NOODLE_POLYGON_COUNT);
         SetNextTarget(data);
     }
 }
@@ -107,12 +104,12 @@ float GetSynchronizeRatio(const PrNoodlePositionData *data) {
 }
 
 void PrInitializeNoodlePolygonPosition() {
-    for (u_int k = 0; k < NOODLE_POLYGON_COUNT; k++) {
+    for (u_int k = 0; k < PR_NOODLE_POLYGON_COUNT; k++) {
         noodlePolygonIndex[k] = k;
     }
 
-    for (u_int i = 0; i < NOODLE_POLYGON_COUNT - 1; i++) {
-        u_int j = PrRandom() % (NOODLE_POLYGON_COUNT - i);
+    for (u_int i = 0; i < PR_NOODLE_POLYGON_COUNT - 1; i++) {
+        u_int j = PrRandom() % (PR_NOODLE_POLYGON_COUNT - i);
         if (j != i) {
             u_int tmp = noodlePolygonIndex[i];
             noodlePolygonIndex[i] = noodlePolygonIndex[j];
@@ -135,7 +132,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     float x = data->position[0] * sync * Maximum(ratio, 1.0f);
     float z = data->position[2] * sync;
 
-    float angle = (float)n * (PR_PI * 2) / static_cast<float>(NOODLE_POLYGON_COUNT) + z;
+    float angle = (float)n * (PR_PI * 2) / static_cast<float>(PR_NOODLE_POLYGON_COUNT) + z;
     float c = cosf(angle);
     float s = sinf(angle);
     NaMATRIX<float, 2, 2> rot(c, s, -s, c);

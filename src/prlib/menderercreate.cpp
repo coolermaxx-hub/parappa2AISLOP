@@ -19,8 +19,8 @@ extern int prCurrentStage;
 int mendererTextureCreationInitialized = 0;
 int mendererTextureRequested = 0;
 float mendererSyncPhase = 0.0f;
-static float noodlePhase[5][3];
-static PrNoodleTextureParameters noodleParameter[5];
+static float noodlePhase[PR_NOODLE_TEXTURE_BANDS][PR_NOODLE_WAVES];
+static PrNoodleTextureParameters noodleParameter[PR_NOODLE_TEXTURE_BANDS];
 static PrNoodleTextureCreationPacket mendererCreatePacket;
 static PrNoodleTextureCopyPacket mendererTexturePacket;
 
@@ -32,7 +32,7 @@ void PrSynchronizeMendererParameter(float ratio);
 
 /* Per-preset wave parameters: amplitude, spatial cycles, temporal frequency (x0.15), phase offset.
    Only the first five presets are read by PrSynchronizeMendererParameter. */
-static const float noodleWavePresets[8][3][4] = {
+static const float noodleWavePresets[8][PR_NOODLE_WAVES][4] = {
     {
         { 1.0f, 2.0f, 1.6f, 0.0f },
         { 1.0f, -3.0f, 3.2f, 0.6f },
@@ -78,10 +78,10 @@ static const float noodleWavePresets[8][3][4] = {
 void PrSynchronizeMendererParameter(float ratio) {
     float inv = 1.0f - ratio;
 
-    for (u_int i = 0; i < 5; i++) {
+    for (u_int i = 0; i < PR_NOODLE_TEXTURE_BANDS; i++) {
         PrNoodleTextureParameters& param = noodleParameter[i];
 
-        for (u_int j = 0; j < 3; j++) {
+        for (u_int j = 0; j < PR_NOODLE_WAVES; j++) {
             const float *src = noodleWavePresets[i][j];
 
             param.amplitude[j] = src[0];
@@ -98,7 +98,7 @@ void PrSynchronizeMendererParameter(float ratio) {
         }
 
         if (i != 0 && ratio == 1.0f) {
-            for (u_int j = 0; j < 3; j++) {
+            for (u_int j = 0; j < PR_NOODLE_WAVES; j++) {
                 float half = (1.0f / param.temporalFrequency[j]) * 0.5f;
                 float diff = noodlePhase[0][j] - noodlePhase[i][j];
                 if (half <= fabsf(diff)) {
@@ -122,7 +122,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     /* FRAME: FBP = zbp, FBW = 10 */
     u_long frame = PR_FRAME_CT32(zbp);
 
-    for (u_int i = 0; i < 5; i++) {
+    for (u_int i = 0; i < PR_NOODLE_TEXTURE_BANDS; i++) {
         PrNoodleTextureParameters& param = noodleParameter[i];
         PrNoodleTextureDrawPacket& packet = param.packet;
 
@@ -192,12 +192,14 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     mendererCreatePacket.state[1].value = NaGifPacketWrapper::EncodeRegister(zbuf) | (u_long(1) << 32);
     mendererCreatePacket.state[1].address = SCE_GS_ZBUF_1;
 
+    /* All band parameter sets go to VU1 memory from address 0 */
+    const u_int parameterQwords = sizeof(noodleParameter) / sizeof(u_long128);
     dmaTag = &mendererCreatePacket.parameterDma;
-    dmaTag->qwc = 0x4B;                       /* 5 * 15 qwords of noodleParameter */
+    dmaTag->qwc = parameterQwords;
     dmaTag->id = 0x30;                        /* ref */
     dmaTag->next = (sceDmaTag*)noodleParameter;
     dmaTag->p[0] = 0;
-    dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, 0x4B, PR_VIF_UNPACK_V4_32(0), 0);
+    dmaTag->p[1] = SCE_VIF1_SET_UNPACK(0, parameterQwords, PR_VIF_UNPACK_V4_32(0), 0);
 
     dmaTag = &mendererCreatePacket.endDma;
     dmaTag->qwc = 0;
@@ -262,10 +264,10 @@ void CreateMendererTexture(float ratio) {
     mendererTextureRequested = 1;
     float step = scale * prMendererSpeed / 60.0f;
 
-    for (u_int i = 0; i < 5; i++) {
+    for (u_int i = 0; i < PR_NOODLE_TEXTURE_BANDS; i++) {
         PrNoodleTextureParameters& param = noodleParameter[i];
 
-        for (u_int j = 0; j < 3; j++) {
+        for (u_int j = 0; j < PR_NOODLE_WAVES; j++) {
             float phase = noodlePhase[i][j] + step;
 
             if (phase < 0.0f) {
