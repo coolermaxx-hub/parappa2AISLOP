@@ -135,6 +135,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *pos, u_int index) {
     float angle = (float)n * (PR_PI * 2) / static_cast<float>(PR_NOODLE_POLYGON_COUNT) + z;
     float c = cosf(angle);
     float s = sinf(angle);
+    // ApplyTransposed uses the transpose, so each corner turns by -angle.
     NaMATRIX<float, 2, 2> rot(c, s, -s, c);
 
     float distance = prMendererDistance + x;

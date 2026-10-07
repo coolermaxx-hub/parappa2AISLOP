@@ -29,6 +29,7 @@ Contents:
 - [Matrix inverse is a rigid inverse (2026-10-05)](#matrix-inverse-is-a-rigid-inverse-2026-10-05)
 - [Axis-angle rotation (2026-10-05)](#axis-angle-rotation-2026-10-05)
 - [Vector helpers](#vector-helpers)
+- [Transform constructors and transposed apply (2026-10-07)](#transform-constructors-and-transposed-apply-2026-10-07)
 - [Subtitles (2026-10-05)](#subtitles-2026-10-05)
 
 ## Rhythm clock (first pass, 2026-10-02)
@@ -801,6 +802,46 @@ in one corner case: `SpcFileHeader::GetCamera` (`camera.cpp`) builds `up` as
 `normalize((direction x Y) x direction)`, which is zero when the camera looks
 straight up or down, and `sceVu0CameraMatrix` then gets a zero up vector. A port
 should make `Normalize3` return zero for a zero input instead of dividing.
+
+## Transform constructors and transposed apply (2026-10-07)
+
+All `NaMATRIX` transforms store column vectors (`src/nalib/namatrix.h`).
+
+- `TranslateMatrix(x, y, z)` puts `(x, y, z, 1)` in the last column, so points
+  (`w = 1`) move and directions (`w = 0`) do not. The vector overload ignores
+  the input's `w`.
+- `ScaleMatrix(x, y, z)` keeps `w` at 1. The vector overload copies `scale.w`
+  into the last diagonal element, so it also scales `w`. The only vector-overload
+  caller is the SPA scale track (`spadata.cpp`).
+- `Translate` and `Scale` left-multiply in place (`this = T * this`), so the new
+  step applies after the existing transform. In `PrSPRAM_DATA::Initialize`
+  (`spram.cpp`), `screenClipMatrix` therefore translates and then scales, while
+  `screenPrimitiveMatrix` scales and then translates. `SetNoodleRotationMatrix`
+  (`menderer.cpp`) rotates about z, offsets by `(0.5, 0.5)`, scales to
+  `(10240, 3584, 0)` and then moves to `(32768, 32768)`. These are read from
+  the source; the float 4x4 products are VU code and were not executed here.
+- `ApplyTransposed` dots each stored column with the input, so it applies the
+  transpose. Both callers build `rot(c, s, -s, c)`, which is a `+angle`
+  rotation as a column matrix, so `ApplyTransposed` turns by `-angle`. The
+  noodle corners (`mendererdata.cpp`) turn by `-angle`, and the AWFUL
+  background UVs (`mendererawful.cpp`, `angle = -awfulAngle`) turn by
+  `+awfulAngle`. A port that writes these as an ordinary rotation must negate
+  the angle.
+- `IsIdentity` compares every element exactly with `IDENT`, so `-0.0f` passes
+  and any rounding error fails. `IsNonZero` treats `-0.0f` as zero and NaN as
+  non-zero.
+
+Validation: `tests/nalib/transform_helpers.cpp` checks the constructors with a
+local column-vector product, the `ApplyTransposed` direction and output
+reference, and both predicates. It passes as a native C++98 executable, fails
+with code 7 when the expected direction is reversed, and compiles with the
+historical EE compiler. It does not run the VU products or `Copy`, which are
+assembly.
+
+```sh
+g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/transform_helpers.cpp -o /tmp/transform-helpers
+/tmp/transform-helpers
+```
 
 ## Subtitles (2026-10-05)
 

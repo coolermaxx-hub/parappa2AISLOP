@@ -175,6 +175,7 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
     float angle = -awfulAngle;
     float c = cosf(angle);
     float s = sinf(angle);
+    // ApplyTransposed uses the transpose, so the UVs turn by +awfulAngle.
     NaMATRIX<float, 2, 2> rot(c, s, -s, c);
 
     NaVECTOR<float, 2> p0 = rot.ApplyTransposed(NaVECTOR<float, 2>(2730.0f, 2048.0f));

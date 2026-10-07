@@ -46,8 +46,14 @@ cannot prove original behavior or complete understanding of the data formats.
    `Inverse` is now documented as the SDK's rigid inverse
    ([notes](behavior-notes.md#matrix-inverse-is-a-rigid-inverse-2026-10-05)),
    and the axis-angle `RotateMatrix` is checked against Rodrigues' formula
-   ([notes](behavior-notes.md#axis-angle-rotation-2026-10-05));
-   other transform-only APIs and hardware interfaces remain to audit.
+   ([notes](behavior-notes.md#axis-angle-rotation-2026-10-05)).
+   The translate/scale constructors, in-place `Translate`/`Scale` order,
+   `ApplyTransposed` direction and the identity/zero predicates are documented
+   and natively tested
+   ([notes](behavior-notes.md#transform-constructors-and-transposed-apply-2026-10-07)).
+   The nalib transform API is now covered; the float 4x4 VU products and MMI
+   copy are only validated as source, not executed. Hardware interfaces and
+   the remaining magic numbers in `main`/`menu` remain to audit.
 
 The supplied OLM overlays do not contain recognizable SPM records. The retained
 original executable and its built-in `common.ipk` support layout/disassembly
