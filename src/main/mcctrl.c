@@ -323,7 +323,7 @@ void mccReqTapForward(u_int time, u_int useLine) {
 
     rep_cnt = mc_rep_ctrl.cl_mc_rep_dat_cnt;
 
-    for (i = 0; i < 4; i++, rep_cnt++) {
+    for (i = 0; i < PR_ARRAYSIZE(mc_rep_ctrl.cl_mc_rep_dat_cnt); i++, rep_cnt++) {
         while (1) {
             if (*rep_cnt >= MC_REP_TAP_MAX || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
                 return;

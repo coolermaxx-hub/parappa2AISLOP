@@ -4606,8 +4606,9 @@ void ScrCtrlInit(STDAT_DAT *sdat_pp, void *data_top) {
         score_str.stdat_dat_pp->play_step != PSTEP_XTR) {
         int j;
 
+        /* Empty in the original as well: GCC 2.9 still emits the countdown,
+         * and ScrCtrlInit matches the executable with it. */
         for (j = 0; j < 4; j++) {
-            /* Empty */
         }
 
         score_str.mbar_flag = TRUE;

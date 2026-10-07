@@ -905,7 +905,7 @@ static void examScoreSet(sceGifPacket *ex_gif_pp) {
         { 530, 36 },
     };
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(pos_dat); i++) {
         if (exam_global_ply[i] != NULL) {
             if (exam_global_ply_current_ply[i]) {
                 examNumDisp(ex_gif_pp, exam_global_ply[i]->now_score, pos_dat[i][0], pos_dat[i][1], 5, scr_tenmetu_col_dat[i], 1);

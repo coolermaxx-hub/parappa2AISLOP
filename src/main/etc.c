@@ -39,7 +39,7 @@ P3_STAGE_ENUM clearStageCheck(void) {
     ret    = P3_STAGE_0;
     clrbit = game_status.stClearBit;
 
-    for (i = 1; i < 9; i++) {
+    for (i = P3_STAGE_1; i < P3_STAGE_MAX; i++) {
         if (!(clrbit & 1)) {
             break;
         }

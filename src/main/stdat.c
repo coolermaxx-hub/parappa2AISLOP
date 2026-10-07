@@ -895,7 +895,7 @@ void stDatFirstFileSearch(void) {
         for (j = 0; j < stdat_rec[i].stdat_dat_num; j++) {
             stDatFileSearch(&stdat_rec[i].stdat_dat_pp[j].intfile);
 
-            for (k = 0; k < 3; k++) {
+            for (k = 0; k < PR_ARRAYSIZE(stdat_rec[i].stdat_dat_pp[j].sndfile); k++) {
                 stDatFileSearch(&stdat_rec[i].stdat_dat_pp[j].sndfile[k]);
             }
         }
