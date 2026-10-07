@@ -42,11 +42,19 @@ struct PrVuNodeHeaderDmaPacket {
     float m_eeColorScale;
     float m_contour_blur_alpha[2];
     PrMICRO_PROGRAM_MODULE m_microprogram;
+    // VU quadword 45 y. 0xd in every built-in packet; neither the EE nor any
+    // microprogram reads it.
     PR_PADDING(unk64, 0x4);
     float m_disturbance;
-    PR_PADDING(unk6C, 0x4);
+    // VU quadword 45 w, read only by vump_refmap: non-zero measures the
+    // reflection's view vector from (0, 0, 1) instead of the camera position.
+    // Zero in every built-in packet and never written by the EE.
+    u_int m_reflectionFixedEye;
     float m_textureOffsetU;
     float m_textureOffsetV;
+    // VU quadwords 46 z-w and 47-63: uploaded, zero in every built-in packet,
+    // and not read by the microprograms (vump_refmap loads quadword 46 but
+    // uses only its x and y).
     PR_PADDING(unk78, 0x11C);
     int m_microprogramCall;
 

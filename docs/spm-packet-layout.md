@@ -168,3 +168,32 @@ packet header (40-46) are read, and nothing falls in 26-39. The `VI00`-based
 counters, not addresses. The upload therefore carries 14 quadwords of
 untouched scratchpad bytes that no code reads. A port can drop both parts.
 
+## Node packet header fields (2026-10-07)
+
+Every context-1 packet starts with a CNT DMA tag whose VIF codes are FLUSHE
+and `UNPACK V4-32` of 24 quadwords to VU address 40 (`0x6c180028` in all 229
+built-in packets). The header from packet offset 0x10 therefore lands in VU
+quadwords 40-63, and the last DMA quadword holds FLUSH and the MSCAL that
+`ChangePointer` patches.
+
+| Packet field | VU quadword | Built-in value | Read by |
+| --- | --- | --- | --- |
+| `m_matrix` | 40-43 | | `preset_registers` (all programs) |
+| depth bias, colour scale, contour blur alphas | 44 | | `preset_registers` |
+| `m_microprogram` | 45 x | | EE `ChangePointer` only |
+| `unk64` | 45 y | 0xd in all 229 | Nothing |
+| `m_disturbance` | 45 z | | normal, both-face, contour, refmap |
+| `m_reflectionFixedEye` (was `unk6C`) | 45 w | 0 in all 229 | `vump_refmap` (`ILW.w VI09, 45(VI00)`) |
+| `m_textureOffsetU`/`V` | 46 x-y | | `vump_refmap` |
+| `unk78` | 46 z-w, 47-63 | 0 in all 229 | Nothing |
+
+The reflection map reflects the vector from the eye point to the vertex, with
+the eye point loaded from display-header quadword 12 (the camera position).
+When `m_reflectionFixedEye` is non-zero, `MR32.xyz VF09, VF00` replaces that
+eye point with (0, 0, 1). No built-in model sets it and no EE code writes it;
+stage models may, which needs their assets to check.
+
+`vump_refmap` loads quadword 46 whole but passes only x and y on to the
+texture coordinates (`MADDi.xy`). No `VI00`-relative access in any
+microprogram reaches quadwords 47-63.
+
