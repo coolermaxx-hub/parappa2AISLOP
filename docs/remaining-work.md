@@ -97,13 +97,15 @@ No runtime rendering equivalence has been claimed.
 
 The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff` and `objdiff-cli report generate`) measures
-**1308 / 1429 exact functions (91.53254%)** and **258724 / 342284 exact code
-bytes (75.587524%)** across 70 units, with a fuzzy instruction score of
-94.133446%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
-menu 352/374, prlib 268/360. README and the badge files in `progress/` show the
-same report. The three functions fewer than the 2026-10-05 report (1311) are
-the tone colour helpers in `pksprite.c`, whose MMI asm now declares the
-registers it overwrites ([binary differences](binary-differences.md)).
+**1307 / 1429 exact functions (91.462555%)** and **258536 / 342284 exact code
+bytes (75.5326%)** across 70 units, with a fuzzy instruction score of
+94.129234%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
+menu 351/374, prlib 268/360. README and the badge files in `progress/` show the
+same report. The four functions fewer than the 2026-10-05 report (1311) gave
+up compiler steering: the three tone colour helpers in `pksprite.c`, whose MMI
+asm now declares the registers it overwrites, and `_P3MC_CheckUserDataHead`,
+which no longer goes through an inline helper that existed only to match
+([binary differences](binary-differences.md)).
 
 The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
 main-ROM checksum fails. A rebuild on 2026-10-07 from the supplied July 12th
@@ -264,12 +266,15 @@ three C structs that differ from the original debug info, all intentional.
 the code uses (each has a comment). `USER_DATA` groups the original's flat date
 fields into `P3MC_DATE`.
 
-`tools/dev/audit/stabs_scopes.py` reports 41 C functions whose locals or block
-nesting differ: 17 add named locals, 10 drop locals the original had, 6 do
-both (mostly renamed locals in functions that never matched) and 8 differ
-only in scope or order. These come from the readability pass; the count fell
-from 45 as functions took back the original's names and blocks. Treat a rise
-in that count as a regression to explain.
+`tools/dev/audit/stabs_scopes.py` reports 43 C functions whose locals or block
+nesting differ: 20 add named locals, 10 drop locals the original had, 6 do
+both (mostly renamed locals in functions that never matched) and 7 differ
+only in scope or order. These come from the readability pass. The count fell
+from 45 as functions took back the original's names and blocks, then rose by
+three when the tone colour helpers in `pksprite.c` declared their asm clobbers:
+their result can no longer live in the return register, so `ret` shows up as a
+local the original optimized away. Treat a rise in that count as a regression
+to explain.
 
 ## Data sections still in asm
 

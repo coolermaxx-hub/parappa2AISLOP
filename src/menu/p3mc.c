@@ -1932,23 +1932,6 @@ static int _P3MC_CheckUserData(P3MC_WORK *pw) {
     }
 }
 
-/* There are no traces of such use of inlines on the
- * symbols, yet the function only matches this way. */
-static inline int _P3MC_CheckHead(USER_HEADER *hed, P3MC_WORK *pw) {
-    /* Checks done on a single line according to symbols */
-    if (hed->user.fileNo != pw->data_no ||
-        hed->user.mode != pw->data_mode || 
-        hed->user.mode != pw->data_mode ||
-        (pw->data_stage > 0 && hed->user.stageNo != pw->data_stage) ||
-        (hed->user.name[0] == 0 && hed->user.name1[0] == 0)) {
-        return 1;
-    }
-    return 0;
-}
-
-/* Without use of inlines you can have a decent
- * match with a minor difference on a likely branch:
- * https://decomp.me/scratch/QD9p8 */
 static int _P3MC_CheckUserDataHead(P3MC_WORK *pw) {
     USER_HEADER *hed = (USER_HEADER*)pw->dhdl->pMemTop;
 
@@ -1960,5 +1943,14 @@ static int _P3MC_CheckUserDataHead(P3MC_WORK *pw) {
         return 0;
     }
 
-    return _P3MC_CheckHead(hed, pw);
+    /* The original tests the mode twice. */
+    if (hed->user.fileNo != pw->data_no ||
+        hed->user.mode != pw->data_mode ||
+        hed->user.mode != pw->data_mode ||
+        (pw->data_stage > 0 && hed->user.stageNo != pw->data_stage) ||
+        (hed->user.name[0] == 0 && hed->user.name1[0] == 0)) {
+        return 1;
+    }
+
+    return 0;
 }

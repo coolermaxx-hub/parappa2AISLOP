@@ -6,7 +6,7 @@ WEAK = 'The missing symbols are the original\'s per-file weak copies of nalib te
 causes = {
     'nalib/navector.cpp': 'Set(NaMATRIX3) is the real template. The original image carried a brute-forced copy; that copy is not reproduced.',
     'menu/menu.c': 'MenuCtrl: register pin removed, and the matching draft\'s self-assignment and repeated `pLog` store dropped (see remaining-work.md).',
-    'menu/p3mc.c': 'Typed tables and `P3MC_DATE` replace word casts and a do-while (see remaining-work.md).',
+    'menu/p3mc.c': 'Typed tables and `P3MC_DATE` replace word casts and a do-while (see remaining-work.md). _P3MC_CheckUserDataHead tests the header fields itself instead of through an inline helper that existed only to match (the original debug info has no trace of it); only the layout of its `flg` branch differs.',
     'main/wipe.c': 'WipeParaOutDisp: loop-alignment asm removed (see remaining-work.md).',
     'main/drawctrl.c': 'DrawMozaikuDisp uses a typed masked frame and drawDispCheckSub lost a temporary named after a register (see remaining-work.md). ' + NM + ' (DrawObjStrDisp, DrawObjPrReq: register allocation).',
     'main/scrctrl.c': 'ScrExamSetCheck: gotos replaced by structured control flow; the replay score buffer is declared in its own block, as the original debug info shows, which changes the stack frame layout.',
