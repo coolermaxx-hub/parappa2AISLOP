@@ -9866,7 +9866,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     u_char         sbuf[10];
     PATPOS        *ppat;
     STRPOS        *psps;
-    int            dispColor;
+    int            isLog;
     int            nUser;
     int            bScroll;
     float          bofsy;
@@ -9877,8 +9877,8 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
     spr->rgba0 = MN_COLOR_NEUTRAL;
 
-    dispColor = pfw->dispColor;
-    switch (dispColor) {
+    isLog = pfw->dispColor;
+    switch (isLog) {
     case 0:
         ppat = LG_SCROLL_MARK;
         break;
@@ -10008,7 +10008,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
                 pflg = 0;
             }
 
-            TsUser_PanelDraw(pk, spr, puser, x, y, pflg, dispColor);
+            TsUser_PanelDraw(pk, spr, puser, x, y, pflg, isLog);
         }
     }
 
@@ -10019,10 +10019,10 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     y = CellCusPos[pfw->curuser + 1].y;
 
     if (pfw->nameinw[0].isOn) {
-        TsNAMEINBox_Draw(pk, spr, x, y, dispColor, &pfw->nameinw[0], 0);
+        TsNAMEINBox_Draw(pk, spr, x, y, isLog, &pfw->nameinw[0], 0);
     }
     if (pfw->nameinw[1].isOn) {
-        TsNAMEINBox_Draw(pk, spr, x, y, dispColor, &pfw->nameinw[1], 1);
+        TsNAMEINBox_Draw(pk, spr, x, y, isLog, &pfw->nameinw[1], 1);
     }
 }
 
@@ -10410,18 +10410,16 @@ static int TsNAMEINBox_Flow(int flg, NAMEINW *pfw, u_int tpad) {
 }
 
 static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog, NAMEINW *pfw, int side) {
-    float   ofsx = spr->ofsx;
-    float   ofsy = spr->ofsy;
-    u_char  str[2];
-    float   rt0, rt1;
-    float   rt;
-    PATPOS *pbox;
-    PATPOS *pok;
-    int     ton;
-    u_int   col, curcol;
-    int     x, y;
     int     i;
-    u_short code;
+    int     x, y;
+    u_int   abgr;
+    PATPOS *ppat;
+    PATPOS *ppat2;
+    u_int   cusABGR;
+    int     ton;
+    float   rt0, rt1;
+    float   box = spr->ofsx;
+    float   boy = spr->ofsy;
 
     rt0 = (MNSceneGetMusicFitTimer() % 360) / 360.0f;
     if (side) {
@@ -10436,35 +10434,38 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
 
     switch (pfw->dispType) {
     case 1:
-        pbox = VS1PNameBox;
-        pok  = &VS1PNameBoxOK;
+        ppat = VS1PNameBox;
+        ppat2  = &VS1PNameBoxOK;
         break;
     case 2:
-        pbox = VS2PNameBox;
-        pok  = &VS2PNameBoxOK;
+        ppat = VS2PNameBox;
+        ppat2  = &VS2PNameBoxOK;
         break;
     case 0:
     default:
-        pbox = STGCNameBox;
-        pok  = &STGCNameBoxOK;
+        ppat = STGCNameBox;
+        ppat2  = &STGCNameBoxOK;
         break;
     }
 
     if (TsANIME_GetRate(&pfw->awork, &rt0, &rt1, NULL)) {
-        x = px + pbox->x + 0x72;
-        y = py + pbox->y + 10;
+        int   x, y;
+        float ft;
+
+        x = px + ppat->x + 0x72;
+        y = py + ppat->y + 10;
         spr->zoom.centerX = x;
         spr->zoom.centerY = y;
 
-        rt = TSNumRBack(rt1, 0.3f);
+        ft = TSNumRBack(rt1, 0.3f);
         if (pfw->awork.aflg & 1) {
-            spr->zoom.zoomX = rt;
+            spr->zoom.zoomX = ft;
         } else {
-            spr->zoom.zoomX = (1.0f - rt) * 1.2f + 1.0f;
+            spr->zoom.zoomX = (1.0f - ft) * 1.2f + 1.0f;
         }
 
-        rt = TSNumRBack(rt0, 0.15f);
-        spr->zoom.zoomY = rt * rt;
+        ft = TSNumRBack(rt0, 0.15f);
+        spr->zoom.zoomY = ft * ft;
         spr->zoom.isOn  = 1;
         ton = rt0 * rt0 * 256.0f;
     } else {
@@ -10472,23 +10473,29 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
         ton = 0x100;
     }
 
-    col = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
-    spr->rgba0 = col;
+    abgr = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
+    spr->rgba0 = abgr;
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     for (i = 0; i < 5; i++) {
-        TsPatPut(pk, spr, &pbox[i], px, py);
+        TsPatPut(pk, spr, &ppat[i], px, py);
     }
 
-    rt = sinf((MNSceneGetMusicFitTimer() % 12) / 12.0f * PR_PI) * 256.0f;
-    if (pfw->onTime) {
-        curcol = GetDToneColor(0x800a6ec8, MN_COLOR_WHITE, rt);
-    } else {
-        curcol = GetDToneColor(0x803ca0ff, 0x80b4ffff, rt);
+    {
+        float rate;
+        int   ltim;
+
+        ltim = MNSceneGetMusicFitTimer() % 12;
+        rate = sinf(ltim / 12.0f * PR_PI) * 256.0f;
+        if (pfw->onTime) {
+            cusABGR = GetDToneColor(0x800a6ec8, MN_COLOR_WHITE, rate);
+        } else {
+            cusABGR = GetDToneColor(0x803ca0ff, 0x80b4ffff, rate);
+        }
     }
 
-    x = px + pbox->x + 0x25;
-    y = py + pbox->y + 9;
+    x = px + ppat->x + 0x25;
+    y = py + ppat->y + 9;
     if (pfw->onTime) {
         spr->px = x;
         spr->py = y;
@@ -10502,39 +10509,42 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
         spr->sw = (pfw->curnpos == 8) ? 0x18 : 0x15;
     }
 
-    spr->rgba0 = GetDToneColor(curcol & 0xffffff, curcol, ton);
+    spr->rgba0 = GetDToneColor(cusABGR & 0xffffff, cusABGR, ton);
     PkCRect_Add(pk, spr, PKSPR_ZOOM);
 
-    spr->rgba0 = col;
-    TsPatPut(pk, spr, pok, px, py);
+    spr->rgba0 = abgr;
+    TsPatPut(pk, spr, ppat2, px, py);
 
-    x = px + pbox->x + 0x30;
-    y = py + pbox->y + 9;
+    x = px + ppat->x + 0x30;
+    y = py + ppat->y + 9;
 
     switch (isLog) {
     case 0:
-        col = 0x80660000;
+        abgr = 0x80660000;
         break;
     case 1:
-        col = 0x801e4000;
+        abgr = 0x801e4000;
         break;
     case 2:
     default:
-        col = 0x80000061;
+        abgr = 0x80000061;
         break;
     }
-    col = GetDToneColor(0x808080, col, ton);
+    abgr = GetDToneColor(0x808080, abgr, ton);
 
     for (i = 0; i < PR_ARRAYSIZE(pfw->curnchr); i++) {
-        code   = pfw->curnchr[i];
-        str[0] = UserName_CharSet[code >> USERNAME_CHAR_SET_SHIFT].ptbl[code & USERNAME_CHAR_INDEX_MASK];
-        str[1] = 0;
-        MENUFontPutL(pk, spr, x, y, col, MNFONT_HALIGN_CENTER, str);
+        u_char  tmp[2];
+        u_short code = pfw->curnchr[i];
+
+
+        tmp[0] = UserName_CharSet[code >> USERNAME_CHAR_SET_SHIFT].ptbl[code & USERNAME_CHAR_INDEX_MASK];
+        tmp[1] = 0;
+        MENUFontPutL(pk, spr, x, y, abgr, MNFONT_HALIGN_CENTER, tmp);
         x += 20;
     }
 
-    spr->ofsx = ofsx;
-    spr->ofsy = ofsy;
+    spr->ofsx = box;
+    spr->ofsy = boy;
 }
 
 int TsSCFADE_Set(int flg, int num, int prio) {
