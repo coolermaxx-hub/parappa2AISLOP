@@ -84,8 +84,17 @@ cannot prove original behavior or complete understanding of the data formats.
    and natively tested
    ([notes](behavior-notes.md#transform-constructors-and-transposed-apply-2026-10-07)).
    The nalib transform API is now covered; the float 4x4 VU products and MMI
-   copy are only validated as source, not executed. Hardware interfaces and
-   the remaining magic numbers in `main`/`menu` remain to audit.
+   copy are only validated as source, not executed. A 2026-10-07 pass over
+   hardware interfaces labelled the remaining bare GS PRIM setups, gave the
+   menu's MMI colour-pack asm the clobbers it needs and made `rotcossin`'s angle
+   a read-write operand (`tools/dev/audit/asm_clobbers.py` now finds no other
+   undeclared register writes), named the TIM2 MIPTBP fields and the IOP
+   stream's channel block size, folded a match-only inline helper and a
+   matching draft (`MenuCtrl`) back into plain code, and documented that the
+   sprite helpers ignore `PKSPR_UV_RECT`
+   ([notes](behavior-notes.md#sprite-texture-rectangle-flag-2026-10-07)).
+   Remaining magic numbers in `main`/`menu` are mostly ABGR colours and
+   screen positions in data tables.
 
 The supplied OLM overlays do not contain recognizable SPM records. The retained
 original executable and its built-in `common.ipk` support layout/disassembly
