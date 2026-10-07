@@ -95,13 +95,15 @@ No runtime rendering equivalence has been claimed.
 
 ## Current exact-match measurement
 
-The 2026-10-05 objdiff report (`progress/report.json`, regenerated with
+The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff` and `objdiff-cli report generate`) measures
-**1311 / 1429 exact functions (91.74248%)** and **259104 / 342284 exact code
-bytes (75.69854%)** across 70 units, with a fuzzy instruction score of
-94.13218%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
-menu 355/374, prlib 268/360. README and the badge files in `progress/` show the
-same report.
+**1308 / 1429 exact functions (91.53254%)** and **258724 / 342284 exact code
+bytes (75.587524%)** across 70 units, with a fuzzy instruction score of
+94.135666%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
+menu 352/374, prlib 268/360. README and the badge files in `progress/` show the
+same report. The three functions fewer than the 2026-10-05 report (1311) are
+the tone colour helpers in `pksprite.c`, whose MMI asm now declares the
+registers it overwrites ([binary differences](binary-differences.md)).
 
 The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
 main-ROM checksum fails. A rebuild on 2026-10-07 from the supplied July 12th

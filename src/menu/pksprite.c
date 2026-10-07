@@ -373,10 +373,10 @@ u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
     ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
     /*
-     * MMI version of the clamp-and-pack above. Like the original, it uses
-     * $2, $4 (or $9) and $8 as scratch without declaring them as clobbers;
-     * declaring them changes the surrounding register allocation. The
-     * three tone colour helpers share this block.
+     * MMI version of the clamp-and-pack above, shared by the three tone
+     * colour helpers. It works in $2, $4 (or $9) and $8. The original did
+     * not declare them, which is only safe while the compiler happens to
+     * keep the inputs elsewhere, so they are declared clobbered here.
      */
     asm(
         "pcpyld  $2, %4, %3       \n\t"
@@ -389,7 +389,7 @@ u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    );
+    : "$2", "$4", "$8");
     #endif
 
     return ret;
@@ -427,7 +427,7 @@ u_int GetToneColorA(u_int abgr, int tona, int tonb, int tong, int tonr) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    );
+    : "$2", "$8", "$9");
     #endif
 
     return ret;
@@ -465,7 +465,7 @@ u_int GetToneColorH(u_int abgr, int tona, int tonb, int tong, int tonr) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    );
+    : "$2", "$8", "$9");
     #endif
 
     return ret;
