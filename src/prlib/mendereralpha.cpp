@@ -94,7 +94,7 @@ void PrInitializeAlphaModulation() {
     u_long zbp = prRenderStuff.m_zbuf.ZBP;
 
     alphaModulationGsPacket.frame.value = PR_FRAME_CT32(zbp);
-    alphaModulationFramePacket.texture.value = SCE_GS_SET_TEX0(zbp * 32, 10, SCE_GS_PSMCT32, tw, th, 1, 1, 0, 0, 0, 0, 0);
+    alphaModulationFramePacket.texture.value = SCE_GS_SET_TEX0(zbp * 32, SCREEN_FBW, SCE_GS_PSMCT32, tw, th, 1, 1, 0, 0, 0, 0, 0);
     alphaModulationDmaPacket.microprogram.p[0] = SCE_VIF1_SET_MSCAL(PrGetMendererDrawMeshAddress(), 0);
 }
 
@@ -156,7 +156,7 @@ void PrBlendNoodleImage(bool clear) {
 
     packet.flush.value = 0;
     packet.flush.address = SCE_GS_TEXFLUSH;
-    packet.texture.value = SCE_GS_SET_TEX0(prMendererWorkFbp * 32, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    packet.texture.value = SCE_GS_SET_TEX0(prMendererWorkFbp * 32, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 1, 1, 0, 0, 0, 0, 0);
     packet.texture.address = SCE_GS_TEX0_1;
     packet.textureFilter.value = 0;
     packet.textureFilter.address = SCE_GS_TEX1_1;

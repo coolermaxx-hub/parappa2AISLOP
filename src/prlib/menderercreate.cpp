@@ -120,7 +120,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
 
     /* TEX0: TBP0 = tbp, TBW = 4, PSM = CT32, TW/TH, TCC = 1 */
     u_long tex0 = SCE_GS_SET_TEX0(tbp, 4, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
-    /* FRAME: FBP = zbp, FBW = 10 */
+    /* FRAME: FBP = zbp, FBW = SCREEN_FBW */
     u_long frame = PR_FRAME_CT32(zbp);
 
     for (u_int i = 0; i < PR_NOODLE_TEXTURE_BANDS; i++) {
@@ -218,7 +218,7 @@ void PrInitializeTextureCreation(u_int tbp, u_int zbp, u_int tw, u_int th) {
     texTag->NREG = 1;
     texTag->REGS0 = SCE_GIF_PACKED_AD;
 
-    mendererTexturePacket.state[0].value = SCE_GS_SET_BITBLTBUF(zbpBlocks, 10, SCE_GS_PSMCT32, tbp, 4, SCE_GS_PSMCT32);
+    mendererTexturePacket.state[0].value = SCE_GS_SET_BITBLTBUF(zbpBlocks, SCREEN_FBW, SCE_GS_PSMCT32, tbp, 4, SCE_GS_PSMCT32);
     mendererTexturePacket.state[0].address = SCE_GS_BITBLTBUF;
     mendererTexturePacket.state[1].value = SCE_GS_SET_TRXPOS(0, 0, 0, 16, 0);
     mendererTexturePacket.state[1].address = SCE_GS_TRXPOS;

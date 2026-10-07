@@ -38,6 +38,6 @@
     SCE_GS_SET_TEX1(/*LCM*/1, /*MXL*/0, /*MMAG*/SCE_GS_LINEAR, /*MMIN*/SCE_GS_LINEAR, /*MTBA*/0, /*L*/0, /*K*/0)
 
 /* FRAME for a screen-wide CT32 buffer at fbp. */
-#define PR_FRAME_CT32(fbp) SCE_GS_SET_FRAME((fbp), SCREEN_WIDTH / 64, SCE_GS_PSMCT32, 0)
+#define PR_FRAME_CT32(fbp) SCE_GS_SET_FRAME((fbp), SCREEN_FBW, SCE_GS_PSMCT32, 0)
 
 #endif /* PRLIB_GSSTATE_H */
