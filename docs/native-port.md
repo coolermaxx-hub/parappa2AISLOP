@@ -24,7 +24,8 @@ code (for example a static recompilation of `SCPS_150.17`).
 | libvu0 subset | Sony library | `src/native/libvu0.c` | Done: the eight routines the engine reaches |
 | prlib model, animation, camera | VU0 asm blocks in `render.cpp`, `spadata.cpp`, `shape.cpp`, `cluster.cpp`, `model.cpp` | Scalar paths | Next |
 | Geometry packets (VU1 microprograms) | `vump_*.vsm` | CPU transform + rasterizer or GPU | Planned |
-| GS state, textures, frame buffer | GIF/DMA packets | Software rasterizer, later a GPU backend | Planned |
+| GS local memory | GS | `src/native/gs_memory.c`: page/block/column addressing for PSMCT32/24/16 and PSMT4, CSM1 CLUTs | Started: stage subtitle fonts decode correctly |
+| GS drawing, frame buffer | GIF/DMA packets | Software rasterizer, later a GPU backend | Planned |
 | IOP sound (WP2 stream, tap sounds) | `WAVE2PS2.IRX`, `TAPCTRL.IRX` | Host audio | Planned |
 | Pads, CD file access, threads (MTC), memory card | EE kernel and SDK | Host equivalents | Planned |
 
@@ -45,6 +46,17 @@ does, so a zero vector normalizes to zero.
 (`asm/sdk/libvu0.s`): the same operations, operand order and treatment of each
 w component.
 
+### GS memory
+
+`src/native/gs_memory.c` stores pixels at the addresses the GS uses for each
+format, so data uploaded in one format and read in another comes back as on
+hardware. The game relies on this: its subtitle fonts are 4-bit textures sent
+as 32-bit transfers. `tools/native/tim2_vram.c` loads TIM2 files the way
+`Tim2Trans` does and reads a texture back through a game TEX0; on the stage
+archives the user supplied it yields the legible kanji and ASCII subtitle
+fonts ([stage-archives.md](stage-archives.md)). PSMT8 and PSMCT16S addressing
+are not written yet.
+
 ## Tests
 
 ```sh
@@ -55,3 +67,9 @@ g++ -std=c++98 -O2 -Wall -Wextra -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tes
 
 The existing `tests/nalib/*.cpp` native tests also build and pass with the host
 paths.
+
+```sh
+cc -std=gnu99 -O2 -Wall -Iinclude/rtl/ee -Iinclude/rtl/common -Isrc/native tests/native/gs_memory.c src/native/gs_memory.c -o /tmp/gs_memory
+/tmp/gs_memory
+```
+
