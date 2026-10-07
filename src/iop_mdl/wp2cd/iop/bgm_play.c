@@ -656,7 +656,7 @@ int BgmStart(void) {
 
     while (1) {
         CpuSuspendIntr(&oldstat);
-        ret = sceSdBlockTrans(1, SD_TRANS_MODE_WRITE | SD_BLOCK_LOOP, (u_char*)sbuf.buf_pos[0], KB(44));
+        ret = sceSdBlockTrans(SD_CORE_1, SD_TRANS_MODE_WRITE | SD_BLOCK_LOOP, (u_char*)sbuf.buf_pos[0], KB(44));
         CpuResumeIntr(oldstat);
         if (ret >= 0) {
             break;
@@ -679,7 +679,7 @@ void _BgmStop(void) {
     if ((BgmMode_tmp &= WP2_MODE_RUNNING) != 0) {
         while (1) {
             CpuSuspendIntr(&oldstat);
-            ret = sceSdBlockTrans(1, SD_TRANS_MODE_STOP, NULL, 0);
+            ret = sceSdBlockTrans(SD_CORE_1, SD_TRANS_MODE_STOP, NULL, 0);
             CpuResumeIntr(oldstat);
             if (ret >= 0) {
                 break;
@@ -705,7 +705,7 @@ void BgmStop(unsigned int vol) {
     if ((BgmMode_tmp &= WP2_MODE_RUNNING) != 0) {
         while (1) {
             CpuSuspendIntr(&oldstat);
-            ret = sceSdBlockTrans(1, SD_TRANS_MODE_STOP, NULL, 0);
+            ret = sceSdBlockTrans(SD_CORE_1, SD_TRANS_MODE_STOP, NULL, 0);
             CpuResumeIntr(oldstat);
             if (ret >= 0) {
                 break;
@@ -877,7 +877,7 @@ int BgmGetTime(void) {
     while (1) {
         gBgmIntrTime = 0;
 
-        ret = sceSdBlockTransStatus(1, SD_TRANS_STATUS_CHECK);
+        ret = sceSdBlockTransStatus(SD_CORE_1, SD_TRANS_STATUS_CHECK);
         now_cnt = ReadOutCnt;
 
         gBgmIntrTmp = gBgmIntr;
