@@ -26,9 +26,23 @@ cannot prove original behavior or complete understanding of the data formats.
    are uploaded but skipped by the traced header consumers; it does not assign
    them invented semantics. Standalone model audits now validate VIF boundaries
    and contour source positions, with synthetic reflection/antiline coverage.
-   The unnamed `SpmNode` fields hold data in the built-in models but are not
-   read by the original code ([evidence](spm-geometry-layout.md#unnamed-node-fields-in-real-models-2026-10-07));
-   the SPM header's reserved words are not read either.
+   An audit on 2026-10-07 against the original executable and its built-in
+   assets accounts for every remaining unnamed field in prlib:
+   - **Never read** (some hold data, which the game ignores): the `SpmNode`
+     fields and SPM header words
+     ([evidence](spm-geometry-layout.md#unnamed-node-fields-in-real-models-2026-10-07));
+     the SPA/SPC header, node and transform words
+     ([evidence](spa-animation-layout.md#reserved-header-words-2026-10-07));
+     the display header's spare quadwords and the node packet's `unk64`/`unk78`
+     ([display](spm-packet-layout.md#display-header-spare-space-2026-10-07),
+     [packet](spm-packet-layout.md#node-packet-header-fields-2026-10-07)).
+   - **Only cleared or relocated**: the scratchpad, model and render-state
+     fields and the relocated file pointers (comments at each field).
+   - **Named from the microcode**: packet offset 0x6c is now
+     `m_reflectionFixedEye`, which `vump_refmap` reads.
+
+   What remains is the two chunk quadwords' original purpose, any use of
+   these fields in stage assets, and PS2 execution.
 3. Validate the derived [texture wave model](noodle-texture-model.md) on PS2,
    including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
    frequency groups are now decoded and named; setup arithmetic has independent
