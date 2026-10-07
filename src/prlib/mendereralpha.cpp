@@ -65,13 +65,13 @@ static PrNoodleAlphaDmaPacket alphaModulationDmaPacket = {
     { 13, 0, PR_DMA_TAG_REFE, (sceDmaTag*)&alphaModulationFramePacket, { SCE_VIF1_SET_FLUSHE(0), SCE_VIF1_SET_DIRECT(13, 0) } },
 };
 
-static float mendererDeltaRotation[8];
-static float alphaWeight[8];
+static float mendererDeltaRotation[PR_NOODLE_ALPHA_STRIPS];
+static float alphaWeight[PR_NOODLE_ALPHA_STRIPS];
 
 void PrInitializeAlphaModulation() {
     PrNoodleAlphaParameters &parameters = alphaModulationPacket;
 
-    for (u_int i = 0; i < 8; i++) {
+    for (u_int i = 0; i < PR_NOODLE_ALPHA_STRIPS; i++) {
         parameters.radius[i] = PrFloatRandom() * 7.0f + 14.0f;
         parameters.phase[i] = 0.0f;
         parameters.horizontalJitter[i] = PrFloatRandom() * 0.8f - 0.4f;
@@ -105,7 +105,7 @@ void PrCreateAlphaModulation(float alpha) {
 
     PrNoodleAlphaParameters &parameters = alphaModulationPacket;
 
-    for (u_int i = 0; i < 8; i++) {
+    for (u_int i = 0; i < PR_NOODLE_ALPHA_STRIPS; i++) {
         float phase = parameters.phase[i] + prMendererSpeed * mendererDeltaRotation[i];
         parameters.phase[i] = phase;
 

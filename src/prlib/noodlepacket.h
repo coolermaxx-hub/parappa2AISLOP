@@ -66,15 +66,17 @@ struct PrNoodleTextureCopyPacket {
 
 // Modulation input is a REGLIST GIF header followed by seven eight-strip
 // parameter groups and a final control vector. The last lane controls fade.
+static const u_int PR_NOODLE_ALPHA_STRIPS = 8;
+
 struct PrNoodleAlphaParameters {
     sceGifTag tag;
-    float radius[8];
-    float phase[8];
-    float horizontalJitter[8];
-    float verticalJitter[8];
-    float weight[8];
-    float signedWeight[8];
-    float alpha[8];
+    float radius[PR_NOODLE_ALPHA_STRIPS];
+    float phase[PR_NOODLE_ALPHA_STRIPS];
+    float horizontalJitter[PR_NOODLE_ALPHA_STRIPS];
+    float verticalJitter[PR_NOODLE_ALPHA_STRIPS];
+    float weight[PR_NOODLE_ALPHA_STRIPS];
+    float signedWeight[PR_NOODLE_ALPHA_STRIPS];
+    float alpha[PR_NOODLE_ALPHA_STRIPS];
     float control[3];
     float fade;
 };
