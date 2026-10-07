@@ -32,9 +32,13 @@ cannot prove original behavior or complete understanding of the data formats.
    instruction-driven checks.
 4. Audit and explain every remaining binary discrepancy. Every differing unit
    in [binary-differences.md](binary-differences.md) now has a stated cause;
-   most are functions that never matched as C, and a few causes are inferred
-   from the source change rather than traced. The main-ROM checksum currently
-   fails. Do not restore compiler steering or change expected hashes.
+   most are functions that never matched as C. The causes previously marked
+   inferred (render.cpp, billboard.cpp) were traced against the original
+   objects on 2026-10-07. That trace found one behaviour difference: the
+   original's context-2 and shape-node sort depth reads stale stack data
+   ([notes](behavior-notes.md#stale-sort-depth-in-context-2-and-shape-nodes-2026-10-07));
+   whether a port should emulate it is an open decision. The main-ROM checksum
+   currently fails. Do not restore compiler steering or change expected hashes.
 5. Continue the readability audit of existing source outside the reconstructed
    functions and old hardware interfaces. Copy/assignment now use proper generic
    vector/matrix types, with real EE float4 MMI specializations; small-matrix
@@ -72,7 +76,9 @@ menu 355/374, prlib 268/360. README and the badge files in `progress/` show the
 same report.
 
 The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
-main-ROM checksum fails. These figures include the accumulated readability
+main-ROM checksum fails. A rebuild on 2026-10-07 from the supplied July 12th
+executable (whose ROM image matches the expected `8e7899f4...` hash) gave the same
+objdiff figures; the built main ROM is 4,864 bytes shorter than the original. These figures include the accumulated readability
 changes and do not imply execution equivalence for the new source. Function
 matching, source reconstruction and ROM checksums are separate measures. Only
 verified semantic aliases are used by the mapping tool.

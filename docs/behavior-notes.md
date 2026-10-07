@@ -30,6 +30,7 @@ Contents:
 - [Axis-angle rotation (2026-10-05)](#axis-angle-rotation-2026-10-05)
 - [Vector helpers](#vector-helpers)
 - [Transform constructors and transposed apply (2026-10-07)](#transform-constructors-and-transposed-apply-2026-10-07)
+- [Stale sort depth in context-2 and shape nodes (2026-10-07)](#stale-sort-depth-in-context-2-and-shape-nodes-2026-10-07)
 - [Subtitles (2026-10-05)](#subtitles-2026-10-05)
 
 ## Rhythm clock (first pass, 2026-10-02)
@@ -842,6 +843,56 @@ assembly.
 g++ -std=c++98 -O2 -Wall -Wextra -Werror -Isrc -Iinclude/rtl/ee -Iinclude/rtl/common tests/nalib/transform_helpers.cpp -o /tmp/transform-helpers
 /tmp/transform-helpers
 ```
+
+## Stale sort depth in context-2 and shape nodes (2026-10-07)
+
+Traced in the original executable (`obj/prlib/render.cpp.o`, `obj/prlib/shape.cpp.o`,
+split from `SCPS_150.17`). `SpmNode::RenderContext2Node` (`render.cpp`) projects the
+node's sort position, then passes `z = pos[2] / pos[3]` (or `pos[2] * FLT_MAX`
+when `pos[3] == 0`) to `PrRenderStuff::AppendTransmitDmaTag`.
+`SpmShapeNode::RenderShapeNode` (`shape.cpp`) computes its depth the same way.
+In both original functions the compiler loads `pos[2]` and `pos[3]` from the
+stack (`lwc1 $f2, 8(sp)` and `lwc1 $f1, 12(sp)`, at `+0x148` in
+`RenderContext2Node` and `+0x2c8` in `RenderShapeNode`) *before* the projected
+vector is stored there (`sq a2, 0(sp)`, about 0x110 bytes later). The division
+and the zero test then use those early values. Nothing earlier in either
+function writes that slot.
+
+Cause: the original `NaVECTOR<float, 4>::Copy` is inline assembly (`lq`/`sq`)
+that takes only the two addresses as inputs and has no `"memory"` clobber, so
+the compiler assumed the copy did not change `pos` and moved the loads above it
+(see `main-rom-matching:src/nalib/navector.h`). This tree's `Copy` declares the
+clobber, so it divides the position it has just computed. This is a behaviour
+difference from the original game, not only an instruction-order difference.
+
+What the original uses instead is leftover stack memory:
+
+- `RenderContext2Node` runs at a fixed depth under the node loop in
+  `SpmFileHeader::RenderContext2Model`, and its own callees cannot reach that
+  slot. So the depth is most likely the previous node's projected position from
+  the same loop, one node late, for nodes that take this path. The first node
+  gets whatever an earlier call at that depth left. This is inferred from the
+  call structure, not executed.
+- `RenderShapeNode` is called from `RenderContext2Node`, at the depth its other
+  callees (`RenderNodeEECore`, `AppendTransmitDmaTag`, `RenderClusterNode`) also
+  use, so its value is unpredictable without running the game.
+
+Effect: `CompareFunction` sorts by `sortGroup` first, so the depth only orders
+packets within one sort group. Within a group, these transparent packets are
+ordered by the stale value rather than by their own distance. If leftover bytes
+form a NaN, the comparison is not consistent for `qsort`.
+
+Port guidance: this tree keeps the correct depth. Reproducing the original order
+exactly would mean feeding the previous node's depth (and an undefined first
+value), which no portable code can match for the shape path. Whether to emulate
+the one-node lag for `RenderContext2Node` is a decision for the project owner;
+it needs PS2 execution to confirm. The scan that found these two cases
+(`tools/dev/audit/stale_stack_reads.py`, which lists reads of stack slots before
+any write across every original unit) found no other genuine instance. Each of
+its other 15 hits was checked by hand and is a write the scan does not follow:
+unaligned `sdl`/`sdr` struct copies, indexed addresses, or, in `tapEventCheck`,
+`time_tmp` filled through a pointer by `mccReqTapGet`, which writes it on every
+path that returns non-zero.
 
 ## Subtitles (2026-10-05)
 
