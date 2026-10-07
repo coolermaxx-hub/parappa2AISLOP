@@ -961,7 +961,7 @@ static void rotcossin(float rot) {
 "_rcossin_01:                                      \n\t"
         "vsubx.x   $vf04, $vf19, $vf05             \n\t" /* VF04.x = s */
 "_rcossin_02:                                      \n\t"
-    : : "f"(rot) : "$7", "$8", "$f0", "memory");
+    : "+f"(rot) : : "$7", "$8", "$f0", "memory");
 }
 
 void _pkVU0RotMatrixZ(float rz) {
