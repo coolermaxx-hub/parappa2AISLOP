@@ -385,7 +385,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "lqc2     vf14,  0x10(%0)       \n\t"
                 "lqc2     vf15,  0x20(%0)       \n\t"
                 "lqc2     vf16,  0x30(%0)       \n\t"
-            : : "r"(&this->m_worldMatrix));
+            : : "r"(&this->m_worldMatrix) : "memory");
 
             asm volatile(
                 "lqc2     vf04,  0x0(%0)        \n\t"
@@ -393,7 +393,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmadday  ACC,   vf14,    vf04  \n\t"
                 "vmaddaz  ACC,   vf15,    vf04  \n\t"
                 "vmaddw   vf17,  vf16,    vf04  \n\t"
-            : : "r"(&this->m_sortPosition));
+            : : "r"(&this->m_sortPosition) : "memory");
 
             asm volatile(
                 "lqc2     vf13,     0(%1)       \n\t"
@@ -405,7 +405,7 @@ void SpmNode::RenderContext1Node(PrModelObject *model) {
                 "vmaddaz  ACC,   vf15,    vf17  \n\t"
                 "vmaddw   vf17,  vf16,    vf17  \n\t"
                 "sqc2     vf17,   0x0(%0)       \n\t"
-            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix));
+            : : "r"(sp0), "r"(&prSpramData->m_view_projection_matrix) : "memory");
 
             float f12 = sp0[2] / sp0[3];
             if (sp0[3] == 0.0f) {
