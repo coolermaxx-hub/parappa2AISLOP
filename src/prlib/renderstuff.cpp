@@ -49,8 +49,8 @@ void PrRenderStuff::Initialize(sceGsZbuf zbuf) {
      * and sceGsResetPath() calls on
      * InitSystem() (os/system.c).
      */
-    *VIF0_ERR |= (1<<1);
-    *VIF1_ERR |= (1<<1);
+    *VIF0_ERR |= VIF0_ERR_ME0_M; /* ME0: mask the DMA tag mismatch error */
+    *VIF1_ERR |= VIF1_ERR_ME0_M;
 }
 
 void PrRenderStuff::Cleanup() {

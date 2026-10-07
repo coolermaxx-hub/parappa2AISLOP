@@ -81,7 +81,7 @@ void PrDmaQueue::Start() {
      * and set the stall address to the
      * start of the queue.
      */
-    *D_CTRL |= 0x40;
+    *D_CTRL |= 1 << D_CTRL_STD_O; /* stall drain channel 1 = VIF1 */
     *D_STADR = (u_int)PR_DECACHE(&m_queue[0].stall_qw);
 
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_VIF1);
@@ -136,7 +136,7 @@ void PrDmaQueue::Wait() {
     *D_STADR = (u_int)PR_DECACHE(queue + 2);
 
     PrWaitDmaFinish(SCE_DMA_VIF1);
-    *D_CTRL &= ~0xc0; /* Disable stall control. */
+    *D_CTRL &= ~D_CTRL_STD_M; /* Disable stall control. */
 
     /*
      * Restore the original tag type
