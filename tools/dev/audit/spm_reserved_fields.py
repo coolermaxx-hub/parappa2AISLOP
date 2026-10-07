@@ -24,7 +24,8 @@ IDENTITY = struct.pack('<16f', 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
 DEFORM_PAYLOAD_MASK = 0xff0
 CONTOUR_NODE = 0x40
 SHORT_RECORD_SIZE = 0x190
-HEADER_FIELDS = {'unk8': (0x8, 8), 'unk54': (0x54, 8), 'unk60': (0x60, 4), 'unk64': (0x64, 4)}
+HEADER_FIELDS = {'unk8': (0x8, 8), 'm_context1PacketCounts': (0x54, 8),
+                 'm_totalDeformPositionCount': (0x60, 4), 'unk64': (0x64, 4)}
 NODE_FIELDS = {'unk100': (0x100, 64), 'm_vertexCount': (0x168, 4),
                'm_context1PacketQwords': (0x174, 8), 'm_reserved18C': (0x18C, 4),
                'unk190': (0x190, 4), 'm_contourPacketQwords': (0x1A8, 4),
@@ -80,6 +81,29 @@ def check_relations(model, node, flags, checks):
             model.word(node + 0x1a8) == quadwords] += 1
 
 
+def check_header(model, nodes, checks):
+    packet_counts = [0, 0]
+    vertices = deform_positions = 0
+    translucent_groups_in_range = True
+    for node in nodes:
+        flags = model.word(node + 0x154)
+        packets = model.read('<2I', node + 0x16c)
+        for k, packet in enumerate(packets):
+            packet_counts[k] += packet != 0
+        vertices += model.word(node + 0x168)
+        if flags & DEFORM_PAYLOAD_MASK:
+            deform_positions += model.word(node + 0x194)
+        # Only the translucent packet is queued under m_sortGroup.
+        if packets[1] and model.word(node + 0x188) > 10:
+            translucent_groups_in_range = False
+    checks['m_context1PacketCounts = nodes with each packet'][
+        list(model.read('<2I', 0x54)) == packet_counts] += 1
+    checks['m_vertex_num = sum of m_vertexCount'][model.word(0x5c) == vertices] += 1
+    checks['m_totalDeformPositionCount = sum of m_deformPositionCount'][
+        model.word(0x60) == deform_positions] += 1
+    checks['translucent nodes use sort groups 0 to 10'][translucent_groups_in_range] += 1
+
+
 def main():
     data = Path(sys.argv[1]).read_bytes()
     values = {name: Counter() for name in list(HEADER_FIELDS) + list(NODE_FIELDS)}
@@ -92,7 +116,14 @@ def main():
         for name, (offset, size) in HEADER_FIELDS.items():
             values[name][describe(blob[offset:offset + size])] += 1
         count, table = model.word(0x68), model.word(0x74)
-        for node in model.read('<%dI' % count, table):
+        nodes = model.read('<%dI' % count, table)
+        for name in ('m_context1PacketCounts = nodes with each packet',
+                     'm_vertex_num = sum of m_vertexCount',
+                     'm_totalDeformPositionCount = sum of m_deformPositionCount',
+                     'translucent nodes use sort groups 0 to 10'):
+            checks.setdefault(name, Counter())
+        check_header(model, nodes, checks)
+        for node in nodes:
             node_count += 1
             flags = model.word(node + 0x154)
             for name, (offset, size) in NODE_FIELDS.items():

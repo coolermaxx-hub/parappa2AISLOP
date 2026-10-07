@@ -256,9 +256,11 @@ public:
     NaVECTOR<float, 4> m_boundMin;
     NaVECTOR<float, 4> m_boundMax;
     PrModelObject *m_model;
-    PR_PADDING(unk54, 0x8);
-    int m_vertex_num;
-    PR_PADDING(unk60, 0x4);
+    // Nodes with a non-null SpmNode::m_context1Packets[k]. Never read.
+    u_int m_context1PacketCounts[2];
+    int m_vertex_num; // Sum of SpmNode::m_vertexCount.
+    // Sum of SpmNode::m_deformPositionCount. Never read.
+    u_int m_totalDeformPositionCount;
     // Relocated by ChangePointer and apparently unused: in the original
     // executable no function of, or taking, this class reads that offset
     // (checked 2026-10-07). Purpose unknown.

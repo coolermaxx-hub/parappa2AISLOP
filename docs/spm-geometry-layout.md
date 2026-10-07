@@ -116,6 +116,13 @@ The earlier count of these fields (before this section was revised) read
 next node's `m_localMatrix[0][0]` and 0x10000019 was the DMA `cnt` tag
 (25 quadwords) that opens a packet's node upload.
 
+`m_sortGroup` (0x188) is read straight from the file: nothing writes it. The
+renderers use it only to queue `m_context1Packets[1]`, and every node with that
+packet stores a group from 0 to 10 (the `*_SPXae10m.spm` models use 10). Only
+`para_para.spm`, the PaRappa model of the scene-change wipe, stores other
+values, such as 0x1c8 and 0x08841598. Its nodes have no translucent packet, so
+the engine never reads those values.
+
 `unk190` keeps its placeholder name: the sum is exact, but nothing says what
 the converter used it for.
 
@@ -125,10 +132,17 @@ AWFUL background packet). `SpmNode::ChangePointer` does not touch them. An
 access through a base already offset into the node would be missed by this
 search.
 
-The header's reserved words are unused too. `unk8` and `unk64` are always 0,
-`unk54` holds two small words (0 to 4), and `unk60` is 0 in 37 models and
-0xc to 0x1d6 in the rest. Two searches find no read of offsets 0x8, 0xc, 0x54,
-0x58 or 0x60 on a header:
+Three header words are converter totals over the nodes, checked by the same
+tool in all 43 models:
+
+| Field | Offset | Contents |
+| --- | --- | --- |
+| `m_context1PacketCounts` | 0x54, 2 words | Number of nodes whose `m_context1Packets[0]` and `[1]` are non-null |
+| `m_vertex_num` | 0x5c | Sum of the nodes' `m_vertexCount`; `PrGetVertexNum` returns it |
+| `m_totalDeformPositionCount` | 0x60 | Sum of the deform nodes' `m_deformPositionCount`, 0 in the 37 models without one |
+
+`unk8` and `unk64` are always 0. Two searches find no read of offsets 0x8,
+0xc, 0x54, 0x58 or 0x60 on a header, so only `m_vertex_num` of these is used:
 
 - In the header's own methods (`SpmFileHeader::*`), the only loads at offset 8
   are on `SpaNodeAnimation` pointers (a non-zero word there leads to

@@ -34,6 +34,14 @@ extern "C" int matrix_layout_test() {
         reinterpret_cast<const char*>(&node.m_contourPacketQwords) - base != 0x1a8 ||
         reinterpret_cast<const char*>(&node.m_reserved1AC) - base != 0x1ac ||
         reinterpret_cast<const char*>(&node.m_reserved1BC) - base != 0x1bc) return 12;
+    SpmFileHeader header;
+    base = reinterpret_cast<const char*>(&header);
+    if (reinterpret_cast<const char*>(&header.m_model) - base != 0x50 ||
+        reinterpret_cast<const char*>(header.m_context1PacketCounts) - base != 0x54 ||
+        reinterpret_cast<const char*>(&header.m_vertex_num) - base != 0x5c ||
+        reinterpret_cast<const char*>(&header.m_totalDeformPositionCount) - base != 0x60 ||
+        reinterpret_cast<const char*>(&header.m_node_num) - base != 0x68 ||
+        reinterpret_cast<const char*>(&header.m_nodes) - base != 0x74) return 13;
     PrVuNodeHeaderDmaPacket packet;
     base = reinterpret_cast<const char*>(&packet);
     if (sizeof(packet) != 0x1a0 ||

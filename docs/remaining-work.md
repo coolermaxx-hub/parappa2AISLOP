@@ -45,6 +45,8 @@ cannot prove original behavior or complete understanding of the data formats.
      0x174 and 0x1a8 are now `m_vertexCount`, `m_context1PacketQwords` and
      `m_contourPacketQwords`; the audit tool checks each against the packets.
      It also showed that a node without a deform payload is a 0x190-byte record.
+     The header words at 0x54 and 0x60 are per-model totals, now
+     `m_context1PacketCounts` and `m_totalDeformPositionCount`.
 
    What remains is the two chunk quadwords' original purpose, any use of
    these fields in stage assets, and PS2 execution.
