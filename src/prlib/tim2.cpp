@@ -431,13 +431,15 @@ void Tim2LoadImage(TIM2_PICTUREHEADER *ph) {
             tbp = GS_REG_VIEW(sceGsTex0, ph->GsTex0).TBP0;
             tbw = GS_REG_VIEW(sceGsTex0, ph->GsTex0).TBW;
         } else if (i < 4) {
-            /* Mipmap levels 1, 2 or 3 */
-            tbp = (pm->GsMiptbp1 >> ((i - 1) * 0x14)) & 0x3fff;
-            tbw = (pm->GsMiptbp1 >> ((i - 1) * 0x14 + 0xe)) & 0x3f;
+            /* Mipmap levels 1, 2 or 3: MIPTBP1 holds a TBP/TBW pair every 20 bits */
+            tbp = (pm->GsMiptbp1 >> ((i - 1) * GS_MIPTBP1_TBP2_O)) & GS_MIPTBP1_TBP1_M;
+            tbw = (pm->GsMiptbp1 >> ((i - 1) * GS_MIPTBP1_TBP2_O + GS_MIPTBP1_TBW1_O))
+                & (GS_MIPTBP1_TBW1_M >> GS_MIPTBP1_TBW1_O);
         } else {
-            /* Mipmap levels 4, 5 or 6 */
-            tbp = (pm->GsMiptbp2 >> ((i - 4) * 0x14)) & 0x3fff;
-            tbw = (pm->GsMiptbp2 >> ((i - 4) * 0x14 + 0xe)) & 0x3f;
+            /* Mipmap levels 4, 5 or 6: MIPTBP2 has the same layout */
+            tbp = (pm->GsMiptbp2 >> ((i - 4) * GS_MIPTBP2_TBP5_O)) & GS_MIPTBP2_TBP4_M;
+            tbw = (pm->GsMiptbp2 >> ((i - 4) * GS_MIPTBP2_TBP5_O + GS_MIPTBP2_TBW4_O))
+                & (GS_MIPTBP2_TBW4_M >> GS_MIPTBP2_TBW4_O);
         }
 
         int w, h;
@@ -536,12 +538,13 @@ u_int Tim2LoadClut(TIM2_PICTUREHEADER *ph) {
                 sceGsExecLoadImage(&li, pClut);
                 sceGsSyncPath(0, 0);
                 
+                /* Step over the 16 colors just sent. */
                 if ((ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) == TIM2_RGB16) {
-                    pClut = (u_long128*)((char*)pClut + 2 * 16); /* 16bit colors */
+                    pClut += 2; /* 16bit colors */
                 } else if ((ph->ClutType & PR_TIM2_CLUT_FORMAT_MASK) == TIM2_RGB24) {
-                    pClut = (u_long128*)((char*)pClut + 3 * 16); /* 24bit colors */
+                    pClut += 3; /* 24bit colors */
                 } else {
-                    pClut = (u_long128*)((char*)pClut + 4 * 16); /* 32bit colors */
+                    pClut += 4; /* 32bit colors */
                 }
             }
 
