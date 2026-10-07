@@ -84,3 +84,21 @@ template copy now served by a shared instance, or a helper whose code is now
 inline (the renderee vertex kernels). Reproduce the per-object figures by comparing each
 `obj/` object with its `build/src/` counterpart, using symbol gaps for sizes.
 
+## Floating-point precision check (2026-10-07)
+
+On the EE, `double` arithmetic goes through the C library's software helpers
+(`dpadd`, `dpsub`, `dpmul`, `dpcmp`, `fptodp`, `dptofp`, `litodp`, `fptoui`). A
+`float` expression written with a `double` literal, or the reverse, therefore
+shows up as a different set of helper calls. For every function in both
+builds, the helper calls in the original objects (`obj/`) match this build's,
+once jump-table labels are merged back into their functions. The original
+makes 79 such calls in all.
+
+The one difference is `DrawNoodleStripChunk`: the original has 9 `fptoui` call
+sites and this build has 3. The original unrolls four vertices times two
+coordinates, plus the polygon count; this build loops over the vertices. The
+number of conversions at run time is the same. So the reconstruction keeps the
+original's float/double choices, which a port should keep too: for example
+`TSJukeCDObj_Draw` and `TsPopCusPut` compute in `double` exactly where the
+original does.
+
