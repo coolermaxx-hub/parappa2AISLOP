@@ -858,14 +858,24 @@ vector is stored there (`sq a2, 0(sp)`, about 0x110 bytes later). The division
 and the zero test then use those early values. Nothing earlier in either
 function writes that slot.
 
-Cause: the original `NaVECTOR<float, 4>::Copy` is inline assembly (`lq`/`sq`)
-that takes only the two addresses as inputs and has no `"memory"` clobber, so
-the compiler assumed the copy did not change `pos` and moved the loads above it
-(see `main-rom-matching:src/nalib/navector.h`). This tree's `Copy` declares the
-clobber, so it divides the position it has just computed. This is a behaviour
-difference from the original game, not only an instruction-order difference.
+Cause (reproduced with the historical compiler, 2026-10-07): the game's own
+source is not available, but the nalib vector/matrix operations are inline VU
+and MMI assembly that write through pointer operands. In the matching
+reconstruction (`main-rom-matching:src/nalib/navector.h` and `namatrix.h`, which
+reproduces the original bytes) none of the 10 assembly blocks declares a
+`"memory"` clobber, so the compiler does not know they write `pos` and may move
+the scalar loads of `pos[2]` and `pos[3]` above the whole matrix multiply,
+apply and copy sequence. Removing the clobbers from this tree's nalib headers
+reproduces that order in both functions (`l.s $f2,8($sp)` and
+`l.s $f1,12($sp)` before `sq $6,0($sp)` in `RenderContext2Node`, the same
+registers as the original); removing only the vector `Copy` clobber is not
+enough, because the multiply and apply blocks also carry one. This tree declares
+the clobbers, so it divides the position it has just computed. This is a
+behaviour difference from the original game, not only an instruction-order
+difference.
 
-What the original uses instead is leftover stack memory:
+What the original uses instead is leftover stack memory (the static reads are
+verified; what the bytes hold at run time is inferred and needs PS2 execution):
 
 - `RenderContext2Node` runs at a fixed depth under the node loop in
   `SpmFileHeader::RenderContext2Model`, and its own callees cannot reach that
