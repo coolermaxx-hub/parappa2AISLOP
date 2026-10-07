@@ -253,13 +253,18 @@ static void memc_clearMEMCINFO(MEMC_INFO *info) {
 
 sceMcTblGetDir* memc_searchDirTbl(char *name, sceMcTblGetDir *dirTbl, int num, int isClose, int cmpSize, int *status) {
     int i, j;
-    int flg;
 
     if (name == NULL) {
         return NULL;
     }
 
-    for (i = 0; i < num && (flg = FALSE, dirTbl[i].EntryName[0] != '\0'); i++) {
+    for (i = 0; i < num; i++) {
+        int flg = FALSE;
+
+        if (dirTbl[i].EntryName[0] == '\0') {
+            break;
+        }
+
         for (j = 0;; j++) {
             if (name[j] == '\0') {
                 flg = TRUE;
