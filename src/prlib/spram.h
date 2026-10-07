@@ -31,6 +31,7 @@ public:
 public:
     NaMATRIX<float, 4, 4> m_nodeMatrix;
     u_long128 *m_noodle_buffer[3];
+    // Never accessed; it keeps m_camera at 0x50, as the original code expects.
     char unk4C[0x4];
     PrPERSPECTIVE_CAMERA m_camera;
     NaVECTOR<float, 4> m_camera_direction;
@@ -41,6 +42,8 @@ public:
     NaMATRIX<float, 4, 4> m_viewScreenMatrix;
     NaMATRIX<float, 4, 4> m_viewClipMatrix;
     NaMATRIX<float, 4, 4> m_viewGuardMatrix;
+    // A matrix-sized gap that no code in the original executable reads or
+    // writes (checked through every prSpramData pointer and this, 2026-10-07).
     char unk260[0x40];
     sceDmaTag m_end_dmatag;
     PrEECoreContext m_eeCore;
