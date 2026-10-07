@@ -358,12 +358,17 @@ enum {
     TSJKANM_ROTSTOP = 8
 };
 
+/* Records in the juke box, laid out in rows of five. */
+#define JUKE_REC_MAX     10
+#define JUKE_REC_COLUMNS 5
+#define JUKE_REC_ROWS    (JUKE_REC_MAX / JUKE_REC_COLUMNS)
+
 typedef struct { // 0x1414
     /* 0x0000 */ int state;
     /* 0x0004 */ int exitflg;
     /* 0x0008 */ int selno;
     /* 0x000c */ MN_SCENE MNS_StageMapW;
-    /* 0x1160 */ JUKECDOBJ cusObj[10];
+    /* 0x1160 */ JUKECDOBJ cusObj[JUKE_REC_MAX];
     /* 0x1408 */ int anmTime;
     /* 0x140c */ int timeV;
     /* 0x1410 */ int bgmFadeVol;

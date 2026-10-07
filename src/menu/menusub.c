@@ -2506,7 +2506,7 @@ static void TsSndFlow(int flg) {
 
     pchan = TsSndChan;
 
-    for (i = 0; i < 15; i++, pchan++) {
+    for (i = 0; i < PR_ARRAYSIZE(TsSndChan); i++, pchan++) {
         ptap = pchan->pTap;
         if (ptap != NULL) {
             pchan->tim++;
@@ -2834,7 +2834,7 @@ static void TsSetScene_Map(MN_SCENE *pScene, int mapNo, int tflg, int bFocus) {
             }
             MenuStageCl1Trans(i, clrno);
 
-            for (l = 0; l < 4; l++) {
+            for (l = 0; l < PR_ARRAYSIZE(cwCol); l++) {
                 cwCol[l] = 0;
             }
 
@@ -5391,7 +5391,7 @@ static int MpMapMenu_Flow(int flg, MAPPOS *mpw, u_int tpad) {
         bkNo = mpw->curPos;
         if (mpw->mnmap != NULL) {
             mpos = &mpw->mnmap[bkNo];
-            for (idx = 0; idx < 4; idx++) {
+            for (idx = 0; idx < PR_ARRAYSIZE(mpos->mapdir); idx++) {
                 if (tpad == mpos->mapdir[idx].mapNo) {
                     break;
                 }
@@ -8293,17 +8293,17 @@ static int TsJukeObjAnime(int isOut) {
     int        i;
     JUKE_MENU *pfw = &JukeMenu;
 
-    for (i = 0; i < 10; i++) {
-        if (i < 5) {
+    for (i = 0; i < JUKE_REC_MAX; i++) {
+        if (i < JUKE_REC_COLUMNS) {
             pfw->cusObj[i].dir2 = i & 1;
             pfw->cusObj[i].dir = 1;
             if (!isOut) {
                 pfw->cusObj[i].state = 1;
                 pfw->cusObj[i].anime = TSJKANM_IN;
-                pfw->cusObj[i].atime = (5 - i) * 6 + 1;
+                pfw->cusObj[i].atime = (JUKE_REC_COLUMNS - i) * 6 + 1;
             } else {
                 pfw->cusObj[i].anime = TSJKANM_OUT;
-                pfw->cusObj[i].atime = (5 - i) * 6 + 1;
+                pfw->cusObj[i].atime = (JUKE_REC_COLUMNS - i) * 6 + 1;
             }
         } else {
             pfw->cusObj[i].dir2 = (i + 1) & 1;
@@ -8311,10 +8311,10 @@ static int TsJukeObjAnime(int isOut) {
             if (!isOut) {
                 pfw->cusObj[i].state = 1;
                 pfw->cusObj[i].anime = TSJKANM_IN;
-                pfw->cusObj[i].atime = (i - 5) * 6 + 19;
+                pfw->cusObj[i].atime = (i - JUKE_REC_COLUMNS) * 6 + 19;
             } else {
                 pfw->cusObj[i].anime = TSJKANM_OUT;
-                pfw->cusObj[i].atime = (i - 5) * 6 + 19;
+                pfw->cusObj[i].atime = (i - JUKE_REC_COLUMNS) * 6 + 19;
             }
         }
     }
@@ -8326,7 +8326,7 @@ static int TsJukeObjAnime2(int isOut) {
     int        i;
     JUKE_MENU *pfw = &JukeMenu;
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < JUKE_REC_MAX; i++) {
         if (i == pfw->selno) {
             switch (isOut) {
             case 0:
@@ -8365,13 +8365,13 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
     int nx, ny;
 
     nx = bx;
-    ny = TSLOOP(by + my, 2);
-    cn = ny * 5 + nx;
+    ny = TSLOOP(by + my, JUKE_REC_ROWS);
+    cn = ny * JUKE_REC_COLUMNS + nx;
 
     if (mx != 0) {
-        cn = TSLOOP(cn + mx, 10);
-        nx = cn % 5;
-        ny = cn / 5;
+        cn = TSLOOP(cn + mx, JUKE_REC_MAX);
+        nx = cn % JUKE_REC_COLUMNS;
+        ny = cn / JUKE_REC_COLUMNS;
     }
 
     if (!cobj[cn].bMsk) {
@@ -8386,11 +8386,11 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
         } else {
             mx = -1;
         }
-        for (i = 0; i < 10; i++) {
-            cn = TSLOOP(cn + mx, 10);
+        for (i = 0; i < JUKE_REC_MAX; i++) {
+            cn = TSLOOP(cn + mx, JUKE_REC_MAX);
             if (!cobj[cn].bMsk) {
-                nx = cn % 5;
-                ny = cn / 5;
+                nx = cn % JUKE_REC_COLUMNS;
+                ny = cn / JUKE_REC_COLUMNS;
                 *cx = nx;
                 *cy = ny;
                 return (bx != nx || by != ny);
@@ -8399,11 +8399,11 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
         return 0;
     }
 
-    for (i = nx; i < 5; i++) {
-        cn = ny * 5 + i;
+    for (i = nx; i < JUKE_REC_COLUMNS; i++) {
+        cn = ny * JUKE_REC_COLUMNS + i;
         if (!cobj[cn].bMsk) {
-            nx = cn % 5;
-            ny = cn / 5;
+            nx = cn % JUKE_REC_COLUMNS;
+            ny = cn / JUKE_REC_COLUMNS;
             *cx = nx;
             *cy = ny;
             return 1;
@@ -8411,10 +8411,10 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
     }
 
     for (i = nx; i >= 0; i--) {
-        cn = ny * 5 + i;
+        cn = ny * JUKE_REC_COLUMNS + i;
         if (!cobj[cn].bMsk) {
-            nx = cn % 5;
-            ny = cn / 5;
+            nx = cn % JUKE_REC_COLUMNS;
+            ny = cn / JUKE_REC_COLUMNS;
             *cx = nx;
             *cy = ny;
             return (bx != nx || by != ny);
@@ -8427,8 +8427,8 @@ static int _TsJKMoveCus(int *cx, int *cy, int mx, int my, JUKECDOBJ *cobj) {
 static void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
     int bx, by;
     int flg;
-    int x = sel % 5;
-    int y = sel / 5;
+    int x = sel % JUKE_REC_COLUMNS;
+    int y = sel / JUKE_REC_COLUMNS;
 
     flg = 0;
 
@@ -8458,10 +8458,6 @@ static void _TsJKSetPadArrow(int sel, JUKECDOBJ *cobj) {
 
     MENUSubt_PadFontArrowSet(flg);
 }
-
-/* Records in the juke box, laid out in rows of five. */
-#define JUKE_REC_MAX     10
-#define JUKE_REC_COLUMNS 5
 
 /* TsJukeMenu_Flow camera (scstate). */
 enum {
@@ -10195,7 +10191,7 @@ static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
         }
 
         cset = UserName_CharSet;
-        for (j = 0; j < 2; j++, cset++) {
+        for (j = 0; j < PR_ARRAYSIZE(UserName_CharSet); j++, cset++) {
             u_char *pchrlst = cset->ptbl;
 
             for (l = 0; l < cset->len; l++, pchrlst++) {

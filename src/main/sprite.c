@@ -22,7 +22,7 @@ void SprInit(void) {
 }
 
 void SprClear(void) {
-    u_long giftag[2] = { SCE_GIF_SET_TAG(0, 0, 0, 0, 0, 1), SCE_GIF_PACKED_AD };
+    u_long giftag[2] = { SCE_GIF_SET_TAG(0, 0, 0, 0, SCE_GIF_PACKED, 1), SCE_GIF_PACKED_AD };
 
     sceGifPkReset(&gifPkSpr);
     sceGifPkCnt(&gifPkSpr, 0, 0, 0);
@@ -48,7 +48,7 @@ void SprPackSet(SPR_DAT *spr_pp) {
 }
 
 void SprFlash(void) {
-    u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, 0, 1), SCE_GIF_PACKED_AD };
+    u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, SCE_GIF_PACKED, 1), SCE_GIF_PACKED_AD };
 
     if (sprSetNum != 0) {
         sceGifPkCloseGifTag(&gifPkSpr);
