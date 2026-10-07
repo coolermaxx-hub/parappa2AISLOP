@@ -14,6 +14,7 @@ Helpers used during the readability pass. Run them from the repository root afte
 | `hoisted_vector_reads.py <object-or-elf> [lo hi]` | List float loads from a stack slot that precede a later 16-byte store to it: the shape of the sort-depth bug, including slots written earlier. |
 | `callee_sets.py` | Compare each function's callees between `obj/` (original) and `build/src/`, ignoring nalib template instances. Tail calls are not counted. |
 | `float_constants.py` | Compare each function's float constants (immediates and `.lit4`/`.rodata` loads) with the original's. |
+| `data_words.py <sections...>` | Compare linked data sections with the original word by word, classing differences as shifted data pointers or same-function code pointers. |
 | `symcmp.py new.elf expected.elf <symbols...>` | Compare symbol bytes between two ELFs. |
 | `layout2.py <lo> <hi>` | Show symbol address deltas against `symbol_addrs`; all deltas in a section must be one constant. |
 | `layout_orig.py [sections]` | Compare every data symbol's offset within `.data`, `.sdata`, `.sbss` and `.bss` with the original executable. The only way to check `.bss`, which is not in the ROM image. |

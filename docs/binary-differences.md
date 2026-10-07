@@ -132,3 +132,23 @@ differ, none in game logic:
 The check found one naming slip, fixed in `TsNAMEINBox_Draw`: the original keeps
 the blink period as the integer `ltim = 12` and divides by `(float)ltim`.
 
+## Data sections against the original (2026-10-07)
+
+objdiff reports 99.60% of data bytes matched. That gap comes from how data
+symbols and their relocations pair between the builds; it is not different
+bytes. The linked executable's data, compared word by word with
+`SCPS_150.17`:
+
+| Section | Result |
+| --- | --- |
+| `.data` (2,188,752 bytes) | 546,032 words identical; 975 are data pointers moved by exactly -0x1300 with the code shift; 181 are code pointers to the same function and offset |
+| `.sdata` (1,752) | identical apart from 25 data pointers (-0x1300) and 1 code pointer |
+| `.lit4` (972) | identical: every float literal |
+| `.vutext` (10,320) | identical: every VU1 microprogram |
+| `.rodata` | 12 bytes longer from alignment padding; the same 448 strings and the same 1,490 jump-table entries per function |
+
+The code-pointer comparison resolves both values to a function and offset. Of
+the 181, 12 point at SDK or C-library routines that this build names
+`func_<original address>`. Those names encode the original's pointer value, so
+they are the same function.
+
