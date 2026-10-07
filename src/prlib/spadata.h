@@ -30,7 +30,8 @@ public:
     };
 
     u_char m_kind;
-    // The remaining transform header bytes are reserved/unknown in this format.
+    // Zero in every built-in transform and never read by the original code
+    // (docs/spa-animation-layout.md, reserved header words).
     PR_PADDING(unk1, 0xF);
 };
 
@@ -70,14 +71,18 @@ public:
     }
 
 public:
+    // The node's own index in SpaFileHeader::m_nodes in every built-in file;
+    // never read by the original code.
     PR_PADDING(unk0, 0x4);
     SpaTrack<int> *m_visibilityTrack;
     u_int m_transformCount;
     SpaTransform **m_transforms;
-    // Relocated by the original code; contents and purpose remain unknown.
+    // Relocated by ChangePointer and otherwise never read; null in every
+    // built-in file. Purpose unknown.
     int *unk10;
     u_int m_extraVectorTransformCount;
     SpaTransform **m_extraVectorTransforms;
+    // Zero in every built-in file and never read by the original code.
     PR_PADDING(unk1C, 0x10);
     u_int m_shapeWeightTrackCount;
     SpaTrack<float> *m_shapeWeightTracks[1];

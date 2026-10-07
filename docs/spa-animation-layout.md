@@ -99,3 +99,19 @@ file and the original code never reads them, so a port can ignore them.
 - `SpaFileHeader::unk38` and `SpcFileHeader::unk74` are relocated by
   `ChangePointer` and then never read.
 
+The node and transform records follow the same pattern, across the 201 nodes
+and 1005 transforms of those 31 files:
+
+| Field | Values | Read by |
+| --- | --- | --- |
+| `SpaNodeAnimation` 0x0 (`unk0`) | The node's own index in `m_nodes`, in all 201 nodes | Nothing |
+| `SpaNodeAnimation` 0x10 (`unk10`) | Null in all nodes | `ChangePointer` only, to relocate it |
+| `SpaNodeAnimation` 0x1c-0x2b (`unk1C`) | Zero | Nothing |
+| `SpaTransform` 0x1-0xf (`unk1`) | Zero | Nothing |
+
+Every built-in node carries the same five transforms (scale, rotate X, Y and
+Z, translate). The code check traced `this` through each `SpaNodeAnimation`
+and `SpaTransform` method. As a control it finds the known reads (0x4, 0x8,
+0xc, 0x14, 0x18 and 0x2c on nodes; the kind byte and the track from 0x10 on
+transforms), and none at the reserved offsets.
+
