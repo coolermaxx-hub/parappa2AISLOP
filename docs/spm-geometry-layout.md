@@ -123,6 +123,10 @@ packet stores a group from 0 to 10 (the `*_SPXae10m.spm` models use 10). Only
 values, such as 0x1c8 and 0x08841598. Its nodes have no translucent packet, so
 the engine never reads those values.
 
+`tests/prlib/spm_reserved_fields.py` checks each relation, and that a wrong
+value is reported, on a synthetic contour model (`python -m unittest discover
+-s tests/prlib -p spm_reserved_fields.py -v`).
+
 `unk190` keeps its placeholder name: the sum is exact, but nothing says what
 the converter used it for.
 

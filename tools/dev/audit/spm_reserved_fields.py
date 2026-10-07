@@ -104,26 +104,45 @@ def check_header(model, nodes, checks):
     checks['translucent nodes use sort groups 0 to 10'][translucent_groups_in_range] += 1
 
 
+CHECKS = ('m_context1PacketCounts = nodes with each packet',
+          'm_vertex_num = sum of m_vertexCount',
+          'm_totalDeformPositionCount = sum of m_deformPositionCount',
+          'translucent nodes use sort groups 0 to 10',
+          'at most one context-1 packet', 'null packet has 0 quadwords',
+          'm_context1PacketQwords = packet quadwords', 'm_vertexCount = packet vertices',
+          'unk190 = m_vertexCount + m_deformPositionCount',
+          'm_contourPacketQwords = contour packet quadwords')
+
+
+def check_model(blob, checks=None):
+    """Count, per relation, how many records of one SPM hold (True) or break it (False)."""
+    if checks is None:
+        checks = {}
+    for name in CHECKS:
+        checks.setdefault(name, Counter())
+    model = spm_packets.Record(blob)
+    count, table = model.word(0x68), model.word(0x74)
+    nodes = model.read('<%dI' % count, table)
+    check_header(model, nodes, checks)
+    for node in nodes:
+        check_relations(model, node, model.word(node + 0x154), checks)
+    return checks
+
+
 def main():
     data = Path(sys.argv[1]).read_bytes()
     values = {name: Counter() for name in list(HEADER_FIELDS) + list(NODE_FIELDS)}
     absent = Counter()
-    checks = {}
+    checks = {name: Counter() for name in CHECKS}
     model_count = node_count = 0
     for blob in models(data):
         model = spm_packets.Record(blob)
         model_count += 1
         for name, (offset, size) in HEADER_FIELDS.items():
             values[name][describe(blob[offset:offset + size])] += 1
+        check_model(blob, checks)
         count, table = model.word(0x68), model.word(0x74)
-        nodes = model.read('<%dI' % count, table)
-        for name in ('m_context1PacketCounts = nodes with each packet',
-                     'm_vertex_num = sum of m_vertexCount',
-                     'm_totalDeformPositionCount = sum of m_deformPositionCount',
-                     'translucent nodes use sort groups 0 to 10'):
-            checks.setdefault(name, Counter())
-        check_header(model, nodes, checks)
-        for node in nodes:
+        for node in model.read('<%dI' % count, table):
             node_count += 1
             flags = model.word(node + 0x154)
             for name, (offset, size) in NODE_FIELDS.items():
@@ -132,12 +151,6 @@ def main():
                     absent[name] += 1
                     continue
                 values[name][describe(blob[node + offset:node + offset + size])] += 1
-            for name in ('at most one context-1 packet', 'null packet has 0 quadwords',
-                         'm_context1PacketQwords = packet quadwords', 'm_vertexCount = packet vertices',
-                         'unk190 = m_vertexCount + m_deformPositionCount',
-                         'm_contourPacketQwords = contour packet quadwords'):
-                checks.setdefault(name, Counter())
-            check_relations(model, node, flags, checks)
     print('%d models, %d nodes' % (model_count, node_count))
     for name, counter in values.items():
         top = '; '.join('%s x%d' % item for item in counter.most_common(5))
