@@ -11,7 +11,7 @@
 
 /* TEX0 that samples a frame buffer as a 1024x256 CT32 texture; the 640x224 field sits in its top-left corner. */
 #define GS_FRAME_TEX0(frame, tcc, tfx) \
-    SCE_GS_SET_TEX0(/*TBP0*/(frame)->FBP << 5, /*TBW*/(frame)->FBW, /*PSM*/SCE_GS_PSMCT32, /*TW*/10, /*TH*/8, \
+    SCE_GS_SET_TEX0(/*TBP0*/(frame)->FBP << 5, /*TBW*/(frame)->FBW, /*PSM*/SCE_GS_PSMCT32, /*TW*/SCREEN_TEX_TW, /*TH*/SCREEN_TEX_TH, \
                     /*TCC*/(tcc), /*TFX*/(tfx), /*CBP*/0, /*CPSM*/0, /*CSM*/0, /*CSA*/0, /*CLD*/0)
 
 /* Texel coordinate of the field's bottom-right corner, in 12.4 fixed point. */

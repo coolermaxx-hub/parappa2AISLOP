@@ -44,6 +44,12 @@ typedef float f32;
 #define SCREEN_HEIGHT       448
 #define SCREEN_FIELD_HEIGHT (SCREEN_HEIGHT / 2)
 
+/* The frame buffer's width in 64-pixel units (FRAME.FBW, TEX0.TBW), and the
+ * log2 texture size that covers one field when it is sampled (1024 x 256). */
+#define SCREEN_FBW    (SCREEN_WIDTH / 64)
+#define SCREEN_TEX_TW 10
+#define SCREEN_TEX_TH 8
+
 #define GS_X_COORD(x) ((2048 - (SCREEN_WIDTH / 2) + (x)) << 4)
 #define GS_Y_COORD(y) ((2048 - (SCREEN_FIELD_HEIGHT / 2) + (y)) << 4)
 

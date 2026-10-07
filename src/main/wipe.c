@@ -271,7 +271,7 @@ static void LocalBufCopy(int disp) {
         break;
     }
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, 0, 0, 0, sbp, 10, 0, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
+    GGsSetLocalMoveImage(&mi, dbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, sbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -605,7 +605,7 @@ static void WipeLoadInDispSame(void *x) {
     };
     SPR_DAT  spr_dat  = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 0, 0, 0, 0, 0, 0, 0);
 
     wipe_end_flag = TRUE;
     SprInit();
@@ -671,7 +671,7 @@ static void WipeYesNoDispTask(void *x) {
 
     SPR_DAT spr_dat = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);;
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 0, 0, 0, 0, 0, 0, 0);
 
     SprInit();
 
@@ -802,7 +802,7 @@ static void WipeParaInDisp(void *x) {
     SPR_DAT      spr_dat   = {};
     int          timer;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
     TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 0);
@@ -868,7 +868,7 @@ static void WipeParaInDispMove(void *x) {
     SPR_DAT   spr_dat   = {};
     int       timer;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
     TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 0);
@@ -923,7 +923,7 @@ static void WipeParaOutDisp(void *x) {
     SPR_DAT   spr_dat   = {};
     int       timer     = 0;
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 1, 1, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 1, 1, 0, 0, 0, 0, 0);
 
     SprInit();
 
@@ -1054,7 +1054,7 @@ static void WipeBoxyInDisp(void *x) {
     };
     SPR_DAT  spr_dat  = {};
 
-    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, 10, SCE_GS_PSMCT32, 10, 8, 0, 0, 0, 0, 0, 0, 0);
+    spr_dat.GsTex0 = SCE_GS_SET_TEX0(TBP_VRAM_DRAW2, SCREEN_FBW, SCE_GS_PSMCT32, SCREEN_TEX_TW, SCREEN_TEX_TH, 0, 0, 0, 0, 0, 0, 0);
 
     Tim2Trans(cmnfGetFileAdrs(CMNF_WIPE_SUBT_FONT));
     SprInit();

@@ -2836,7 +2836,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     Tim2Trans_TBP_MODE(GetIntAdrsCurrent(ndl_pp->texnum), use_pp->FBP << 5, SCE_GS_PSMT8H);
     Tim2TransColor_TBP(GetIntAdrsCurrent(ndl_pp->texnum), col_pp->FBP << 5);
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, SCE_GS_PSMT8H, 10, 8, 1, SCE_GS_MODULATE, col_pp->FBP << 5, SCE_GS_PSMCT16, 0, 0, 1));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEX0_1, SCE_GS_SET_TEX0(use_pp->FBP << 5, use_pp->FBW, SCE_GS_PSMT8H, SCREEN_TEX_TW, SCREEN_TEX_TH, 1, SCE_GS_MODULATE, col_pp->FBP << 5, SCE_GS_PSMCT16, 0, 0, 1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_TRUE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_RGB_ONLY, SCE_GS_FALSE, 0, SCE_GS_TRUE, 1));
@@ -2874,7 +2874,7 @@ int DrawVramLocalCopy(void *para_pp, int frame, int first_f, int useDisp, int dr
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
+    GGsSetLocalMoveImage(&mi, dbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, sbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -2899,7 +2899,7 @@ int DrawVramLocalCopy2(void *para_pp, int frame, int first_f, int useDisp, int d
     sbp = DrawGetTbpPos(useDisp);
     dbp = DrawGetTbpPos(drDisp);
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
+    GGsSetLocalMoveImage(&mi, dbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, sbp, SCREEN_FBW, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
