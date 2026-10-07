@@ -99,7 +99,7 @@ void PrInitializeAlphaModulation() {
 }
 
 void PrCreateAlphaModulation(float alpha) {
-    if (prCurrentStage == 6 || prCurrentStage == 16) {
+    if (prCurrentStage == 6 || prCurrentStage == 6 + PR_STAGE_VS_OFFSET) {
         alpha = 0.0f;
     }
 

@@ -109,6 +109,8 @@ void PrRender(PrSceneObject *scene);
 void PrWaitRender();
 /* PrSetStage index of the title screen (same numbering as stdat_rec). */
 #define PR_STAGE_TITLE 19
+/* Versus stage n + PR_STAGE_VS_OFFSET (11-18) reuses stage n's data. */
+#define PR_STAGE_VS_OFFSET 10
 
 void PrSetStage(int stage);
 void PrSetDepthOfField(PrSceneObject *scene, float focal_lng, float defocus_lng);

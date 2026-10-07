@@ -134,7 +134,7 @@ static int StageIndexForColor() {
     if (prCurrentStage == PR_STAGE_TITLE) {
         return 0;
     }
-    return (u_int)prCurrentStage % 10; /* VS stages 11-18 use the colours of stages 1-8 */
+    return (u_int)prCurrentStage % PR_STAGE_VS_OFFSET; /* VS stages use their base stage's colours */
 }
 
 void PushNoodleColor(u_long *rgbaq) {
@@ -246,7 +246,7 @@ void PrGetNoodlePolygonPosition(NaVECTOR<float, 4> *position, u_int index);
 void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
     u_int count = PR_NOODLE_POLYGON_COUNT;
 
-    if (prCurrentStage == 6 || prCurrentStage == 16) {
+    if (prCurrentStage == 6 || prCurrentStage == 6 + PR_STAGE_VS_OFFSET) {
         float ratio = prMendererRatio;
         float t;
 
@@ -434,7 +434,7 @@ void PrUpdateMendererSpeed() {
         return;
     }
 
-    if (prCurrentStage == 6 || prCurrentStage == 16) {
+    if (prCurrentStage == 6 || prCurrentStage == 6 + PR_STAGE_VS_OFFSET) {
         float fade = prMendererFade - decelerateRatio;
         if (fade < 0.0f) {
             prMendererFade = 0.0f;
@@ -453,12 +453,12 @@ void PrUpdateMendererSpeed() {
 
 PR_EXTERN
 void PrDecelerateMenderer(u_int frames) {
-    if (prCurrentStage == 6 || prCurrentStage == 16) {
+    if (prCurrentStage == 6 || prCurrentStage == 6 + PR_STAGE_VS_OFFSET) {
         frames = 120;
     }
 
     float r;
-    if (prCurrentStage == 6 || prCurrentStage == 16) {
+    if (prCurrentStage == 6 || prCurrentStage == 6 + PR_STAGE_VS_OFFSET) {
         r = prMendererFade / frames;
     } else {
         r = prMendererSpeed / frames;
@@ -497,7 +497,7 @@ void DrawMenderer() {
         leader -= 1.0f;
     }
 
-    if (prCurrentStage == 8 || prCurrentStage == 18) {
+    if (prCurrentStage == 8 || prCurrentStage == 8 + PR_STAGE_VS_OFFSET) {
         prSchoolLeaderIndex = leader;
         return;
     }
