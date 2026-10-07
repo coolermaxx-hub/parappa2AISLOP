@@ -79,7 +79,7 @@ void PrSceneObject::ApplyDepthOfField() {
         PrSetSpriteDefinitionZ(static_cast<u_int>((m[2][2] * depth + m[3][2]) / (m[2][3] * depth + m[3][3])));
 
         packet.AddGifPackedAD_TEXFLUSH();
-        packet.AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 1, 2);
+        packet.AddGifPackedAD_TEST_1(0, SCE_GS_ALPHA_NEVER, 0, 0, 0, 0, /*ZTE*/1, SCE_GS_ZGEQUAL);
         PrAddDrawAreaDefinition(&packet, src, false, false, 0);
         PrAddTextureAreaDefinition(&packet, work, false);
         packet.AddGsAD(SCE_GS_ALPHA_1, PR_ALPHA_FIXED(0x60));

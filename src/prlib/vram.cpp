@@ -20,7 +20,7 @@ int PrAddDrawAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, bool o
     }
 
     if (test) {
-        packet->AddGifPackedAD_TEST_1(0, 0, 0, 0, 0, 0, 0, 0);
+        packet->AddGifPackedAD_TEST_1(0, SCE_GS_ALPHA_NEVER, 0, 0, 0, 0, /*ZTE*/0, 0); /* no tests */
         num++;
     }
 
@@ -44,13 +44,13 @@ int PrAddTextureAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, boo
     u_int v = y & 0x1f;
 
     packet->AddGifPackedAD_TEX0_1(((y >> 5) * tbw) << 5, tbw, 0, 10, 10, 1, 1, 0, 0, 0, 0, 0);
-    packet->AddGifPackedAD_CLAMP_1(2, 2, x, x + w - 1, v, v + h - 1);
+    packet->AddGifPackedAD_CLAMP_1(SCE_GS_REGION_CLAMP, SCE_GS_REGION_CLAMP, x, x + w - 1, v, v + h - 1);
 
     if (!bilinear) {
         return 2;
     }
 
-    packet->AddGifPackedAD_TEX1_1(0, 0, 1, 1, 0, 0, 0);
+    packet->AddGifPackedAD_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
     return 3;
 }
 
