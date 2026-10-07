@@ -79,7 +79,8 @@ objects at link time absorbs the rest, leaving 4,828. That 5,076 breaks down as:
 | Other functions that compile to a different size (87 functions; for example `DrawNoodleStripChunk` -256, spram's `Scale`/`Translate` -232/-224, `RenderChunkEECore` -184, the SPA track templates +40 to +160) | about -1,420 |
 
 45 of those 87 functions differ by 8 bytes or less (alignment `nop`s), 40 bytes
-in all. No code was dropped: every original function has a counterpart or a
-shared template instance. Reproduce the per-object figures by comparing each
+in all. No code was dropped. Each original function missing here is a per-file
+template copy now served by a shared instance, or a helper whose code is now
+inline (the renderee vertex kernels). Reproduce the per-object figures by comparing each
 `obj/` object with its `build/src/` counterpart, using symbol gaps for sizes.
 
