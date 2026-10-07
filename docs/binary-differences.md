@@ -92,7 +92,7 @@ On the EE, `double` arithmetic goes through the C library's software helpers
 shows up as a different set of helper calls. For every function in both
 builds, the helper calls in the original objects (`obj/`) match this build's,
 once jump-table labels are merged back into their functions. The original
-makes 79 such calls in all.
+makes 81 such calls in all.
 
 The one difference is `DrawNoodleStripChunk`: the original has 9 `fptoui` call
 sites and this build has 3. The original unrolls four vertices times two
