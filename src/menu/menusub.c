@@ -7384,130 +7384,135 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
 
 static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
     POPUP_MENU *pfw = &PopupMenu;
-    char        buf[32];
-    float       rt0, rt1, rt2;
-    int         ton;
-    float       uneri;
-    float       rt;
-    PTPOS      *pos;
-    PATPOS     *pat;
-    PATPOS     *stno;
-    STRPOS     *str;
-    RANKLIST   *pRanking;
-    int         nRanking;
-    u_int       hicol, nmcol, col;
+    int         i;
     int         px, py;
-    int         ox, oy;
-    int         x, y, sy;
-    int         i, n;
+    int         px0, py0;
+    PTPOS      *pPos;
+    int         npat;
+    PATPOS     *ppat;
+    PATPOS     *ppat2; /* stage number patterns */
+    STRPOS     *pspos;
+    RANKLIST   *GameRank;
+    int         nGameRank;
+    char        tbuf[32];
+    int         lmty, lmth; /* ranking list scissor top and height */
+    float       fune;
+    int         arate;
+    float       crate;
+    float       rt0, rt1, rt2;
+    u_int       abgr, hiCol, nmCol;
 
     pfw->cani.fswing = -cosf((MNSceneGetMusicFitTimer() % 72) / 72.0f * (PR_PI * 2));
-    uneri = (MNSceneGetMusicFitTimer() % 180) / 180.0f;
+    fune = (MNSceneGetMusicFitTimer() % 180) / 180.0f;
 
     spr->zx = 1.0f;
     spr->zy = 0.5f;
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
     if (pfw->isRnkWAnime == 0 && TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
-        pos = &POPWZoom_CXY[pfw->nPBubPat];
-        ton = rt0 * 256.0f;
+        pPos  = &POPWZoom_CXY[pfw->nPBubPat];
+        arate = rt0 * 256.0f;
 
-        spr->zoom.centerX = pos->x;
-        spr->zoom.centerY = pos->y;
+        spr->zoom.centerX = pPos->x;
+        spr->zoom.centerY = pPos->y;
         spr->zoom.zoomX   = rt0;
         spr->zoom.zoomY   = rt1;
         spr->zoom.isOn    = 1;
     } else {
         spr->zoom.isOn = 0;
-        ton = 0x100;
+        arate = 0x100;
     }
 
-    pos = PopRnk_pPos[pfw->nPPosSet].pPopPos;
-    py  = pos->y;
-    px  = pos->x;
-    spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, ton);
+    pPos = PopRnk_pPos[pfw->nPPosSet].pPopPos;
+    py   = pPos->y;
+    px   = pPos->x;
+    spr->rgba0 = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
 
     if (pfw->urTim) {
         pfw->urTim--;
     }
 
-    hicol = GetDToneColor(0x404040, MN_COLOR_WHITE, ton);
-    nmcol = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, ton);
-    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 0);
-    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 1);
-    TsPopMenCus_Draw(pk, spr, pfw, px, py, hicol, nmcol, 6);
+    hiCol = GetDToneColor(0x404040, MN_COLOR_WHITE, arate);
+    nmCol = GetDToneColor(0x404040, MN_COLOR_NEUTRAL, arate);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hiCol, nmCol, 0);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hiCol, nmCol, 1);
+    TsPopMenCus_Draw(pk, spr, pfw, px, py, hiCol, nmCol, 6);
     spr->zoom.isOn = 0;
 
     if (pfw->isRankOn == 0) {
         return;
     }
 
-    ox  = px;
-    oy  = py;
-    pos = PopRnk_pPos[pfw->nPPosSet].pRnkPos;
-    py  = pos->y;
-    px  = pos->x;
+    px0  = px;
+    py0  = py;
+    pPos = PopRnk_pPos[pfw->nPPosSet].pRnkPos;
+    py   = pPos->y;
+    px   = pPos->x;
 
     if (pfw->isRnkWAnime) {
         if (TsANIME_GetRate(&pfw->awork, &rt0, &rt1, &rt2)) {
-        if (pfw->rankFlg == 0) {
-            pat = &PopMenuSel_Pat[3];
-        } else {
-            pat = &PopMenuSel_Pat[4];
-        }
+            if (pfw->rankFlg == 0) {
+                ppat = &PopMenuSel_Pat[3];
+            } else {
+                ppat = &PopMenuSel_Pat[4];
+            }
 
-        x = pat->x + ox;
-        spr->zoom.zoomY   = rt1 * 0.9f + 0.1f;
-        spr->zoom.isOn    = 1;
-        spr->zoom.centerX = (x + 32) + (x - px) / 1.8f;
-        spr->zoom.zoomX   = rt0 * 0.65f + 0.35f;
-        spr->zoom.centerY = pat->y + oy + 6;
-        ton = (int)(rt0 * 156.0f) + 100;
-        rt  = rt2 * 0.6f;
+            {
+                int cx = ppat->x + px0;
+                int cy = ppat->y + py0;
+
+                spr->zoom.zoomY   = rt1 * 0.9f + 0.1f;
+                spr->zoom.isOn    = 1;
+                spr->zoom.centerX = (cx + 32) + (cx - px) / 1.8f;
+                spr->zoom.zoomX   = rt0 * 0.65f + 0.35f;
+                spr->zoom.centerY = cy + 6;
+            }
+            arate = (int)(rt0 * 156.0f) + 100;
+            crate = rt2 * 0.6f;
         } else {
             spr->zoom.isOn = 0;
-            ton = 0x100;
-            rt  = 0.0f;
+            arate = 0x100;
+            crate = 0.0f;
         }
     } else {
-        ton = 0x100;
-        rt  = 0.0f;
+        arate = 0x100;
+        crate = 0.0f;
     }
 
-    spr->rgba0 = GetDToneColor(0x20ffffff, MN_COLOR_NEUTRAL, ton);
+    spr->rgba0 = GetDToneColor(0x20ffffff, MN_COLOR_NEUTRAL, arate);
 
     if (pfw->rankFlg == 0) {
-        pat  = SIRanking_Pat;
-        stno = RankSISTNo_PAT;
-        n    = 2;
+        ppat  = SIRanking_Pat;
+        ppat2 = RankSISTNo_PAT;
+        npat  = 2;
     } else {
-        pat  = VSRanking_PatTbl[pfw->rVsLev];
-        stno = RankVSSTNo_PAT;
-        n    = 5;
+        ppat  = VSRanking_PatTbl[pfw->rVsLev];
+        ppat2 = RankVSSTNo_PAT;
+        npat  = 5;
     }
 
-    for (i = 0; i < n; i++) {
-        if (rt != 0.0f) {
-            float f = sinf(rt * (PR_PI * 2));
+    for (i = 0; i < npat; i++) {
+        if (crate != 0.0f) {
+            float zrx = sinf(crate * (PR_PI * 2));
 
-            TsPatPutMZoom(pk, spr, &pat[i], px, py, f * 0.2f + 1.0f, f * 0.2f + 1.0f, 8, 8, f * 0.3f, f * 0.3f);
+            TsPatPutMZoom(pk, spr, &ppat[i], px, py, zrx * 0.2f + 1.0f, zrx * 0.2f + 1.0f, 8, 8, zrx * 0.3f, zrx * 0.3f);
             pfw->urTim = 20;
         } else if (i == 0) {
-            TsPatPutUneri(pk, spr, &pat[i], px, py, 8, 10, uneri, (pfw->urTim != 0) ? 1.0f - pfw->urTim * 0.05f : 1.0f);
+            TsPatPutUneri(pk, spr, &ppat[i], px, py, 8, 10, fune, (pfw->urTim != 0) ? 1.0f - pfw->urTim * 0.05f : 1.0f);
         } else {
-            TsPatPut(pk, spr, &pat[i], px, py);
+            TsPatPut(pk, spr, &ppat[i], px, py);
         }
     }
 
-    if (rt < 0.15f) {
-        ton = (0.15f - rt) * 256.0f * 6.6666665f;
+    if (crate < 0.15f) {
+        arate = (0.15f - crate) * 256.0f * 6.6666665f;
     } else {
-        ton = 0;
+        arate = 0;
     }
 
-    spr->rgba0 = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, ton);
-    TsPatPut(pk, spr, &stno[0], px, py);
-    TsPatPut(pk, spr, &stno[pfw->rStageNo + 1], px, py);
+    spr->rgba0 = GetDToneColor(0x808080, MN_COLOR_NEUTRAL, arate);
+    TsPatPut(pk, spr, &ppat2[0], px, py);
+    TsPatPut(pk, spr, &ppat2[pfw->rStageNo + 1], px, py);
 
     if (pfw->selrnkpg > 0) {
         TsPatPut(pk, spr, &Ranking_PatScroll[0], px, py);
@@ -7516,35 +7521,37 @@ static void TsPopMenu_Draw(SPR_PKT pk, SPR_PRM *spr) {
         TsPatPut(pk, spr, &Ranking_PatScroll[1], px, py);
     }
 
-    pRanking = pfw->pRanking;
-    nRanking = pfw->nRanking;
+    GameRank  = pfw->pRanking;
+    nGameRank = pfw->nRanking;
 
     if (pfw->rankFlg == 0) {
-        str = SRanking_Str;
+        pspos = SRanking_Str;
     } else {
-        str = VRanking_Str;
+        pspos = VRanking_Str;
     }
 
-    y  = py + str->y;
-    sy = y - 5;
+    /* Clip the scrolling list to its 80-pixel window (ten 8-pixel rows). */
+    lmty = py + pspos->y - 5;
+    lmth = 80;
     SetSprScreenXYWH(spr);
-    PkSCISSOR_Add(pk, spr->px, sy, spr->sw, 80);
+    PkSCISSOR_Add(pk, spr->px, lmty, spr->sw, lmth);
 
     py -= pfw->selrnkpg * 80 + (pfw->rsline >> 1);
 
-    for (i = 0; i < nRanking; i++, py += 8) {
-        x = py + str->y;
-        if (y - 13 < x && x < sy + 88) {
-            col = GetDToneColor(str->abgr & 0xffffff, str->abgr, ton);
+    for (i = 0; i < nGameRank; i++, py += 8) {
+        int y = py + pspos->y;
 
-            sprintf(buf, "%d", i + 1);
-            MENUFontPutR(pk, spr, px + str[0].x, x, col, MNFONT_VALIGN_MIDDLE, buf, 1.0f);
+        if (lmty - 8 < y && y < lmty + lmth + 8) {
+            abgr = GetDToneColor(pspos->abgr & 0xffffff, pspos->abgr, arate);
 
-            sprintf(buf, "%d", pRanking[i].score);
-            MENUFontPutR(pk, spr, px + str[1].x, py + str[1].y, col, MNFONT_VALIGN_MIDDLE | MNFONT_HALIGN_RIGHT, buf, 1.0f);
+            sprintf(tbuf, "%d", i + 1);
+            MENUFontPutR(pk, spr, px + pspos[0].x, y, abgr, MNFONT_VALIGN_MIDDLE, tbuf, 1.0f);
 
-            sprintf(buf, "%s", pRanking[i].name);
-            MENUFontPutR(pk, spr, px + str[2].x, py + str[2].y, col, MNFONT_VALIGN_MIDDLE, buf, 1.1f);
+            sprintf(tbuf, "%d", GameRank[i].score);
+            MENUFontPutR(pk, spr, px + pspos[1].x, py + pspos[1].y, abgr, MNFONT_VALIGN_MIDDLE | MNFONT_HALIGN_RIGHT, tbuf, 1.0f);
+
+            sprintf(tbuf, "%s", GameRank[i].name);
+            MENUFontPutR(pk, spr, px + pspos[2].x, py + pspos[2].y, abgr, MNFONT_VALIGN_MIDDLE, tbuf, 1.1f);
         }
     }
 
