@@ -168,6 +168,7 @@ inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Copy(NaMATRIX<T, t0, t1>& lhs, 
 }
 
 // Keep the original four-quadword MMI transfer for the actual EE 4x4 type.
+#if defined(__R5900__)
 template <>
 inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
     asm volatile("\n\
@@ -183,6 +184,7 @@ inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Copy(NaMATRIX<float, 4, 4>&
     : "$6", "$7", "$8", "$9", "memory");
     return lhs;
 }
+#endif
 
 // Column-vector products: t0 rows, t1 columns. Stage the complete result
 // before writing out so that the scalar path permits the same in-place use
@@ -207,6 +209,7 @@ inline NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Multiply(NaMATRIX<T, t0, t1>& o
 }
 
 // Preserve the original EE float4 instruction sequence and accumulation order.
+#if defined(__R5900__)
 template <>
 inline NaVECTOR<float, 4>& NaMATRIX<float, 4, 4>::Apply(NaVECTOR<float, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
     asm volatile("\n\
@@ -223,7 +226,9 @@ inline NaVECTOR<float, 4>& NaMATRIX<float, 4, 4>::Apply(NaVECTOR<float, 4>& out,
     " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
     return out;
 }
+#endif
 
+#if defined(__R5900__)
 template <>
 inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Multiply(NaMATRIX<float, 4, 4>& out, const NaMATRIX<float, 4, 4>& lhs, const NaMATRIX<float, 4, 4>& rhs) {
     asm volatile("\n\
@@ -258,6 +263,7 @@ inline NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Multiply(NaMATRIX<float, 4,
     " : : "r"(&out), "r"(&lhs), "r"(&rhs) : "memory");
     return out;
 }
+#endif
 
 template <typename T, int t0, int t1>
 NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const T& m10, const T& m11) {

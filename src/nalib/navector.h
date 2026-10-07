@@ -1,6 +1,9 @@
 #ifndef NALIB_NAVECTOR_H
 #define NALIB_NAVECTOR_H
 
+#include <float.h>
+#include <math.h>
+
 template <typename T, int t0>
 class NaVECTOR {
 public:
@@ -67,6 +70,7 @@ public:
 
     static NaVECTOR<float, 4> Cross3(const NaVECTOR<float, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
         NaVECTOR<float, 4> result;
+#if defined(__R5900__)
         asm volatile("\n\
             lqc2         $vf4, 0(%0)\n\
             lqc2         $vf5, 0(%1)\n\
@@ -75,6 +79,13 @@ public:
             vsub.w       $vf6, $vf6, $vf6\n\
             sqc2         $vf6, 0(%2)\n\
         " : : "r"(&lhs), "r"(&rhs), "r"(&result) : "memory");
+#else
+        // VOPMULA/VOPMSUB: each component is a product minus the swapped product.
+        result.v[0] = lhs.v[1] * rhs.v[2] - rhs.v[1] * lhs.v[2];
+        result.v[1] = lhs.v[2] * rhs.v[0] - rhs.v[2] * lhs.v[0];
+        result.v[2] = lhs.v[0] * rhs.v[1] - rhs.v[0] * lhs.v[1];
+        result.v[3] = 0.0f;
+#endif
         return result;
     }
 
@@ -83,6 +94,7 @@ public:
         // Keep the VU sum and reciprocal order, including singular inputs:
         // VU division by zero gives the largest float, so a zero vector
         // normalizes to zero rather than NaN.
+#if defined(__R5900__)
         asm volatile("\n\
             lqc2         $vf4, 0(%0)\n\
             vmul.xyz     $vf5, $vf4, $vf4\n\
@@ -97,6 +109,14 @@ public:
             vmulq.xyz    $vf6, $vf4, Q\n\
             sqc2         $vf6, 0(%1)\n\
         " : : "r"(&value), "r"(&result) : "memory");
+#else
+        float length = sqrtf((value.v[0] * value.v[0] + value.v[1] * value.v[1]) + value.v[2] * value.v[2]);
+        float q = (length != 0.0f) ? 1.0f / length : FLT_MAX;
+        result.v[0] = value.v[0] * q;
+        result.v[1] = value.v[1] * q;
+        result.v[2] = value.v[2] * q;
+        result.v[3] = 0.0f;
+#endif
         return result;
     }
 
@@ -124,6 +144,7 @@ inline NaVECTOR<T, t0>& NaVECTOR<T, t0>::Copy(NaVECTOR<T, t0>& lhs, const NaVECT
 
 // The 16-byte EE vector has a genuine MMI transfer specialization. Other
 // dimensions use the shared typed implementation, without widening their copy.
+#if defined(__R5900__)
 template <>
 inline NaVECTOR<float, 4>& NaVECTOR<float, 4>::Copy(NaVECTOR<float, 4>& lhs, const NaVECTOR<float, 4>& rhs) {
     asm volatile("\n\
@@ -133,6 +154,7 @@ inline NaVECTOR<float, 4>& NaVECTOR<float, 4>::Copy(NaVECTOR<float, 4>& lhs, con
     : "$6", "memory");
     return lhs;
 }
+#endif
 
 // Float4 arithmetic keeps the original VU operations and rounding. Other
 // types and dimensions share ordinary typed arithmetic.
@@ -143,6 +165,7 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator*(const T& s) const {
     return result;
 }
 
+#if defined(__R5900__)
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator*(const float& s) const {
     NaVECTOR<float, 4> ret;
@@ -155,6 +178,7 @@ inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator*(const float& s) const {
     " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
     return ret;
 }
+#endif
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator+(const NaVECTOR<T, t0>& rhs) const {
@@ -163,6 +187,7 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator+(const NaVECTOR<T, t0>& rhs) co
     return result;
 }
 
+#if defined(__R5900__)
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator+(const NaVECTOR<float, 4>& rhs) const {
     NaVECTOR<float, 4> ret;
@@ -174,6 +199,7 @@ inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator+(const NaVECTOR<float, 4>
     " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
     return ret;
 }
+#endif
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator-(const NaVECTOR<T, t0>& rhs) const {
@@ -182,6 +208,7 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator-(const NaVECTOR<T, t0>& rhs) co
     return result;
 }
 
+#if defined(__R5900__)
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator-(const NaVECTOR<float, 4>& rhs) const {
     NaVECTOR<float, 4> ret;
@@ -193,6 +220,7 @@ inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator-(const NaVECTOR<float, 4>
     " : : "r"(&ret), "r"(this), "r"(&rhs) : "memory");
     return ret;
 }
+#endif
 
 template <typename T, int t0>
 inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator/(const T& s) const {
@@ -204,6 +232,7 @@ inline NaVECTOR<T, t0> NaVECTOR<T, t0>::operator/(const T& s) const {
 template <>
 inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator/(const float& s) const {
     NaVECTOR<float, 4> ret;
+#if defined(__R5900__)
     asm volatile("\n\
         lqc2       $vf4, 0x0(%1)\n\
         mfc1       $8, %2\n\
@@ -213,6 +242,12 @@ inline NaVECTOR<float, 4> NaVECTOR<float, 4>::operator/(const float& s) const {
         vmulq.xyzw $vf4, $vf4, Q\n\
         sqc2       $vf4, 0x0(%0)\n\
     " : : "r"(&ret), "r"(this), "f"(s) : "$8", "memory");
+#else
+    // VDIV forms the reciprocal (1 / s, the largest float for zero) and VMULQ
+    // scales by it, so this is not a componentwise divide.
+    float q = (s != 0.0f) ? 1.0f / s : FLT_MAX;
+    for (int i = 0; i < 4; i++) ret.v[i] = v[i] * q;
+#endif
     return ret;
 }
 
