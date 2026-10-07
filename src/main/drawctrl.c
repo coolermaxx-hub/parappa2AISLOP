@@ -2841,7 +2841,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEST_1, SCE_GS_SET_TEST(SCE_GS_TRUE, SCE_GS_ALPHA_NEVER, 0, SCE_GS_AFAIL_RGB_ONLY, SCE_GS_FALSE, 0, SCE_GS_TRUE, 1));
     sceGifPkAddGsAD(&gifpk, SCE_GS_ALPHA_1, GS_ALPHA_BLEND);
-    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(0, 1, 64));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_TEXA, SCE_GS_SET_TEXA(/*TA0*/0, /*AEM*/1, /*TA1*/64));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
     sceGifPkAddGsAD(&gifpk, SCE_GS_FRAME_1, GS_REG_WORD(*use_pp));

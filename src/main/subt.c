@@ -283,7 +283,7 @@ void SubtFlash(void) {
 
 void SubtMcodeSet(int code) {
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX0_1, SubtGsTex0[code]);
-    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, 0, 1, 1, 0, 0));
+    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, SCE_GS_NEAREST, SCE_GS_LINEAR, /*MTBA*/1, /*L*/0, /*K*/0));
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEXA, GS_TEXA_STP);
 }
 

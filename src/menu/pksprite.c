@@ -331,9 +331,9 @@ void PkTEX0_SetAdd(SPR_PKT pkt, int vram, int w, int h, int isLinear) {
     }
 
     if (isLinear) {
-        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0);
+        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
     } else {
-        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, 0, 0, 0, 0, 0);
+        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0);
     }
 
     pk->ad[1].ADDR = SCE_GS_TEX1_1;
