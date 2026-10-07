@@ -83,3 +83,19 @@ when the active transform count decreases. It does not execute the optimizer,
 visibility routines or VU composition. Existing scalar track tests cover integer
 visibility-track interpolation semantics. Full camera/animation equivalence and
 the unidentified fields still need original assets and PS2 execution.
+
+## Reserved header words (2026-10-07)
+
+The reserved words in the SPA and SPC file headers are zero in every built-in
+file and the original code never reads them, so a port can ignore them.
+
+- `SpaFileHeader` 0x8-0x13 and `SpcFileHeader` 0x8-0x13 and 0x38-0x3f are zero
+  in all 31 SPA (version 2) and 3 SPC (version 1) files in the executable's
+  `common.ipk`.
+- No function of, or taking, `SpaFileHeader` or `SpcFileHeader` reads those
+  offsets. The loads at 0x8-0x10 in `SpaNodeAnimation::ChangePointer` are on
+  node and track records. In `SpcFileHeader::GetCamera` the header base reads
+  only 0x60-0x70 and the track pointers at 0x88-0x94.
+- `SpaFileHeader::unk38` and `SpcFileHeader::unk74` are relocated by
+  `ChangePointer` and then never read.
+

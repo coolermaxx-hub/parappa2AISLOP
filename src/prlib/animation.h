@@ -24,6 +24,8 @@ public:
     u_int m_magic;
     u_short m_version;
     u_short m_flags;
+    // Zero in every built-in file and never read by the original code
+    // (docs/spa-animation-layout.md, reserved header words).
     PR_PADDING(unk8, 0xC);
     float m_duration;
     char m_name[32];

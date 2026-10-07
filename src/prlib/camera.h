@@ -39,6 +39,8 @@ public:
     u_short m_version;
     u_short m_flags;
 
+    // unk8 and unk38 are zero in every built-in file and never read by the
+    // original code (docs/spa-animation-layout.md, reserved header words).
     PR_PADDING(unk8, 0xC);
     float m_duration;
     char m_name[32];
