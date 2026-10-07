@@ -59,7 +59,7 @@ void PrWaitDmaFinish(u_int channel) {
         u_int pcr = *D_PCR;
         u_int pcr_old = pcr;
         
-        pcr &= ~0x3ff;
+        pcr &= ~0x3ff; /* clear CPC0-CPC9: only this channel drives CPCOND0 */
         pcr |= PR_BIT(channel);
 
         *D_PCR = pcr;

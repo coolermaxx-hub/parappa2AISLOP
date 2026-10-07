@@ -49,14 +49,8 @@ void PrStartMfifo() {
         *D8_MADR = (u_int)mfifoBase;
         *D2_TADR = (u_int)mfifoBase;
 
-        /*
-         * Start GIF transfer.
-         *
-         * MOD=Chain
-         * ASP,TTE,TIE=0
-         * STR=1
-         */
-        *(int*)D2_CHCR = 0x104;
+        /* Start the GIF transfer in chain mode; ASP, TTE and TIE stay 0. */
+        *(int*)D2_CHCR = (1 << D_CHCR_MOD_O) | D_CHCR_STR_M;
     }
 }
 

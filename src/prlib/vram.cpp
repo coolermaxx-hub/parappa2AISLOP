@@ -1,5 +1,7 @@
 #include "vram.h"
 
+#include <libgraph.h>
+
 int PrAddDrawAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, bool offset, bool test, u_long color) {
     int num = 2;
     u_int x0 = rect.x;
@@ -23,7 +25,7 @@ int PrAddDrawAreaDefinition(NaGifPacket *packet, const PrVRAM_RECT& rect, bool o
     }
 
     if (color) {
-        packet->AddGifPackedAD_PRIM(6 /* SPRITE */, 0, 0, 0, 0, 0, 0, 0, 0);
+        packet->AddGifPackedAD_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0);
         num += 4;
         packet->AddGsAD(SCE_GS_RGBAQ, color);
         packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(x0 << 4, y0 << 4, 0));
@@ -70,7 +72,7 @@ int PrAddSpriteDefinition(NaGifPacket *packet, const PrVRAM_RECT& dst, const PrV
     u_int sw = src.w;
     u_int sh = src.h;
 
-    packet->AddGifPackedAD_PRIM(6, 0, 1, 0, blend, 0, 1, 0, 0);
+    packet->AddGifPackedAD_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, blend, 0, 1, 0, 0);
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max(sx * 16 + 8, 0), Max(sy * 16 + 8, 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx + sw) * 16 + 8, 0), Max((sy + sh) * 16 + 8, 0)));
@@ -94,15 +96,17 @@ int PrAddSpriteDefinitionSuperSampled(NaGifPacket *packet, const PrVRAM_RECT& ds
     int u0 = (du >> 2) + 8;
     int v0 = dv + 8;
 
-    packet->AddGifPackedAD_PRIM(6, 0, 1, 0, 1, 0, 1, 0, 0);
-    packet->AddGifPackedAD_ALPHA_1(0, 2, 2, 2, 0x21);
+    // A four-tap box filter: the first tap writes Cs * 33/128, the other three
+    // add Cs * 33/128 to it. The weights sum to 132/128, slightly over 1.
+    packet->AddGifPackedAD_PRIM(SCE_GS_PRIM_SPRITE, 0, 1, 0, 1, 0, 1, 0, 0);
+    packet->AddGifPackedAD_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_ZERO, 0x21);
 
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx << 4) + (u0 - du), 0), Max((sy << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max(((sx + sw) << 4) + (u0 - du), 0), Max(((sy + sh) << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ((dx + dw) << 4, (dy + dh) << 4, prSpriteDefinitionZ << 4));
 
-    packet->AddGifPackedAD_ALPHA_1(0, 2, 2, 1, 0x21);
+    packet->AddGifPackedAD_ALPHA_1(SCE_GS_ALPHA_CS, SCE_GS_ALPHA_ZERO, SCE_GS_ALPHA_FIX, SCE_GS_ALPHA_CD, 0x21);
 
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max((sx << 4) + (u0 + du), 0), Max((sy << 4) + (v0 - dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ(dx << 4, dy << 4, prSpriteDefinitionZ << 4));
@@ -119,5 +123,5 @@ int PrAddSpriteDefinitionSuperSampled(NaGifPacket *packet, const PrVRAM_RECT& ds
     packet->AddGsAD(SCE_GS_UV, SCE_GS_SET_UV(Max(((sx + sw) << 4) + (u0 + du), 0), Max(((sy + sh) << 4) + (v0 + dv), 0)));
     packet->AddGsAD(SCE_GS_XYZ2, SCE_GS_SET_XYZ((dx + dw) << 4, (dy + dh) << 4, prSpriteDefinitionZ << 4));
 
-    return 19;
+    return 19; /* A+D quadwords written: PRIM, 2 ALPHA, 4 taps x (UV, XYZ2) x 2 */
 }
