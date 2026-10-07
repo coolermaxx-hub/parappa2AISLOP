@@ -41,7 +41,10 @@ cannot prove original behavior or complete understanding of the data formats.
    - **Named from evidence**: packet offset 0x6c is now
      `m_reflectionFixedEye`, which `vump_refmap` reads; 0x64 is
      `m_inputVertexParameterSet`, the module's vertex attribute set, stored by
-     the exporter and never read.
+     the exporter and never read. The never-read `SpmNode` words at 0x168,
+     0x174 and 0x1a8 are now `m_vertexCount`, `m_context1PacketQwords` and
+     `m_contourPacketQwords`; the audit tool checks each against the packets.
+     It also showed that a node without a deform payload is a 0x190-byte record.
 
    What remains is the two chunk quadwords' original purpose, any use of
    these fields in stage assets, and PS2 execution.

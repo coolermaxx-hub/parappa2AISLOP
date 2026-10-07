@@ -25,6 +25,15 @@ extern "C" int matrix_layout_test() {
     if (reinterpret_cast<const char*>(&node.m_deformPositionCount) - base != 0x194 ||
         reinterpret_cast<const char*>(&node.m_positionTargets) - base != 0x198 ||
         reinterpret_cast<const char*>(&node.m_contourPacket) - base != 0x1a4) return 4;
+    // These offsets come from the shipped models instead, since no code reads
+    // them (tools/dev/audit/spm_reserved_fields.py).
+    if (reinterpret_cast<const char*>(&node.m_vertexCount) - base != 0x168 ||
+        reinterpret_cast<const char*>(node.m_context1PacketQwords) - base != 0x174 ||
+        reinterpret_cast<const char*>(&node.m_reserved18C) - base != 0x18c ||
+        reinterpret_cast<const char*>(&node.unk190) - base != 0x190 ||
+        reinterpret_cast<const char*>(&node.m_contourPacketQwords) - base != 0x1a8 ||
+        reinterpret_cast<const char*>(&node.m_reserved1AC) - base != 0x1ac ||
+        reinterpret_cast<const char*>(&node.m_reserved1BC) - base != 0x1bc) return 12;
     PrVuNodeHeaderDmaPacket packet;
     base = reinterpret_cast<const char*>(&packet);
     if (sizeof(packet) != 0x1a0 ||

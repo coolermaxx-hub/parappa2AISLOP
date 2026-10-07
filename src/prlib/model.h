@@ -142,9 +142,9 @@ public:
     // An inverse-bind interpretation still needs original model assets.
     NaMATRIX<float, 4, 4> m_bindCorrectionMatrix;
     NaMATRIX<float, 4, 4> m_skinningMatrix;
-    // The unnamed node fields below hold data in real models but are never
-    // read by the original code (docs/spm-geometry-layout.md). unk100 is an
-    // identity matrix in every built-in model.
+    // The fields marked "never read" below hold converter data in real models
+    // that the original code ignores (docs/spm-geometry-layout.md). unk100 is
+    // an identity matrix in every built-in model.
     PR_PADDING(unk100, 0x40);
     NaVECTOR<float, 4> m_sortPosition;
     int m_animationIndex;
@@ -153,21 +153,31 @@ public:
     SpmNode *m_firstChild;
     SpmNode *m_nextSibling;
     SpmNode *m_parent;
-    PR_PADDING(unk168, 0x4);
+    // Vertices in the context-1 packet below (a node has at most one). Never read.
+    u_int m_vertexCount;
     // Opaque packet first, depth-sorted translucent packet second.
     PrVuNodeHeaderDmaPacket *m_context1Packets[2];
-    PR_PADDING(unk174, 0x8);
+    // Each packet's size in quadwords, node upload included; 0 when null. Never read.
+    u_int m_context1PacketQwords[2];
     PrVuNodeHeaderDmaPacket *m_geometryPacket;
     float m_textureScrollU;
     float m_textureScrollV;
     u_int m_sortGroup;
-    PR_PADDING(unk18C, 0x8);
+    u_int m_reserved18C;
+    // A record without a deform payload (eSpmDeformPayloadMask) ends here, at
+    // 0x190, and the next node or packet follows. The fields below exist only
+    // in deform nodes, the only nodes whose code reads them.
+    // m_vertexCount + m_deformPositionCount in every such node. Never read.
+    u_int unk190;
     u_int m_deformPositionCount;
     SpmPositionTargets *m_positionTargets;
     u_int m_contourCount;
     SpmContourIndex *m_contourIndices;
     PrVuNodeHeaderDmaPacket *m_contourPacket;
-    PR_PADDING(unk1A8, 0x8);
+    // Contour packet size in quadwords in contour nodes; stale converter data
+    // in other deform nodes. Never read.
+    u_int m_contourPacketQwords;
+    u_int m_reserved1AC;
     // m_flags selects cluster or shape payloads (eSpmClusterPayload, eSpmShapePayload).
     union {
         SpmClusterData m_cluster;

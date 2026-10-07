@@ -72,7 +72,8 @@ validate actual model assets or establish rendered equivalence.
 
 The follow-up [real-asset packet audit](spm-packet-layout.md) identifies the
 clipped-polygon GIF template and the current/previous contour vertex pairs.
-Two zero chunk quadwords and other reserved node/header fields remain unresolved.
+Two zero chunk quadwords remain unresolved; the node and header fields the
+engine never reads are listed below.
 
 The historical geometry-pass objdiff report retained 1325/1429 exact functions and 264612/342284
 exact code bytes. Only the already-unmatched cluster and shape unit scores change
@@ -82,33 +83,47 @@ The report does not establish runtime equivalence; VU validation remains open.
 
 ## Unnamed node fields in real models (2026-10-07)
 
-The unnamed `SpmNode` fields hold data in the shipped models, but no code in
-the original executable reads them. They are file-format fields the game
-ignores, so a port can skip them.
+A node record is 0x190 bytes unless the node has a deform payload
+(`eSpmDeformPayloadMask`, 0xff0). Without one, the next node or the node's own
+packet starts at +0x190. That holds for 310 of the 312 such nodes in the
+built-in `common.ipk`; the other two are the last node of their file
+(`bxy_bxy_SPXt.spm`, file 15, and `para_para.spm`, file 75), so the file
+ends there. `SpmNode` declares the full 0x1c0 bytes. The code reaches the
+fields past 0x190 only for deform nodes: `ChangePointer` behind
+`eSpmDeformPayloadMask`, and the cluster, shape and contour routines behind
+their own flags. A port that loads records into a fixed-size struct must
+still copy only 0x190 bytes from a node without a payload.
 
-Values come from the 43 SPM models (334 nodes) in the executable's built-in
-`common.ipk`, using `tools/dev/audit/spm_reserved_fields.py`:
+The remaining node fields hold converter data that no code in the original
+executable reads, so a port can skip them. Values come from the 43 SPM models
+(334 nodes, 22 of them deform nodes) in the executable's built-in `common.ipk`,
+using `tools/dev/audit/spm_reserved_fields.py`, which also checks each
+relation below:
 
-| Field | Offset | Values in common.ipk |
+| Field | Offset | Contents in common.ipk |
 | --- | --- | --- |
 | `unk100` | 0x100, 64 bytes | Identity matrix in all 334 nodes |
-| `unk168` | 0x168 | 41 values: 4 (118 nodes), 0 (105), 0x2c, 0x10, 0x14 ... |
-| `unk174` | 0x174, 2 words | At most one word set: 0x33 in either word (118), 0 (105), others |
-| `unk18C` | 0x18C, 2 words | First word always 0; second 0x10000019 (207), 1.0f (81), others |
-| `unk1A8` | 0x1A8, 2 words | Second word always 0; first 0 (187) or small negative floats such as 0x9d000001 |
-| `m_reserved1BC` | 0x1BC | Always 0 |
+| `m_vertexCount` | 0x168 | Vertex count of the node's context-1 packet, 0 without one (334 of 334). No node has both packets. |
+| `m_context1PacketQwords` | 0x174, 2 words | Size of `m_context1Packets[k]` in quadwords, the 0x1a0-byte node upload included (229 of 229 packets); 0 for a null packet (439 of 439) |
+| `m_reserved18C` | 0x18C | Always 0 |
+| `unk190` | 0x190 | Deform nodes only: `m_vertexCount + m_deformPositionCount` (22 of 22) |
+| `m_contourPacketQwords` | 0x1A8 | Contour nodes: size of `m_contourPacket` in quadwords (3 of 3). Other deform nodes: 0, 4, or words such as 0x081860a0 and 0xbfffa938 that look like stale converter memory |
+| `m_reserved1AC` | 0x1AC | Deform nodes only; always 0 |
+| `m_reserved1BC` | 0x1BC | Deform nodes only; always 0 |
+
+The earlier count of these fields (before this section was revised) read
+0x190 and up in every node, so it mixed in the next record: `1.0f` was the
+next node's `m_localMatrix[0][0]` and 0x10000019 was the DMA `cnt` tag
+(25 quadwords) that opens a packet's node upload.
+
+`unk190` keeps its placeholder name: the sum is exact, but nothing says what
+the converter used it for.
 
 Code check: no load or store at any of these offsets appears in any prlib
 function of `SCPS_150.17` except unrelated structs (GIF register strips, the
 AWFUL background packet). `SpmNode::ChangePointer` does not touch them. An
 access through a base already offset into the node would be missed by this
 search.
-
-Two node records are cut short: the last node of `bxy_bxy_SPXt.spm` (file 15)
-and of `para_para.spm` (file 75) ends at +0x190, inside `unk18C`. Both are
-bone-only nodes (flags 0x1000). `ChangePointer` reads the fields past 0x190
-only when a deform payload bit (0xff0) is set, so the engine never reads past
-those files.
 
 The header's reserved words are unused too. `unk8` and `unk64` are always 0,
 `unk54` holds two small words (0 to 4), and `unk60` is 0 in 37 models and

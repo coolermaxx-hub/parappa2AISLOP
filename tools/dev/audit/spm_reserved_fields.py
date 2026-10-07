@@ -1,11 +1,15 @@
-"""Summarize the values of the unnamed SPM node and header fields.
+"""Summarize the SPM node and header fields that the engine never reads.
 
 Usage: python3 tools/dev/audit/spm_reserved_fields.py assets/common_ipk.databin.bin
 
 Walks every unrelocated version-5 SPM in a common.ipk (or one .spm file) with
 the same readers as spm_packets.py and prints, per field, how many distinct
-values occur and the most common ones. Offsets are serialized file offsets.
-A record that ends before a field is counted as "past end", never as zero.
+values occur and the most common ones, then checks the relations documented
+in docs/spm-geometry-layout.md. Offsets are serialized file offsets.
+
+A node record without a deform payload (flags & 0xff0) is 0x190 bytes long,
+so fields at 0x190 and above are counted only for deform nodes. Bytes past
+the end of a record belong to the next record and are never counted.
 """
 import struct
 import sys
@@ -17,9 +21,14 @@ import spm_packets  # noqa: E402
 
 SPM_MAGIC = b'\x0a\x54\xdf\x18'
 IDENTITY = struct.pack('<16f', 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+DEFORM_PAYLOAD_MASK = 0xff0
+CONTOUR_NODE = 0x40
+SHORT_RECORD_SIZE = 0x190
 HEADER_FIELDS = {'unk8': (0x8, 8), 'unk54': (0x54, 8), 'unk60': (0x60, 4), 'unk64': (0x64, 4)}
-NODE_FIELDS = {'unk100': (0x100, 64), 'unk168': (0x168, 4), 'unk174': (0x174, 8),
-               'unk18C': (0x18C, 8), 'unk1A8': (0x1A8, 8), 'm_reserved1BC': (0x1BC, 4)}
+NODE_FIELDS = {'unk100': (0x100, 64), 'm_vertexCount': (0x168, 4),
+               'm_context1PacketQwords': (0x174, 8), 'm_reserved18C': (0x18C, 4),
+               'unk190': (0x190, 4), 'm_contourPacketQwords': (0x1A8, 4),
+               'm_reserved1AC': (0x1AC, 4), 'm_reserved1BC': (0x1BC, 4)}
 
 
 def describe(raw):
@@ -37,10 +46,45 @@ def models(data):
             yield blob
 
 
+def packet_shape(model, packet):
+    """Return (quadwords, vertices) of a packet, node upload included."""
+    end, vertices = packet, 0
+    for start, upload_end in spm_packets.chunks(model, packet):
+        vertices += model.word(start + 0x1c)
+        end = upload_end + 16
+    return (end - packet) // 16, vertices
+
+
+def check_relations(model, node, flags, checks):
+    packets = model.read('<2I', node + 0x16c)
+    sizes = model.read('<2I', node + 0x174)
+    present = [packet for packet in packets if packet]
+    checks['at most one context-1 packet'][len(present) <= 1] += 1
+    vertices = 0
+    for packet, size in zip(packets, sizes):
+        if not packet:
+            checks['null packet has 0 quadwords'][size == 0] += 1
+            continue
+        quadwords, count = packet_shape(model, packet)
+        vertices += count
+        checks['m_context1PacketQwords = packet quadwords'][size == quadwords] += 1
+    checks['m_vertexCount = packet vertices'][model.word(node + 0x168) == vertices] += 1
+    if not flags & DEFORM_PAYLOAD_MASK:
+        return
+    deform_positions = model.word(node + 0x194)
+    checks['unk190 = m_vertexCount + m_deformPositionCount'][
+        model.word(node + 0x190) == model.word(node + 0x168) + deform_positions] += 1
+    if flags & CONTOUR_NODE:
+        quadwords, _ = packet_shape(model, model.word(node + 0x1a4))
+        checks['m_contourPacketQwords = contour packet quadwords'][
+            model.word(node + 0x1a8) == quadwords] += 1
+
+
 def main():
     data = Path(sys.argv[1]).read_bytes()
     values = {name: Counter() for name in list(HEADER_FIELDS) + list(NODE_FIELDS)}
-    past_end = Counter()
+    absent = Counter()
+    checks = {}
     model_count = node_count = 0
     for blob in models(data):
         model = spm_packets.Record(blob)
@@ -50,16 +94,26 @@ def main():
         count, table = model.word(0x68), model.word(0x74)
         for node in model.read('<%dI' % count, table):
             node_count += 1
+            flags = model.word(node + 0x154)
             for name, (offset, size) in NODE_FIELDS.items():
-                if node + offset + size > len(blob):
-                    past_end[name] += 1
+                in_short_record = offset + size <= SHORT_RECORD_SIZE
+                if (not in_short_record and not flags & DEFORM_PAYLOAD_MASK) or node + offset + size > len(blob):
+                    absent[name] += 1
                     continue
                 values[name][describe(blob[node + offset:node + offset + size])] += 1
+            for name in ('at most one context-1 packet', 'null packet has 0 quadwords',
+                         'm_context1PacketQwords = packet quadwords', 'm_vertexCount = packet vertices',
+                         'unk190 = m_vertexCount + m_deformPositionCount',
+                         'm_contourPacketQwords = contour packet quadwords'):
+                checks.setdefault(name, Counter())
+            check_relations(model, node, flags, checks)
     print('%d models, %d nodes' % (model_count, node_count))
     for name, counter in values.items():
         top = '; '.join('%s x%d' % item for item in counter.most_common(5))
-        extra = ', %d past end' % past_end[name] if past_end[name] else ''
+        extra = ', %d records without the field' % absent[name] if absent[name] else ''
         print('%s: %d distinct%s; %s' % (name, len(counter), extra, top))
+    for name, counter in checks.items():
+        print('%s: %d of %d' % (name, counter[True], counter[True] + counter[False]))
 
 
 if __name__ == '__main__':

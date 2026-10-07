@@ -81,7 +81,8 @@ VIF boundaries and commands, source/destination record alignment, reserved data
 and archive truncation.
 The EE scalar test checks the header, prefix stepping and contour pair layout.
 None of these checks executes the GS/VU rendering pipeline. The two zero
-quadwords and other reserved node fields remain open; original PS2 execution
+quadwords remain open (the node fields are covered in
+[spm-geometry-layout.md](spm-geometry-layout.md)); original PS2 execution
 is still needed for rendering equivalence. No original asset bytes are included
 in the tests or committed by this change.
 
