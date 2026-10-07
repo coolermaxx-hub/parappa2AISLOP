@@ -133,6 +133,9 @@ public:
     // An inverse-bind interpretation still needs original model assets.
     NaMATRIX<float, 4, 4> m_bindCorrectionMatrix;
     NaMATRIX<float, 4, 4> m_skinningMatrix;
+    // The unnamed node fields below hold data in real models but are never
+    // read by the original code (docs/spm-geometry-layout.md). unk100 is an
+    // identity matrix in every built-in model.
     PR_PADDING(unk100, 0x40);
     NaVECTOR<float, 4> m_sortPosition;
     int m_animationIndex;

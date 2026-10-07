@@ -26,6 +26,9 @@ cannot prove original behavior or complete understanding of the data formats.
    are uploaded but skipped by the traced header consumers; it does not assign
    them invented semantics. Standalone model audits now validate VIF boundaries
    and contour source positions, with synthetic reflection/antiline coverage.
+   The unnamed `SpmNode` fields hold data in the built-in models but are not
+   read by the original code ([evidence](spm-geometry-layout.md#unnamed-node-fields-in-real-models-2026-10-07));
+   the SPM header's reserved words are still unresolved.
 3. Validate the derived [texture wave model](noodle-texture-model.md) on PS2,
    including ESIN accuracy and degenerate amplitude sums. The amplitude/spatial
    frequency groups are now decoded and named; setup arithmetic has independent

@@ -79,3 +79,39 @@ exact code bytes. Only the already-unmatched cluster and shape unit scores chang
 (from 80.92% to 74.925%, and 85.73163% to 75.0703%, respectively). Explicit record
 stepping and indexed target access replace the old incremented integer cursor.
 The report does not establish runtime equivalence; VU validation remains open.
+
+## Unnamed node fields in real models (2026-10-07)
+
+The unnamed `SpmNode` fields hold data in the shipped models, but no code in
+the original executable reads them. They are file-format fields the game
+ignores, so a port can skip them.
+
+Values come from the 43 SPM models (334 nodes) in the executable's built-in
+`common.ipk`, using `tools/dev/audit/spm_reserved_fields.py`:
+
+| Field | Offset | Values in common.ipk |
+| --- | --- | --- |
+| `unk100` | 0x100, 64 bytes | Identity matrix in all 334 nodes |
+| `unk168` | 0x168 | 41 values: 4 (118 nodes), 0 (105), 0x2c, 0x10, 0x14 ... |
+| `unk174` | 0x174, 2 words | At most one word set: 0x33 in either word (118), 0 (105), others |
+| `unk18C` | 0x18C, 2 words | First word always 0; second 0x10000019 (207), 1.0f (81), others |
+| `unk1A8` | 0x1A8, 2 words | Second word always 0; first 0 (187) or small negative floats such as 0x9d000001 |
+| `m_reserved1BC` | 0x1BC | Always 0 |
+
+Code check: no load or store at any of these offsets appears in any prlib
+function of `SCPS_150.17` except unrelated structs (GIF register strips, the
+AWFUL background packet). `SpmNode::ChangePointer` does not touch them. An
+access through a base already offset into the node would be missed by this
+search.
+
+Two node records are cut short: the last node of `bxy_bxy_SPXt.spm` (file 15)
+and of `para_para.spm` (file 75) ends at +0x190, inside `unk18C`. Both are
+bone-only nodes (flags 0x1000). `ChangePointer` reads the fields past 0x190
+only when a deform payload bit (0xff0) is set, so the engine never reads past
+those files.
+
+Header fields, for comparison: `unk8` and `unk64` are always 0; `unk54` holds
+two small words (0 to 4); `unk60` is 0 in 37 models and 0xc to 0x1d6 in the
+rest. Their code use is not yet established: the search by offset is
+ambiguous for these small offsets.
+
