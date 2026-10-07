@@ -54,7 +54,11 @@ cannot prove original behavior or complete understanding of the data formats.
    objects on 2026-10-07. That trace found one behaviour difference: the
    original's context-2, shape-node and contour sort depth reads stale stack data
    ([notes](behavior-notes.md#stale-sort-depth-in-context-2-and-shape-nodes-2026-10-07));
-   whether a port should emulate it is an open decision. The main-ROM checksum
+   whether a port should emulate it is an open decision. Checks against the
+   original on 2026-10-07 also account for the main ROM's 4,864-byte shortfall
+   and find the data sections, callees, float constants and double-precision
+   use equivalent apart from explained cases
+   ([binary differences](binary-differences.md)). The main-ROM checksum
    currently fails. Do not restore compiler steering or change expected hashes.
 5. Continue the readability audit of existing source outside the reconstructed
    functions and old hardware interfaces. Copy/assignment now use proper generic
