@@ -51,6 +51,9 @@ struct PrInnerDisplayHeader {
     NaVECTOR<float, 4> camera_position;
     NaMATRIX<float, 4, 4> worldGuardMatrix;
     u_int disturbance_param;
+    // Uploaded but unused: the microprograms read only the x lane of VU
+    // quadword 17, and nothing addresses quadwords 26-39 (unk1D0). The EE
+    // never writes either area, so it sends whatever the scratchpad holds.
     char unk144[0xc];
     NaMATRIX<float, 4, 4> screen_clip_matrix;
     NaMATRIX<float, 4, 4> screen_primitive_matrix;

@@ -150,3 +150,21 @@ and an original/reconstructed execution comparison with the same inputs.
 This follow-up changes the audit and documentation only; it changes no runtime
 source or ROM output. The preceding build and objdiff results remain historical
 validation of the runtime source, not evidence of PS2 equivalence.
+
+## Display header spare space (2026-10-07)
+
+`PrInnerDisplayHeader` (`src/prlib/vu1/vumem.h`) is uploaded to VU1 quadwords
+0-39 every frame, but two parts of it are never used:
+
+| Part | VU quadwords | EE writes | Microprogram reads |
+| --- | --- | --- | --- |
+| `unk144` | 17, lanes y-w | Never | Never: `LQ.x 17(VI00)` takes only the disturbance value |
+| `unk1D0` | 26-39 | Never | Never |
+
+Every `VI00`-relative load and store in the nine microprograms under
+`src/prlib/vu1/` was listed. The header's other quadwords (0-25) and the
+packet header (40-46) are read, and nothing falls in 26-39. The `VI00`-based
+`IADDIU` constants near that range (0x18, 0x20) are flag masks and loop
+counters, not addresses. The upload therefore carries 14 quadwords of
+untouched scratchpad bytes that no code reads. A port can drop both parts.
+
