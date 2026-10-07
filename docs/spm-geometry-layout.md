@@ -110,8 +110,18 @@ bone-only nodes (flags 0x1000). `ChangePointer` reads the fields past 0x190
 only when a deform payload bit (0xff0) is set, so the engine never reads past
 those files.
 
-Header fields, for comparison: `unk8` and `unk64` are always 0; `unk54` holds
-two small words (0 to 4); `unk60` is 0 in 37 models and 0xc to 0x1d6 in the
-rest. Their code use is not yet established: the search by offset is
-ambiguous for these small offsets.
+The header's reserved words are unused too. `unk8` and `unk64` are always 0,
+`unk54` holds two small words (0 to 4), and `unk60` is 0 in 37 models and
+0xc to 0x1d6 in the rest. Two searches find no read of offsets 0x8, 0xc, 0x54,
+0x58 or 0x60 on a header:
+
+- In the header's own methods (`SpmFileHeader::*`), the only loads at offset 8
+  are on `SpaNodeAnimation` pointers (a non-zero word there leads to
+  `SpaNodeAnimation::GetMatrix`).
+- Following every header pointer loaded from `PrModelObject::m_spm_image` or
+  `SpmNode::m_owner` finds reads of offsets 0x0, 0x6, 0x50, 0x5c, 0x68, 0x70,
+  0x74 and 0x78, and none of the reserved ones.
+
+`unk64` is still relocated by `ChangePointer`; with a stored 0 it becomes the
+file's base address, which nothing reads.
 
