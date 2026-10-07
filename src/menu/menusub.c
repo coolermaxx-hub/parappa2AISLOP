@@ -7885,37 +7885,38 @@ static void _TsJkRecordPut(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int 
 static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, int py, int anmtime) {
     PATPOS *ppat;
     float   box, boy;
-    float   jrot, rrot;
-    float   addx, addy;
-    float   rt, zm;
-    float   jzr, rzr;
+    float   lv;         /* animation progress, 0 to 1 */
+    float   rot, rrot;  /* jacket and record rotation */
+    float   ox, oy;     /* slide-in offset */
+    float   zc;         /* cursor zoom */
+    float   zr, zx;     /* record and jacket zoom */
     float   jz, rz;
-    float   swing;
+    float   zupr;       /* idle bobbing amplitude */
     float   fx, fy;
-    float   rpx, rpy;
+    float   dx, dy;     /* distance from the jacket to the play position */
     u_int   abgr, abgrs;
-    u_int   rabgr, rabgrs;
+    u_int   abgrR, abgrsR;
     int     ton;
     int     i;
-    int     sx, sy;
+    int     tx, ty;
 
-    addy = 0.0f;
+    oy = 0.0f;
     px += pw->patPos->x;
     py += pw->patPos->y;
     ppat = &JUKEJKT_Pat[pw->patNo];
 
-    jzr = 1.0f;
-    rzr = 1.0f;
-    zm = 1.0f;
-    swing = 1.0f;
+    zx = 1.0f;
+    zr = 1.0f;
+    zc = 1.0f;
+    zupr = 1.0f;
 
     box = spr->ofsx;
     boy = spr->ofsy;
 
     PkALPHA_Add(pk, GS_ALPHA_BLEND);
 
-    jrot = 0.0f;
-    addx = 0.0f;
+    rot = 0.0f;
+    ox = 0.0f;
     rrot = 0.0f;
 
     switch (pw->state) {
@@ -7928,43 +7929,43 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         break;
     case TSJKCUS_CUR:
     case TSJKCUS_SELOK:
-        zm = 1.25f;
+        zc = 1.25f;
         abgr = 0x80c0c0c0;
         abgrs = 0x30808080;
         pw->vrate = 0.0f;
         break;
     case TSJKCUS_ON:
         pw->time++;
-        rt = pw->time * (1.0f / 15.0f);
+        lv = pw->time * (1.0f / 15.0f);
         if (pw->time >= 15) {
             pw->time = 0;
             pw->state = TSJKCUS_CUR;
         }
 
-        fx = rt * PR_PI;
+        fx = lv * PR_PI;
         abgrs = 0x30808080;
-        zm = (sinf(fx) * 0.2f + 1.0f) * (rt * 0.25f + 1.0f);
+        zc = (sinf(fx) * 0.2f + 1.0f) * (lv * 0.25f + 1.0f);
         pw->vrate = sinf(fx) * 0.1f;
-        abgr = GetDToneColor(0x80707070, 0x80c0c0c0, rt * 256.0f);
+        abgr = GetDToneColor(0x80707070, 0x80c0c0c0, lv * 256.0f);
         break;
     case TSJKCUS_OFF:
         pw->time++;
-        rt = pw->time * (1.0f / 15.0f);
+        lv = pw->time * (1.0f / 15.0f);
         if (pw->time >= 15) {
             pw->time = 0;
             pw->state = TSJKCUS_DEF;
         }
 
-        fx = rt * PR_PI;
+        fx = lv * PR_PI;
         abgrs = 0x30808080;
-        zm = (1.0 - sinf(fx) * 0.25) * ((1.0f - rt) * 0.25f + 1.0f);
+        zc = (1.0 - sinf(fx) * 0.25) * ((1.0f - lv) * 0.25f + 1.0f);
         pw->vrate = sinf(fx) * -0.08f;
-        abgr = GetDToneColor(0x80c0c0c0, 0x80707070, rt * 256.0f);
+        abgr = GetDToneColor(0x80c0c0c0, 0x80707070, lv * 256.0f);
         break;
     default:
         abgr = 0x80c0c0c0;
         abgrs = 0x30808080;
-        pw->vrate = jrot;
+        pw->vrate = rot;
         break;
     }
 
@@ -7974,8 +7975,8 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         pw->vrate = 0.0f;
     }
 
-    rabgr = abgr;
-    rabgrs = abgrs;
+    abgrR = abgr;
+    abgrsR = abgrs;
 
     switch (pw->anime) {
     case TSJKANM_IN:
@@ -7986,20 +7987,20 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         }
 
         pw->innm = TSNumMov(pw->innm, 0, 5);
-        rt = 1.0f - pw->innm / 512.0f;
+        lv = 1.0f - pw->innm / 512.0f;
 
-        jrot = (1.0f - rt) * (PR_PI * 2);
-        addx = (1.0f - rt) * (pw->dir ? 200.0f : -200.0f);
+        rot = (1.0f - lv) * (PR_PI * 2);
+        ox = (1.0f - lv) * (pw->dir ? 200.0f : -200.0f);
         if (pw->dir2) {
-            addy = (1.0f - rt) * 20.0f;
+            oy = (1.0f - lv) * 20.0f;
         } else {
-            addy = (1.0f - rt) * -20.0f;
+            oy = (1.0f - lv) * -20.0f;
         }
 
-        ton = rt * 256.0f;
+        ton = lv * 256.0f;
         abgr = GetDToneColor(0xffffff, abgr, ton);
         abgrs = GetDToneColor(0x808080, abgrs, ton);
-        jzr = (1.0f - rt) * 1.5f + 1.0f;
+        zx = (1.0f - lv) * 1.5f + 1.0f;
 
         if (pw->innm == 0) {
             pw->anime = TSJKANM_OFF;
@@ -8015,16 +8016,16 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         }
 
         pw->innm = TSNumMov(pw->innm, 0, 5);
-        rt = 1.0f - pw->innm / 256.0f;
+        lv = 1.0f - pw->innm / 256.0f;
 
-        jrot = rt * -9.424778f;
-        addx = rt * (pw->dir ? -200.0f : 200.0f);
-        addy = rt * (pw->dir2 ? 20.0f : -20.0f);
+        rot = lv * -9.424778f;
+        ox = lv * (pw->dir ? -200.0f : 200.0f);
+        oy = lv * (pw->dir2 ? 20.0f : -20.0f);
 
-        ton = rt * 256.0f;
+        ton = lv * 256.0f;
         abgr = GetDToneColor(abgr, 0xffffff, ton);
         abgrs = GetDToneColor(abgr, 0x808080, ton);
-        jzr = rt * 1.2f + 0.5f;
+        zx = lv * 1.2f + 0.5f;
 
         if (pw->innm == 0) {
             pw->anime = TSJKANM_OFF;
@@ -8046,21 +8047,21 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         }
 
         pw->innm = TSNumMov(pw->innm, 0, 12);
-        rt = 1.0f - pw->innm / 128.0f;
-        TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
-        fx = sx + px - 318;
-        fy = sy + py - 161;
+        lv = 1.0f - pw->innm / 128.0f;
+        TsPatGetSize(ppat, &tx, &ty, NULL, NULL);
+        fx = tx + px - 318;
+        fy = ty + py - 161;
 
         if (pw->anime == TSJKANM_RETURN2) {
-            rt = 1.0f - rt;
+            lv = 1.0f - lv;
         }
 
-        ton = rt * 256.0f;
-        addx = fx * 0.35f * rt;
-        addy = fy * 0.5f * rt;
+        ton = lv * 256.0f;
+        ox = fx * 0.35f * lv;
+        oy = fy * 0.5f * lv;
         abgr = GetDToneColor(abgr, 0x404040, ton);
         abgrs = GetDToneColor(abgrs, 0x808080, ton);
-        jzr = 1.0f - rt * 0.3f;
+        zx = 1.0f - lv * 0.3f;
 
         if (pw->innm == 0) {
             if (pw->anime == TSJKANM_RETURN2) {
@@ -8083,33 +8084,33 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
             if (pw->anime == TSJKANM_RETURN1) {
                 abgr = 0x80c0c0c0;
                 abgrs = 0x30808080;
-                rabgr = 0x80c0c0c0;
-                rabgrs = 0x30808080;
-                pw->rox = zm * 0.0f;
-                pw->roy = zm * -43.0f;
-                swing = 0.0f;
+                abgrR = 0x80c0c0c0;
+                abgrsR = 0x30808080;
+                pw->rox = zc * 0.0f;
+                pw->roy = zc * -43.0f;
+                zupr = 0.0f;
             }
             break;
         }
 
-        pw->rox = pw->roy = pw->ox = rpx = pw->oy = 0.0f;
-        rpy = -43.0f;
+        pw->rox = pw->roy = pw->ox = dx = pw->oy = 0.0f;
+        dy = -43.0f;
 
         pw->innm = TSNumMov(pw->innm, 0, 7);
-        rzr = 1.0f;
-        rt = 1.0f - pw->innm / 512.0f;
+        zr = 1.0f;
+        lv = 1.0f - pw->innm / 512.0f;
 
         if (pw->anime == TSJKANM_RETURN1) {
-            rt = 1.0f - rt;
+            lv = 1.0f - lv;
         }
 
-        swing = 1.0f - rt;
-        rabgr = abgr;
-        rabgrs = abgrs;
+        zupr = 1.0f - lv;
+        abgrR = abgr;
+        abgrsR = abgrs;
 
-        fx = rt * 0.5f * PR_PI;
-        pw->rox = (1.0f - cosf(fx)) * rpx * zm * jzr;
-        pw->roy = sinf(fx) * rpy * zm * jzr;
+        fx = lv * 0.5f * PR_PI;
+        pw->rox = (1.0f - cosf(fx)) * dx * zc * zx;
+        pw->roy = sinf(fx) * dy * zc * zx;
 
         if (pw->innm == 0) {
             pw->time = 0;
@@ -8124,12 +8125,12 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         }
         break;
     case TSJKANM_ROTATE:
-        swing = 0.0f;
+        zupr = 0.0f;
 
         if (pw->atime == 0) {
             pw->innm2 = 0x400;
             pw->atime = 1;
-            pw->rrot = swing;
+            pw->rrot = zupr;
             pw->innm = 0x400;
         } else {
             pw->atime++;
@@ -8139,35 +8140,35 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
             }
         }
 
-        fx = zm * 0.0f;
-        fy = zm * -43.0f;
+        fx = zc * 0.0f;
+        fy = zc * -43.0f;
         rrot = pw->rrot;
-        rzr = 1.0f;
+        zr = 1.0f;
         pw->rox = fx;
         pw->roy = fy;
 
         if (pw->atime > 70) {
             pw->innm2 = TSNumMov(pw->innm2, 0, 11);
-            rt = 1.0f - pw->innm2 / 1024.0f;
-            ton = rt * 256.0f;
+            lv = 1.0f - pw->innm2 / 1024.0f;
+            ton = lv * 256.0f;
             abgr = GetDToneColor(abgr, 0xffffff, ton);
             abgrs = GetDToneColor(abgrs, 0x808080, ton);
-            jzr = 1.0f - rt * 0.5f;
+            zx = 1.0f - lv * 0.5f;
         }
 
         if (pw->atime > 100) {
             pw->innm = TSNumMov(pw->innm, 0, 14);
-            rt = 1.0f - pw->innm / 1024.0f;
-            ton = rt * 256.0f;
-            rabgr = GetDToneColor(rabgr, 0xffffff, ton);
-            rabgrs = GetDToneColor(rabgrs, 0x808080, ton);
-            rzr = rt * 0.8f + rzr;
+            lv = 1.0f - pw->innm / 1024.0f;
+            ton = lv * 256.0f;
+            abgrR = GetDToneColor(abgrR, 0xffffff, ton);
+            abgrsR = GetDToneColor(abgrsR, 0x808080, ton);
+            zr = lv * 0.8f + zr;
 
-            TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
-            rpx = sx + px - 318;
-            rpy = sy + py - 181;
-            pw->rox = fx - rpx * rt;
-            pw->roy = fy - rpy * rt;
+            TsPatGetSize(ppat, &tx, &ty, NULL, NULL);
+            dx = tx + px - 318;
+            dy = ty + py - 181;
+            pw->rox = fx - dx * lv;
+            pw->roy = fy - dy * lv;
         }
 
         if (pw->innm == 0 && pw->innm2 == 0) {
@@ -8178,55 +8179,58 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         }
         break;
     case TSJKANM_ROTSTOP:
-        swing = 0.0f;
+        zupr = 0.0f;
 
         if (pw->atime == 0) {
             pw->atime = 80;
-            pw->rrot = swing;
+            pw->rrot = zupr;
             for (i = 0; i < 60; i++) {
                 pw->rrot -= i;
             }
             pw->innm = 0x400;
 
-            TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
+            TsPatGetSize(ppat, &tx, &ty, NULL, NULL);
             abgr = 0xffffff;
             abgrs = 0x808080;
-            rpx = sx + px - 318;
-            rpy = sy + py - 181;
-            pw->roy = zm * -43.0f - rpy;
-            pw->rox = zm * 0.0f - rpx;
+            dx = tx + px - 318;
+            dy = ty + py - 181;
+            pw->roy = zc * -43.0f - dy;
+            pw->rox = zc * 0.0f - dx;
             break;
         }
 
         pw->atime--;
-        i = pw->atime - 20;
-        if (i > 0) {
-            pw->rrot += i;
-            rrot = pw->rrot * 0.005f;
-        } else {
-            jrot = swing;
+        {
+            int acl = pw->atime - 20;
+
+            if (acl > 0) {
+                pw->rrot += acl;
+                rrot = pw->rrot * 0.005f;
+            } else {
+                rot = zupr;
+            }
         }
 
         pw->innm = TSNumMov(pw->innm, 0, 6);
-        rt = pw->innm / 1024.0f;
-        rzr = rt * 0.8f + 1.0f;
-        jzr = 1.0f - rt * 0.5f;
+        lv = pw->innm / 1024.0f;
+        zr = lv * 0.8f + 1.0f;
+        zx = 1.0f - lv * 0.5f;
 
-        ton = rt * 256.0f;
+        ton = lv * 256.0f;
         abgr = GetDToneColor(abgr, 0xffffff, ton);
         abgrs = GetDToneColor(abgrs, 0x808080, ton);
 
-        TsPatGetSize(ppat, &sx, &sy, NULL, NULL);
-        rpx = sx + px - 318;
-        rpy = sy + py - 181;
-        fx = zm * 0.0f;
-        fy = zm * -43.0f;
-        pw->roy = fy - rpy * rt;
-        pw->rox = fx - rpx * rt;
+        TsPatGetSize(ppat, &tx, &ty, NULL, NULL);
+        dx = tx + px - 318;
+        dy = ty + py - 181;
+        fx = zc * 0.0f;
+        fy = zc * -43.0f;
+        pw->roy = fy - dy * lv;
+        pw->rox = fx - dx * lv;
 
-        ton = rt * 256.0f * 0.5f;
-        rabgr = GetDToneColor(rabgr, 0xffffff, ton);
-        rabgrs = GetDToneColor(rabgrs, 0x808080, ton);
+        ton = lv * 256.0f * 0.5f;
+        abgrR = GetDToneColor(abgrR, 0xffffff, ton);
+        abgrsR = GetDToneColor(abgrsR, 0x808080, ton);
 
         if (pw->atime == 0) {
             pw->state = TSJKCUS_CUR;
@@ -8242,21 +8246,21 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         break;
     }
 
-    jz = jzr * zm;
-    rz = rzr * zm;
+    jz = zx * zc;
+    rz = zr * zc;
 
-    spr->ofsx += addx + pw->ox;
-    spr->ofsy += addy + pw->oy;
+    spr->ofsx += ox + pw->ox;
+    spr->ofsy += oy + pw->oy;
 
-    rt = (anmtime % 240) * 2.0f / 240.0f;
-    spr->ofsy += sinf((rt + JUKEWAV_INITBL[pw->patNo]) * PR_PI) * 8.0f * swing;
+    lv = (anmtime % 240) * 2.0f / 240.0f;
+    spr->ofsy += sinf((lv + JUKEWAV_INITBL[pw->patNo]) * PR_PI) * 8.0f * zupr;
 
     if (pw->anime == TSJKANM_ROTATE || pw->anime == TSJKANM_ROTSTOP) {
-        _TsJkJacketPut(pk, spr, pw, px, py, jz, jrot, abgr, abgrs);
-        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, rabgr, rabgrs);
+        _TsJkJacketPut(pk, spr, pw, px, py, jz, rot, abgr, abgrs);
+        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, abgrR, abgrsR);
     } else {
-        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, rabgr, rabgrs);
-        _TsJkJacketPut(pk, spr, pw, px, py, jz, jrot, abgr, abgrs);
+        _TsJkRecordPut(pk, spr, pw, px, py, rz, rrot, abgrR, abgrsR);
+        _TsJkJacketPut(pk, spr, pw, px, py, jz, rot, abgr, abgrs);
     }
 
     spr->ofsy = boy;
