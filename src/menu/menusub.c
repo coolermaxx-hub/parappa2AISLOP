@@ -6980,7 +6980,6 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
     int sel;
     int osel;
     int bkSel;
-    int i;
 
     if (flg == MNFLOW_INIT) {
         TsANIME_Init(&pfw->awork);
@@ -6996,6 +6995,8 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
         pfw->urTim = 0;
 
         if (pP3GameState->pLog->nRound == 0 && !(((int)pP3GameState->pLog->clrFlg[0] >> (pP3GameState->nStage - 1)) & 1)) {
+            int i;
+
             for (i = 0; i < 5; i++) {
                 if (i != 0) {
                     pfw->cani.bDim[i] = 1;
@@ -7062,9 +7063,8 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
             break;
         }
 
-        i = pfw->btnNo;
-        bkSel = POPBtn2Sel[pfw->bSelRank ? i + 3 : i];
-        sel = i;
+        bkSel = POPBtn2Sel[pfw->bSelRank ? pfw->btnNo + 3 : pfw->btnNo];
+        sel = pfw->btnNo;
 
         if (tpad & SCE_PADLleft) {
             sel--;
@@ -7072,7 +7072,7 @@ static int TsPopMenu_Flow(int flg, u_int tpad) {
         if (tpad & SCE_PADLright) {
             sel++;
         }
-        if (i != sel) {
+        if (pfw->btnNo != sel) {
             sel = TSLOOP(sel, 3);
             if (TsPUPCheckMove(sel, pfw->bSelRank, &pfw->cani)) {
                 pfw->btnNo = sel;
