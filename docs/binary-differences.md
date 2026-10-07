@@ -51,3 +51,35 @@ the historical compiler shows changed address arithmetic and scheduling in
 `RenderChunkEECore`. Both functions already differed from the original; this
 pass preserves the typed expressions rather than steering the compiler back.
 The table above is the earlier `alldiff.py` snapshot, not a rerun of that audit.
+
+## Where the main ROM's 4,864 bytes go (2026-10-07)
+
+The built main ROM is 4,864 bytes shorter than the original because `.text`
+shrinks and every later section moves down with it. Measured against
+`iso/SCPS_150.17`:
+
+| Section | Original | This build | Difference |
+| --- | --- | --- | --- |
+| `.text` | 0x78034 (491,572) | 0x76d58 (486,744) | -4,828 |
+| `.data` start | 0x17a900 | 0x179600 | -0x1300 (-4,864) |
+| `.data`, `.sdata` | | | same size |
+| `.rodata` | 0x7e74 | 0x7e80 | +12 |
+| `.gcc_except_table` | 0x148 | 0x180 | +56 |
+
+`.data` is 64-byte aligned, so the 4,828-byte code shrink becomes the 4,864-byte
+ROM difference.
+
+Per object, `.text` is 5,076 bytes smaller in total. Alignment between
+objects at link time absorbs the rest, leaving 4,828. That 5,076 breaks down as:
+
+| Cause | Bytes |
+| --- | --- |
+| `CalculateCurrentMatrixAnimation` and `CalculateClusterMatrixAnimation` call `ComposeGlobalMatrixWithoutVisibility` instead of inlining it (render.cpp) | -3,240 |
+| Per-file nalib template copies in the original (4,224 bytes in 9 prlib units) replaced by shared instances (3,816) | -408 |
+| Other functions that compile to a different size (87 functions; for example `DrawNoodleStripChunk` -256, spram's `Scale`/`Translate` -232/-224, `RenderChunkEECore` -184, the SPA track templates +40 to +160) | about -1,420 |
+
+45 of those 87 functions differ by 8 bytes or less (alignment `nop`s), 40 bytes
+in all. No code was dropped: every original function has a counterpart or a
+shared template instance. Reproduce the per-object figures by comparing each
+`obj/` object with its `build/src/` counterpart, using symbol gaps for sizes.
+
