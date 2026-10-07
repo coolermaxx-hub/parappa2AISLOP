@@ -10483,10 +10483,9 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
 
     {
         float rate;
-        int   ltim;
+        int   ltim = 12; /* blink period in frames */
 
-        ltim = MNSceneGetMusicFitTimer() % 12;
-        rate = sinf(ltim / 12.0f * PR_PI) * 256.0f;
+        rate = sinf((MNSceneGetMusicFitTimer() % ltim) / (float)ltim * PR_PI) * 256.0f;
         if (pfw->onTime) {
             cusABGR = GetDToneColor(0x800a6ec8, MN_COLOR_WHITE, rate);
         } else {
