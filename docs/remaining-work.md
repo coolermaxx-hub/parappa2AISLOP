@@ -99,7 +99,7 @@ The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff` and `objdiff-cli report generate`) measures
 **1308 / 1429 exact functions (91.53254%)** and **258724 / 342284 exact code
 bytes (75.587524%)** across 70 units, with a fuzzy instruction score of
-94.135666%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
+94.133446%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
 menu 352/374, prlib 268/360. README and the badge files in `progress/` show the
 same report. The three functions fewer than the 2026-10-05 report (1311) are
 the tone colour helpers in `pksprite.c`, whose MMI asm now declares the
@@ -225,7 +225,9 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   inside its loop; the original had one extra nop for loop alignment.
 - `MenuCtrl` (src/menu/menu.c) no longer pins a local to `a1` with a
   register variable; the original used different temporaries for the same
-  stores.
+  stores. The matching draft, with its register notes, a self-assignment of
+  `pLog->nRound` and an early second store of `pLog`, is gone; only the plain
+  version remains (98.59% in objdiff, was 99.76%).
 - `DrawMozaikuDisp` (src/main/drawctrl.c) builds its unused masked frame copy
   as a typed struct instead of a volatile `u_long` store.
 - `_P3MC_ASC2SJIS` (src/menu/p3mc.c) uses typed `u_short` lookup tables

@@ -5,7 +5,7 @@ NM = 'Never matched as C: `main-rom-matching` keeps the original asm under `NON_
 WEAK = 'The missing symbols are the original\'s per-file weak copies of nalib templates, which this build does not reproduce; every file calls the one shared template'
 causes = {
     'nalib/navector.cpp': 'Set(NaMATRIX3) is the real template. The original image carried a brute-forced copy; that copy is not reproduced.',
-    'menu/menu.c': 'MenuCtrl: register pin removed (see remaining-work.md).',
+    'menu/menu.c': 'MenuCtrl: register pin removed, and the matching draft\'s self-assignment and repeated `pLog` store dropped (see remaining-work.md).',
     'menu/p3mc.c': 'Typed tables and `P3MC_DATE` replace word casts and a do-while (see remaining-work.md).',
     'main/wipe.c': 'WipeParaOutDisp: loop-alignment asm removed (see remaining-work.md).',
     'main/drawctrl.c': 'DrawMozaikuDisp uses a typed masked frame and drawDispCheckSub lost a temporary named after a register (see remaining-work.md). ' + NM + ' (DrawObjStrDisp, DrawObjPrReq: register allocation).',
