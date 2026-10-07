@@ -10221,7 +10221,8 @@ static void TsNAMEINBox_SetName(NAMEINW *pfw, u_char *name) {
             }
         }
 
-        if (j >= 2) {
+        /* A character in neither set becomes a space. */
+        if (j >= PR_ARRAYSIZE(UserName_CharSet)) {
             *pcode = USERNAME_CHAR_SPACE;
         } else {
             *pcode = USERNAME_CHAR(j, l);
