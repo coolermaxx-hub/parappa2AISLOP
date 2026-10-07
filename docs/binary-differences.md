@@ -117,3 +117,18 @@ four functions differ, all explained:
 No function in this build calls something the original does not, or skips a
 call the original makes.
 
+## Float constant check (2026-10-07)
+
+`tools/dev/audit/float_constants.py` compares every function's float constants
+(immediates and `.lit4`/`.rodata` loads) with the original's. Five functions
+differ, none in game logic:
+
+- **`ApplyDepthOfField`:** both builds load the same NaN bit pattern, which
+  never compares equal to itself.
+- **Matrix template instances (`spram.cpp`'s `Scale`/`Translate`, `spadata.cpp`'s
+  `ScaleMatrix`/`TranslateMatrix`):** the original's per-file copies build the
+  matrix inline, while this build calls the shared constructor.
+
+The check found one naming slip, fixed in `TsNAMEINBox_Draw`: the original keeps
+the blink period as the integer `ltim = 12` and divides by `(float)ltim`.
+
