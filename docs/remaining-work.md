@@ -241,6 +241,19 @@ The full per-unit table is in [binary-differences.md](binary-differences.md).
   places it. The old function-scope declaration only reproduced the original
   stack frame; the frame is now 16 bytes smaller and the spill slots move.
 
+## Debug-info comparison (2026-10-07)
+
+With the original executable present, `tools/dev/audit/stabs_types.py` finds
+three C structs that differ from the original debug info, all intentional.
+`P3SRT_OD` and `SD_SCENE` name fields the original calls `pad1`/`pad2`, which
+the code uses (each has a comment). `USER_DATA` groups the original's flat date
+fields into `P3MC_DATE`.
+
+`tools/dev/audit/stabs_scopes.py` reports 45 C functions whose locals or block
+nesting differ: 16 add named locals, 9 drop locals the original had, and 20
+differ only in scope or order. These come from the readability pass. Treat a
+rise in that count as a regression to explain.
+
 ## Data sections still in asm
 
 Everything the project's own source defines is now typed C: `.data`, `.sdata`,
