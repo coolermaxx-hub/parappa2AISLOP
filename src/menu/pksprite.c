@@ -814,7 +814,7 @@ void PkCRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 4);
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
     asm volatile(
@@ -861,7 +861,7 @@ void PkCGRect_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 9);
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_RGBAQ(3) | PK_REG_XYZF2(4) | PK_REG_RGBAQ(5) | PK_REG_XYZF2(6) | PK_REG_RGBAQ(7) | PK_REG_XYZF2(8);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 1, 0, 0, 1, 0, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/1, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba0 = ppspr->rgba0;
     sp->rgba1 = ppspr->rgba1;
     sp->rgba2 = ppspr->rgba2;
@@ -992,7 +992,7 @@ void PkRSprite_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 10);
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_UV(2) | PK_REG_XYZF2(3) | PK_REG_UV(4) | PK_REG_XYZF2(5) | PK_REG_UV(6) | PK_REG_XYZF2(7) | PK_REG_UV(8) | PK_REG_XYZF2(9);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 1, 0, 1, 0, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/0, /*TME*/1, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
     if (flg & PKSPR_UV_RECT) {
@@ -1117,9 +1117,9 @@ void PkCLine2_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3);
 
     if (flg & PKSPR_ANTIALIAS) {
-        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINE, 0, 0, 0, 1, 1, 1, 0, 0);
+        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/1, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     } else {
-        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINE, 0, 0, 0, 1, 0, 1, 0, 0);
+        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     }
 
     sp->rgba = ppspr->rgba0;
@@ -1182,9 +1182,9 @@ void PkCLineS_AddStart(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord2.regs = PK_REG_AD(0);
 
     if (flg & PKSPR_ANTIALIAS) {
-        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINESTRIP, 1, 0, 0, 1, 1, 1, 0, 0);
+        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINESTRIP, /*IIP*/1, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/1, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     } else {
-        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINESTRIP, 1, 0, 0, 1, 0, 1, 0, 0);
+        sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_LINESTRIP, /*IIP*/1, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     }
 
     sp->rgba = ppspr->rgba0;
@@ -1265,7 +1265,7 @@ void PkPolyF3_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 5);
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3) | PK_REG_XYZF2(4);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRI, 0, 0, 0, 1, 0, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRI, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
     asm volatile(
@@ -1322,7 +1322,7 @@ void PkPolyF4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
     sp->GifCord.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_REGLIST, 6);
     sp->GifCord.regs = PK_REG_PRIM(0) | PK_REG_RGBAQ(1) | PK_REG_XYZF2(2) | PK_REG_XYZF2(3) | PK_REG_XYZF2(4) | PK_REG_XYZF2(5);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, 0, 0, 1, 0, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
     asm volatile(
@@ -1392,8 +1392,8 @@ void PkPolyFT4_Add(SPR_PKT pk, SPR_PRM *ppspr, int flg) {
         (u_long)(SCE_GS_UV   ) << (8 * 4) |
         (u_long)(SCE_GS_XYZF2) << (9 * 4);
 
-    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, 0, SCE_GS_TRUE, SCE_GS_FALSE, SCE_GS_TRUE,
-                               SCE_GS_FALSE, 1, 0, 0);
+    sp->prim = SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/0, /*TME*/SCE_GS_TRUE, /*FGE*/SCE_GS_FALSE, /*ABE*/SCE_GS_TRUE,
+                               /*AA1*/SCE_GS_FALSE, /*FST*/1, /*CTXT*/0, /*FIX*/0);
     sp->rgba = ppspr->rgba0;
 
     asm volatile(

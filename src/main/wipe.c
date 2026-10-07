@@ -827,7 +827,7 @@ static void WipeParaInDisp(void *x) {
         sceGifPkAddGsAD(&gifP, SCE_GS_XYOFFSET_1, GS_REG_WORD(wipe_draw_env.xyoffset1));
         sceGifPkAddGsAD(&gifP, SCE_GS_SCISSOR_1, GS_REG_WORD(wipe_draw_env.scissor1));
         sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, GS_TEST_COLOR_ONLY);
-        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 0, 0, 0, 0, 0));
+        sceGifPkAddGsAD(&gifP, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/0, /*AA1*/0, /*FST*/0, /*CTXT*/0, /*FIX*/0));
         sceGifPkAddGsAD(&gifP, SCE_GS_RGBAQ, 0);
         sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(0), GS_Y_COORD(0), 1));
         sceGifPkAddGsAD(&gifP, SCE_GS_XYZ2, SCE_GS_SET_XYZ2(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));

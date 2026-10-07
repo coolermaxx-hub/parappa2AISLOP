@@ -2780,7 +2780,7 @@ int DrawPlphaIndex8Disp(void *para_pp, int frame, int first_f, int useDisp, int 
     sceGifPkAddGsAD(&gifpk, SCE_GS_PRIM,
         (use_pp != NULL)
         ? GS_PRIM_TEX_SPRITE(TRUE)
-        : SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, 0, 0, 0, 1, 0, 1, 0, 0)
+        : SCE_GS_SET_PRIM(SCE_GS_PRIM_SPRITE, /*IIP*/0, /*TME*/0, /*FGE*/0, /*ABE*/1, /*AA1*/0, /*FST*/1, /*CTXT*/0, /*FIX*/0)
     );
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV((0 << 4) | (1 << 3), (0 << 4) | (1 << 3)));

@@ -108,6 +108,12 @@ int CmnGifOpenCmnPk(sceGifPacket *gifpk_pp) {
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_TEST_1, GS_TEST_OFF);
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_CLAMP_1, GS_CLAMP_REPEAT);
+    /*
+     * Q is the raw word 1, a denormal float, not 1.0f (GS_Q_ONE); the packet
+     * builders below do the same. Q only divides ST texture coordinates, and
+     * the textured primitives checked so far use UV coordinates (FST=1), which
+     * ignore it.
+     */
     sceGifPkAddGsAD(gifpk_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
     return 0;
 }
