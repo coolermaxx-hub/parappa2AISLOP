@@ -33,10 +33,15 @@ public:
     T* GetLinearValue(unsigned int segment, float time) const;
 
     void ChangePointer() {
-        const unsigned int elementsPerKey = m_interpolation == Spline ? 3 : 1;
         // This crosses the known file-format boundary between the key array
         // and time array. No key value is read through a different scalar type.
-        m_times = reinterpret_cast<float*>(m_values + m_keyCount * elementsPerKey);
+        // The two kinds are stepped separately rather than through a selected
+        // stride, matching how the original walks past a spline key's tangents.
+        if (m_interpolation == Spline) {
+            m_times = reinterpret_cast<float*>(m_values + m_keyCount * 3);
+        } else {
+            m_times = reinterpret_cast<float*>(m_values + m_keyCount);
+        }
     }
 
     T& KeyValue(unsigned int key) const {
