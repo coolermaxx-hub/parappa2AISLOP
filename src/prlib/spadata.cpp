@@ -70,7 +70,13 @@ T* SpaTrack<T>::GetValue(float time) const {
         return &KeyValue(0);
     }
     if (segment == m_keyCount) {
-        return &KeyValue(m_keyCount - 1);
+        // The last key. A Spline key holds three elements, so the two kinds are
+        // stepped separately here rather than through a selected stride, which
+        // is how the original reaches this address.
+        if (m_interpolation == Spline) {
+            return &m_values[(m_keyCount - 1) * 3];
+        }
+        return &m_values[m_keyCount - 1];
     }
     switch (m_interpolation) {
     case Spline: return GetSprineValue(segment, time);

@@ -59,27 +59,31 @@ No runtime rendering equivalence has been claimed.
 
 The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff`, `tools/objdiff_symbol_mappings.py` and
-`objdiff-cli report generate`) measures **1321 / 1429 exact functions
-(92.44227%)** and **261203 / 342284 exact code bytes (76.20806%)** across 70
-units, with a fuzzy instruction score of 95.13328%. By folder: dbug 21/21,
-os 100/100, iop_mdl 4/4, main 563/570, menu 355/374, prlib 278/360. README and
+`objdiff-cli report generate`) measures **1324 / 1429 exact functions
+(92.65220%)** and **261683 / 342284 exact code bytes (76.47334%)** across 70
+units, with a fuzzy instruction score of 95.15883%. By folder: dbug 21/21,
+os 100/100, iop_mdl 4/4, main 563/570, menu 355/374, prlib 281/360. README and
 the badge files in `progress/` show the same report.
 
-That is up from 1311 / 1429 (91.74248%) on 2026-10-05. The gain is ten
-functions, in prlib, from one root cause in `SpaTrack`: the accessors computed a
-key stride from `m_interpolation`, costing a load of that byte and two selects
-at every call site, even where the interpolation kind was already decided.
-`GetValue` routes to `GetLinearValue` only from its `Linear` case and to
-`GetSprineValue` only from its `Spline` case, so inside those the stride is the
-constant 1 or 3. Indexing `m_values` directly, and addressing a spline key as
-one block, accounts for all of it. `TranslateMatrix(NaVECTOR<float,4>)` was
-delegating to the three-scalar overload's sixteen-constant constructor where the
-original fills the rows above the translation with a loop. `ChangePointer` now
-branches between the two kinds instead of selecting a stride.
+That is up from 1311 / 1429 (91.74248%) on 2026-10-05. The gain is thirteen
+functions, in prlib and prlib/setpointer, from one root cause in `SpaTrack`: the
+accessors computed a key stride from `m_interpolation`, costing a load of that
+byte and a select at every call site, even where the interpolation kind was
+already decided. `GetValue` routes to `GetLinearValue` only from its `Linear`
+case and to `GetSprineValue` only from its `Spline` case, so inside those the
+stride is the constant 1 or 3. The last-key return in `GetValue` steps the two
+kinds in separate arms rather than selecting a stride. Indexing `m_values`
+directly, and addressing a spline key as one block, accounts for the rest.
+`TranslateMatrix(NaVECTOR<float,4>)` was delegating to the three-scalar
+overload's sixteen-constant constructor where the original fills the rows above
+the translation with a loop. `ChangePointer` likewise branches between the two
+kinds instead of selecting a stride.
 
-Newly exact: `GetLinearValue<float>`, `GetSprineValue<NaVECTOR<float,4>>`,
-`TranslateMatrix(NaVECTOR<float,4>)`, `ChangePointer<SpcFileHeader>`,
-`ScaleMatrix(NaVECTOR<float,4>)` and `NaMATRIX::operator[]`'s enabling overload.
+Newly exact: `GetValue<float>`, `GetValue<NaVECTOR<float,4>>`,
+`GetValue<NaMATRIX<float,4,4>>`, `GetLinearValue<float>`,
+`GetSprineValue<NaVECTOR<float,4>>`, `TranslateMatrix(NaVECTOR<float,4>)`,
+`ChangePointer<SpcFileHeader>`, `ScaleMatrix(NaVECTOR<float,4>)` and
+`NaMATRIX::operator[]`'s enabling overload.
 Partly improved: `GetLinearValue<NaMATRIX>`, `GetSprineValue<float>` (13% to
 81%) and `SpaNodeAnimation::ChangePointer`. No function that previously matched
 stopped matching.
