@@ -85,7 +85,10 @@ T* SpaTrack<T>::GetLinearValue(unsigned int segment, float time) const {
     static T result;
     const float afterStart = time - m_times[segment];
     const float beforeEnd = m_times[segment + 1] - time;
-    result = (KeyValue(segment) * beforeEnd + KeyValue(segment + 1) * afterStart)
+    // A Linear track stores one element per key, so the key index needs no
+    // interpolation stride. Only a Spline track interleaves tangents, and
+    // GetValue never routes one here.
+    result = (m_values[segment] * beforeEnd + m_values[segment + 1] * afterStart)
              / (beforeEnd + afterStart);
     return &result;
 }
@@ -142,7 +145,7 @@ float* SpaTrack<float>::GetLinearValue(unsigned int segment, float time) const {
 template <>
 NaVECTOR<float, 4>* SpaTrack<NaVECTOR<float, 4> >::GetSprineValue(u_int segment, float time) const {
     float duration = this->m_times[segment + 1] - this->m_times[segment];
-    NaVECTOR<float, 4> *start = &KeyValue(segment);
+    NaVECTOR<float, 4> *start = &m_values[segment * 3];
     if (duration == 0.0f) {
         return start;
     }
@@ -368,11 +371,14 @@ template <typename T>
 T* SpaTrack<T>::GetSprineValue(unsigned int segment, float time) const {
     static T result;
     const float duration = m_times[segment + 1] - m_times[segment];
-    T& start = KeyValue(segment);
+    // A Spline key holds three elements, so the stride is always 3 here and
+    // GetValue never routes a non-spline track to this.
+    T* const key = &m_values[segment * 3];
+    T& start = key[0];
     if (duration == 0.0f) return &start;
-    const T& end = KeyValue(segment + 1);
-    const T& outgoing = OutgoingTangent(segment);
-    const T& incoming = IncomingTangent(segment + 1);
+    const T& end = key[3];
+    const T& outgoing = key[2];
+    const T& incoming = key[4];
     const float t = (time - m_times[segment]) / duration;
     T difference = start - end;
     result = ((((outgoing + incoming) * duration + difference * 2.0f) * t

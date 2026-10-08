@@ -377,9 +377,23 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const
                                x, y, z, 1.0f);
 }
 
+// The translation row is the last one, so the identity above it is built by a
+// loop rather than sixteen constants: the original fills rows 0..t1-2 with
+// diagonal ones, copies the first three translation components into the last
+// row, and stores a single 1.0f after them.
 template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& translation) {
-    return TranslateMatrix(translation[0], translation[1], translation[2]);
+    NaMATRIX<float, 4, 4> result;
+    for (int row = 0; row < t1 - 1; row++) {
+        for (int column = 0; column < t0; column++) {
+            result[row][column] = (row == column) ? 1.0f : 0.0f;
+        }
+    }
+    for (int axis = 0; axis < 3; axis++) {
+        result[t1 - 1][axis] = translation[axis];
+    }
+    result[t1 - 1][t0 - 1] = 1.0f;
+    return result;
 }
 
 // Unlike the three-scalar overload, this overload preserves scale.w: it lands on
