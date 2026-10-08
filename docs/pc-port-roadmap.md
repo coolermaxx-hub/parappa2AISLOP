@@ -5,7 +5,8 @@ Target: a native PC build of *PaRappa the Rapper 2*, ultimately with netplay.
 This document is a plan, not a report. Where it states facts they come from the
 reconstructed source or from [behavior-notes.md](behavior-notes.md), and the
 provenance is given. Where it is inference or design judgement it says so.
-Nothing here has been built or run; see [Verification status](#verification-status).
+Nothing above Phase 0 has been built or run; see
+[Verification status](#verification-status).
 
 Related: [remaining-work.md](remaining-work.md) covers finishing the
 decompilation, [porting-rules.md](porting-rules.md) covers how to write the
@@ -36,9 +37,12 @@ Concretely, for porting purposes:
 
 Two things follow that are easy to get wrong when estimating this project:
 
-- **Byte-match percentage is worth nothing to a port.** The 91.74% figure
-  measures decompilation fidelity, not portability. Work on the remaining
-  mismatching functions should be prioritised last, not first.
+- **Byte-match percentage is worth nothing to a port.** The current 92.65%
+  figure measures decompilation fidelity, not portability. Work on the remaining
+  105 mismatching functions has been deprioritised for exactly this reason: the
+  ones still reachable need either compiler steering that
+  [AGENTS.md](../AGENTS.md) forbids or a source shape not yet derived, and none
+  of it is a portability blocker.
 - **Much of what objdiff still reports as absent is dead code we do not need.**
   Of the 26 functions the original contains and our build does not, 24 are
   unreferenced in the original and are deleted rather than ported; see
@@ -71,7 +75,7 @@ hardware.
 Each phase has an exit test. Do not start a phase before the previous exit test
 passes; the failures compound badly.
 
-### Phase 0 - verified build (blocked)
+### Phase 0 - verified build (complete)
 
 Get the historical toolchain running and confirm a baseline.
 
@@ -86,6 +90,28 @@ Get the historical toolchain running and confirm a baseline.
 
 Exit test: a clean build, an objdiff report, and a decision on the
 `ScaleMatrix` change based on measured evidence rather than expectation.
+
+**Passed 2026-10-07.** All three conditions are met:
+
+- Clean build, both ROMs linked, on `codex-work` at `1b32dba`.
+- objdiff report regenerated: 1324 / 1429 exact functions, 261683 / 342284
+  exact code bytes, fuzzy 95.15883%.
+- The `ScaleMatrix` change was decided on measurement, not expectation: writing
+  the diagonal with a nested loop keeps the function out of line without any
+  pragma or asm barrier, and it matches the original exactly at 208 bytes and
+  52 instructions. It needed a non-const `NaMATRIX::operator[]`, which the
+  class was missing.
+
+Two environment findings worth carrying forward, both in
+[build.md](../build.md)'s territory:
+
+- The repository's committed blobs contain CRLF, so every `./tools/*.py`
+  shebang fails on a clean checkout. Strip CR from text files only; doing it
+  across all tracked files corrupts the binary tools.
+- `ninja` records no header dependencies, so a `.h` edit does not trigger a
+  rebuild. Every measurement above comes from a clean rebuild.
+
+Phase 1 is now unblocked.
 
 ### Phase 1 - host-compile the engine
 
@@ -237,10 +263,12 @@ explicit policy rather than an accident of implementation.
 
 ## Verification status
 
-Nothing in this roadmap has been built or run. The source analysis it relies on
-is checked-in work, but the port itself does not exist. No claim of functional
-equivalence to the original has been made or should be inferred from the
-decompilation matching percentage.
+Phase 0 is complete and verified; see that section for the measurement and the
+two environment findings. Everything from Phase 1 onward is still a plan and
+has not been built or run.
+
+No claim of functional equivalence to the original has been made or should be
+inferred from the decompilation matching percentage.
 
 The original executable is retained locally for disassembly and comparison, and
 its assets (SCPS_150.17, the IRX modules, the OLM stage overlays) are needed to
