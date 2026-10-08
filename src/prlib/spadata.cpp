@@ -126,7 +126,10 @@ float* SpaTrack<float>::GetLinearValue(unsigned int segment, float time) const {
     static float result;
     const float afterStart = time - m_times[segment];
     const float beforeEnd = m_times[segment + 1] - time;
-    result = (beforeEnd * KeyValue(segment) + afterStart * KeyValue(segment + 1))
+    // A Linear track stores one element per key, so the key index needs no
+    // interpolation stride. Only a Spline track interleaves tangents, and
+    // GetValue never routes one here.
+    result = (beforeEnd * m_values[segment] + afterStart * m_values[segment + 1])
              / (beforeEnd + afterStart);
     return &result;
 }
