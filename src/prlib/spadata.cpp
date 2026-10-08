@@ -108,11 +108,16 @@ template <>
 float* SpaTrack<float>::GetSprineValue(unsigned int segment, float time) const {
     static float result;
     const float duration = m_times[segment + 1] - m_times[segment];
-    float& start = KeyValue(segment);
+    // A Spline key holds three elements: value, incoming tangent, outgoing
+    // tangent, then the next key. The stride is therefore always 3, and
+    // GetValue only routes to this from its Spline case. Addressing the key as
+    // one block keeps the four element offsets relative to a single base.
+    float* const key = &m_values[segment * 3];
+    float& start = key[0];
     if (duration == 0.0f) return &start;
-    const float end = KeyValue(segment + 1);
-    const float outgoing = OutgoingTangent(segment);
-    const float incoming = IncomingTangent(segment + 1);
+    const float outgoing = key[2];
+    const float end = key[3];
+    const float incoming = key[4];
     const float t = (time - m_times[segment]) / duration;
     const float difference = start - end;
     result = t * (t * (t * ((outgoing + incoming) * duration + (difference + difference))
