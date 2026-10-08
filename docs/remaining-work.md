@@ -61,7 +61,7 @@ The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff`, `tools/objdiff_symbol_mappings.py` and
 `objdiff-cli report generate`) measures **1318 / 1429 exact functions
 (92.23233%)** and **259940 / 342284 exact code bytes (75.94279%)** across 70
-units, with a fuzzy instruction score of 94.868065%. By folder: dbug 21/21,
+units, with a fuzzy instruction score of 94.90818%. By folder: dbug 21/21,
 os 100/100, iop_mdl 4/4, main 563/570, menu 355/374, prlib 275/360. README and
 the badge files in `progress/` show the same report.
 
@@ -70,8 +70,9 @@ functions, all in prlib: `ScaleMatrix(NaVECTOR<float,4>)` in prlib/spadata was
 previously inlined away and is now emitted and matched exactly,
 `GetLinearValue<float>` was indexing track keys through a spline stride test and
 now indexes them directly, and `NaMATRIX::operator[]` gained the non-const
-overload the first fix needed. No function that previously matched stopped
-matching.
+overload the first fix needed. `GetSprineValue<float>` carries the same fix and
+rose from 13% to 81% without reaching an exact match. No function that
+previously matched stopped matching.
 
 `tools/objdiff_symbol_mappings.py` has to run before the report is generated,
 not after, or the nine verified aliases it pairs are absent from the result and
