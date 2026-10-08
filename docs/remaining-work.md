@@ -57,19 +57,33 @@ No runtime rendering equivalence has been claimed.
 
 ## Current exact-match measurement
 
-The 2026-10-05 objdiff report (`progress/report.json`, regenerated with
-`./configure.py --objdiff` and `objdiff-cli report generate`) measures
-**1311 / 1429 exact functions (91.74248%)** and **259104 / 342284 exact code
-bytes (75.69854%)** across 70 units, with a fuzzy instruction score of
-94.13218%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
-menu 355/374, prlib 268/360. README and the badge files in `progress/` show the
-same report.
+The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
+`./configure.py --objdiff`, `tools/objdiff_symbol_mappings.py` and
+`objdiff-cli report generate`) measures **1318 / 1429 exact functions
+(92.23233%)** and **259940 / 342284 exact code bytes (75.94279%)** across 70
+units, with a fuzzy instruction score of 94.868065%. By folder: dbug 21/21,
+os 100/100, iop_mdl 4/4, main 563/570, menu 355/374, prlib 275/360. README and
+the badge files in `progress/` show the same report.
 
-The clean build links both ROMs. The unchanged IOP checksum passes; the unchanged
-main-ROM checksum fails. These figures include the accumulated readability
-changes and do not imply execution equivalence for the new source. Function
-matching, source reconstruction and ROM checksums are separate measures. Only
-verified semantic aliases are used by the mapping tool.
+That is up from 1311 / 1429 (91.74248%) on 2026-10-05. The gain is three
+functions, all in prlib: `ScaleMatrix(NaVECTOR<float,4>)` in prlib/spadata was
+previously inlined away and is now emitted and matched exactly,
+`GetLinearValue<float>` was indexing track keys through a spline stride test and
+now indexes them directly, and `NaMATRIX::operator[]` gained the non-const
+overload the first fix needed. No function that previously matched stopped
+matching.
+
+`tools/objdiff_symbol_mappings.py` has to run before the report is generated,
+not after, or the nine verified aliases it pairs are absent from the result and
+the figures read about five functions low.
+
+The clean build links both ROMs. The unchanged IOP checksum passes; the main-ROM
+checksum fails, at `7bf8ca64a4928de12bd5186d750cb237b3ad0092` against an expected
+`8e7899f42ff2690362889da6cbf957e0faac608a`. It has failed throughout on this
+branch and these fixes did not change that. These figures include the
+accumulated readability changes and do not imply execution equivalence for the
+new source. Function matching, source reconstruction and ROM checksums are
+separate measures. Only verified semantic aliases are used by the mapping tool.
 
 ## Handwritten kernels retained
 
