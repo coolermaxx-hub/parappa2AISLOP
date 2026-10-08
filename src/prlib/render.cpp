@@ -600,7 +600,10 @@ void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4,
 }
 
 /* prlib/render.cpp */
-void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
+// Inline: the original keeps an out-of-line copy of this AND inlines the body
+// into ComposeAnimatedMatrix, which is what carries the matrix arithmetic into
+// the two *MatrixAnimation functions. Marking it inline gives both.
+inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& parentMatrix) {
     if (model->m_postureMatrices[0] != NULL) {
         PrSPRAM_DATA *spram;
         if (m_flags & eSpmIdentityLocalMatrix) {
