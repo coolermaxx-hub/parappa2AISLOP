@@ -24,6 +24,10 @@ public:
         Copy(*this, rhs);
     }
 
+    NaVECTOR<T, t0>& operator[](int index) {
+        return m[index];
+    }
+
     const NaVECTOR<T, t0>& operator[](int index) const {
         return m[index];
     }
@@ -378,13 +382,19 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float,
     return TranslateMatrix(translation[0], translation[1], translation[2]);
 }
 
+// Unlike the three-scalar overload, this overload preserves scale.w: it lands on
+// the last diagonal element. Filling the diagonal in place rather than spelling
+// sixteen constants keeps this the out-of-line body the single caller in
+// spadata.cpp gets, and lets the float4 transfer below carry the result.
 template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& scale) {
-    // Unlike the three-scalar overload, this overload preserves scale.w.
-    return NaMATRIX<float, 4, 4>(scale[0], 0.0f, 0.0f, 0.0f,
-                               0.0f, scale[1], 0.0f, 0.0f,
-                               0.0f, 0.0f, scale[2], 0.0f,
-                               0.0f, 0.0f, 0.0f, scale[3]);
+    NaMATRIX<float, 4, 4> result;
+    for (int row = 0; row < t1; row++) {
+        for (int column = 0; column < t0; column++) {
+            result[row][column] = (row == column) ? scale[column] : 0.0f;
+        }
+    }
+    return result;
 }
 
 template <typename T, int t0, int t1>
