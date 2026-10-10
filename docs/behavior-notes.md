@@ -30,6 +30,7 @@ Contents:
 - [Axis-angle rotation (2026-10-05)](#axis-angle-rotation-2026-10-05)
 - [Vector helpers](#vector-helpers)
 - [Subtitles (2026-10-05)](#subtitles-2026-10-05)
+- [Memory-safety bugs in the original (2026-10-10)](#memory-safety-bugs-in-the-original-2026-10-10)
 
 ## Rhythm clock (first pass, 2026-10-02)
 
@@ -816,3 +817,35 @@ usual `euc2sjis` arithmetic before the glyph lookup; characters without a glyph
 are skipped. Lines are centred on screen, starting at field line 168, or 186
 for story-type steps (`PSTEP_SERIAL`, bonus, hook and XTR scenes) and Boxy's
 wipe. Fonts are chosen by `SUBT_FONT` (`include/main/subt.h`).
+
+## Memory-safety bugs in the original (2026-10-10)
+
+The source keeps these as the original compiled them, each marked with a
+`BUG` or "original bug" comment. A port built with bounds checking or a
+different allocator will trip over them, so it has to decide for each whether to
+reproduce, contain or fix it. Every function named here compiles to exactly the
+original's code, so the behaviour is the original's; the reading of it is from
+the source.
+
+- **Texture cross-fade overruns its buffer** (`Cl2MixTrans`, `drawctrl.c`,
+  used by `OCTRL_CL2`). For a 16-bit image or CLUT the blend walks the data as
+  `RGB15TR`, which is 3 bytes rather than one 2-byte texel, for `size / 2`
+  steps. It reads 1.5 times the data size from each source and writes as many
+  bytes into a buffer of the data size, and the colours it produces come from
+  the wrong bits. The original steps by 3 as well. 24- and 32-bit data take the
+  byte-wise path, which is correct.
+- **CLUT upload over-reads** (`Tim2SetLoadImageC`, `tim2.c`). A 4-bit
+  texture's 16-colour CLUT is sent as 8x2, but `HsizeAdj` rounds every height
+  to whole GS blocks (8 rows for the CLUT formats), so the transfer is 8x8 and
+  reads 48 entries past the CLUT. `Tim2TransColor_TBP` sends the same CLUT
+  without the padding.
+- **3D stream sort list off by one** (`p3str_sort_set`, `p3str.c`). The guard
+  is `> 16` on a 16-entry array, so a 17th object is stored one past the end.
+- **Pad press lookup off by one** (`GetIndex2PressId`, `etc.c`). It accepts
+  index 7 of a 7-entry table, but its only caller passes a `GetKeyCode2Index`
+  result, so the bad index never occurs.
+- **Leak on allocation failure** (`PkMesh_Create`, `pksprite.c`). When the
+  point array cannot be allocated it calls `free(NULL)` and leaks the mesh.
+- `FD_MonocroDisp` (`effect.c`) clips the width against the height and lets a
+  channel value of 256 wrap to 0, but nothing calls it.
+

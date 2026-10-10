@@ -99,7 +99,7 @@ static STDAT_DAT stdat_dat_st01[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D2AEF0,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x8aef0),
     },
     {
         PSTEP_XTR,
@@ -131,7 +131,7 @@ static STDAT_DAT stdat_dat_st01[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST01GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST01GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D2AEF0,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x8aef0),
     },
 };
 static STDAT_DAT stdat_dat_st02[] = {
@@ -165,7 +165,7 @@ static STDAT_DAT stdat_dat_st02[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D30CA8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x90ca8),
     },
     {
         PSTEP_XTR,
@@ -197,7 +197,7 @@ static STDAT_DAT stdat_dat_st02[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST02GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST02GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D30CA8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x90ca8),
     },
 };
 static STDAT_DAT stdat_dat_st03[] = {
@@ -231,7 +231,7 @@ static STDAT_DAT stdat_dat_st03[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D484B8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xa84b8),
     },
     {
         PSTEP_XTR,
@@ -263,7 +263,7 @@ static STDAT_DAT stdat_dat_st03[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST03GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST03GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D484B8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xa84b8),
     },
 };
 static STDAT_DAT stdat_dat_st04[] = {
@@ -297,7 +297,7 @@ static STDAT_DAT stdat_dat_st04[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D3F1D0,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x9f1d0),
     },
     {
         PSTEP_XTR,
@@ -329,7 +329,7 @@ static STDAT_DAT stdat_dat_st04[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST04GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST04GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D3F1D0,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x9f1d0),
     },
 };
 static STDAT_DAT stdat_dat_st05[] = {
@@ -363,7 +363,7 @@ static STDAT_DAT stdat_dat_st05[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D72B78,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xd2b78),
     },
     {
         PSTEP_XTR,
@@ -395,7 +395,7 @@ static STDAT_DAT stdat_dat_st05[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST05GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST05GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D72B78,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xd2b78),
     },
 };
 static STDAT_DAT stdat_dat_st06[] = {
@@ -429,7 +429,7 @@ static STDAT_DAT stdat_dat_st06[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D20140,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x80140),
     },
     {
         PSTEP_XTR,
@@ -461,7 +461,7 @@ static STDAT_DAT stdat_dat_st06[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST06GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST06GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D20140,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x80140),
     },
 };
 static STDAT_DAT stdat_dat_st07[] = {
@@ -495,7 +495,7 @@ static STDAT_DAT stdat_dat_st07[] = {
             { FRMODE_CD, 0, 0, 0, NULL, {} },
             { FRMODE_CD, 0, 0, 0, NULL, {} },
         },
-        (TAPLVL_STR *)0x1D14AD8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x74ad8),
     },
     {
         PSTEP_XTR,
@@ -527,7 +527,7 @@ static STDAT_DAT stdat_dat_st07[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST07GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST07GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D14AD8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x74ad8),
     },
 };
 static STDAT_DAT stdat_dat_st08[] = {
@@ -561,7 +561,7 @@ static STDAT_DAT stdat_dat_st08[] = {
             { FRMODE_CD, FTMODE_WP2, 2, 0, "\\SND\\ST08GM0G.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\SND\\ST08GM0N.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D82128,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xe2128),
     },
 };
 static STDAT_DAT stdat_dat_st09[] = {
@@ -615,7 +615,7 @@ static STDAT_DAT stdat_dat_vs01[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS01VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS01VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D6F728,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xcf728),
     },
 };
 static STDAT_DAT stdat_dat_vs02[] = {
@@ -633,7 +633,7 @@ static STDAT_DAT stdat_dat_vs02[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS02VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS02VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D74BF8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xd4bf8),
     },
 };
 static STDAT_DAT stdat_dat_vs03[] = {
@@ -651,7 +651,7 @@ static STDAT_DAT stdat_dat_vs03[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS03VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS03VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D910E8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xf10e8),
     },
 };
 static STDAT_DAT stdat_dat_vs04[] = {
@@ -669,7 +669,7 @@ static STDAT_DAT stdat_dat_vs04[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS04VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS04VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D8EE40,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xeee40),
     },
 };
 static STDAT_DAT stdat_dat_vs05[] = {
@@ -687,7 +687,7 @@ static STDAT_DAT stdat_dat_vs05[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS05VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS05VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1DC1F30,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x121f30),
     },
 };
 static STDAT_DAT stdat_dat_vs06[] = {
@@ -705,7 +705,7 @@ static STDAT_DAT stdat_dat_vs06[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS06VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS06VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D72520,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xd2520),
     },
 };
 static STDAT_DAT stdat_dat_vs07[] = {
@@ -723,7 +723,7 @@ static STDAT_DAT stdat_dat_vs07[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS07VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS07VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1D5B7B8,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0xbb7b8),
     },
 };
 static STDAT_DAT stdat_dat_vs08[] = {
@@ -741,127 +741,127 @@ static STDAT_DAT stdat_dat_vs08[] = {
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS08VS1.WP2;1", {} },
             { FRMODE_CD, FTMODE_WP2, 4, 0, "\\VS\\VS08VS2.WP2;1", {} },
         },
-        (TAPLVL_STR *)0x1DD6158,
+        STAGE_OVERLAY_PTR(TAPLVL_STR, 0x136158),
     },
 };
 STDAT_REC stdat_rec[STDAT_STAGE_MAX] = {
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG00.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_st00),
         stdat_dat_st00,
         "STAGE 0",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG01.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st01),
         stdat_dat_st01,
         "STAGE 1",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG02.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st02),
         stdat_dat_st02,
         "STAGE 2",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG03.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st03),
         stdat_dat_st03,
         "STAGE 3",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG04.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st04),
         stdat_dat_st04,
         "STAGE 4",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG05.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st05),
         stdat_dat_st05,
         "STAGE 5",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG06.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st06),
         stdat_dat_st06,
         "STAGE 6",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG07.OLM;1", {} },
-        4,
+        PR_ARRAYSIZE(stdat_dat_st07),
         stdat_dat_st07,
         "STAGE 7",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG08.OLM;1", {} },
-        2,
+        PR_ARRAYSIZE(stdat_dat_st08),
         stdat_dat_st08,
         "STAGE 8",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG09.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_st09),
         stdat_dat_st09,
         "STAGE 9",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STGBN.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_bonus),
         stdat_dat_bonus,
         "BONUS GAME",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG01.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs01),
         stdat_dat_vs01,
         "VS 1",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG02.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs02),
         stdat_dat_vs02,
         "VS 2",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG03.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs03),
         stdat_dat_vs03,
         "VS 3",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG04.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs04),
         stdat_dat_vs04,
         "VS 4",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG05.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs05),
         stdat_dat_vs05,
         "VS 5",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG06.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs06),
         stdat_dat_vs06,
         "VS 6",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG07.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs07),
         stdat_dat_vs07,
         "VS 7",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG08.OLM;1", {} },
-        1,
+        PR_ARRAYSIZE(stdat_dat_vs08),
         stdat_dat_vs08,
         "VS 8",
     },
     {
         { FRMODE_CD, FTMODE_ETC, 0, 0, "\\MDL\\STG00.OLM;1", {} },
-        2,
+        PR_ARRAYSIZE(stdat_dat_title),
         stdat_dat_title,
         "TITLE",
     },
@@ -885,7 +885,7 @@ void stDatFirstFileSearch(void) {
     stDatFileSearch(&file_str_logo_file);
     stDatFileSearch(&file_str_menu_file);
 
-    for (i = 0; i < 10u; i++) {
+    for (i = 0; i < PR_ARRAYSIZEU(file_str_extra_file); i++) {
         stDatFileSearch(&file_str_extra_file[i]);
     }
 
@@ -895,7 +895,7 @@ void stDatFirstFileSearch(void) {
         for (j = 0; j < stdat_rec[i].stdat_dat_num; j++) {
             stDatFileSearch(&stdat_rec[i].stdat_dat_pp[j].intfile);
 
-            for (k = 0; k < 3; k++) {
+            for (k = 0; k < PR_ARRAYSIZE(stdat_rec[i].stdat_dat_pp[j].sndfile); k++) {
                 stDatFileSearch(&stdat_rec[i].stdat_dat_pp[j].sndfile[k]);
             }
         }

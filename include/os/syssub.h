@@ -82,8 +82,8 @@ typedef struct { // 0x24
     /* 0x06 */ u_short shot; /* Button state from the current frame. */
     /* 0x08 */ u_short one; /* Newly pushed buttons on this frame. */
     /* 0x0a */ u_short off; /* Newly released buttons on this frame. */
-    /* 0x0c */ u_char ana[4]; /* Analog data. */
-    /* 0x10 */ u_char press[12]; /* Pressure sensitivity data. */
+    /* 0x0c */ u_char ana[PAD_ANA_MAX]; /* Analog data, in PAD_ANA order. */
+    /* 0x10 */ u_char press[PAD_PR_MAX]; /* Pressure sensitivity data, in PAD_PRESS_ENUM order. */
     /* 0x1c */ u_char padvib[2]; /* Vibration status to set. */
     /* 0x1e */ u_short mshot; /* Mixed button state (Dig. + Ana.) from the current frame. */
     /* 0x20 */ u_short mone; /* Newly pushed buttons (Dig. + Ana.) on this frame. */

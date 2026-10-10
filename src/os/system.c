@@ -274,7 +274,7 @@ void osFunc(void) {
 }
 
 void systemCtrlMain(void *xx) {
-    MtcExec(mainStart, 1);
+    MtcExec(mainStart, MTC_TASK_MAIN);
     SetOsFuncAddr(osFunc);
 
     while (1) {

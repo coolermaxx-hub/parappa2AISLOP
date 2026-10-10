@@ -45,6 +45,10 @@ typedef struct { // 0x1c
     /* 0x18 */ int endTime;
 } BTHROW_STR;
 
+/* BTHROW_STR::use flags. */
+#define BTHROW_USE_ACTIVE 0x1 /* in flight: moved, drawn and counted down each frame */
+#define BTHROW_USE_LAUNCH 0x2 /* first frame: start from the thrower model's screen position */
+
 typedef struct { // 0xe14
     /* 0x000 */ int frame;
     /* 0x004 */ BTHROW_STR bthrow_str[128];

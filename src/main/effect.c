@@ -140,7 +140,7 @@ void UG_AlpDisp(PLH_STR *plh_pp, sceGsFrame *frame_pp, sceGifPacket *alpPkSpr) {
     sceGifPkAddGsAD(alpPkSpr, SCE_GS_PRIM, SCE_GS_SET_PRIM(SCE_GS_PRIM_TRISTRIP, /*IIP*/1, /*TME*/TRUE, /*FGE*/FALSE, /*ABE*/TRUE,
                                                            /*AA1*/FALSE, /*FST*/1, SCE_GS_PRIM_CTXT1, /*FIX*/FALSE));
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < PR_ARRAYSIZE(plh_pp->xyOfs); i++) {
         short ofs_tbl[4][2] = {
             { 0,   0   },
             { SCREEN_WIDTH, 0 },
@@ -350,6 +350,7 @@ void UG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, sceGifPacket *ndl
             tmp2_pp = &ndl_prm_pp[(i + 1) * (ndl_pp->cntW + 1)];
 
             for (j = 0; j <= ndl_pp->cntH; j++) {
+                /* +8 is half a texel (UV is in 1/16-texel units), so both strip edges sample texel centres. */
                 sceGifPkAddGsAD(ndlPkSpr, SCE_GS_UV, SCE_GS_SET_UV(tmp1_pp->u + 8, tmp1_pp->v + 8));
                 sceGifPkAddGsAD(ndlPkSpr, SCE_GS_XYZ2, SCE_GS_SET_XYZ(tmp1_pp->xp, tmp1_pp->yp, 1));
 
@@ -376,6 +377,12 @@ void CG_NoodlesDisp(NOODLES_STR *ndl_pp, sceGsFrame *frame_pp, int pri, int time
     CmnGifCloseCmnPk(&noodlesPkSpr, pri);
 }
 
+/* Tints a w x h CT32 area of VRAM at tbp to one hue: each channel becomes the
+ * average of the pixel's RGB times pR/pG/pB / 128 (128 = plain grey). The area
+ * is read back in 128x32 blocks, 4096 pixels or 16KB, the whole EE scratchpad.
+ * No caller in this build. Original bugs (kept): the width clip tests sizeh
+ * instead of sizew, and the "> 256" clamps let exactly 256 through, which wraps
+ * to 0 in a u_char. */
 void FD_MonocroDisp(MONOCRO_STR *mono_pp, int tbp, int w, int h) {
     u_char *dat_pp;
     int     i, j, k;

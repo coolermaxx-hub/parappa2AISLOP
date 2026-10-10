@@ -364,9 +364,9 @@ static void _P3MC_SetBrowsInfo(int mode, int fileNo, char *name, int stageNo, in
 
         memc_setIconSysHed(ptr, size);
 
-        memc_setSaveIcon(0, P3MC_GetIconPtr(mode, iconNo), P3MC_GetIconSize(mode));
-        memc_setSaveIcon(1, NULL, 0);
-        memc_setSaveIcon(2, NULL, 0);
+        memc_setSaveIcon(MEMC_ICON_VIEW, P3MC_GetIconPtr(mode, iconNo), P3MC_GetIconSize(mode));
+        memc_setSaveIcon(MEMC_ICON_COPY, NULL, 0);
+        memc_setSaveIcon(MEMC_ICON_DEL, NULL, 0);
     }
 }
 
@@ -529,7 +529,7 @@ int P3MC_InitReady(void) {
     memc_init();
 
     mcmenu_info.dirfile = p3mcTblGetDir;
-    mcmenu_info.dirfileMax = 8;
+    mcmenu_info.dirfileMax = PR_ARRAYSIZE(p3mcTblGetDir);
     memc_port_info(0, &mcmenu_info);
 
     re = memc_manager(MEMC_MODE_SYNC);
@@ -612,7 +612,7 @@ int P3MC_CheckChange(void) {
     if (err != 0) {
         FreeSizeFlg = 0;
         portCheckFlg = 0;
-        if (mcmenu_info.flag == 2) {
+        if (mcmenu_info.flag == sceMcTypePS2) {
             return err;
         } else {
             return P3MC_RES_NO_CARD;
@@ -626,7 +626,7 @@ int P3MC_CheckChange(void) {
     }
 
     portCheckFlg = 0;
-    if (mcmenu_info.flag != 2) {
+    if (mcmenu_info.flag != sceMcTypePS2) {
         FreeSizeFlg = 0;
         err = P3MC_RES_NO_CARD;
     } else {
@@ -851,12 +851,12 @@ int P3MC_GetUserStart(int mode, P3MC_USRLST *pUsrLst, int bFirst) {
         pWork->curState = 0;
 
         if (mode & P3MC_MODE_LOG) {
-            pWork->curMode = 1;
+            pWork->curMode = P3MC_MODE_LOG;
         } else if (mode & P3MC_MODE_REPLAY) {
-            pWork->curMode = 2;
+            pWork->curMode = P3MC_MODE_REPLAY;
         } else {
             printf("P3MC_GetUser Error Mode is unknown!\n");
-            pWork->curMode = 1;
+            pWork->curMode = P3MC_MODE_LOG;
         }
 
         pWork->curFno = 0;

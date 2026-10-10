@@ -140,6 +140,13 @@ typedef struct { // 0x58
     /* 0x54 */ int curRecJacket;
 } P3GAMESTATE;
 
+/* P3GAMESTATE::winPlayer, saved as USER_DATA::winner: who won a versus play. */
+enum {
+    P3WIN_1P = 0,  /* player 1 won more rounds (vsWin > vsLost) */
+    P3WIN_2P = 1,  /* player 2 or the computer won more */
+    P3WIN_DRAW = 2
+};
+
 enum {
     P3MRET_SELECT = 0,
     P3MRET_ABORT = 1,

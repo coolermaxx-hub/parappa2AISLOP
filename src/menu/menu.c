@@ -117,12 +117,12 @@ int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
     lost = global_data.global_ply->vsLost;
 
     if (win == lost) {
-        P3GameState.winPlayer = 2;
+        P3GameState.winPlayer = P3WIN_DRAW;
     } else {
         if (win > lost) {
-            P3GameState.winPlayer = 0;
+            P3GameState.winPlayer = P3WIN_1P;
         } else {
-            P3GameState.winPlayer = 1;
+            P3GameState.winPlayer = P3WIN_2P;
         }
     }
 
@@ -266,11 +266,11 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     lost = global_data.global_ply->vsLost;
 
     if (win == lost) {
-        P3GameState.winPlayer = 2;
+        P3GameState.winPlayer = P3WIN_DRAW;
     } else if (win > lost) {
-        P3GameState.winPlayer = 0;
+        P3GameState.winPlayer = P3WIN_1P;
     } else {
-        P3GameState.winPlayer = 1;
+        P3GameState.winPlayer = P3WIN_2P;
     }
 
     P3GameState.isState = 0;

@@ -108,8 +108,8 @@ static u_char ascii2sjiscng_tbl[] = {
 
 static MC_REP_STR mc_rep_str_local;
 
-static u_char mc_holdTmp[4];
-static u_char mc_resetTmp[4];
+static u_char mc_holdTmp[MAX_PLAYER_NUM];
+static u_char mc_resetTmp[MAX_PLAYER_NUM];
 
 static MC_REP_CTRL mc_rep_ctrl;
 
@@ -323,7 +323,7 @@ void mccReqTapForward(u_int time, u_int useLine) {
 
     rep_cnt = mc_rep_ctrl.cl_mc_rep_dat_cnt;
 
-    for (i = 0; i < 4; i++, rep_cnt++) {
+    for (i = 0; i < PR_ARRAYSIZE(mc_rep_ctrl.cl_mc_rep_dat_cnt); i++, rep_cnt++) {
         while (1) {
             if (*rep_cnt >= MC_REP_TAP_MAX || *rep_cnt >= mc_rep_str_local.mc_rep_dat_cnt) {
                 return;

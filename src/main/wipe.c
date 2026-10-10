@@ -135,6 +135,13 @@ static WIPE_SCRATCH_CTRL wipe_scratch_ctrl[] = {
     { .frt_size = PR_ARRAYSIZE(wipe_scratch_tbl_05), .frt_pp = wipe_scratch_tbl_05 },
 };
 
+/* Lengths in frames of the loading wipe's turn-in (WSHC_IN, WSHC_IN_MOVE), of the
+ * loop that follows it (WSHC_LOOP, WSHC_LOOP_MOVE) and of its turn-out (WSHC_OUT,
+ * WSHC_OUT_MOVE): the last key frame of each table. */
+#define WIPE_LOAD_IN_FRAMES   67
+#define WIPE_LOAD_LOOP_FRAMES 135
+#define WIPE_LOAD_OUT_FRAMES  28
+
 static int ldmove_rate = 0;
 static int ldrecode_rate = 0;
 static int ldlogo_rate = 0;
@@ -244,6 +251,10 @@ void wipeSndFileTrans(void) {
     TapCt(TAPCT_SETEFFECTVOL,  SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
 }
 
+/* Copies one 640x224 field between VRAM2 and the frame buffers. disp 0 saves the
+ * shown buffer and 1 the draw buffer into VRAM2; -1 and -2 copy VRAM2 back to the
+ * shown and the draw buffer. Most wipe requests save the outgoing screen with 0,
+ * and their tasks then draw it from VRAM2 (TBP_VRAM_DRAW2) while they animate. */
 static void LocalBufCopy(int disp) {
     sceGsMoveImage mi;
     short          dbp = 0;
@@ -271,7 +282,7 @@ static void LocalBufCopy(int disp) {
         break;
     }
 
-    GGsSetLocalMoveImage(&mi, dbp, 10, 0, 0, 0, sbp, 10, 0, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
+    GGsSetLocalMoveImage(&mi, dbp, 10, SCE_GS_PSMCT32, 0, 0, sbp, 10, SCE_GS_PSMCT32, 0, 0, SCREEN_WIDTH, SCREEN_FIELD_HEIGHT, 0);
     FlushCache(WRITEBACK_DCACHE);
 
     GGsExecLocalMoveImage(&mi);
@@ -411,12 +422,14 @@ static void WipeLoadInDisp(void *x) {
     while (1) {
         timer = TimeCallbackTimeGetChan(TCBK_CHANNEL_WIPE);
 
-        if (timer >= 67) {
-            ldmove_rate   = wipeTimeGetInWait(timer - 67, WSHC_LOOP_MOVE);
-            ldrecode_rate = wipeTimeGetInWait(timer - 67, timer >= 67);
+        /* timer >= WIPE_LOAD_IN_FRAMES doubles as the table index: 1 (WSHC_LOOP)
+         * in the first branch, 0 (WSHC_IN) in the second. */
+        if (timer >= WIPE_LOAD_IN_FRAMES) {
+            ldmove_rate   = wipeTimeGetInWait(timer - WIPE_LOAD_IN_FRAMES, WSHC_LOOP_MOVE);
+            ldrecode_rate = wipeTimeGetInWait(timer - WIPE_LOAD_IN_FRAMES, timer >= WIPE_LOAD_IN_FRAMES);
         } else {
             ldmove_rate   = wipeTimeGetInWait(timer, WSHC_IN_MOVE);
-            ldrecode_rate = wipeTimeGetInWait(timer, timer >= 67);
+            ldrecode_rate = wipeTimeGetInWait(timer, timer >= WIPE_LOAD_IN_FRAMES);
         }
 
         if (!loading_wipe_switch) {
@@ -436,20 +449,22 @@ static void WipeLoadInDisp(void *x) {
         wipe_end_flag = FALSE;
         timer++;
 
-        if (timer > 67) {
+        if (timer > WIPE_LOAD_IN_FRAMES) {
             if (firstf) {
                 firstf = FALSE;
 
                 wipeSndReq(STW_TURN_WAIT);
                 wipe_end_flag = TRUE;
 
-                TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, 67);
+                TimeCallbackTimeSetChan(TCBK_CHANNEL_WIPE, WIPE_LOAD_IN_FRAMES);
             } else {
-                int ttmp = timer - 67;
+                int ttmp = timer - WIPE_LOAD_IN_FRAMES;
 
-                ttmp %= 135;
+                ttmp %= WIPE_LOAD_LOOP_FRAMES;
 
-                if (ttmp == 134 || ttmp == 0) {
+                /* Raised only on the last two frames of each loop pass, so a caller
+                 * waiting on WipeEndCheck starts the turn-out at the loop's seam. */
+                if (ttmp == WIPE_LOAD_LOOP_FRAMES - 1 || ttmp == 0) {
                     wipe_end_flag = TRUE;
                 }
             }
@@ -526,7 +541,9 @@ void WipeLoadOutDispNR(void) {
         lddisp_draw_on(LDMAP_LABEL);
         lddisp_draw_quit(DNUM_VRAM2);
 
-        fade_make_str.alp = (3840 + (timer * -128)) / 30;
+        /* Over the 30 frames the image in VRAM2 fades from alpha 128 towards 0 while
+         * growing from 1x towards 3x; WipeLoadInDispNR is the reverse. */
+        fade_make_str.alp = (30 * 128 + (timer * -128)) / 30;
         scl = (timer / 30.0f) + (timer / 30.0f) + 1.0;
 
         CmnGifADPacketMake(&gifpk, DrawGetFrameP(DNUM_DRAW));
@@ -576,7 +593,7 @@ static void WipeLoadOutDisp(void *x) {
 
         MtcWait(1);
         timer++;
-    } while (timer < 28);
+    } while (timer < WIPE_LOAD_OUT_FRAMES);
 
     WipeLoadOutDispNR();
     wipe_end_flag = TRUE;
@@ -789,6 +806,13 @@ void WipeEnd(void) {
     wipeSndStop();
 }
 
+/* The PaRappa wipes render PaRappa's model into VRAM2's alpha channel only
+ * (GS_FBMSK_ALPHA_ONLY), then draw VRAM2 over the screen with an alpha test.
+ * Here VRAM2 still holds the saved screen (its alpha cleared first) and the test
+ * keeps alpha > 0, so the old screen shows inside PaRappa's silhouette on a
+ * vclr_para_disp background. The Move and Out variants clear VRAM2 to that
+ * colour and keep alpha == 0, painting the colour around the silhouette over the
+ * live frame. */
 static void WipeParaInDisp(void *x) {
     sceGifPacket gifP;
     VCLR_PARA    vclr_para = {};

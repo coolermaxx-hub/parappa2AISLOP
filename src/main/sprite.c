@@ -47,6 +47,10 @@ void SprPackSet(SPR_DAT *spr_pp) {
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_FBA_1, PR_REGS(spr_pp).fba );
 }
 
+/* Unlike packets queued with CmnGifCloseCmnPk, which CmnGifFlush sorts by priority
+ * and sends later, this sends the sprites at once on the GIF DMA channel and waits
+ * for them, so they draw at this point in the frame. Nothing is sent unless a
+ * sprite or box was added since SprClear. */
 void SprFlash(void) {
     u_long giftag[2] = { SCE_GIF_SET_TAG(0, 1, 0, 0, 0, 1), SCE_GIF_PACKED_AD };
 
@@ -81,6 +85,11 @@ void SprDatPrint(SPR_DAT *spr_pp) {
         PR_REGS(spr_pp).ta0,  PR_REGS(spr_pp).aem, PR_REGS(spr_pp).ta1,  PR_REGS(spr_pp).pabe, PR_REGS(spr_pp).fba);
 }
 
+/* Draws the w x h texels at (u, v) as a sprite centred on (x, y), given in whole
+ * GS primitive pixels (2048, 2048 is the screen centre) and scaled by
+ * scalex/scaley in 8.8 fixed point (256 = 1:1). The UVs run from u + 1 to
+ * u + w - 1, one texel inside each edge. SprDispAlp is the same with alpha
+ * blending on. */
 void SprDisp(SPR_PRIM *prm_pp) {
     sceGifPkAddGsAD(&gifPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(FALSE));
 

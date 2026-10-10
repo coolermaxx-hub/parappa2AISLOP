@@ -32,7 +32,7 @@ static sceMcIconSys memc_iconsys = {
     {0.5f, 0.5f, 0.5f, 0.0f}, /* Ambient */
 };
 /* MEMC_INFO.flag bit for each card type value stored in pmw->type. */
-static u_int _memc_type[] = { 0x000, 0x100, 0x200, 0x400 };
+static u_int _memc_type[] = { 0, MEMC_FLAG_PS1, MCMC_FLAG_PS2, MEMC_FLAG_PDA };
 static MEMC_STAT memc_stat;
 
 static int memc_SaveFileClust(void);
@@ -394,7 +394,7 @@ int memc_save_file(int port, int no, char* buf, int size, int bSysRW) {
     pmw->buf     = buf;
     pmw->size    = size;
     pmw->retry   = 0;
-    pmw->stat    &= ~0x1f; /* Clear all flags */
+    pmw->stat    &= ~MEMC_STAT_ALL; /* Clear all flags */
 
     pmw->seek    = 0;
     pmw->size2   = 0;
@@ -987,7 +987,7 @@ static int memc_manager_save(int result) {
             return MEMC_ERR_INVALID;
         }
 
-        sceMcSeek(pmw->fd, pmw->seek, 0);
+        sceMcSeek(pmw->fd, pmw->seek, SCE_SEEK_SET);
         pmw->cmd = MEMC_CMD_WRITE_TAIL;
         break;
     case MEMC_CMD_WRITE_TAIL:

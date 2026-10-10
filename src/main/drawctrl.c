@@ -195,9 +195,9 @@ static MOZAIKU_STR mozaiku_str_poll_02[34] = {
 };
 
 static MOZAIKU_POLL_STR mozaiku_poll_str[3] = {
-    { 0, 17, mozaiku_str_poll_00 },
-    { 0, 54, mozaiku_str_poll_01 },
-    { 0, 34, mozaiku_str_poll_02 },
+    { 0, PR_ARRAYSIZE(mozaiku_str_poll_00), mozaiku_str_poll_00 },
+    { 0, PR_ARRAYSIZE(mozaiku_str_poll_01), mozaiku_str_poll_01 },
+    { 0, PR_ARRAYSIZE(mozaiku_str_poll_02), mozaiku_str_poll_02 },
 };
 
 /* Noodle warp strength keyframes for the title screen; the last entry's frame
@@ -390,7 +390,7 @@ static DR_TAP_REQ dr_tap_req[16];
 static int octst_time[8];
 static int octst_timeLoad[8];
 static SCENECTRL scenectrl_outside[8];
-static BTHROW_CTRL bthrow_ctrl[2];
+static BTHROW_CTRL bthrow_ctrl[OBJBTHROW_MAX];
 static void *tmp_buf_adrs[16];
 static SCENECTRL *check_scenectrl[20];
 static int dr_tap_req_num;
@@ -687,11 +687,11 @@ void BallThrowSetFrame(int frame) {
 void BallThrowInit(void) {
     WorkClear(bthrow_ctrl, sizeof(bthrow_ctrl));
 
-    bthrow_ctrl[0].targetY = 112.0f;
-    bthrow_ctrl[0].targetX = 120.0f;
+    bthrow_ctrl[OBJBTHROW_TEACHER].targetY = 112.0f;
+    bthrow_ctrl[OBJBTHROW_TEACHER].targetX = 120.0f;
 
-    bthrow_ctrl[1].targetX = 520.0f;
-    bthrow_ctrl[1].targetY = 112.0f;
+    bthrow_ctrl[OBJBTHROW_PARAPPA].targetX = 520.0f;
+    bthrow_ctrl[OBJBTHROW_PARAPPA].targetY = 112.0f;
 }
 
 void BallThrowInitDare(int dare) {
@@ -700,6 +700,9 @@ void BallThrowInitDare(int dare) {
 
 /* In versus play a thrown ball ends in a 12-frame explosion (the vs06 bomb textures). */
 #define VS_BOMB_FRAMES 12
+
+/* A versus throw lasts at most 32 frames, the last VS_BOMB_FRAMES of them the explosion. */
+#define VS_THROW_FRAMES 32
 
 static void* vs06BomAdr(OBJBTHROW_TYPE thtype, int time) {
     u_short bomdat_tea[VS_BOMB_FRAMES] = {
@@ -736,13 +739,13 @@ void BallThrowReq(void *mdlh, OBJBTHROW_TYPE thtype, void *texpp, void *mdlhomin
 
     bt_pp = &bthrow_ctrl[thtype].bthrow_str[bthrow_ctrl[thtype].bthrow_str_cnt];
 
-    bt_pp->use = 3;
+    bt_pp->use = BTHROW_USE_ACTIVE | BTHROW_USE_LAUNCH;
     bt_pp->mdl_adr = mdlh;
     bt_pp->tim2_dat_pp = texpp;
     bt_pp->homingpp = mdlhoming;
 
     if (global_data.play_step == PSTEP_VS) {
-        bt_pp->endTime = 32;
+        bt_pp->endTime = VS_THROW_FRAMES;
         if (bt_pp->endTime > bthrow_ctrl_time) {
             bt_pp->endTime = bthrow_ctrl_time;
         }
@@ -784,7 +787,7 @@ void BallThrowPoll(void) {
                 sceGifPkAddGsAD(&gifP, SCE_GS_TEST_1, GS_TEST_ALPHA_NONZERO);
 
                 for (j = 0; j < bthrow_ctrl[i].bthrow_str_cnt; j++, bts_pp++) {
-                    if (bts_pp->use & 1) {
+                    if (bts_pp->use & BTHROW_USE_ACTIVE) {
                         /* The target follows its model on screen. */
                         {
                             float *pos_pp = PrGetModelScreenPosition(bts_pp->homingpp);
@@ -793,10 +796,10 @@ void BallThrowPoll(void) {
                             bthrow_ctrl[i].targetY = pos_pp[1] + -16.0f;
                         }
 
-                        if (bts_pp->use & 2) {
+                        if (bts_pp->use & BTHROW_USE_LAUNCH) {
                             float *pos_pp;
 
-                            bts_pp->use &= ~2;
+                            bts_pp->use &= ~BTHROW_USE_LAUNCH;
 
                             pos_pp = PrGetModelScreenPosition(bts_pp->mdl_adr);
 
@@ -1223,6 +1226,12 @@ static void DrawObjStrKill(SCENE_OBJDATA *scn_pp, int num) {
     scn_pp->objstr_pp[num].PRtimeOld = -1;
 }
 
+/*
+ * OCTRL_TCTRL time curve: maps the frames since that entry started to the clock
+ * the program's entries run at. SPF data holds one value per two frames; odd
+ * frames take the mean of the two values around them (rounded down), and
+ * frames past the end hold the last value.
+ */
 static u_int GetSpfTimeCtrl(OBJDAT *objdat_pp, u_int frame) {
     SPF_STR *spf_str_pp;
     u_int    max_cnt;
@@ -1726,6 +1735,15 @@ static int DrawObjStrDispTap(SCENE_OBJDATA *scn_pp, int num) {
             }
 
             if (objctrl_pp->objctrl_type == OCTRL_ANI) {
+                /*
+                 * dat[4] also says how a tap animation follows the press: 0 stops
+                 * following it (the clock runs at 1x from here on); 2 is a hold
+                 * animation, which jumps to its end on any frame the button is
+                 * released or OBJSTR_PRESSON is clear. That flag is set only from
+                 * the frame after the tap, once the press passes PAD_PRESS_HELD,
+                 * so a hold entry reached on the tap's own frame ends at once, and
+                 * on a pad without pressure data it never plays.
+                 */
                 if (objctrl_pp->dat[4] == 0) {
                     objstr_pp->PRpress = NULL;
                 }
@@ -1924,6 +1942,11 @@ void DrawSceneFirstSet(SCENE_OBJDATA *scene_pp) {
     }
 }
 
+/*
+ * Uploads a blend of two TIM2 images ("TIM2") or two CLUT files ("CLT2") that
+ * share one VRAM slot: cl2_1 at now_T = 0, moving to cl2_0 at now_T >= max_T,
+ * in 1/256 steps. OCTRL_CL2 uses it to cross-fade a texture or palette.
+ */
 void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
     TIM2INFO        tim2info0, tim2info1;
     u_char         *dat_pp;
@@ -2004,6 +2027,12 @@ void Cl2MixTrans(int now_T, int max_T, u_char *cl2_0_pp, u_char *cl2_1_pp) {
     dat_pp = usrMalloc(trSize0);
 
     if (trType0 == TIM2_RGB16) {
+        /*
+         * BUG: RGB15TR is 3 bytes (its u_char bit-fields cannot straddle a byte),
+         * not one 16-bit RGBA5551 texel. The loop steps 3 bytes per texel, so it
+         * mixes the wrong bits, reads 1.5 x trSize0 bytes from each source and
+         * writes as many into the trSize0-byte dat_pp. The original does the same.
+         */
         int      i;
         int      maxx, maxy;
         RGB15TR *rgb15tr0, *rgb15tr1;
@@ -2099,15 +2128,15 @@ void DrawObjPrReq(SCENE_OBJDATA *scene_pp) {
             case OCTRL_ANI: {
                 int first_f, brff;
 
-                brff = 0;
+                brff = BLMV_NONE;
                 if (oct_now_pp[i].status & OCTRL_STAT_MOVE) {
-                    brff = 2;
+                    brff = BLMV_MOVE;
                 }
                 if (oct_now_pp[i].status & OCTRL_STAT_BLUR) {
-                    brff = 1;
+                    brff = BLMV_BLUR;
                 }
                 if (oct_now_pp[i].status & OCTRL_STAT_BLUR2) {
-                    brff = 3;
+                    brff = BLMV_BLUR2;
                 }
 
                 first_f = oct_now_pp[i].first_flag;
@@ -2849,7 +2878,7 @@ int DrawNoodlesDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
     sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(0, 0));
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(0), GS_Y_COORD(0), 1));
 
-    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, SCE_GS_SET_UV(SCREEN_WIDTH << 4, SCREEN_FIELD_HEIGHT << 4));
+    sceGifPkAddGsAD(&gifpk, SCE_GS_UV, GS_FIELD_UV_MAX);
     sceGifPkAddGsAD(&gifpk, SCE_GS_XYZ2, SCE_GS_SET_XYZ(GS_X_COORD(SCREEN_WIDTH), GS_Y_COORD(SCREEN_FIELD_HEIGHT), 1));
 
     sceGifPkAddGsAD(&gifpk, SCE_GS_TEXFLUSH, 0);
@@ -3009,6 +3038,12 @@ void MendererCtrlTitleDera(void) {
     mend_title_req = 2;
 }
 
+/*
+ * Ramps the menderer (noodle) ratio by 1/120 per frame (one unit every two
+ * seconds at 60 frames a second) and clamps it to the ramp's range. MEN_CTRL_*
+ * names read start-to-end with G = 0, B = 1, AB/BA = 1.5 and A = 2; at 0
+ * nothing is drawn.
+ */
 static void MendererCtrl(void) {
     float Mmax = 0.0f;
     float Mmin = 0.0f;

@@ -134,11 +134,11 @@ void GlobalLobcalCopy(void) {
     case DEMOF_DEMO: {
         int demo_rnd = clearStageCheck();
 
-        if (demo_rnd < 5) {
-            demo_rnd = 5;
+        if (demo_rnd < P3_STAGE_5) {
+            demo_rnd = P3_STAGE_5;
         }
-        if (demo_rnd > 8) {
-            demo_rnd = 8;
+        if (demo_rnd > P3_STAGE_8) {
+            demo_rnd = P3_STAGE_8;
         }
 
         global_data.play_modeL       = PLAY_MODE_SINGLE;
@@ -184,7 +184,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_SERIAL:
         global_data.draw_tbl_top = DTBL_ENUM_SERIAL_TOP;
         
-        gply_pp = &global_data.global_ply[3];
+        gply_pp = &global_data.global_ply[NON_PLAYER_NUM];
         gply_pp->player_code = PCODE_NONE;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_DEMO;
@@ -195,7 +195,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_XTR:
         global_data.draw_tbl_top = DTBL_ENUM_SERIAL_TOP;
         
-        gply_pp = &global_data.global_ply[3];
+        gply_pp = &global_data.global_ply[NON_PLAYER_NUM];
         gply_pp->player_code = PCODE_NONE;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_DEMO;
@@ -206,7 +206,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_HOOK:
         global_data.draw_tbl_top = inCmnHookSet(stage_num);
         
-        gply_pp = &global_data.global_ply[1];
+        gply_pp = &global_data.global_ply[TEACHER_PLAYER_NUM];
         gply_pp->player_code  = PCODE_TEACHER;
         gply_pp->rank_level   = RLVL_GOOD;
         gply_pp->pad_type     = PAD_DEMO;
@@ -214,7 +214,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->score        = 0;
         gply_pp->tap_lvl_tmp  = 0;
         
-        gply_pp = &global_data.global_ply[0];
+        gply_pp = &global_data.global_ply[PARA_PLAYER_NUM];
         gply_pp->player_code  = PCODE_PARA;
         gply_pp->rank_level   = RLVL_GOOD;
 
@@ -234,7 +234,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_GAME:
         global_data.draw_tbl_top = DTBL_ENUM_GAME_TOP;
         
-        gply_pp = &global_data.global_ply[2];
+        gply_pp = &global_data.global_ply[BOXY_PLAYER_NUM];
         gply_pp->player_code = PCODE_BOXY;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_DEMO;
@@ -242,7 +242,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->score       = 0;
         gply_pp->tap_lvl_tmp = 0;
         
-        gply_pp = &global_data.global_ply[1];
+        gply_pp = &global_data.global_ply[TEACHER_PLAYER_NUM];
         gply_pp->player_code = PCODE_TEACHER;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_DEMO;
@@ -250,7 +250,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->score       = 0;
         gply_pp->tap_lvl_tmp = 0;
         
-        gply_pp = &global_data.global_ply[0];
+        gply_pp = &global_data.global_ply[PARA_PLAYER_NUM];
         gply_pp->player_code  = PCODE_PARA;
         gply_pp->rank_level   = RLVL_GOOD;
 
@@ -271,7 +271,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_BONUS:
         global_data.draw_tbl_top = DTBL_ENUM_BN_TOP;
         
-        gply_pp = &global_data.global_ply[1];
+        gply_pp = &global_data.global_ply[TEACHER_PLAYER_NUM];
         gply_pp->player_code = PCODE_TEACHER;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_UNUSE;
@@ -279,7 +279,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->score       = 0;
         gply_pp->tap_lvl_tmp = 0;
 
-        gply_pp = &global_data.global_ply[0];
+        gply_pp = &global_data.global_ply[PARA_PLAYER_NUM];
         gply_pp->player_code = PCODE_PARA;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_UNUSE;
@@ -291,7 +291,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
     case PSTEP_VS:
         global_data.draw_tbl_top = DTBL_ENUM_VS_TOP;
         
-        gply_pp = &global_data.global_ply[2];
+        gply_pp = &global_data.global_ply[BOXY_PLAYER_NUM];
         gply_pp->player_code = PCODE_BOXY;
         gply_pp->rank_level  = RLVL_GOOD;
         gply_pp->pad_type    = PAD_DEMO;
@@ -304,7 +304,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->vsLost  = 0;
         gply_pp->vsScore = 0;
         
-        gply_pp = &global_data.global_ply[1];
+        gply_pp = &global_data.global_ply[TEACHER_PLAYER_NUM];
         gply_pp->player_code = PCODE_TEACHER;
         gply_pp->rank_level  = RLVL_GOOD;
 
@@ -334,7 +334,7 @@ void GlobalPlySet(GLOBAL_DATA *gl_pp, PLAY_STEP stp, int stage_num) {
         gply_pp->vsScore = 0;
         ExamDispPlySet(gply_pp, 1);
         
-        gply_pp = &global_data.global_ply[0];
+        gply_pp = &global_data.global_ply[PARA_PLAYER_NUM];
         gply_pp->player_code  = PCODE_PARA;
         gply_pp->rank_level   = RLVL_GOOD;
 
@@ -453,6 +453,10 @@ PLAYER_INDEX Pcode2Pindex(PLAYER_CODE pc) {
     return 0;
 }
 
+/* Returns one key, the first set in the order triangle, circle, cross, square, L1, R1,
+ * L2, R2, with L2 and R2 read as L1 and R1. For a live pad tapEventCheck passes the
+ * buttons newly pressed this frame (PADD::one), so when several are pressed on the same
+ * frame only the first in this order taps. */
 int GetKeyCode2Index(int code) {
     if (code & KcTR) {
         return KiTR;
@@ -485,7 +489,7 @@ int GetKeyCode2Index(int code) {
 }
 
 int GetIndex2KeyCode(int index) {
-    static int KeyCode[7] = {
+    static int KeyCode[KiMAX] = {
         0, KcTR, KcCI, KcXX, KcSQ, KcL1, KcR1,
     };
 
@@ -497,10 +501,12 @@ int GetIndex2KeyCode(int index) {
 }
 
 int GetIndex2PressId(int index) {
-    static int KeyPressNum[7] = {
+    static int KeyPressNum[KiMAX] = {
         PAD_PR_None, PAD_PR_Rup, PAD_PR_Rright, PAD_PR_Rdown, PAD_PR_Rleft, PAD_PR_L1, PAD_PR_R1,
     };
 
+    /* BUG: should be >=; index KiMAX would read one past the table. Callers only
+     * pass GetKeyCode2Index results (KiNO..KiR1), so it never happens. */
     if (index > PR_ARRAYSIZEU(KeyPressNum)) {
         return PAD_PR_None;
     }
@@ -559,6 +565,11 @@ void UsrPrSetScene(void) {
     usrSceneHandle = NULL;
 }
 
+/* SPU2 sound banks of the TapCt channels, packed back to back from 0x5010 (each spu_adrs
+ * is the previous spu_adrs + spu_size; spu_size itself is never passed to TapCt).
+ * Channel 3 holds the wipe sounds (WIPE_TAP_BANK in wipe.c); during a stage channel 0
+ * holds the common tap sounds (SCR_TAP_COMMON) and 1 and 2 the alternating score-line
+ * banks. */
 static SCR_SND_AREA scr_snd_area[] = {
     { .spu_size = 0x120000, .spu_adrs = 0x5010,   .iop_size = 0x3000 },
     { .spu_size = 0x50000,  .spu_adrs = 0x125010, .iop_size = 0x3000 },
@@ -569,6 +580,8 @@ static SCR_SND_AREA scr_snd_area[] = {
 void SpuBankSet(void) {
     int i;
 
+    /* Banks 0-2 only: the menu moves bank 1 (MenuDataSndInit), while bank 3 keeps the
+     * wipe sounds sent once at boot (SpuBankSetAll, then wipeSndFileTrans). */
     for (i = 0; i < PR_ARRAYSIZEU(scr_snd_area) - 1; i++) {
         TapCt(TAPCT_ALLOCSPU | i, scr_snd_area[i].spu_adrs, TAPCT_NONE);
         TapCt(TAPCT_ALLOCIOP | i, scr_snd_area[i].iop_size, TAPCT_NONE);

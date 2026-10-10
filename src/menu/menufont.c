@@ -377,7 +377,7 @@ static int _AnimeFontFlg;
 static MCODE_STR *kanji_pp;
 
 static MCODE_CHAR mcode_dat_pp[512];
-static MNFONT_INFO MnSubtFontInfo[3];
+static MNFONT_INFO MnSubtFontInfo[SUBTN_END]; /* texture and colour per glyph kind, indexed by MCODE_CHAR::flg */
 
 static void _PKFontPut(SPR_PKT pk, SPR_PRM *spr, SUBT_CODE *psubt, int line_num, int xp, int yp, int pflg, int hsize, float rtx, float rty);
 static void _PADArrow_Put(SPR_PKT pk, SPR_PRM *spr, MCODE_DAT *pfnt, int x, int y);
@@ -622,7 +622,11 @@ static void _PKFontPut(SPR_PKT pk, SPR_PRM *spr, SUBT_CODE *psubt, int line_num,
                 oflg = mflg;
             }
 
-            if (mflg == 2) {
+            /* Pad symbols are MCODE_KANJI_ANIME entries, so pfnt + 1 is the glyph's
+             * alternate frame (apat). Only the d-pad glyphs have one (the pad with no
+             * arrow lit); they flash to it on frames 21-39 of every 40 counted by the
+             * menu music timer (_AnimeFontFlg). */
+            if (mflg == SUBTN_PADSYM_CODE) {
                 if ((pfnt + 1)->w != 0) {
                     if (_AnimeFontFlg) {
                         pfnt = pfnt + 1;
@@ -733,7 +737,7 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
             ppMcode->pmcode = &mcode_HalfSpace;
             subt_code[line_num].wsize += ppMcode->pmcode->w;
             subt_code[line_num].cnt++;
-            ppMcode->flg = 0;
+            ppMcode->flg = SUBTN_ETC_CODE;
             ppMcode++;
             continue;
         }
@@ -748,11 +752,11 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
         }
 
         if (_PadFont_SW) {
-            ppMcode->pmcode = codeKanjiACheck(dat0, dat1, PadSymbolFontA, 12);
+            ppMcode->pmcode = codeKanjiACheck(dat0, dat1, PadSymbolFontA, PR_ARRAYSIZE(PadSymbolFontA));
             if (ppMcode->pmcode != NULL) {
                 subt_code[line_num].cnt++;
                 subt_code[line_num].wsize += ppMcode->pmcode->w;
-                ppMcode->flg = 2;
+                ppMcode->flg = SUBTN_PADSYM_CODE;
                 ppMcode++;
                 continue;
             }
@@ -762,7 +766,7 @@ static int _JPFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code) {
         if (ppMcode->pmcode != NULL) {
             subt_code[line_num].cnt++;
             subt_code[line_num].wsize += ppMcode->pmcode->w;
-            ppMcode->flg = 1;
+            ppMcode->flg = SUBTN_KANJI_CODE;
             ppMcode++;
         }
     }
@@ -793,7 +797,7 @@ static int _EGFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code, MCODE_DAT *pfn
             line_num++;
         }
 
-        if (c < 32) {
+        if (c < ' ') {
             continue;
         }
 
@@ -804,24 +808,25 @@ static int _EGFont_GetSubtCode(u_char *str, SUBT_CODE *subt_code, MCODE_DAT *pfn
             dat1 = *str;
             euc2sjis(&dat0, &dat1);
 
-            ppMcode->pmcode = codeKanjiACheck(dat0, dat1, PadSymbolFontA, 12);
+            ppMcode->pmcode = codeKanjiACheck(dat0, dat1, PadSymbolFontA, PR_ARRAYSIZE(PadSymbolFontA));
             if (ppMcode->pmcode != NULL) {
                 str++;
 
                 subt_code[line_num].cnt++;
                 subt_code[line_num].wsize += ppMcode->pmcode->w;
 
-                ppMcode->flg = 2;
+                ppMcode->flg = SUBTN_PADSYM_CODE;
                 ppMcode++;
                 continue;
             }
         }
 
-        ppMcode->pmcode = &pfnt_ascii[c - 32];
+        /* The ASCII glyph tables (mcode_ascii, TsFont) start at the space character. */
+        ppMcode->pmcode = &pfnt_ascii[c - ' '];
         subt_code[line_num].wsize += ppMcode->pmcode->w;
         subt_code[line_num].cnt++;
 
-        ppMcode->flg = 0;
+        ppMcode->flg = SUBTN_ETC_CODE;
         ppMcode++;
     }
 

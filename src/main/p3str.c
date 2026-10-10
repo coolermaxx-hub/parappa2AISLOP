@@ -56,7 +56,7 @@ void p3strImage2RealPos(P3STR_SD *p3str_sd_pp) {
         p3str_sd_pp->adrD += (int)p3str_sd_pp;
         adrd_pp = (ADRD*)p3str_sd_pp->adrD;
 
-        for (i = 0; i < p3str_sd_pp->adrDsize / 16; i++, adrd_pp++) {
+        for (i = 0; i < p3str_sd_pp->adrDsize / PR_SIZEOF(ADRD); i++, adrd_pp++) {
             if (adrd_pp->common < 0) {
                 adrd_pp->adrs += (u_int)p3str_sd_pp;
             } else {
@@ -88,8 +88,10 @@ void p3StrInit(u_int adrs) {
             adrd_pp = (ADRD*)p3str_sd->adrD;
             usr_pp  = (int*)p3str_sd->usrD;
 
+            /* Each texture's user word is SD_VRAM_AW (always sent) or SD_VRAM_R1..R4
+             * (sent only for that hat, see GetHatRound). */
             for (j = 0; j < p3str_sd->Dcnt; j++) {
-                if (usr_pp[j] == 0 || usr_pp[j] == GetHatRound() + 1) {
+                if (usr_pp[j] == SD_VRAM_AW || usr_pp[j] == GetHatRound() + SD_VRAM_R1) {
                     Tim2Trans((void*)adrd_pp[j].adrs);
                 }
             }
@@ -98,7 +100,7 @@ void p3StrInit(u_int adrs) {
             p3StrInitSd(p3srt_od_pp, p3str_sd, i);
 
             adrd_common = (ADRD*)p3str_sd->adrD;
-            adrd_common_cnt = p3str_sd->adrDsize / 16;
+            adrd_common_cnt = p3str_sd->adrDsize / PR_SIZEOF(ADRD);
         }
     }
 
@@ -132,7 +134,7 @@ int p3StrInitSd(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int datnum) {
 
     adrd_common_clr();
     adrd_pp  = (ADRD*)p3sd_pp->adrD;
-    adrd_cnt = p3sd_pp->adrDsize / 16;
+    adrd_cnt = p3sd_pp->adrDsize / PR_SIZEOF(ADRD);
 
     if (p3o_pp->od_type == OD_SCENE) {
         u_int  fbp_tmp;
@@ -207,7 +209,7 @@ int p3StrQuitSdEach(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp) {
         return 0;
     }
 
-    adrd_cnt = p3sd_pp->adrDsize / 16;
+    adrd_cnt = p3sd_pp->adrDsize / PR_SIZEOF(ADRD);
     adrd_pp  = (ADRD*)p3sd_pp->adrD;
 
     for (i = 0; i < adrd_cnt; i++) {
@@ -337,7 +339,8 @@ void p3str_sort_init(void) {
 }
 
 void p3str_sort_set(P3SRT_OD *p3o_pp, P3STR_SD *p3sd_pp, int subtime) {
-    if (p3str_sort_cnt > 16) {
+    /* BUG: should be >=; a 17th object is written one past the end of p3str_sort. */
+    if (p3str_sort_cnt > PR_ARRAYSIZE(p3str_sort)) {
         printf("p3str pack over\n");
         return;
     }

@@ -1491,6 +1491,7 @@ PKMESH* PkMesh_Create(int w, int h) {
     pmesh->pmspt = malloc(sizeof(PKMSPT) * (w + 1) * (h + 1));
 
     if (pmesh->pmspt == NULL) {
+        /* Original bug: free(NULL) does nothing, so pmesh leaks when the point array allocation fails. */
         free(NULL);
         return NULL;
     } else {
@@ -1620,7 +1621,7 @@ void PkFTMesh_Add(SPR_PKT pk, SPR_PRM *spr, PKMESH *mesh) {
             spr->px3 = pt[lidx + 1].x + pt[lidx + 1].ofsx;
             spr->py3 = pt[lidx + 1].y + pt[lidx + 1].ofsy;
 
-            PkPolyFT4_Add(pk, spr, 2);
+            PkPolyFT4_Add(pk, spr, PKSPR_ZOOM);
         }
 
         cidx += lidx;
@@ -1682,6 +1683,8 @@ void PkMesh_SetVLinOfsUDY(PKMESH *mesh, int no, float uofsy, float dofsy) {
     float   y, dy;
 
     y  = uofsy;
+    /* Original quirk: unlike PkMesh_SetHLinOfsLRX the step is (uofsy - dofsy),
+     * so the column runs from uofsy to 2 * uofsy - dofsy, not to dofsy. */
     dy = (uofsy - dofsy) / mesh->mh;
 
     if (mesh->mw < no) {

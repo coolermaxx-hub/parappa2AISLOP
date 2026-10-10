@@ -536,13 +536,13 @@ void MNScene_Draw(MN_SCENE *pshdl) {
     if (pshdl->isDisp) {
         MNScene_ExecAnime(pshdl);
 
-        if (pshdl->isDisp & 1) {
+        if (pshdl->isDisp & MN_SCENE_DISP_SCREEN) {
             PrSetSceneEnv(pshdl->scene, DrawGetDrawEnvP(DNUM_DRAW));
             PrRender(pshdl->scene);
             PrWaitRender();
         }
 
-        if (pshdl->isDisp & 2) {
+        if (pshdl->isDisp & MN_SCENE_DISP_CAPTURE) {
             TsMenu_CleanVram(DNUM_VRAM2);
 
             SetDrawEnv12(DrawGetDrawEnvP(DNUM_VRAM2));
@@ -612,7 +612,7 @@ u_int MNScene_StartAnime(MN_SCENE *pshdl, int no, MNANM_TBL *anime) {
     acobj  = anime->anmCobj;
     anmBit = PR_BIT(no);
 
-    for (i = 0; i < 6 && acobj->cflg != 0; i++, acobj++) {
+    for (i = 0; i < PR_ARRAYSIZE(anime->anmCobj) && acobj->cflg != 0; i++, acobj++) {
         int      cflg = acobj->cflg;
         int      ano;
         MN_HMDL *mdl;
@@ -1085,7 +1085,7 @@ static void MnMoveMode_InitRoot(int movNo) {
     PRPOS   *ppos;
     float    flen;
 
-    prt  = &PRP_RootTbl[movNo & ~128];
+    prt  = &PRP_RootTbl[movNo & ~MNANM_MOVE_REVERSE];
     ppos = prt->ppos;
     flen = 0.0f;
 
@@ -1186,14 +1186,14 @@ static void MnMoveModelPosition(void *spm, int movNo, int ttim, int ttim0) {
         sceVu0FVECTOR cpos;
         sceVu0FMATRIX mt;
 
-        /* Ease along the route; bit 7 of movNo runs it backwards. */
+        /* Ease along the route; MNANM_MOVE_REVERSE in movNo runs it backwards. */
         rate = sinf(fry * 0.5f * (float)M_PI);
 
-        if (movNo & 0x80) {
+        if (movNo & MNANM_MOVE_REVERSE) {
             rate = 1.0f - rate;
         }
 
-        _MnParMovRoot_GetPos(&PRP_RootTbl[movNo & ~0x80], rate, cpos);
+        _MnParMovRoot_GetPos(&PRP_RootTbl[movNo & ~MNANM_MOVE_REVERSE], rate, cpos);
 
         /* Face along the route while moving; at either end, face the default way. */
         if (rate == 0.0f || rate == 1.0f) {
@@ -1201,7 +1201,7 @@ static void MnMoveModelPosition(void *spm, int movNo, int ttim, int ttim0) {
         } else {
             fry = cpos[3];
 
-            if (movNo & 0x80) {
+            if (movNo & MNANM_MOVE_REVERSE) {
                 fry += (float)M_PI;
             }
             if (fry > (float)M_PI) {

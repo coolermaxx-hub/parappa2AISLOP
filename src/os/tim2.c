@@ -135,6 +135,10 @@ int GetTim2Info(void *tim2_pp, TIM2INFO *info_pp, int maxinfo) {
     return pictures;
 }
 
+/* Rounds a transfer height up to whole GS blocks: 16 rows for PSMT8 and PSMT4
+ * (mode 19 and 20), 8 rows for every other pixel format. The padded rows are
+ * read from the source as well, so Tim2SetLoadImageC sends a 4-bit texture's
+ * 16-colour 8x2 CLUT as 8x8, reading 48 entries past the CLUT data. */
 static int HsizeAdj(int w, int h, int mode) {
     int tr_h = 8;
     
@@ -400,8 +404,10 @@ int Tim2TransX(void *adrs, int ofs_num) {
 /* Largest single image transfer, 0x7fff quadwords. */
 #define TIM2_TRANS_MAX_BYTES 0x7fff0
 
-/* Rows of a w-pixel image (TIM2 pixel mode) that fit in one transfer, rounded
- * down to a multiple of 16. */
+/* Rows of a w-pixel image that fit in one transfer, rounded down to a multiple
+ * of 16. mode is a GS pixel format (SCE_GS_PSM*), not a TIM2 image type: its low
+ * three bits are 0, 1, 2 or 3 for 4, 3, 2 or 1 bytes per pixel, and 4 for the
+ * 4-bit formats. */
 static int GetModeMaxH(int w, int mode, int *trsize_pp) {
     int line1_size = w;
     int ret;

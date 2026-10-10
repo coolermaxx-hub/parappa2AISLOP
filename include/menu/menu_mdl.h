@@ -32,6 +32,10 @@ typedef struct { // 0x8
 #define MNANM_BLEND_FAST     0x2100 /* motion blended from the saved posture, 0.1 per frame */
 #define MNANM_BLEND_SLOW     0x1100 /* motion blended from the saved posture, 1/30 per frame */
 
+/* MNANM_MOVE_MODE route number (the command's no - 1): this bit runs the route
+ * backwards; the low bits pick the PRP_RootTbl entry. */
+#define MNANM_MOVE_REVERSE   0x80
+
 typedef struct { // 0x4
     /* 0x0 */ u_short cflg;
     /* 0x2 */ u_short no;
@@ -100,6 +104,10 @@ typedef struct { // 0x8c
     /* 0x84 */ float ablend_rate;
     /* 0x88 */ float ablend_speed;
 } MN_HMDL;
+
+/* MN_SCENE::isDisp bits (MNScene_DispSw): where MNScene_Draw renders the scene. */
+#define MN_SCENE_DISP_SCREEN  1 /* the draw buffer (DNUM_DRAW) */
+#define MN_SCENE_DISP_CAPTURE 2 /* DNUM_VRAM2, the screen copy SCFADE_FROM_CAPTURE dissolves from */
 
 typedef struct { // 0x1154
     /* 0x0000 */ u_short isDisp;
