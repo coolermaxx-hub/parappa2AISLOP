@@ -141,7 +141,7 @@ static EXH_STR exh_str_hook[] = {
 
 static u_int thnum_tbl[] = { 0x00e79e79, 0x00f3cf3c, 0x00c1cc1c, 0x00000000 };
 
-TCL_CTRL tcl_ctrl[4][33] = {
+TCL_CTRL tcl_ctrl[TRND_MAX][TCL_TYPE_MAX] = {
     /* TRND_R1 */
     {
         /* TCL_TYPE_EZ_0  */ { .tcl_do_enum_down = TCL_DO_ZERO_UPTO, .tcl_do_enum_up = TCL_DO_OTH_MORE, .min = -1, .max = -1 },
@@ -484,6 +484,13 @@ DISP_LEVEL RANK_LEVEL2DISP_LEVEL(RANK_LEVEL lvl) {
 }
 
 DISP_LEVEL RANK_LEVEL2DISP_LEVEL_HK(RANK_LEVEL lvl) {
+    /*
+     * Original bug: 15 entries for the 17 RANK_LEVEL values, so RLVL_HK_END1
+     * and RLVL_HK_END2 read past the table. levelDownRank turns RLVL_END2 into
+     * RLVL_HK_END1 and ScrExamSetCheck passes the result here (levelChangeCheck),
+     * so a line examined at RLVL_END2 that steps down reads past it. Whether
+     * play can reach that was not checked.
+     */
     DISP_LEVEL lvl_tbl[15] = {
         DLVL_HK_COOL,  DLVL_HK_COOL,
         DLVL_HK_GOOD,  DLVL_HK_GOOD,  DLVL_HK_GOOD,
@@ -1006,6 +1013,13 @@ int ScrDrawTimeGet(int line) {
 
 int ScrDrawTimeGetFrame(int line) {
     if (line & SCR_LINE_REF_MODE) {
+        /*
+         * Original bug: line still has SCR_LINE_REF_MODE set, so GetLineTempo
+         * reads the SCR_CTRL 0x8000 entries past the real one, far beyond the
+         * line table, and the frame uses whatever float lies there. The main
+         * loop calls this every frame a SCRSUBJ_REVERS job runs
+         * (ScrLincChangTblRef sets the flag). ScrDrawTimeGet is not affected.
+         */
         return TICKS_TO_FRAMES(scrRefLineTime, GetLineTempo(line));
     }
 
@@ -2184,8 +2198,9 @@ void tapEventCheck(SCORE_INDV_STR *sindv_pp, int Ttime, int Ctime, int num) {
         mkey_pp->onKey     = onKeyOut;
 
         sindv_pp->scr_tap_memory_cnt++;
-        if (sindv_pp->scr_tap_memory_cnt > 255) {
-            sindv_pp->scr_tap_memory_cnt = 255;
+        /* Full: stay on the last slot, so further presses overwrite it. */
+        if (sindv_pp->scr_tap_memory_cnt > PR_ARRAYSIZE(sindv_pp->scr_tap_memory) - 1) {
+            sindv_pp->scr_tap_memory_cnt = PR_ARRAYSIZE(sindv_pp->scr_tap_memory) - 1;
             printf(" KEY STACK OVER!!\n");
         }
 
@@ -3324,9 +3339,9 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                                 printf("hook end job\n");
                             } else {
-                                if (scex_pp->scr_exam_job[1].goto_line != -1) {
+                                if (scex_pp->scr_exam_job[SCREX_DOWN].goto_line != SCRLINE_NODATA) {
                                     scex_pp->exam_do = EXAM_DO_END_GO;
-                                    scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[1];
+                                    scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[SCREX_DOWN];
 
                                     printf("hook loop job\n");
                                 }
@@ -3571,30 +3586,32 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     MendererReq(men_ctrl_enum);
                                 }
                             } else {
+                                /* Rank moved within the same level (levelChangeCheck returned -1):
+                                 * the script's SUB job for a step down, its ADD job for a step up. */
                                 if (rank_moto < rank_saki) {
-                                    if (scex_pp->scr_exam_job[3].goto_job != -1) {
-                                        if (scex_pp->scr_exam_job[3].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
+                                    if (scex_pp->scr_exam_job[SCREX_SUB].goto_job != SCRLINE_NODATA) {
+                                        if (scex_pp->scr_exam_job[SCREX_SUB].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
                                             scex_pp->exam_do = EXAM_DO_END_GO_RET;
-                                            scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[3];
+                                            scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[SCREX_SUB];
                                         }
                                     }
 
                                     ScrTapReq(SCR_TAP_COMMON, 0, 1);
                                 } else {
-                                    if (scex_pp->scr_exam_job[2].goto_job != -1) {
-                                        if (scex_pp->scr_exam_job[2].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
+                                    if (scex_pp->scr_exam_job[SCREX_ADD].goto_job != SCRLINE_NODATA) {
+                                        if (scex_pp->scr_exam_job[SCREX_ADD].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
                                             scex_pp->exam_do = EXAM_DO_END_GO_RET;
-                                            scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[2];
+                                            scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[SCREX_ADD];
                                         }
                                     }
                                     ScrTapReq(SCR_TAP_COMMON, 0, 0);
                                 }
                             }
                         } else {
-                            if (scex_pp->scr_exam_job[2].goto_job != -1) {
-                                if (scex_pp->scr_exam_job[2].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
+                            if (scex_pp->scr_exam_job[SCREX_ADD].goto_job != SCRLINE_NODATA) {
+                                if (scex_pp->scr_exam_job[SCREX_ADD].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
                                     scex_pp->exam_do = EXAM_DO_END_GO_RET;
-                                    scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[2];
+                                    scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[SCREX_ADD];
                                 }
                             }
 
@@ -3662,12 +3679,14 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 sub_time = sej_pp->goto_job_time;
 
                 ScrCtrlIndvNextRead(sindv_pp, 1);
-                sindv_pp->sjob[0] = exam_start;
-                sindv_pp->sjob_data[0][0] = 0;
-                sindv_pp->sjob_data[0][1] = 0;
-                sindv_pp->sjob[2] = exam_start;
-                sindv_pp->sjob_data[2][0] = 0;
-                sindv_pp->sjob_data[2][1] = 0;
+                /* Run when this player wakes at exam_start: the BGM volume comes back up (the seek
+                 * below sets it to 0) and drawing, subtitles and the mbar return to this line. */
+                sindv_pp->sjob[SCRSUBJ_CDSND_ON] = exam_start;
+                sindv_pp->sjob_data[SCRSUBJ_CDSND_ON][0] = 0;
+                sindv_pp->sjob_data[SCRSUBJ_CDSND_ON][1] = 0;
+                sindv_pp->sjob[SCRSUBJ_DRAW_CHANGE] = exam_start;
+                sindv_pp->sjob_data[SCRSUBJ_DRAW_CHANGE][0] = 0;
+                sindv_pp->sjob_data[SCRSUBJ_DRAW_CHANGE][1] = 0;
 
                 sindv_pp->wakeUpTime = sub_time;
                 sindv_pp->wakeUpGoTime = exam_start;
@@ -3764,6 +3783,16 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
             TapCt(TAPCT_SETEFFECTMODE, sindv_pp->sjob_data[j][0], sindv_pp->sjob_data[j][1]);
             break;
         case SCRSUBJ_REVERS: {
+            /*
+             * Scrubs the picture during a line move. ScrMoveSetSub sets the ref*
+             * fields on the move line's player: as this line's clock goes from 0
+             * to sjob_data[j][0], the reference time runs linearly from
+             * refStartTime (end of the examined tap set) to refTargetTime (the
+             * target line's next draw change, targetTimeGet), and keeps the same
+             * rate after that. The examined line's draw table is shown for the
+             * first half, the target line's after. See the bug in
+             * ScrDrawTimeGetFrame.
+             */
             int drline = sindv_pp->retStartLine;
             int time_tmp;
 
@@ -3788,7 +3817,9 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
             ScrTapReq(SCR_TAP_COMMON, sindv_pp->sjob_data[j][0], sindv_pp->sjob_data[j][1]);
             break;
         case SCRSUBJ_TITLE:
-            if (sindv_pp->sjob_data[j][0] == 0) {
+            /* sjob_data[j][0] is a SCRRJ_TITLE_ENUM: in the two JUMP modes Start jumps the
+             * clock ahead in the score; in SCRRJ_TITLE_START it ends the title (ScrEndCheckTitle). */
+            if (sindv_pp->sjob_data[j][0] == SCRRJ_TITLE_JUMP) {
                 if (sindv_pp->sjob_data[j][1] == 0) {
                     MendererCtrlTitle();
                     sindv_pp->sjob_data[j][1] = 1;
@@ -3797,7 +3828,7 @@ void subjobEvent(SCORE_INDV_STR *sindv_pp, int ctime_next) {
                     int next_time = ScrCtrlIndvNextTime(sindv_pp, 2);
                     TimeCallbackTimeSetChanTempo(sindv_pp->useLine, next_time, GetLineTempo(sindv_pp->useLine));
                 }
-            } else if (sindv_pp->sjob_data[j][0] == 2) {
+            } else if (sindv_pp->sjob_data[j][0] == SCRRJ_TITLE_JUMP_DERA) {
                 if (sindv_pp->sjob_data[j][1] == 0) {
                     MendererCtrlTitleDera();
                     sindv_pp->sjob_data[j][1] = 1;
@@ -4423,11 +4454,11 @@ int SetIndvCdChannel(SCORE_INDV_STR *sindv_pp) {
     chantmp[0] = tapset_pp->chan[0];
     chantmp[1] = tapset_pp->chan[1];
 
-    if (tapset_pp->chan[0] == -2) {
+    if (tapset_pp->chan[0] == TAPSET_CHAN_KEEP) {
         return 1;
     }
 
-    if (tapset_pp->chan[0] == -1) {
+    if (tapset_pp->chan[0] == TAPSET_CHAN_AUTO) {
         if (scr_ctrl_pp->scr_chan_auto_size != 0) {
             int i;
             int haba = tapset_pp->taptimeEnd - tapset_pp->taptimeStart;
@@ -4471,11 +4502,11 @@ int CheckIndvCdChannel(SCORE_INDV_STR *sindv_pp, u_char *chantmp) {
     chantmp[0] = tapset_pp->chan[0];
     chantmp[1] = tapset_pp->chan[1];
 
-    if (tapset_pp->chan[0] == -2) {
+    if (tapset_pp->chan[0] == TAPSET_CHAN_KEEP) {
         return 0;
     }
 
-    if (tapset_pp->chan[0] == -1) {
+    if (tapset_pp->chan[0] == TAPSET_CHAN_AUTO) {
         SCR_CTRL *scr_ctrl_pp = &sindv_pp->top_scr_ctrlpp[sindv_pp->useLine];
         int       i;
         int       haba;

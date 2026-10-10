@@ -334,7 +334,7 @@ void comMakingNo3(CM_STR_CTRL *cmstr_pp) {
         int mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
 
         if (cmstr_pp->keyCnt_now[mabiki] >= 2) {
-            comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, 0, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
+            comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, KiNO, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
         }
     }
 
@@ -415,7 +415,7 @@ void comMakingNo15(CM_STR_CTRL *cmstr_pp) {
         int mabiki = comMakeSSmaxCntGet(cmstr_pp->keyCnt_now);
 
         if (cmstr_pp->keyCnt_now[mabiki] >= 2) {
-            comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, 0, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
+            comMakeSubSwapCntKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox, mabiki, KiNO, randMakeMax(cmstr_pp->keyCnt_now[mabiki]));
         }
     }
 
@@ -427,7 +427,7 @@ void comMakingNo15(CM_STR_CTRL *cmstr_pp) {
 void comMakingNo16(CM_STR_CTRL *cmstr_pp) {
     setMakingDataCopy(cmstr_pp->cm_str_make, cmstr_pp->cm_str_now);
 
-    if (cmstr_pp->keyCnt_now[0] < (cmstr_pp->maxBox / 2)) {
+    if (cmstr_pp->keyCnt_now[KiNO] < (cmstr_pp->maxBox / 2)) {
         comMakeSubDoubleKey(cmstr_pp->cm_str_make, cmstr_pp->maxBox);
     }
 

@@ -437,6 +437,8 @@ USERNAME_CSET UserName_CharSet[] = {
 };
 static u_char *TeachersName_Tbl[] = { "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER", "TEACHER" };
 static u_char *UserName_RankingNoSave = (u_char*)"";
+/* Indexed by the BCD month byte of a save date (0x01-0x12), so 0x0a-0x0f are blank;
+ * TsUser_PanelDraw clamps the byte to 0x12. */
 static char *_MONTH_STR[] = {
     "", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JLY", "AUG", "SEP", "", "", "", "", "", "",
     "OCT", "NOV", "DEC", NULL,
@@ -2468,7 +2470,14 @@ static void TsGetMenuPad(int no, u_int *getpad) {
     one = pPad->mone;
     shot = pPad->mshot;
 
-    for (i = 0; i < 4; i++, pRpPad++, pPadBit++) {
+    /*
+     * Auto-repeat for the four directions (D-pad, or the left stick via mone/mshot):
+     * a held direction fires again 20 frames after the press, then every 5 frames.
+     * From the 19th held frame on, state is 3 on a repeat frame and 2 otherwise
+     * (TsGetMenuPadIsRepeat tests state >= 2). Other buttons report only the frame
+     * they are pressed.
+     */
+    for (i = 0; i < PR_ARRAYSIZEU(RPPadBit); i++, pRpPad++, pPadBit++) {
         padMsk |= *pPadBit;
         if (one & *pPadBit) {
             pRpPad->time = 0;
@@ -2506,7 +2515,7 @@ static void TsSndFlow(int flg) {
 
     pchan = TsSndChan;
 
-    for (i = 0; i < 15; i++, pchan++) {
+    for (i = 0; i < PR_ARRAYSIZE(TsSndChan); i++, pchan++) {
         ptap = pchan->pTap;
         if (ptap != NULL) {
             pchan->tim++;
@@ -2939,7 +2948,7 @@ static void TsClearSet(P3GAMESTATE *pstate) {
             /* Walk on to the next stage after a first clear. */
             int nextPos = pstate->nStage + 1;
 
-            if (nextPos >= 9) {
+            if (nextPos >= MAP_POS_RECORD_SHOP) {
                 nextPos = 1;
             }
             pstate->autoMovePos[1] = AUTO_MOVE_STOP;
@@ -2993,7 +3002,8 @@ static void TsClearSet(P3GAMESTATE *pstate) {
     if (bGoRecShop) {
         short *pRute = RecordShopRute[nStage + 1];
 
-        for (i = 0; i < 9; i++) {
+        /* Leave room for the AUTO_MOVE_RECORD_SHOP end mark. */
+        for (i = 0; i < PR_ARRAYSIZE(pstate->autoMovePos) - 1; i++) {
             pstate->autoMovePos[i] = pRute[i];
             if (pRute[i] < 0) {
                 break;
@@ -6726,13 +6736,13 @@ static RANKLIST* TsGetRankingList(int flag, int vsLev, int stageNo, int *nrank) 
 
         if (pUser->flg == P3MC_USER_VALID) {
             if (flag == 0) {
-                if (pUser->isVs != 0) {
+                if (pUser->isVs != PLAY_MODE_SINGLE) {
                     continue;
                 }
                 n     = pUser->stageRank[stageNo].nSplay;
                 pRank = pUser->stageRank[stageNo].splay;
             } else {
-                if (pUser->isVs != 2) {
+                if (pUser->isVs != PLAY_MODE_VS_COM) {
                     continue;
                 }
                 n     = pUser->stageRank[stageNo].nVplay[vsLev];
@@ -8176,6 +8186,9 @@ static void TSJukeCDObj_Draw(SPR_PKT pk, SPR_PRM *spr, JUKECDOBJ *pw, int px, in
         if (pw->atime == 0) {
             pw->atime = 80;
             pw->rrot = swing;
+            /* Start at -(0 + 1 + ... + 59) = -1770: the frames below add 59, 58, ..., 1
+             * back, so the record slows to a stop at angle 0 and holds there once atime
+             * is down to 20. */
             for (i = 0; i < 60; i++) {
                 pw->rrot -= i;
             }
@@ -8572,11 +8585,12 @@ static int TsJukeMenu_Flow(int flg, u_int tpad) {
         }
 
         for (i = 0; i < PR_ARRAYSIZE(pP3GameState->pLog->clrVSCOM1); i++) {
-            if (pP3GameState->pLog->clrVSCOM1[i] < 4) {
+            if (pP3GameState->pLog->clrVSCOM1[i] < LVS_MAX) {
                 break;
             }
         }
-        if (i < 8) {
+        /* The last record needs every stage beaten at the computer's top level. */
+        if (i < PR_ARRAYSIZE(pP3GameState->pLog->clrVSCOM1)) {
             pfw->cusObj[9].bMsk = 1;
         }
 
@@ -9900,7 +9914,7 @@ static void TsUserList_Draw(SPR_PKT pk, SPR_PRM *spr) {
     if (pfw->curPageTop > 0) {
         TsPatPut(pk, spr, &scr[0], 0, 0);
     }
-    if (pfw->curPageTop + 5 < pfw->userMax) {
+    if (pfw->curPageTop + ULST_ROWS < pfw->userMax) {
         TsPatPut(pk, spr, &scr[1], 0, 0);
     }
     TsPatPut(pk, spr, &CSSLASH_MARK, 0, 0);
@@ -10082,13 +10096,13 @@ static void TsUser_PanelDraw(SPR_PKT pk, SPR_PRM *spr, USER_DATA *user, int px, 
             TsPatPut(pk, spr, &VS_MARK, px, py);
 
             switch (user->winner) {
-            case 0:
+            case P3WIN_1P:
                 TsPatPut(pk, spr, &VS_WINMARK1, px, py);
                 break;
-            case 1:
+            case P3WIN_2P:
                 TsPatPut(pk, spr, &VS_WINMARK2, px, py);
                 break;
-            case 2:
+            case P3WIN_DRAW:
                 break;
             }
 
@@ -10498,7 +10512,7 @@ static void TsNAMEINBox_Draw(SPR_PKT pk, SPR_PRM *spr, int px, int py, int isLog
         spr->px = x;
         spr->py = y;
         spr->sh = 0x19;
-        spr->sw = (pfw->curnpos == 8) ? 0x18 : 0x15;
+        spr->sw = (pfw->curnpos == USERNAME_LEN) ? 0x18 : 0x15; /* wider on the OK button */
     }
 
     spr->rgba0 = GetDToneColor(curcol & 0xffffff, curcol, ton);
@@ -10859,10 +10873,10 @@ static void _TsPatSetPrm(SPR_PKT pk, SPR_PRM *spr, PATPOS *ppos, int ox, int oy)
         PkTEX0_Add(pk, ptex->tex0);
         break;
     case 1:
-        PkTEX0_Add(pk, ptex->tex0 | ((u_long)2 << 35));
+        PkTEX0_Add(pk, ptex->tex0 | ((u_long)SCE_GS_HILIGHT << GS_TEX0_TFX_O));
         break;
     case 2:
-        PkTEX0_Add(pk, ptex->tex0 | ((u_long)3 << 35));
+        PkTEX0_Add(pk, ptex->tex0 | ((u_long)SCE_GS_HIGHLIGHT2 << GS_TEX0_TFX_O));
         break;
     }
 

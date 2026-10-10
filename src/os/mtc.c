@@ -26,7 +26,7 @@ static char mtcStack_0D[MTC_TASK_SIZE_0D] PR_ALIGNED(16);
 static char mtcStack_0E[MTC_TASK_SIZE_0E] PR_ALIGNED(16);
 static char mtcStack_0F[MTC_TASK_SIZE_0F] PR_ALIGNED(16);
 
-static MTC_TASK_CONB mtcTaskConB[16];
+static MTC_TASK_CONB mtcTaskConB[MTC_TASK_MAX];
 static char mtcStack_Ctrl[MTC_TASK_SIZE_CTRL];
 static struct ThreadParam th_para_Ctrl;
 
@@ -42,7 +42,7 @@ int mtcStackSizeTbl[] = {
     MTC_TASK_SIZE_0E,   MTC_TASK_SIZE_0F
 };
 
-char* mtcStack[16] = {
+char* mtcStack[MTC_TASK_MAX] = {
     mtcStack_CTRL, mtcStack_MAIN, mtcStack_02, mtcStack_03,
     mtcStack_04,   mtcStack_05,   mtcStack_06, mtcStack_07,
     mtcStack_08,   mtcStack_09,   mtcStack_0A, mtcStack_0B,
@@ -72,7 +72,7 @@ void MtcChangeThCtrl(void *x) {
     while (1) {
         mtcCurrentTask++;
 
-        if (mtcCurrentTask > 15) {
+        if (mtcCurrentTask >= MTC_TASK_MAX) {
             mtcCurrentTask = 0;
             if (MtcResetCheck() != 0) {
                 SignalSema(mtcSemaEnd);
@@ -179,6 +179,10 @@ void MtcKill(long level) {
     MTC_TASK_CONB *tcb_pp = &mtcTaskConB[level];
     MTC_COND_ENUM  mtc_f  = tcb_pp->status;
 
+    /* Original bug: this should be &= to strip the pause flag. With |=, mtc_f
+     * is never MTC_COND_KILL or MTC_COND_EXEC, so every call marks the slot
+     * killed and calls TerminateThread and DeleteThread on its th_id, even on
+     * a slot that is already dead (a stale id, or 0 if never used). */
     mtc_f |= ~MTC_COND_PAUSE;
 
     if (mtc_f != MTC_COND_KILL) {
@@ -195,7 +199,7 @@ void MtcKill(long level) {
 void MtcPause(long level) {
     MTC_TASK_CONB *tcb_pp = &mtcTaskConB[level];
 
-    if (tcb_pp->status != 0) {
+    if (tcb_pp->status != MTC_COND_KILL) {
         tcb_pp->status |= MTC_COND_PAUSE;
     }
 }

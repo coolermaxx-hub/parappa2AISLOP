@@ -628,6 +628,12 @@ int selPlayDispTitleDisp(int sel_stage, int sel_disp, int ovl_load) {
 
         SpHatChangeSub();
 
+        /* D-pad down on pad 1 at the title toggles debug mode, still reachable
+         * in this build: "DEBUG" shows on the title, and after each menu
+         * selection dbg_select_disp offers the tap level (TABLE: AUTO or a fixed
+         * level), the line-score override (SCORE DBUG: hold d-pad down/up for a
+         * line score of 1/500, scrctrl.c) and NON PLAY (dummyPlay instead of
+         * the stage). */
         if (pad[0].one & SCE_PADLdown) {
             dbg_select_str.debug_on ^= 1;
         }

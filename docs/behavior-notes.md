@@ -493,6 +493,8 @@ Provenance: direct reading of `src/os/system.c`, `src/os/mtc.c`, `include/os/mtc
 
 So in every frame: VBlank, pad read, game flow, score/judgement, then drawing. A port that replaces threads with plain function calls must keep this order, and must keep `MtcWait(n)` semantics: a task started with `MtcExec` in a higher slot than the caller runs later in the same frame, while one in a lower slot first runs next frame. `MtcExec` on a busy slot kills the old task first. The scheduler checks a stack canary (`0x572a8b4c`) on every wait and hangs on overflow.
 
+**`MtcKill` ignores the slot's state (original bug, checked against `asm/os/mtc.s`).** It meant to strip the pause flag with `status & ~MTC_COND_PAUSE` but ORs it in, so its tests for a dead slot (`MTC_COND_KILL`) and for a task in `MTC_COND_EXEC` never pass. Every call marks the slot dead and calls `TerminateThread` and then `DeleteThread` on the slot's stored thread id, even when the slot is already empty. `th_id` is never cleared, so that id may be stale (or 0 if the slot was never used). This happens on every `MtcExec` (which kills the slot first) and for all 16 slots in `MtcQuit`. A port's thread layer has to accept terminating and deleting an id that is dead or not a thread. The original also terminates an `EXEC` task, which the code meant to skip. On hardware the kernel rejects calls on an id that is not in use; whether a freed id could be reused by another slot's thread before such a call was not checked.
+
 **`osFunc` order (`system.c:225`).** `rand()`; `CmnGifFlush()` (send last frame's 2D packets on PATH3); `sceGsSyncPath`; `sceGsSyncV` (wait for VBlank, returns the field: odd/even); `T0_COUNT = 0` (the hblank counter used for load throttling and debug meters); `GPadSysRead` + `GPadRead`; flip `outbuf_idx`; `CmnGifClear()`; set the half-pixel offset for the next field; wait for GIF DMA; `sceGsSwapDBuffDc`.
 
 **Video mode.** `sceGsResetGraph(0, SCE_GS_INTERLACE, SCE_GS_NTSC, SCE_GS_FRAME)` with 640x224 draw buffers (`SCREEN_HEIGHT / 2`), 32-bit colour and 32-bit Z (`ZGEQUAL`). Each frame is rendered at half height and offset by half a line according to the field (`sceGsSetHalfOffset(..., oddeven_idx ^ 1)`), so the output is 60 fields per second. A port can render at full height and ignore the field offset; it does not feed back into game logic. Extra GS buffers (`drawEnvSp`, `drawEnvZbuff`, `drawEnvEnd`) share the draw env and differ only in FBP.
@@ -814,7 +816,10 @@ come from the tap set: text of three or more lines is split into two-line pages
 spread evenly over the tap window. `@` (or the full-width Shift-JIS `@`) starts
 a new line. Japanese text is stored as EUC and converted to Shift-JIS with the
 usual `euc2sjis` arithmetic before the glyph lookup; characters without a glyph
-are skipped. Lines are centred on screen, starting at field line 168, or 186
+are skipped. In Japanese text a single-byte space is skipped with no width by
+`SubtMsgPrint`, but `SubtMsgDataKaijyouCnt` and `SubtMsgDataPos`, which count
+and page the lyric lines, read it as the first byte of a two-byte character.
+A port that merges the three parsers would change line counts or spacing. Lines are centred on screen, starting at field line 168, or 186
 for story-type steps (`PSTEP_SERIAL`, bonus, hook and XTR scenes) and Boxy's
 wipe. Fonts are chosen by `SUBT_FONT` (`include/main/subt.h`).
 
@@ -846,6 +851,22 @@ the source.
   result, so the bad index never occurs.
 - **Leak on allocation failure** (`PkMesh_Create`, `pksprite.c`). When the
   point array cannot be allocated it calls `free(NULL)` and leaks the mesh.
+- **Draw time read from far past the line table** (`ScrDrawTimeGetFrame`,
+  `scrctrl.c`). While a line move scrubs the picture (`SCRSUBJ_REVERS`), the
+  draw line carries the `SCR_LINE_REF_MODE` flag (0x8000), and this function
+  passes it unmasked to `GetLineTempo`. The tempo comes from the `SCR_CTRL`
+  entry 0x8000 past the real one, about 1.4 MB beyond the table, and the frame
+  number is computed from whatever float lies there. `ScrDrawTimeGet`, used for
+  the rhythm bar and subtitles, handles the flag correctly.
+- **Hook display-level table too short** (`RANK_LEVEL2DISP_LEVEL_HK`,
+  `scrctrl.c`). The table has 15 entries for 17 `RANK_LEVEL` values, so
+  `RLVL_HK_END1` and `RLVL_HK_END2` read past it on the stack. `levelDownRank`
+  maps `RLVL_END2` to `RLVL_HK_END1`, and `ScrExamSetCheck` passes that to
+  `levelChangeCheck`. Whether play can reach it was not checked.
+- **Subtitle parse buffers are unbounded** (`SubtMsgPrint`, `subt.c`). It
+  fills 16 line records and 256 glyph pointers with no bounds checks; `mline`
+  limits only how many lines are drawn, after parsing. A message has to fit in
+  16 lines and 256 glyphs.
 - `FD_MonocroDisp` (`effect.c`) clips the width against the height and lets a
   channel value of 256 wrap to 0, but nothing calls it.
 

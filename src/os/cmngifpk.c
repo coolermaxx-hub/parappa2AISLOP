@@ -10,7 +10,8 @@ static int cmngif_pri_cnt;
 
 static u_long128 *cmnGifPkBase, *cmnGifPkCurrent, *cmnGifPkEnd;
 
-static u_long128 cmnGifTr[65];
+/* DMA chain for CmnGifFlush: one CALL tag per queued packet, then the END tag. */
+static u_long128 cmnGifTr[PR_ARRAYSIZE(cmngif_pri) + 1];
 static sceGifPacket cmnGifPacket;
 
 void CmnGifInit(void *buf_adr, int size) {
@@ -180,7 +181,7 @@ void CmnGifADPacketMake2(sceGifPacket *gifP_pp, sceGsFrame *gsframe_pp) {
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEX1_2, 0);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_TEST_2, GS_TEST_OFF);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_PRMODECONT, SCE_GS_SET_PRMODECONT(1));
-    sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_2, 0);
+    sceGifPkAddGsAD(gifP_pp, SCE_GS_CLAMP_2, GS_CLAMP_REPEAT);
     sceGifPkAddGsAD(gifP_pp, SCE_GS_RGBAQ, SCE_GS_SET_RGBAQ(128, 128, 128, 128, 1));
 }
 

@@ -392,7 +392,7 @@ void intReadSub(void) {
         case FT_R4: {
             int i;
 
-            if (GetHatRound() == (PACK(head_read_pp)->ftype - 4)) {
+            if (GetHatRound() == (PACK(head_read_pp)->ftype - FT_R1)) {
                 printf("int file tim2 round:%d file in\n", PACK(head_read_pp)->ftype - 3);
 
                 for (i = 0; i < PACK(head_read_pp)->fnum; i++) {
@@ -559,7 +559,7 @@ void CdctrlMemIntgDecode(u_int rbuf, u_int setbuf) {
         case FT_R4: {
             int i;
 
-            if (GetHatRound() == PACK(head_read_pp)->ftype - 4) {
+            if (GetHatRound() == PACK(head_read_pp)->ftype - FT_R1) {
                 printf("int file tim2 round:%d file in\n", PACK(head_read_pp)->ftype - 3);
 
                 for (i = 0; i < PACK(head_read_pp)->fnum; i++) {

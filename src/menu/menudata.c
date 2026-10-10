@@ -901,7 +901,8 @@ static int rt2t_r4[] = {
     0x16e, 0x16f, 0x170, 0,
 };
 
-static RT2TRANS_STR rt2trans_str[4] = {
+/* The three TIM2 textures of Parappa's hat for each round (MenuRoundTim2Trans). */
+static RT2TRANS_STR rt2trans_str[TRND_MAX] = {
     { .num = 3, .data_pp = rt2t_r1 },
     { .num = 3, .data_pp = rt2t_r2 },
     { .num = 3, .data_pp = rt2t_r3 },
@@ -1020,16 +1021,16 @@ void* MenuDataGetIconSysHed(int mode, int stageNo, int *size) {
     }
 
     switch (mode) {
-    case 0:
-        if (stageNo >= 0 && stageNo <= 3) {
+    case 0: /* a save's icon, by Parappa's cap colour (1-4) */
+        if (stageNo >= 0 && stageNo < PR_ARRAYSIZE(menumciconL)) {
             ptr = &menumciconL[stageNo].iconSys;
             if (size != NULL) {
                 *size = sizeof(MenuMcIconSys);
             }
         }
         break;
-    case 1:
-        if (stageNo >= 0 && stageNo <= 7) {
+    case 1: /* a replay's icon, by stage (1-8) */
+        if (stageNo >= 0 && stageNo < PR_ARRAYSIZE(menumciconR)) {
             ptr = &menumciconR[stageNo].iconSys;
             if (size != NULL) {
                 *size = sizeof(MenuMcIconSys);
@@ -1045,7 +1046,9 @@ void MenuDataSndInit(void) {
     _BankChan1Req = 0;
     _BankChan1Stat = 0;
 
-    TapCt(TAPCT_ALLOCSPU | 1, 0x135010, TAPCT_NONE);
+    /* The menu moves channel 1's sound bank 0x10000 above where a stage keeps it
+     * (scr_snd_area in etc.c; SpuBankSet moves it back). */
+    TapCt(TAPCT_ALLOCSPU | MENU_SPU_CHAN1, 0x135010, TAPCT_NONE);
     TapCt(TAPCT_SETMASTERVOL, SPU_VOLUME_LR(SPU_VOLUME_MAX, SPU_VOLUME_MAX), TAPCT_NONE);
 }
 
@@ -1063,7 +1066,8 @@ void MenuDataSndStop(int chanId) {
 void MenuDataSndQuit(void) {
     int i;
 
-    for (i = 0; i < 3; i++) {
+    /* Channel 3, which holds the wipe sounds (scr_snd_area in etc.c), stays open. */
+    for (i = 0; i < MENU_SPU_MAX; i++) {
         TapCt(TAPCT_CHANCLOSE | i, TAPCT_NONE, TAPCT_NONE);
     }
 }
@@ -1162,6 +1166,8 @@ void MenuVoicePlayVol(int chanId, int vsetIdx, int vol0) {
     MENU_SPU_ENUM  trId;
     int            bnkNo;
 
+    /* Every VoiceSet entry has bnkNo 0, so voices always play on MENU_SPU_CHAN and the
+     * MENU_SPU_CHAN1 branch below is never taken (_BankChan1Stat is never set nonzero either). */
     bnkNo = VoiceSet[vsetIdx].bnkNo;
     if (bnkNo != 0) {
         if (_BankChan1Req != bnkNo) {

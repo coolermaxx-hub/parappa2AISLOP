@@ -59,6 +59,10 @@ typedef struct { // 0x34
     /* 0x30 */ TAPSCODE_ENUM tapscode;
 } TAPSET;
 
+/* TAPSET::chan[0] values that do not name a CD stream channel. */
+#define TAPSET_CHAN_AUTO (-1) /* the line's scr_chan_auto entry for the tap window's width, else its cdChan */
+#define TAPSET_CHAN_KEEP (-2) /* leave the current channels */
+
 typedef struct { // 0x8
     /* 0x0 */ int tapset_size;
     /* 0x4 */ TAPSET *tapset_pp;

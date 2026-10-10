@@ -255,10 +255,12 @@ static GUIMAP guimap[] = {
     { CMNF_SPM_CUNT2P, CMNF_SPA_CUNT2P_CUNT, CMNF_SPA_CUNT2P_CUNT_P, 0, 0, 0, &vsScoreAni[1], &vsScoreMove[1] },
 };
 
-static int guimap_single[] = { 0, 1, 4, 0 };
-static int guimap_vs[] = { 1, 4, 8, 9 };
-static int guimap_sr[] = { 5, 0 };
-static int guimap_hk[] = { 5, 0 };
+/* Models MbarDispGuiScene shows for each play step, as guimap indices. It reads
+ * only the first use_mappp_cnt entries, so the trailing zeros are never used. */
+static int guimap_single[] = { GUIME_COUNTER, GUIME_HARI_L, GUIME_JIMAKU, 0 };
+static int guimap_vs[] = { GUIME_HARI_L, GUIME_JIMAKU, GUIME_VS_SCORE1P, GUIME_VS_SCORE2P };
+static int guimap_sr[] = { GUIME_JIMAKU_SER, 0 };
+static int guimap_hk[] = { GUIME_JIMAKU_SER, 0 };
 
 void examCharSet(EX_CHAR_DISP *ecd_pp, sceGifPacket *gifpk_pp) {
     int wl, hl;
@@ -389,13 +391,13 @@ static void NikoReset(void) {
 }
 
 void MbarNikoHookUse(void) {
-    niko_chan_str_cnt = 10;
+    niko_chan_str_cnt = PR_ARRAYSIZE(niko_chan_str_hook);
     niko_chan_str_pp = niko_chan_str_hook;
     NikoReset();
 }
 
 void MbarNikoVsUse(void) {
-    niko_chan_str_cnt = 6;
+    niko_chan_str_cnt = PR_ARRAYSIZE(niko_chan_str_vs);
     niko_chan_str_pp = niko_chan_str_vs;
     NikoReset();
 }
@@ -405,6 +407,11 @@ void MbarNikoUnUse(void) {
     niko_chan_str_cnt = 0;
 }
 
+/* Fills faces from face ofs on, counting num in half faces: num / 2 full faces,
+ * then a half face if num is odd. The hook exam passes two halves (one face) per
+ * line passed, out of HOOK_PASS_LINES (10) faces; versus passes two per win and
+ * one per draw, with Parappa's faces in the left column (from face 0) and the
+ * opponent's in the right (from face 3). */
 void MbarNikoSet(int num, int ofs) {
     int i;
 
@@ -742,6 +749,13 @@ float examScore2Level(long score) {
     return ret_lvl;
 }
 
+/* Called each frame from MbarDispScene while the bar is shown. After
+ * ExamDispReq the exam meter needles swing out towards the line's exam
+ * sub-scores over 30 frames, hold until frame 60 and swing back to centre by
+ * frame 90; on frame 91 the display goes idle again (exam_disp_cursor_timer
+ * -1). Until then a player flagged by ExamDispReq shows the signed line score
+ * (now_score) instead of the total, pulsing blue if positive and red
+ * otherwise on a 32-frame cycle. */
 static void ExamDispOn(void) {
     int met_time;
     int i;
@@ -1037,8 +1051,10 @@ static void MbarCl1CharSet(int col_num, int moto_num) {
 static void MbarCharSetSub(void) {
     int i;
 
-    for (i = 0; i < 7; i++) {
-        MbarCl1CharSet(i + 15, i + 1);
+    /* The dimmed (BW) button sprites are CLUT-only entries: give each one the
+     * texture and size of the matching normal button sprite, keeping its own CLUT. */
+    for (i = 0; i < MBC_OTEHON_M_TOP - MBC_OTEHON_TOP; i++) {
+        MbarCl1CharSet(i + MBC_OTEHON_BW_TOP, i + MBC_OTEHON_TOP);
     }
 }
 
@@ -1356,9 +1372,10 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
                 mbarr_chr2.yp += 25;
             }
 
+            /* The line crosses the row break: end the first piece on the first row's last tick. */
             if (mbarr_chr2.yp != mbarr_chr2.yp2) {
-                mbarr_chr2.xp2 = MbarGetDispPosX(479);
-                mbarr_chr2.yp2 = MbarGetDispPosY(479);
+                mbarr_chr2.xp2 = MbarGetDispPosX(MBAR_ROW_TICKS - 1);
+                mbarr_chr2.yp2 = MbarGetDispPosY(MBAR_ROW_TICKS - 1);
 
                 if (mr_pp->mbar_req_enum & MBAR_BIT_ROW_LOW) {
                     mbarr_chr2.yp2 += 50;
@@ -1386,14 +1403,14 @@ void MbarBackSet(MBAR_REQ_STR *mr_pp) {
         }
     }
 
-    /* A ball on every beat from the first tap on, a star on every bar. */
-    for (i = stt + 24; i < endt; i += 24) {
-        if ((i - 24) >= sttap) {
+    /* A ball on every step from the first tap on, a star on every beat. */
+    for (i = stt + TICKS_PER_STEP; i < endt; i += TICKS_PER_STEP) {
+        if ((i - TICKS_PER_STEP) >= sttap) {
             mbarr.xp = MbarGetDispPosX(i - stt);
             mbarr.yp = MbarGetDispPosY(i - stt);
 
             mbarr.mbc_enum = MBC_BALL;
-            if (((i / 24) % 4) == 0) {
+            if (((i / TICKS_PER_STEP) % (TICKS_PER_BEAT / TICKS_PER_STEP)) == 0) {
                 mbarr.mbc_enum = MBC_STAR;
             }
 
@@ -1819,7 +1836,7 @@ static void guidisp_init_pr(void) {
     PrAnimateSceneCamera(guime_hdl, 0.0f);
 
     guim_pp = guimap;
-    for (i = 0; i < 10u; i++, guim_pp++) {
+    for (i = 0; i < PR_ARRAYSIZEU(guimap); i++, guim_pp++) {
         guim_pp->spmHdl = PrInitializeModel(cmnfGetFileAdrs(guim_pp->spmmap), guime_hdl);
 
         if (guim_pp->spamap >= 0) {
@@ -1853,7 +1870,7 @@ static void guidisp_draw_quit(int drapP) {
     PrWaitRender();
 
     guim_pp = guimap;
-    for (i = 0; i < 10u; i++, guim_pp++) {
+    for (i = 0; i < PR_ARRAYSIZEU(guimap); i++, guim_pp++) {
         if (guim_pp->spamap >= 0) {
             PrUnlinkAnimation(guim_pp->spmHdl);
             PrCleanupAnimation(guim_pp->spaHdl);
@@ -1950,7 +1967,7 @@ int MbarDispGuiScene(void *para_pp, int frame, int first_f, int useDisp, int drD
             PrShowModel(guimap[GUIME_NEW_OTEHON].spmHdl, NULL);
         }
 
-        curnum = mbar_req_str[PINDEX_TEACHER].gui_cursor_enum - 3;
+        curnum = mbar_req_str[PINDEX_TEACHER].gui_cursor_enum - GUI_CUR_ST1;
         if (curnum < 0) {
             curnum = mbar_ctrl_stage_selT;
         }
@@ -2089,7 +2106,7 @@ void MbarDemoCharDisp(void) {
     };
 
     SprInit();
-    ChangeDrawArea(DrawGetDrawEnvP(2));
+    ChangeDrawArea(DrawGetDrawEnvP(DNUM_DRAW));
     tim2_dat_pp = &tim2spr_tbl[53];
     spr_prim.w = tim2_dat_pp->w;
     spr_prim.h = tim2_dat_pp->h;

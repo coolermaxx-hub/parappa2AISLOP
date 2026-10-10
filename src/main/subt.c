@@ -9,6 +9,9 @@
 #define SJIS_FULLWIDTH_AT_HI 0x81
 #define SJIS_FULLWIDTH_AT_LO 0x97
 
+/* Distance between subtitle lines, in field lines. */
+#define SUBT_LINE_HEIGHT 13
+
 /* Glyph rectangles in the font texture for ASCII 0x20-0xff (adjx/adjy are pen offsets). */
 static MCODE_ASCII mcode_ascii[224] = {
     { 0, 0, 16, 25, 0, 0 }, /* 0x20 ' ' */
@@ -250,6 +253,9 @@ static int subtSetNum = 0;
 static MCODE_STR *kanji_pp;
 
 static sceGifPacket subtPkSpr;
+/* Width and glyph count of each line, and the glyphs of the whole message. SubtMsgPrint
+ * fills them without bounds checks (mline limits only what is drawn), so a message must
+ * fit in 16 lines and 256 glyphs. */
 static SUBT_CODE subt_code[16];
 static MCODE_DAT *mcode_dat_pp[256];
 
@@ -283,7 +289,8 @@ void SubtFlash(void) {
 
 void SubtMcodeSet(int code) {
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX0_1, SubtGsTex0[code]);
-    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(0, 0, 0, 1, 1, 0, 0));
+    sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEX1_1, SCE_GS_SET_TEX1(/*LCM*/0, /*MXL*/0, /*MMAG*/SCE_GS_NEAREST, /*MMIN*/SCE_GS_LINEAR,
+                                                               /*MTBA*/1, /*L*/0, /*K*/0));
     sceGifPkAddGsAD(&subtPkSpr, SCE_GS_TEXA, GS_TEXA_STP);
 }
 
@@ -341,12 +348,12 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
     WorkClear(&subt_code, sizeof(subt_code));
 
     line_num = 0;
-    hsize    = 13;
+    hsize    = SUBT_LINE_HEIGHT;
     tmp_pp   = msg_pp;
 
     while (1) {
-        if (hsize == 13) {
-            hsize = 13;
+        if (hsize == SUBT_LINE_HEIGHT) {
+            hsize = SUBT_LINE_HEIGHT;
         }
 
         if (*tmp_pp == '\0') {
@@ -358,6 +365,8 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
             u_char dat0 = tmp_pp[0];
             u_char dat1 = tmp_pp[1];
 
+            /* A single-byte space is skipped and takes no width; SubtMsgDataKaijyouCnt and
+             * SubtMsgDataPos instead read it as the first byte of a two-byte character. */
             if (dat0 == '@') {
                 line_num++;
             } else if (dat0 != ' ') {
@@ -379,7 +388,7 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
             if (*tmp_pp == '@') {
                 line_num++;
             } else {
-                mcode_dat_pp[cnt_all] = &mcode_ascii[*tmp_pp - 32];
+                mcode_dat_pp[cnt_all] = &mcode_ascii[*tmp_pp - ' '];
                 subt_code[line_num].cnt++;
                 subt_code[line_num].wsize += mcode_dat_pp[cnt_all]->w;
                 cnt_all++;
@@ -401,6 +410,9 @@ void SubtMsgPrint(u_char* msg_pp, int xp, int yp, int jap_flag, int mline) {
         for (j = 0; j < subt_code[i].cnt; j++) {
             mcode_pp = mcode_dat_pp[k++];
 
+            /* Positions are in field lines (draw buffers are SCREEN_FIELD_HEIGHT, half the
+             * 448-line screen), so the glyph's height and adjy are halved on screen while its
+             * UVs keep the full texel height; x and the width are not scaled. */
             sceGifPkAddGsAD(&subtPkSpr, SCE_GS_PRIM, GS_PRIM_TEX_SPRITE(TRUE));
 
             sceGifPkAddGsAD(&subtPkSpr, SCE_GS_UV,

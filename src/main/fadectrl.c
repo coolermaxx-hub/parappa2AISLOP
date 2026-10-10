@@ -29,6 +29,8 @@ void FadeCtrlMain(void *x) {
             /* 128 is opaque: a fade in starts there, a fade out stops one step
              * short of it, and nothing is drawn once the task exits. */
             fade_make_str.alp = (tmp_time * 128) / fmode_ctrl_str.max_time;
+            /* GIF packet priority 100 is above every other user's (the highest elsewhere
+             * is 15), so CmnGifFlush draws the fade over all other queued packets. */
             CG_FadeDisp(&fade_make_str, 100, NULL);
 
             fmode_ctrl_str.current_time++;
