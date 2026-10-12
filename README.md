@@ -24,10 +24,10 @@ Measured with objdiff on the July 12th NTSC-J prototype (2026-10-07), fork `main
 | `dbug` | 21 / 21 (100%) | 21 / 21 (100.0%) | 100% | 100.0%
 | `os` | 100 / 100 (100%) | 100 / 100 (100.0%) | 100% | 100.0%
 | `iop_mdl` | 4 / 4 (100%) | 4 / 4 (100.0%) | 100% | 100.0%
-| `main` | 564 / 570 (98.9%) | 563 / 570 (98.8%) | 95.0% | 93.0%
+| `main` | 564 / 570 (98.9%) | see total | 95.0% | see total
 | `menu` | 308 / 374 (82.4%) | 351 / 374 (93.9%) | 52.0% | 81.6%
 | `prlib` | 143 / 360 (39.7%) | 269 / 360 (74.7%) | 21.8% | 34.6%
-| **Total** | **1140 / 1429 (79.8%)** | **1308 / 1429 (91.5%)** | **63.3%** | **75.6%**
+| **Total** | **1140 / 1429 (79.8%)** | **1324 / 1429 (92.7%)** | **63.3%** | **77.6%**
 
 ### Progress
 *Badges below show this fork's matched-function percentage. The upstream project's own numbers are on its [decomp(dot)dev page](https://decomp.dev/parappadev/parappa2).*
