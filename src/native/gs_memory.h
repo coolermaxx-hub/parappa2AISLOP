@@ -29,7 +29,8 @@ unsigned int GsMemoryReadPixel(const GsMemory *mem, int psm, int bp, int bw, int
 void GsMemoryUpload(GsMemory *mem, int psm, int bp, int bw, int x, int y, int w, int h, const void *src);
 
 /* Texel colour as 8-bit RGBA, PS2 alpha scaled so 0x80 becomes 0xff.
- * Indexed formats look up a CSM1 CLUT at cbp in cpsm (PSMCT32 or PSMCT16).
+ * 4-bit textures look up a CSM1 CLUT at block cbp in cpsm: 8 x 2 pixels for
+ * PSMCT32, 16 x 1 for PSMCT16.
  * PSMCT16 alpha follows TEXA with TA0 = 0, TA1 = 0x80 and AEM off. */
 unsigned int GsMemoryReadTexelRGBA(const GsMemory *mem, int psm, int tbp, int tbw, int x, int y, int cbp, int cpsm);
 

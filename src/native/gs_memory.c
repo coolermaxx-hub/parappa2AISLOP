@@ -213,8 +213,13 @@ unsigned int GsMemoryReadTexelRGBA(const GsMemory *mem, int psm, int tbp, int tb
     unsigned int raw = GsMemoryReadPixel(mem, psm, tbp, tbw, x, y);
 
     if (psm == SCE_GS_PSMT4) {
-        /* CSM1: the 16 entries form an 8 x 2 rectangle at the CLUT base. */
-        raw = GsMemoryReadPixel(mem, cpsm, cbp, 1, raw & 7, raw >> 3);
+        /* CSM1: 16 entries sit at the CLUT base as an 8 x 2 block of 32-bit
+         * pixels, or a 16 x 1 row of 16-bit pixels. */
+        if (cpsm == SCE_GS_PSMCT16) {
+            raw = GsMemoryReadPixel(mem, cpsm, cbp, 1, raw, 0);
+        } else {
+            raw = GsMemoryReadPixel(mem, cpsm, cbp, 1, raw & 7, raw >> 3);
+        }
         return colour(raw, cpsm);
     }
     return colour(raw, psm);

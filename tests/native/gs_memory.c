@@ -81,6 +81,17 @@ int main(void) {
         }
     }
 
+    /* CSM1 palettes: entry i of a 32-bit CLUT is pixel (i & 7, i >> 3), of a
+     * 16-bit CLUT pixel (i, 0). Alpha 0x80 reads back as 0xff. */
+    memset(&mem, 0, sizeof(mem));
+    for (x = 0; x < 16; x++) {
+        GsMemoryWritePixel(&mem, SCE_GS_PSMCT32, 0x40, 1, x & 7, x >> 3, 0x80000000u | (x * 16) | ((15 - x) * 16) << 8);
+        GsMemoryWritePixel(&mem, SCE_GS_PSMCT16, 0x60, 1, x, 0, 0x8000 | x);
+    }
+    GsMemoryWritePixel(&mem, SCE_GS_PSMT4, 0, 2, 5, 3, 11);
+    check(GsMemoryReadTexelRGBA(&mem, SCE_GS_PSMT4, 0, 2, 5, 3, 0x40, SCE_GS_PSMCT32) == (0xff000000u | (11 * 16) | ((15 - 11) * 16) << 8), "PSMT4 texel through a 32-bit CLUT");
+    check(GsMemoryReadTexelRGBA(&mem, SCE_GS_PSMT4, 0, 2, 5, 3, 0x60, SCE_GS_PSMCT16) == (0xff000000u | (11 << 3)), "PSMT4 texel through a 16-bit CLUT");
+
     if (failures == 0) {
         printf("PASS: native GS memory addressing\n");
     }
