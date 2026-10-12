@@ -597,19 +597,18 @@ and unverified fields.
 
 ## EE-core init packet register slots (2026-10-03)
 
-**The original `PrRenderStuff::InitializeEECore` stores three draw-environment
-registers one slot ahead of the register address that follows them.** The
-static A+D packet (`initEECoreDmaPacket`, `src/prlib/renderee.cpp`) lists, for
+**`PrRenderStuff::InitializeEECore` fills five registers of the static A+D
+packet** (`initEECoreDmaPacket`, `src/prlib/renderee.cpp`), which lists, for
 drawing context 2: FRAME_2, ZBUF_2, TEST_2, ALPHA_2, TEX1_2, FBA_2, PRMODECONT,
-TEXA, COLCLAMP, PABE, XYOFFSET_2, SCISSOR_2, DTHE. The function writes the
-scene's `xyoffset` into the PABE slot, `scissor1` into the XYOFFSET_2 slot and
-`dthe` into the SCISSOR_2 slot (checked from the instruction offsets +176,
-+192 and +208 against the data addresses). The DTHE slot is never written. The
-source reproduces this exactly because the stores are part of the matching
-code; whether it is a latent bug in the shipped game or is harmless (the
-EE-core path may only run with defaults that make the shifted values inert)
-is *not known*. A port should verify this on hardware or in an emulator
-before copying the behaviour or fixing it.
+TEXA, COLCLAMP, PABE, XYOFFSET_2, SCISSOR_2, DTHE. It writes the scene's frame
+and the z buffer, then `xyoffset` into XYOFFSET_2, `scissor1` into SCISSOR_2
+and `dthe` into DTHE (instruction offsets +32, +48, +192, +208 and +224).
+
+Correction (2026-10-12): an earlier version of this note, and the source, had
+the last three stores one slot early (PABE, XYOFFSET_2, SCISSOR_2), calling
+that an original quirk. The original's instruction offsets show it was our
+field naming that was off, so the source now writes the right registers and
+the function matches the original exactly.
 
 ## Stage map music (2026-10-04)
 

@@ -4,7 +4,7 @@ Function-level differences between this tree and the original-compiler objects (
 Each difference comes from a function that never matched as C (the `main-rom-matching` branch keeps its original asm), or from replacing compiler steering, alias casts and weak template copies with typed C/C++. None is a behaviour change by intent, but the original instruction order is not kept.
 Causes marked *inferred* were read from the source change, not traced instruction by instruction. A unit marked *not yet classified* is an open audit item.
 
-Total: 103 functions differ, 23 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
+Total: 102 functions differ, 23 original symbols have no counterpart (mostly orphan `func_XXXXXXXX` helpers and brute-forced template copies that were removed on purpose).
 
 | Unit | Differing functions | Original symbols not reproduced | Cause |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Total: 103 functions differ, 23 original symbols have no counterpart (mostly orp
 | `prlib/setpointer.cpp.o` | 2 | 0 | Both functions inline `SpaTrack<T>::ChangePointer`, which finds the time table with one stride expression instead of a branch per interpolation kind; SpaNodeAnimation::ChangePointer also binds its tables through `BindInlineTables`. |
 | `prlib/spadata.cpp.o` | 15 | 2 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (the generic GetValue/GetLinearValue/GetSprineValue instances and both RotateMatrix copies). SpaTransform::GetMatrix now differs only in calling the shared NaMATRIX::Set instead of the original's weak copy. IsEverIdentical handles the scale, translate and shear cases in one branch where the original tests them separately; the NaVECTOR spline differs in register allocation. The missing symbols are the original's per-file weak copies of nalib templates, which this build does not reproduce; every file calls the one shared template (the 9- and 16-argument NaMATRIX Set). The vector forms of ScaleMatrix and TranslateMatrix are emitted here as the shared template and differ from the original's copies. |
 | `prlib/cluster.cpp.o` | 1 | 0 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (RenderClusterNode: two registers swapped). |
-| `prlib/renderee.cpp.o` | 5 | 1 | The two vertex kernels are inline asm blocks instead of standalone functions, and the orphan helper is gone; surrounding functions inherit the shifted register use. |
+| `prlib/renderee.cpp.o` | 4 | 1 | The two vertex kernels are inline asm blocks instead of standalone functions, and the orphan helper is gone; surrounding functions inherit the shifted register use. |
 | `prlib/mendererawful.cpp.o` | 4 | 1 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (all four functions). The missing symbol is a weak nalib copy. |
 | `prlib/transition.cpp.o` | 1 | 0 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (BlendTransitionMatrix). |
 | `prlib/mendereralpha.cpp.o` | 3 | 0 | Never matched as C: `main-rom-matching` keeps the original asm under `NON_MATCHING` for these (all three functions). |

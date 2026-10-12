@@ -106,12 +106,12 @@ No runtime rendering equivalence has been claimed.
 
 The 2026-10-07 objdiff report (`progress/report.json`, regenerated with
 `./configure.py --objdiff` and `objdiff-cli report generate`) measures
-**1307 / 1429 exact functions (91.462555%)** and **258536 / 342284 exact code
-bytes (75.5326%)** across 70 units, with a fuzzy instruction score of
-94.129234%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
-menu 351/374, prlib 268/360. README and the badge files in `progress/` show the
-same report. The four functions fewer than the 2026-10-05 report (1311) gave
-up compiler steering: the three tone colour helpers in `pksprite.c`, whose MMI
+**1308 / 1429 exact functions (91.53254%)** and **258672 / 342284 exact code
+bytes (75.57233%)** across 70 units, with a fuzzy instruction score of
+94.12927%. By folder: dbug 21/21, os 100/100, iop_mdl 4/4, main 563/570,
+menu 351/374, prlib 269/360. README and the badge files in `progress/` show the
+same report. Four functions gave up compiler steering since the 2026-10-05 report (1311), and
+`InitializeEECore` gained an exact match when a wrong-slot bug was fixed: the three tone colour helpers in `pksprite.c`, whose MMI
 asm now declares the registers it overwrites, and `_P3MC_CheckUserDataHead`,
 which no longer goes through an inline helper that existed only to match
 ([binary differences](binary-differences.md)).

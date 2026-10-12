@@ -12,9 +12,8 @@
 
 /* data */
 // Decoded from the original 14-quadword DMA payload (13 A+D registers).
-// The 14-quadword A+D payload targets drawing context 2. The three draw
-// environment stores in InitializeEECore land one slot before the registers
-// that follow them in this table, see docs/behavior-notes.md.
+// The A+D payload targets drawing context 2. InitializeEECore fills the frame,
+// z buffer, offset, scissor and dithering registers from the scene.
 struct PrEECoreInitializationPacket {
     sceDmaTag dma;
     sceGifTag gif;
@@ -54,9 +53,9 @@ void PrRenderStuff::InitializeEECore(PrSceneObject *scene) {
     PrEECoreInitializationPacket *packet = reinterpret_cast<PrEECoreInitializationPacket*>(PR_UNCACHED(&initEECoreDmaPacket));
     packet->zbuf.value = NaGifPacket::EncodeRegister(m_zbuf);
     packet->frame.value = NaGifPacket::EncodeRegister(scene->m_frame);
-    packet->alphaBlendControl.value = NaGifPacket::EncodeRegister(scene->m_xyoffset);
-    packet->offset.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->scissor1);
-    packet->scissor.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->dthe);
+    packet->offset.value = NaGifPacket::EncodeRegister(scene->m_xyoffset);
+    packet->scissor.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->scissor1);
+    packet->dithering.value = NaGifPacket::EncodeRegister(scene->m_drawEnv->dthe);
 
     PrWaitDmaFinish(SCE_DMA_GIF);
     sceDmaChan *chan = sceDmaGetChan(SCE_DMA_GIF);

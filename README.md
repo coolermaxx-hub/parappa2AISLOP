@@ -26,8 +26,8 @@ Measured with objdiff on the July 12th NTSC-J prototype (2026-10-07), fork `main
 | `iop_mdl` | 4 / 4 (100%) | 4 / 4 (100.0%) | 100% | 100.0%
 | `main` | 564 / 570 (98.9%) | 563 / 570 (98.8%) | 95.0% | 93.0%
 | `menu` | 308 / 374 (82.4%) | 351 / 374 (93.9%) | 52.0% | 81.6%
-| `prlib` | 143 / 360 (39.7%) | 268 / 360 (74.4%) | 21.8% | 34.5%
-| **Total** | **1140 / 1429 (79.8%)** | **1307 / 1429 (91.5%)** | **63.3%** | **75.5%**
+| `prlib` | 143 / 360 (39.7%) | 269 / 360 (74.7%) | 21.8% | 34.6%
+| **Total** | **1140 / 1429 (79.8%)** | **1308 / 1429 (91.5%)** | **63.3%** | **75.6%**
 
 ### Progress
 *Badges below show this fork's matched-function percentage. The upstream project's own numbers are on its [decomp(dot)dev page](https://decomp.dev/parappadev/parappa2).*
