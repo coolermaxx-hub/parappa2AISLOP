@@ -1,0 +1,16 @@
+160	src/menu/p3mc.c	_P3MC_mainfile_chk
+415	src/menu/menusub.c	TsSaveMenu_Draw
+500	src/main/drawctrl.c	DrawObjStrDisp
+580	src/menu/menusub.c	TsCmnCell_CusorDraw
+590	src/menu/menusub.c	TsPopMenu_Flow
+625	src/menu/menusub.c	TsUserList_SetCurTag
+850	src/menu/menusub.c	TsOption_Flow
+1205	src/menu/menusub.c	TsUserList_Flow
+1520	src/menu/menusub.c	TsPopMenCus_Draw
+2300	src/menu/menusub.c	TsRestoreSaveData
+2345	src/menu/menusub.c	TsRanking_Set
+3035	src/menu/menusub.c	TsNAMEINBox_Draw
+3255	src/main/drawctrl.c	DrawObjPrReq
+3925	src/menu/menusub.c	TSJukeCDObj_Draw
+8680	src/menu/menusub.c	TsPopMenu_Draw
+9445	src/menu/p3mc.c	P3MC_GetUserCheck
