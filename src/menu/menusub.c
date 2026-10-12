@@ -2167,14 +2167,15 @@ static void TsBGMStop(int time) {
         pbgm->ttim0 = 0;
         pbgm->ttim = 0;
 
-        /* The time only selects this branch: nothing fades, the music carries on at full volume. */
         if (time > 0) {
-            pbgm->state = BGMST_ON | BGMST_FADE;
-            pbgm->vol = BGM_VOL_MAX;
+            pbgm->state = 3;
+            pbgm->vol = 0x100;
 
             if (pbgm->ctim == 0) {
-                tsBGMONEVol(pbgm->sndno, BGM_VOL_MAX);
+                tsBGMONEVol(pbgm->sndno, 0x100);
             }
+
+            do {} while (0); /* TODO: Get rid of this? */
         } else {
             pbgm->chgReq = 0;
             pbgm->cstate = 0;
@@ -2183,7 +2184,7 @@ static void TsBGMStop(int time) {
             pbgm->state = 0;
             pbgm->vol = 0;
 
-            for (i = 0; i < BGM_TRACK_MAX; i++) {
+            for (i = 0; i < 11; i++) {
                 tsBGMONEStop(i);
             }
         }
@@ -2410,13 +2411,13 @@ void TsGetTm2Tex(void *ptim2, TSTEX_INF *tex) {
     tex->h = info.picturH->ImageHeight;
     tex->tex0 = info.picturH->GsTex0;
 
-    ptw = GS_REG_VIEW(sceGsTex0, tex->tex0).TW;
-    pth = GS_REG_VIEW(sceGsTex0, tex->tex0).TH;
+    ptw = (((int*)&tex->tex0)[0] >> 0x1a) & 0xf; /* TW */
+    pth = (((u_int*)&tex->tex0)[0] >> 0x1e) | ((((u_int*)&tex->tex0)[1] & 0x3) << 0x2); /* TH */
 
     tex->rUsize = 1.0f / (1 << ptw);
     tex->rVsize = 1.0f / (1 << pth);
 
-    GS_REG_VIEW(sceGsTex0, tex->tex0).TCC = 1;
+    ((u_int*)&tex->tex0)[1] |= 0x4; /* TCC = 1 */
 }
 
 void TsGetTm2HedTex(int no, TSTEX_INF *tex) {
@@ -2429,13 +2430,13 @@ void TsGetTm2HedTex(int no, TSTEX_INF *tex) {
     tex->h = ptm2h->h;
     tex->tex0 = ptm2h->GsTex0;
 
-    ptw = GS_REG_VIEW(sceGsTex0, ptm2h->GsTex0).TW;
-    pth = GS_REG_VIEW(sceGsTex0, ptm2h->GsTex0).TH;
+    ptw = (((int*)&ptm2h->GsTex0)[0] >> 0x1a) & 0xf; /* TW */
+    pth = (((u_int*)&ptm2h->GsTex0)[0] >> 0x1e) | ((((u_int*)&ptm2h->GsTex0)[1] & 0x3) << 0x2); /* TH */
 
     tex->rUsize = 1.0f / (1 << ptw);
     tex->rVsize = 1.0f / (1 << pth);
 
-    GS_REG_VIEW(sceGsTex0, tex->tex0).TCC = 1;
+    ((u_int*)&tex->tex0)[1] |= 0x4; /* TCC = 1 */
 }
 
 static void TsClearMenuPad(int no) {

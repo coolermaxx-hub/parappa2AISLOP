@@ -302,16 +302,19 @@ static void PkDefReg_Add(SPR_PKT pkt) {
 }
 
 void PkTEX0_SetAdd(SPR_PKT pkt, int vram, int w, int h, int isLinear) {
-    PK_AD_PACKET *pk;
-    int           n;
-    int           tw, th;
+    qword *pk;
+    int    n;
+    int    tw, th;
 
-    pk = (PK_AD_PACKET*)*pkt;
+    pk = (qword*)*pkt;
 
-    pk->gif.tag = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
-    pk->gif.regs = PK_REG_AD(0) | PK_REG_AD(1) | PK_REG_AD(2);
+    ((u_long*)*pk)[0] = SCE_GIF_SET_TAG(1, 1, 0, 0, SCE_GIF_PACKED, 3);
+    ((u_long*)*pk)[1] =
+        SCE_GIF_PACKED_AD << (0 * 4) |
+        SCE_GIF_PACKED_AD << (1 * 4) |
+        SCE_GIF_PACKED_AD << (2 * 4);
 
-    pk->ad[0].ADDR = SCE_GS_TEXFLUSH;
+    ((u_long*)*pk)[3] = SCE_GS_TEXFLUSH;
 
     th = 0;
     tw = 0;
@@ -331,17 +334,29 @@ void PkTEX0_SetAdd(SPR_PKT pkt, int vram, int w, int h, int isLinear) {
     }
 
     if (isLinear) {
-        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_LINEAR, SCE_GS_LINEAR, 0, 0, 0);
+        ((u_long*)*pk)[4] = SCE_GS_SET_TEX1_1(0, 0, 1, 1, 0, 0, 0);
     } else {
-        pk->ad[1].DATA = SCE_GS_SET_TEX1_1(0, 0, SCE_GS_NEAREST, SCE_GS_NEAREST, 0, 0, 0);
+        ((u_long*)*pk)[4] = SCE_GS_SET_TEX1_1(0, 0, 0, 0, 0, 0, 0);
     }
 
-    pk->ad[1].ADDR = SCE_GS_TEX1_1;
+    ((u_long*)*pk)[5] = SCE_GS_TEX1_1;
 
-    pk->ad[2].DATA = SCE_GS_SET_TEX0(vram, (w + 63) / 64, SCE_GS_PSMCT32, tw, th, 1, 0, 0, 0, 0, 0, 0);
-    pk->ad[2].ADDR = SCE_GS_TEX0_1;
+    /* Macros to set (a portion of) the TEX0 register as two words */
+    #define GS_SET_TEX0_W0(tbp, tbw, psm, tw, th) \
+        ((tbp)        | ((tbw) << 14) | \
+        ((psm) << 20) | ((tw ) << 26) | \
+        ((th ) << 30))
+    #define GS_SET_TEX0_W1(th, tcc) \
+        (((th) >> 2)  | ((tcc) << 2)) /* Set last two bits of TH, and TCC */
 
-    *pkt = (u_long128*)&pk->ad[3];
+    ((u_int*)*pk)[12] = GS_SET_TEX0_W0(vram, (w + 63) / 64, 0, tw, th);
+    ((u_int*)*pk)[13] = GS_SET_TEX0_W1(th, 1);
+    ((u_long*)*pk)[7] = SCE_GS_TEX0_1;
+
+    *pkt = (u_long128*)pk + 4;
+
+    #undef GS_SET_TEX0_W0
+    #undef GS_SET_TEX0_W1
 }
 
 u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
@@ -370,14 +385,8 @@ u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
-    /*
-     * MMI version of the clamp-and-pack above, shared by the three tone
-     * colour helpers. It works in $2, $4 (or $9) and $8. The original did
-     * not declare them, which is only safe while the compiler happens to
-     * keep the inputs elsewhere, so they are declared clobbered here.
-     */
     asm(
         "pcpyld  $2, %4, %3       \n\t"
         "pcpyld  $4, %2, %1       \n\t"
@@ -389,7 +398,7 @@ u_int GetDToneColor(u_int sbgr, u_int dbgr, int ton) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    : "$2", "$4", "$8");
+    );
     #endif
 
     return ret;
@@ -414,7 +423,7 @@ u_int GetToneColorA(u_int abgr, int tona, int tonb, int tong, int tonr) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
     asm(
         "pcpyld  $2, %4, %3       \n\t"
@@ -427,7 +436,7 @@ u_int GetToneColorA(u_int abgr, int tona, int tonb, int tong, int tonr) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    : "$2", "$8", "$9");
+    );
     #endif
 
     return ret;
@@ -452,7 +461,7 @@ u_int GetToneColorH(u_int abgr, int tona, int tonb, int tong, int tonr) {
     g = min(max(g, 0), 255);
     b = min(max(b, 0), 255);
     a = min(max(a, 0), 255);
-    ret = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
+    a = (u_int)SCE_GS_SET_RGBAQ(r, g, b, a, 0x0 /* 0.0f */);
     #else
     asm(
         "pcpyld  $2, %4, %3       \n\t"
@@ -465,7 +474,7 @@ u_int GetToneColorH(u_int abgr, int tona, int tonb, int tong, int tonr) {
         "ppach   $2, $0, $2       \n\t"
         "ppacb   %0, $0, $2       \n\t"
     : "=r"(ret) : "r"(r), "r"(g), "r"(b), "r"(a)
-    : "$2", "$8", "$9");
+    );
     #endif
 
     return ret;

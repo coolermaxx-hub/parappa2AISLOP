@@ -3094,6 +3094,9 @@ void ScrMoveSetSub(SCORE_INDV_STR *sindv_pp, int Pnum, int sub_job, int sub_time
 int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indvTime) {
     TAPSET       *tapset_pp;
     int           yaruyaru;
+    SCR_EXAM_STR *scex_pp;
+
+    MC_REP_SCR    mcr_scr; /* note: not supposed to be here */
 
     tapset_pp = IndvGetTapSetAdrs(sindv_pp);
     if (tapset_pp == NULL) {
@@ -3111,17 +3114,24 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
     }
 
     if (yaruyaru) {
-        SCR_EXAM_STR *scex_pp;
-
         if (sindv_pp->tap_follow_enum == TAP_FOLLOW_SAVE) {
             followTapSave(sindv_pp);
         }
 
         scex_pp = &sindv_pp->scr_exam_str;
 
-        /* Cancelled, bonus and empty exams skip the scoring step */
-        if (scex_pp->exam_enum != EXAM_CANCEL && scex_pp->exam_enum != EXAM_BONUS && scex_pp->exam_enum != EXAM_NONE &&
-            scex_pp->exam_do == EXAM_DO_NON) {
+        /* TODO: Can we get rid of the gotos? */
+        if (scex_pp->exam_enum == EXAM_CANCEL) {
+            goto l_2d8;
+        }
+        if (scex_pp->exam_enum == EXAM_BONUS) {
+            goto l_2d8;
+        }
+        if (scex_pp->exam_enum == EXAM_NONE) {
+            goto l_107c;
+        }
+
+        if (scex_pp->exam_do == EXAM_DO_NON) {
             ExamScoreCheck(sindv_pp);
 
             if (global_data.play_step == PSTEP_GAME) {
@@ -3153,7 +3163,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 if (mcr_scr_pp != NULL) {
                     sindv_pp->global_ply->now_score = mcr_scr_pp->now_score;
 
-                    for (i = 0; i < PR_ARRAYSIZE(sindv_pp->global_ply->exam_score); i++) {
+                    for (i = 0; i < 3; i++) {
                         sindv_pp->global_ply->exam_score[i] = mcr_scr_pp->exam_score[i];
                     }
                 } else {
@@ -3161,18 +3171,18 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                     sindv_pp->global_ply->now_score = 0;
 
-                    for (i = 0; i < PR_ARRAYSIZE(sindv_pp->global_ply->exam_score); i++) {
+                    for (i = 0; i < 3; i++) {
                         sindv_pp->global_ply->exam_score[i] = 0;
                     }
                 }
             } else {
                 if (global_data.demo_flagL == DEMOF_OFF) {
-                    MC_REP_SCR mcr_scr;
-                    int        i;
+                    // /* 0x0(sp) */ MC_REP_SCR mcr_scr; /* Supposed to be here, not up there! */
+                    int i;
 
                     mcr_scr.now_score = sindv_pp->global_ply->now_score;
 
-                    for (i = 0; i < PR_ARRAYSIZE(mcr_scr.exam_score); i++) {
+                    for (i = 0; i < 3; i++) {
                         mcr_scr.exam_score[i] = sindv_pp->global_ply->exam_score[i];
                     }
 
@@ -3201,6 +3211,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
             }
         }
 
+    l_2d8:
         if (scex_pp->exam_enum != EXAM_NONE) {
             int rank_saki = RLVL_COOL;
             int rank_moto = RLVL_COOL;
@@ -3233,11 +3244,10 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     }
                 }
             } else if (scex_pp->exam_enum == EXAM_BONUS) {
-                /* Repeat the line once per hook practice point; a skipped hook (0) passes at once. */
                 int bline = ingame_common_str.HookClrCnt;
 
-                if (bline > HOOK_PASS_LINES) {
-                    bline = HOOK_PASS_LINES;
+                if (bline > 10) {
+                    bline = 10;
                 }
 
                 if (bline < bonusGameCntPls()) {
@@ -3251,7 +3261,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     scex_pp->exam_point = sindv_pp->global_ply->now_score;
 
                     if (tapset_pp == NULL) {
-                        scex_pp->exam_coolP = 11111; /* no tap set: a COOL threshold no line reaches */
+                        scex_pp->exam_coolP = 11111;
                     } else {
                         exp = ExamScoreCheckSame(sindv_pp);
                         if (global_data.play_step != PSTEP_VS) {
@@ -3311,14 +3321,14 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         MbarNikoSet(sindv_pp->global_ply->exam_tbl_up * 2, 0);
 
                         if (!nexton) {
-                            if (sindv_pp->global_ply->exam_tbl_up >= HOOK_PASS_LINES) {
+                            if (sindv_pp->global_ply->exam_tbl_up >= 10) {
                                 scex_pp->exam_do = EXAM_DO_END_GO;
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[0];
 
                                 printf("hook end job\n");
                             }
                         } else {
-                            if (sindv_pp->global_ply->exam_tbl_up >= HOOK_PASS_LINES) {
+                            if (sindv_pp->global_ply->exam_tbl_up >= 10) {
                                 scex_pp->exam_do = EXAM_DO_END_GO;
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[0];
 
@@ -3334,9 +3344,9 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         }
 
                         if (scex_pp->exam_point > 0) {
-                            ScrTapReq(SCR_TAP_COMMON, 0, 0);
+                            ScrTapReq(-1, 0, 0);
                         } else {
-                            ScrTapReq(SCR_TAP_COMMON, 0, 1);
+                            ScrTapReq(-1, 0, 1);
                         }
 
                         break;
@@ -3345,7 +3355,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         int         hantei_flag;
                         GLOBAL_PLY *gplay_my, *gplay_enemy;
                         int         my_ply,    ene_ply;
-                        int         tapscode; /* not in the original debug info */
+                        TAPSET     *tapset_pp; /* note: not present in STABS. */
 
                         hantei_flag = ScrCtrlIndvNextReadLine(sindv_pp, 2) != 0;
 
@@ -3360,26 +3370,26 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                         gplay_my    = sindv_pp->global_ply;
                         gplay_enemy = score_indv_str[Pcode2Pindex(scex_pp->vsPlayer)].global_ply;
 
-                        printf("exam vs [%d] index[%d]\n", (int)gplay_enemy, scex_pp->vsPlayer);
+                        printf("exam vs [%d] index[%d]\n", gplay_enemy, scex_pp->vsPlayer);
 
-                        tapscode = IndvGetTapSetAdrs(sindv_pp)->tapscode;
-                        if (tapscode == TAPSCODE_ANSWER_F) {
+                        tapset_pp = IndvGetTapSetAdrs(sindv_pp);
+                        if (tapset_pp->tapscode == TAPSCODE_ANSWER_F) {
                             int pointx;
 
                             printf("first !!hantei[%d]\n", hantei_flag);
 
                             if (sindv_pp->global_ply->now_score > 0) {
-                                pointx = sindv_pp->global_ply->now_score + VS_START_SCORE;
-                                ScrTapReq(SCR_TAP_COMMON, 0, 0);
-                                vsAnimationReq(my_ply, VS_START_SCORE, pointx, VSMT_UP);
+                                pointx = sindv_pp->global_ply->now_score + 500;
+                                ScrTapReq(-1, 0, 0);
+                                vsAnimationReq(my_ply, 500, pointx, VSMT_UP);
                             } else {
-                                pointx = sindv_pp->global_ply->now_score + VS_START_SCORE;
-                                ScrTapReq(SCR_TAP_COMMON, 0, 1);
-                                vsAnimationReq(my_ply, VS_START_SCORE, pointx, VSMT_DW);
+                                pointx = sindv_pp->global_ply->now_score + 500;
+                                ScrTapReq(-1, 0, 1);
+                                vsAnimationReq(my_ply, 500, pointx, VSMT_DW);
                             }
 
                             sindv_pp->global_ply->score = pointx;
-                        } else if (tapscode == TAPSCODE_ANSWER) {
+                        } else if (tapset_pp->tapscode == TAPSCODE_ANSWER) {
                             int pointx = sindv_pp->global_ply->now_score - scex_pp->exam_coolP;
 
                             if (pointx < 0) {
@@ -3390,7 +3400,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->score = 0;
                                 }
 
-                                ScrTapReq(SCR_TAP_COMMON, 0, 1);
+                                ScrTapReq(-1, 0, 1);
 
                                 sindv_pp->global_ply->now_score = pointx;
 
@@ -3404,7 +3414,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_enemy->score = 0;
                                 }
 
-                                ScrTapReq(SCR_TAP_COMMON, 0, 0);
+                                ScrTapReq(-1, 0, 0);
 
                                 gplay_enemy->now_score = -pointx;
 
@@ -3436,11 +3446,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->vsWin++;
                                     gplay_enemy->vsLost++;
 
-                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score == 0) {
+                                    if (gplay_my->score > 250 && gplay_enemy->score == 0) {
                                         jobnum = SCREX_AR_WIN1;
                                     }
 
-                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score > VS_ROUND_HIGH_SCORE) {
+                                    if (gplay_my->score > 250 && gplay_enemy->score > 250) {
                                         jobnum = SCREX_AR_WIN2;
                                     }
                                 } else {
@@ -3449,11 +3459,11 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                     gplay_my->vsLost++;
                                     gplay_enemy->vsWin++;
 
-                                    if (gplay_enemy->score > VS_ROUND_HIGH_SCORE && gplay_my->score == 0) {
+                                    if (gplay_enemy->score > 250 && gplay_my->score == 0) {
                                         jobnum = SCREX_AR_LOSE1;
                                     }
 
-                                    if (gplay_my->score > VS_ROUND_HIGH_SCORE && gplay_enemy->score > VS_ROUND_HIGH_SCORE) {
+                                    if (gplay_my->score > 250 && gplay_enemy->score > 250) {
                                         jobnum = SCREX_AR_LOSE2;
                                     }
                                 }
@@ -3515,8 +3525,6 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                         printf("vs cool point:%d  now point:%d\n", scex_pp->exam_coolP, scex_pp->exam_point);
 
-                        /* Beating the copy score with some original play makes this
-                         * pattern the next one to answer. */
                         if (scex_pp->exam_point > scex_pp->exam_coolP) {
                             if (gplay_my->exam_score[1] != 0) {
                                 vsTapdatSet(sindv_pp);
@@ -3548,7 +3556,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                 scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[line_change];
 
                                 if (rank_moto < rank_saki) {
-                                    ScrTapReq(SCR_TAP_COMMON, 0, 1);
+                                    ScrTapReq(-1, 0, 1);
 
                                     if (RANK_LEVEL2DISP_LEVEL_HK(rank_saki) == DLVL_BAD) {
                                         men_ctrl_enum = MEN_CTRL_GtoB;
@@ -3557,7 +3565,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                         men_ctrl_enum = MEN_CTRL_BtoA;
                                     }
                                 } else {
-                                    ScrTapReq(SCR_TAP_COMMON, 0, 0);
+                                    ScrTapReq(-1, 0, 0);
 
                                     if (RANK_LEVEL2DISP_LEVEL_HK(rank_saki) == DLVL_GOOD) {
                                         men_ctrl_enum = MEN_CTRL_BtoG;
@@ -3579,7 +3587,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                         }
                                     }
 
-                                    ScrTapReq(SCR_TAP_COMMON, 0, 1);
+                                    ScrTapReq(-1, 0, 1);
                                 } else {
                                     if (scex_pp->scr_exam_job[2].goto_job != -1) {
                                         if (scex_pp->scr_exam_job[2].goto_line == 0 || !ScrCtrlIndvNextReadLine(sindv_pp, 1)) {
@@ -3587,7 +3595,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                             scex_pp->scr_exam_job_pp = &scex_pp->scr_exam_job[2];
                                         }
                                     }
-                                    ScrTapReq(SCR_TAP_COMMON, 0, 0);
+                                    ScrTapReq(-1, 0, 0);
                                 }
                             }
                         } else {
@@ -3598,7 +3606,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                                 }
                             }
 
-                            ScrTapReq(SCR_TAP_COMMON, 0, 0);
+                            ScrTapReq(-1, 0, 0);
                         }
                     }
                 }
@@ -3625,7 +3633,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 TimeCallbackTimeSetChanTempo(goto_line, goto_time, GetLineTempo(goto_line));
 
                 sindv_pp->top_scr_ctrlpp[goto_line].lineTime = goto_time;
-                sindv_pp->top_scr_ctrlpp[goto_line].lineTimeFrame = TICKS_TO_FRAMES(goto_time, GetLineTempo(goto_line));
+                sindv_pp->top_scr_ctrlpp[goto_line].lineTimeFrame = ((goto_time * 3600.0f) + (GetLineTempo(goto_line) * 96.0f * 0.5f)) / (GetLineTempo(goto_line) * 96.0f);
 
                 ScrLincChangTbl(goto_line);
                 return -1;
@@ -3633,13 +3641,13 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
             if (global_data.play_step == PSTEP_GAME) {
                 if (rank_moto < rank_saki) {
-                    DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_DOWN), PINDEX_PARA, NULL);
+                    DrawTapReqTbl(0xfe02, PINDEX_PARA, NULL);
                 } else if (rank_moto > rank_saki) {
-                    DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_UP), PINDEX_PARA, NULL);
+                    DrawTapReqTbl(0xfe03, PINDEX_PARA, NULL);
                 } else {
                     /* Stage 6 specific logic */
                     if (global_data.play_stageL == 6) {
-                        DrawTapReqTbl(DR_TAP_REQ(DR_TAP_ID_ALL, DR_TAP_REQ_RANK_UP), PINDEX_PARA, NULL);
+                        DrawTapReqTbl(0xfe03, PINDEX_PARA, NULL);
                     }
                 }
             }
@@ -3653,8 +3661,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
                 tapReqGroupInit();
 
-                exam_start = sindv_pp->current_time + tapset_pp->taptimeEnd;
-                scex_pp->exam_start = exam_start;
+                exam_start = sindv_pp->current_time + tapset_pp->taptimeEnd; scex_pp->exam_start = exam_start;
 
                 sej_pp = scex_pp->scr_exam_job_pp;
 
@@ -3678,7 +3685,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                 otherIndvTapReset(Pnum);
                 otherIndvPause(Pnum);
 
-                sub_in_pp = &score_indv_str[PINDEX_MOVE];
+                sub_in_pp = &score_indv_str[4];
                 sub_in_pp->status = SCS_USE;
                 sub_in_pp->plycode = PCODE_MOVE;
                 sub_in_pp->global_ply = NULL;
@@ -3705,7 +3712,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
                     u_char chantmp[2];
 
                     tmp_cdsample  = CdctrlSndTime2WP2sample(GetLineTempo(sub_job), exam_start);
-                    tmp_cdsample -= WP2_MS_TO_UNITS(GetTimeOfset(sindv_pp->useLine));
+                    tmp_cdsample -= (GetTimeOfset(sindv_pp->useLine) * 48) / 256;
                     if (tmp_cdsample < 0) {
                         tmp_cdsample = 0;
                     }
@@ -3727,6 +3734,7 @@ int ScrExamSetCheck(SCORE_INDV_STR *sindv_pp, int Pnum, int ctime_next, int indv
 
         }
 
+    l_107c:
         if (sindv_pp->scr_exam_str.exam_do != EXAM_DO_END_GO && sindv_pp->scr_exam_str.exam_do != EXAM_DO_END_GO_RET) {
             ScrCtrlIndvNextRead(sindv_pp, 1);
             ScrLincChangTbl(sindv_pp->useLine);

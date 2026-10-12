@@ -2572,9 +2572,10 @@ int DrawAlphaBlendDisp(void *para_pp, int frame, int first_f, int useDisp, int d
 }
 
 int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDisp) {
-    sceGsFrame   *use_pp;
-    sceGsFrame   *draw_pp;
-    sceGifPacket  gifpk;
+    sceGsFrame          *use_pp;
+    sceGsFrame          *draw_pp;
+    sceGifPacket         gifpk;
+    volatile sceGsFrame  sceGsFrameTmp; /* todo: find a way to match without marking as volatile */
 
     if (first_f == DRPRGF_INIT) {
         return 0;
@@ -2588,13 +2589,7 @@ int DrawMozaikuDisp(void *para_pp, int frame, int first_f, int useDisp, int drDi
 
     CmnGifADPacketMake(&gifpk, draw_pp);
 
-    {
-        /* A masked copy of the draw frame that is never submitted. */
-        sceGsFrame sceGsFrameTmp;
-
-        sceGsFrameTmp = *draw_pp;
-        sceGsFrameTmp.FBMSK = 0x1f1f1f1f;
-    }
+    *(u_long*)&sceGsFrameTmp = *(u_int*)draw_pp | ((u_long)0x1f1f1f1f << 32);
 
     UG_MozaikuDisp(para_pp, use_pp, &gifpk);
     CmnGifADPacketMakeTrans(&gifpk);
@@ -2921,9 +2916,10 @@ static void drawUseDrDispCheckInit(void) {
 static int drawDispCheckSub(u_int drD, u_int *dat_pp) {
     int ret = drD & 0xff;
 
-    if (((drD >> 8) & 0xff) != 0) {
-        if (*dat_pp & drD & 0xff) {
-            ret = (drD >> 8) & 0xff;
+    if (((drD >> 0x8) & 0xff) != 0) {
+        int v0 = *dat_pp & 0xff;
+        if (v0 & drD) {
+            ret = (drD >> 0x8) & 0xff;
         }
     }
 

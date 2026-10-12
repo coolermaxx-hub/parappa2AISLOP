@@ -538,7 +538,7 @@ void PrSetDebugParam(PrDEBUG_PARAM param, int value) {
 
 PR_EXTERN
 void PrSetDebugParamFloat(PrDEBUG_PARAM param, float value) {
-    debugParam[param].f = value;
+    debugParam[param].d = *(int*)&value;
 }
 
 PR_EXTERN

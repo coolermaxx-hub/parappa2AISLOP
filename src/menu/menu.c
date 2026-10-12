@@ -60,32 +60,41 @@ int MenuMemCardCheck(void) {
     return 0;
 }
 
-int MenuCtrl(MENU_STR *menu_str_ptr) {
-    int          ret;
-    P3GAMESTATE  P3GameState;
-    GAME_STATUS *pGStatus;
-    int          win, lost;
+int MenuCtrl(/* s0 16 */ MENU_STR *menu_str_ptr) {
+    /* s0 16 */ int ret;
+    /* 0x0(sp) */ P3GAMESTATE P3GameState;
+    /* a3 7 */ GAME_STATUS *pGStatus;
+    /* a0 4 */ int win;
+    /* a1 5 */ int lost;
+    register int a1 asm("a1");
 
     MenuDataSndInit();
+
+    P3GameState.pLog = &P3Log_Val;
 
     P3GameState.vsLev = VsLev;
     P3GameState.pGameStatus = menu_str_ptr->game_status_p;
     P3GameState.pReplayArea = menu_str_ptr->mc_rep_str_p;
     P3GameState.endFlg = menu_str_ptr->sel_menu_enum;
 
+    a1 = menu_str_ptr->sel_menu_enum;
+    P3GameState.endFlg = a1;
+    
     pGStatus = menu_str_ptr->game_status_p;
 
     P3GameState.nStage = pGStatus->play_stageG;
-    P3GameState.nMode = pGStatus->play_modeG;
 
+    P3GameState.nMode = pGStatus->play_modeG;
+    P3GameState.pLog->nRound = P3GameState.pLog->nRound;
     P3GameState.isState = 0;
     P3GameState.pLog = &P3Log_Val;
 
     if (bFirst) {
-        P3Log_Val.nRound = 0;
-        P3Log_Val.clrFlg[0] = 0;
+        P3GameState.pLog->nRound = 0;
+        P3GameState.pLog->clrFlg[0] = 0;
+
         P3GameState.nStage = 0;
-        P3GameState.endFlg = SEL_MENU_STAGESEL;
+        P3GameState.endFlg = 0;
     } else {
         P3GameState.nStage = pGStatus->play_stageG;
     }
@@ -93,7 +102,9 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     bFirst = FALSE;
 
     P3GameState.nMode = pGStatus->play_modeG;
+
     P3GameState.bCoolClr = (pGStatus->disp_level == DLVL_COOL);
+
     P3GameState.bonusG = pGStatus->bonusG;
 
     P3GameState.score = pGStatus->scoreG[0];
@@ -104,10 +115,12 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
 
     if (win == lost) {
         P3GameState.winPlayer = 2;
-    } else if (win > lost) {
-        P3GameState.winPlayer = 0;
     } else {
-        P3GameState.winPlayer = 1;
+        if (win > lost) {
+            P3GameState.winPlayer = 0;
+        } else {
+            P3GameState.winPlayer = 1;
+        }
     }
 
     P3GameState.isState = 0;
@@ -137,19 +150,21 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     case P3MRET_SELECT:
         break;
     case P3MRET_PLAYGAME:
-        P3GameState.endFlg = SEL_MENU_SAVE;
+        P3GameState.endFlg = 1;
         break;
     case P3MRET_REPLAY:
-        P3GameState.endFlg = SEL_MENU_REPLAY;
+        P3GameState.endFlg = 2;
         break;
     case P3MRET_TOTITLE:
-        P3GameState.endFlg = SEL_MENU_STAGESEL;
+        P3GameState.endFlg = 0;
         break;
     }
 
     pGStatus = P3GameState.pGameStatus;
+
     pGStatus->play_stageG = P3GameState.nStage;
     pGStatus->play_modeG = P3GameState.nMode;
+
     if (pGStatus->play_modeG != PLAY_MODE_SINGLE) {
         switch (P3GameState.vsLev) {
         case 0:
@@ -190,10 +205,11 @@ int MenuCtrl(MENU_STR *menu_str_ptr) {
     if (ret == P3MRET_PLAYGAME) {
         pGStatus->endingFlag = P3GameState.endingGame;
     } else {
-        pGStatus->endingFlag = ENDING_NONE;
+        pGStatus->endingFlag = 0;
     }
 
     pGStatus->stClearBit = P3GameState.pLog->clrFlg[0];
+
     if (ret == P3MRET_REPLAY) {
         pGStatus->demo_flagG = DEMOF_REPLAY;
     } else {

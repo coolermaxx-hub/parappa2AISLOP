@@ -31,11 +31,17 @@ void PrInitializeRandomPool() {
 }
 
 float PrFloatRandom() {
-    // Rejection sampling: reroll until the scaled value is strictly below 1.0.
-    float scaled;
-    do {
-        scaled = static_cast<float>(PrRandom()) / RAND_MAX;
-    } while (scaled >= 1.0f);
+    /*
+     * FIXME(poly):
+     *   Was a goto actually used here?
+     *   I can't get it to match without one. 
+     */
+generate_rand:
+    float ret = PrRandom();
 
-    return scaled;
+    if ((ret / RAND_MAX) >= 1.0f) {
+        goto generate_rand;
+    }
+
+    return ret / RAND_MAX;
 }
