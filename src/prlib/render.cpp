@@ -17,11 +17,6 @@
 #include <eeregs.h>
 #include <math.h>
 
-#ifndef NON_MATCHING
-/* This file's weak copy of the constructor is asm near the end of the file */
-extern template NaVECTOR<float, 4>::NaVECTOR(const float& x, const float& y, const float& z, const float& w);
-#endif
-
 /* sdata */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
@@ -232,16 +227,40 @@ void SpmFileHeader::CalculateCurrentMatrix(PrModelObject *model, const NaMATRIX<
     }
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#else
+/*
+ * These three are inline and defined after their callers above, so gcc
+ * emits them at the end of the unit (in the reverse of this order), and
+ * ComposeGlobalMatrix is parsed before ComposeGlobalMatrixWithoutVisibility,
+ * so it calls it rather than inlining it.
+ */
+inline void PrRenderStuff::AppendDmaTag(const sceDmaTag *tag) {
+    m_dma_queue.Append((void*)tag);
+}
+
+inline void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
+    SpmNode *parent = this->m_parent;
+
+    if (parent != NULL && !(parent->m_flags & 0x4000)) {
+        m_flags &= ~0x4000;
+    } else {
+        bool visible = !(m_flags & 0x20000);
+        if (visible) {
+            m_flags |= 0x4000;
+        } else {
+            m_flags &= ~0x4000;
+        }
+    }
+
+    if (m_flags & 0x4000) {
+        ComposeGlobalMatrixWithoutVisibility(model, arg1);
+    }
+}
+
 /*
  * The world matrix is the parent's times this node's local matrix. With
  * transitions active, the local matrix is also stored (blended) per model.
- * Inline in the original: inlined into CalculateCurrentMatrixAnimation,
- * with a weak copy (called by ComposeGlobalMatrix) at the end of this file.
- * Built here, gcc also inlines it into ComposeGlobalMatrix, and the copy
- * schedules the m_flags load differently.
+ * Inlined into CalculateCurrentMatrixAnimation; ComposeGlobalMatrix calls
+ * the copy at the end of the unit.
  */
 inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
     if (model->m_posture_matrices[0] != NULL) {
@@ -257,7 +276,8 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
         }
 
         this->m_global_matrix = arg1 * prSpramData->m_node_matrix;
-        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->m_node_matrix;
+        u_int i = this->m_index;
+        model->m_posture_matrices[model->m_active_transition][i] = prSpramData->m_node_matrix;
     } else if (m_flags & 0x1) {
         this->m_global_matrix = arg1;
     } else {
@@ -269,6 +289,9 @@ inline void SpmNode::ComposeGlobalMatrixWithoutVisibility(PrModelObject *model, 
     }
 }
 
+#ifndef NON_MATCHING
+INCLUDE_ASM("asm/nonmatchings/prlib/render", CalculateCurrentMatrixAnimation__13SpmFileHeaderP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
+#else
 /*
  * Like ComposeGlobalMatrix, but visibility and the local matrix come from
  * the scene's current animation when the node has one. Always inlined in
@@ -309,7 +332,8 @@ inline void SpmNode::ComposeGlobalMatrixAnimation(PrModelObject *model, const Na
         }
 
         this->m_global_matrix = arg1 * prSpramData->m_node_matrix;
-        model->m_posture_matrices[model->m_active_transition][this->m_index] = prSpramData->m_node_matrix;
+        u_int i = this->m_index;
+        model->m_posture_matrices[model->m_active_transition][i] = prSpramData->m_node_matrix;
     } else if (identity) {
         this->m_global_matrix = arg1;
     } else {
@@ -635,37 +659,3 @@ void SpmNode::RenderContext2Node(PrModelObject *model) {
         }
     }
 }
-
-/* nalib/navector.h: weak copy of the 4-argument NaVECTOR constructor */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", __t8NaVECTOR2Zfi4RCfT1T1T1);
-#endif
-
-/* prlib/render.cpp */
-void SpmNode::ComposeGlobalMatrix(PrModelObject *model, const NaMATRIX<float, 4, 4>& arg1) {
-    SpmNode *parent = this->m_parent;
-
-    if (parent != NULL && !(parent->m_flags & 0x4000)) {
-        m_flags &= ~0x4000;
-    } else {
-        bool visible = !(m_flags & 0x20000);
-        if (visible) {
-            m_flags |= 0x4000;
-        } else {
-            m_flags &= ~0x4000;
-        }
-    }
-
-    if (m_flags & 0x4000) {
-        ComposeGlobalMatrixWithoutVisibility(model, arg1);
-    }
-}
-
-/* prlib/renderstuff.h */
-INCLUDE_ASM("asm/nonmatchings/prlib/render", func_00145E50);
-
-/* prlib/render.cpp */
-/* Weak copy of the inline ComposeGlobalMatrixWithoutVisibility; its source is above CalculateCurrentMatrixAnimation */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/render", ComposeGlobalMatrixWithoutVisibility__7SpmNodeP13PrModelObjectRCt8NaMATRIX3Zfi4i4);
-#endif

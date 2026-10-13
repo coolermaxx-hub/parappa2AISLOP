@@ -128,6 +128,7 @@ public:
         NaMATRIX<float, 4, 4> ret;
         NaMATRIX<float, 4, 4> *pret = &ret;
         const NaMATRIX<float, 4, 4> *pthis = this;
+        const NaMATRIX<float, 4, 4> *prhs = &rhs;
         asm volatile("
             lqc2         $vf4, 0x0(%1)
             lqc2         $vf5, 0x10(%1)
@@ -157,7 +158,7 @@ public:
             vmaddaz.xyzw ACC, $vf6, $vf8z
             vmaddw.xyzw  $vf9, $vf7, $vf8w
             sqc2         $vf9, 0x30(%0)
-        " : : "r"(pret), "r"(pthis), "r"(&rhs) : "$6", "$7", "$8", "$9");
+        " : : "r"(pret), "r"(pthis), "r"(prhs) : "$6", "$7", "$8", "$9");
         return ret;
     }
 
