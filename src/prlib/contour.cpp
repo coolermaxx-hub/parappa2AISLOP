@@ -24,14 +24,7 @@ void PrModelObject::SaveContour() {
     m_flags |= 2;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/contour", SaveContour__14SpmComplexNodeP13PrModelObject);
-#else
-/*
- * Two addu operands are swapped: the original adds the scaled index to the
- * packet address as integers ((m_src << 4) + (u_int)src), while indexing the
- * vector array puts the base first.
- */
+/* The source vectors are addressed as (m_src << 4) + (u_int)src, as integers */
 void SpmComplexNode::SaveContour(PrModelObject *model) {
     PrVuNodeHeaderDmaPacket *packet = this->m_main_packet;
     NaMATRIX<float, 4, 4> *matrix = &packet->m_matrix;
@@ -42,14 +35,14 @@ void SpmComplexNode::SaveContour(PrModelObject *model) {
     u_int num = m_contour_index_num;
     if (ident) {
         for (u_int i = 0; i < num; i++) {
-            NaVECTOR<float, 4> *s = &src[m_contour_index[i].m_src];
+            NaVECTOR<float, 4> *s = (NaVECTOR<float, 4>*)((m_contour_index[i].m_src << 4) + (u_int)src);
             dst[m_contour_index[i].m_dst] = *s;
         }
     } else {
         for (u_int i = 0; i < num; i++) {
             NaVECTOR<float, 4> result;
             NaVECTOR<float, 4> tmp;
-            NaVECTOR<float, 4> *v = &src[m_contour_index[i].m_src];
+            NaVECTOR<float, 4> *v = (NaVECTOR<float, 4>*)((m_contour_index[i].m_src << 4) + (u_int)src);
             u_int d = m_contour_index[i].m_dst;
 
             asm volatile(
@@ -70,7 +63,6 @@ void SpmComplexNode::SaveContour(PrModelObject *model) {
         }
     }
 }
-#endif
 
 void PrModelObject::ResetContour() {
     m_flags &= ~2;
