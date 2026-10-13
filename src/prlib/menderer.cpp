@@ -403,31 +403,34 @@ void UpdateNoodleRotation() {
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", PrUpdateMendererSpeed__Fv);
-#else
-static void PrUpdateMendererSpeed() {
+/* Both clamps branch to their store, as the original lays the blocks out */
+void PrUpdateMendererSpeed() {
+    float fade, speed;
+
     if (deceleratingMenderer == 0) {
         return;
     }
 
     if (prCurrentStage == 6 || prCurrentStage == 16) {
-        float fade = prMendererFade - decelerateRatio;
-        if (fade < 0.0f) {
-            prMendererFade = 0.0f;
-        } else {
-            prMendererFade = fade;
+        fade = prMendererFade - decelerateRatio;
+        if (!(fade < 0.0f)) {
+            goto set_fade;
         }
+        prMendererFade = 0.0f;
     } else {
-        float speed = prMendererSpeed - decelerateRatio;
-        if (speed < 0.0f) {
-            prMendererSpeed = 0.0f;
-        } else {
-            prMendererSpeed = speed;
+        speed = prMendererSpeed - decelerateRatio;
+        if (!(speed < 0.0f)) {
+            goto set_speed;
         }
+        prMendererSpeed = 0.0f;
     }
+    return;
+set_fade:
+    prMendererFade = fade;
+    return;
+set_speed:
+    prMendererSpeed = speed;
 }
-#endif
 
 PR_EXTERN
 void PrDecelerateMenderer(u_int frames) {
