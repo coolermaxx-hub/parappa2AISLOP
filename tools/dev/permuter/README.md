@@ -8,3 +8,8 @@ result only at score 0, then move it into the source and confirm with
 the permuter parses C only.
 
 `queue.tsv` is the starting score for each of the 16 C targets (2026-10-12), lowest first.
+
+`setup_unit.py` is the better harness: it compiles the whole translation unit for
+every candidate, so static helpers inline exactly as in the real build, and
+scores against the unit object built with the function still in asm.
+`splice.py` puts a candidate's version of the function back into the unit.
