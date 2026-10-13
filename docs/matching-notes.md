@@ -66,6 +66,18 @@ reload (14 off) but dispatches through a comparison tree. The unreachable
 tail `return NaMATRIX<float, 4, 4>(c, s, 0.0f, -s, c, 0.0f, 0.0f, 0.0f, 1.0f);`
 is a less artificial way to reference the 9-argument `Set` than `if (0)`.
 
+## Template emission (general)
+
+The original nalib had `TranslateMatrix`, `ScaleMatrix` (both overloads) and
+`RotateMatrix(int)` inline: each unit emits them after its template
+instances, in reverse order of first use (menderer: `ScaleMatrix(x, y, z)`,
+`TranslateMatrix(x, y, z)`, `RotateMatrix(int)`). They are inline in
+namatrix.h now. Units that do not carry their own copy of the 16-argument
+`Set` (menderer) need `extern template` for it once their asm is replaced.
+An empty `asm volatile("" ::: "memory")` before the third case of
+`RotateMatrix(int)` also brings back the reload, but blocks reorg the same
+way the loop does.
+
 ## Near misses
 
 | Function | Off by | Notes |
