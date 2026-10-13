@@ -7097,9 +7097,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsCmnCell_CusorDraw);
 }
 #endif
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
-#else
 /* static */ int TsOption_Flow(int flg, u_int tpad) {
     OPTION_MENU  *pfw = &OptionMenu;
     int           state;
@@ -7196,9 +7193,9 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
         if (old != sel) {
             int max;
 
-            /* Start the press timer of the left or right arrow */
-            pfw->btnlr[osel].tim[(sel < old) ? 0 : 1] = 6;
             max = OptionSelTbl[osel].nObj;
+            /* Start the press timer of the left or right arrow */
+            (pfw->btnlr + osel)->tim[(sel < old) ? 0 : 1] = 6;
             pfw->sw[pfw->selno] = TSLOOP(sel, max);
             TSSNDPLAY(2);
         }
@@ -7259,7 +7256,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsOption_Flow);
     pfw->state = state;
     return 0;
 }
-#endif
 
 static void TsOption_Draw(SPR_PKT pk, SPR_PRM *spr) {
     int           i;
