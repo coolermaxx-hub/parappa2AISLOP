@@ -267,11 +267,15 @@ template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& v) {
     NaMATRIX<float, 4, 4> ret;
     for (int i = 0; i < 3; i++) {
+        NaVECTOR<float, 4>& row = ret.m[i];
         for (int j = 0; j < 4; j++) {
-            ret.m[i][j] = (i == j) ? 1.0f : 0.0f;
+            row[j] = (i == j) ? 1.0f : 0.0f;
         }
     }
-    ret.m[3] = v;
+    for (int i = 0; i < 3; i++) {
+        ret.m[3][i] = v[i];
+    }
+    ret.m[3][3] = 1.0f;
     return ret;
 }
 
@@ -288,8 +292,9 @@ template <typename T, int t0, int t1>
 NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& v) {
     NaMATRIX<float, 4, 4> ret;
     for (int i = 0; i < 4; i++) {
+        NaVECTOR<float, 4>& row = ret.m[i];
         for (int j = 0; j < 4; j++) {
-            ret.m[i][j] = (i == j) ? v[j] : 0.0f;
+            row[j] = (i == j) ? v[j] : 0.0f;
         }
     }
     return ret;
