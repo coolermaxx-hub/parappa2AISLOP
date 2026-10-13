@@ -12,10 +12,11 @@
 /* sdata */
 static PrSPRAM_DATA *prSpramData = (PrSPRAM_DATA*)0x70000000;
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", ApplyDepthOfField__13PrSceneObject);
-#else
-/* Register allocation: zbuf and the packet pointer swap s0/s1 */
+/* A packet set up on construction (gcc then gives Init its own copy of the address) */
+struct DofPacket : public NaGifPacket {
+    DofPacket(u_long128 *base) { Init(base); }
+};
+
 void PrSceneObject::ApplyDepthOfField() {
     u_int level = GetDepthLevel();
     if (level == 0) {
@@ -36,12 +37,13 @@ void PrSceneObject::ApplyDepthOfField() {
         return;
     }
 
+    sceGsZbuf zbuf = prRenderStuff.m_zbuf;
     u_int width = this->m_width;
     u_int height = this->m_height;
 
     PrVRAM_RECT src;
-    src.x = 0;
     src.buffer_width = width;
+    src.x = 0;
     src.y = ((u_long)this->m_frame.FBP << 11) / width;
     src.w = width;
     src.h = height;
@@ -53,10 +55,8 @@ void PrSceneObject::ApplyDepthOfField() {
     work.w = width >> 1;
     work.h = height;
 
-    sceGsZbuf zbuf = prRenderStuff.m_zbuf;
-    NaGifPacket packet;
     /* The packet goes in scratchpad right after PrSPRAM_DATA */
-    packet.Init((u_long128*)(prSpramData + 1));
+    DofPacket packet((u_long128*)(prSpramData + 1));
     packet.End(0, 0, 0);
 
     static sceGifTag tag;
@@ -112,24 +112,3 @@ void PrSceneObject::ApplyDepthOfField() {
     FlushCache(0);
     sceDmaSend(dma, (u_long128*)(((u_int)packet.pBase & 0x3fff) | 0x80000000));
 }
-#endif
-
-
-/* nalib/napacket.h (emitted by the C version above) */
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEXFLUSH__11NaGifPacket);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGifPackedAD_TEST_1__11NaGifPacketbiUcibibi);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__11NaGifPacketUI80);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", AddGsAD__18NaGifPacketWrapperUiUl);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", CloseGifTag__18NaGifPacketWrapper);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", OpenGifTag__18NaGifPacketWrapperUI80);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", End__18NaGifPacketWrapperUiUiUi);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/depthfield", Init__18NaGifPacketWrapperPUI80);
-#endif
