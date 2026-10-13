@@ -255,7 +255,7 @@ NaMATRIX<T, t0, t1>& NaMATRIX<T, t0, t1>::Set(const T& m00, const T& m01, const 
  * column and a vector is transformed as M * v (see Apply).
  */
 template <typename T, int t0, int t1>
-NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const float& y, const float& z) {
+inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const float& y, const float& z) {
     return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
                                  0.0f, 1.0f, 0.0f, 0.0f,
                                  0.0f, 0.0f, 1.0f, 0.0f,
@@ -264,7 +264,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const float& x, const
 
 /* Identity with the translation column replaced by v (w included) */
 template <typename T, int t0, int t1>
-NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& v) {
+inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float, 4>& v) {
     NaMATRIX<float, 4, 4> ret;
     for (int i = 0; i < 3; i++) {
         NaVECTOR<float, 4>& row = ret.m[i];
@@ -280,7 +280,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::TranslateMatrix(const NaVECTOR<float,
 }
 
 template <typename T, int t0, int t1>
-NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const float& x, const float& y, const float& z) {
+inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const float& x, const float& y, const float& z) {
     return NaMATRIX<float, 4, 4>(x,    0.0f, 0.0f, 0.0f,
                                  0.0f, y,    0.0f, 0.0f,
                                  0.0f, 0.0f, z,    0.0f,
@@ -289,7 +289,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const float& x, const flo
 
 /* Diagonal matrix of all four components of v */
 template <typename T, int t0, int t1>
-NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& v) {
+inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::ScaleMatrix(const NaVECTOR<float, 4>& v) {
     NaMATRIX<float, 4, 4> ret;
     for (int i = 0; i < 4; i++) {
         NaVECTOR<float, 4>& row = ret.m[i];
@@ -344,7 +344,7 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(const NaVECTOR<float, 4>
 
 /* Rotation by angle around the X (0), Y (1) or Z (2) axis */
 template <typename T, int t0, int t1>
-NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const float& angle) {
+inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const float& angle) {
     float c = cosf(angle);
     float s = sinf(angle);
 
