@@ -13,6 +13,8 @@ targets and relocations, with every `NON_MATCHING` block of the unit in C.
 | `SpmComplexNode::SaveContour` (contour.cpp) | Source vectors addressed as `(m_src << 4) + (u_int)src` |
 | `TsOption_Flow` (menusub.c) | Arrow timer indexed as `(pfw->btnlr + osel)->tim[...]` |
 | menderer.cpp `TranslateMatrix(x, y, z)`, `RotateMatrix(int)` | The namatrix.h changes above; `ScaleMatrix(x, y, z)` stays asm, placed after `_GLOBAL_$I` |
+| render.cpp end-of-unit copies (3) | Inline `ComposeGlobalMatrix` and `AppendDmaTag` defined after their callers; `rhs` through a local pointer in `operator*`; node index read first |
+| depthfield.cpp (all 9) | The packet initialised by a constructor (a local `NaGifPacket` subclass): gcc then computes the packet address for `Init` separately, as the original does; `zbuf` read before the rectangles; `src.buffer_width` stored before `src.x`. Its bss moves to C (yaml and slinky) |
 | billboard.cpp (all 5) | `RotateMatrix(int)` below: an `if (0)` 9-argument `Set` reference and an empty loop after the second case's `return` |
 
 ## spadata.cpp: emission order
@@ -131,10 +133,7 @@ scene.cpp's draft builds `dir` with the 4-argument constructor; with
   no scratch register is free (otherwise it splits it into `mult` + `addu`,
   even for a plain `a * b + c`), so the difference is register pressure at
   that call, not the expression.
-- `ApplyDepthOfField`: with `zbuf` loaded before `width` (24 off), the
-  original's only remaining difference is that the packet address is a
-  fresh `addiu` for `Init` and a saved register only afterwards; empty loops
-  around `Init` make it worse.
+- When a unit's static data moves to C, both `config/p3.jul12.yaml` (`bss` to `.bss`) and the linker layout in `config/p3.jul12.slinky.yaml` (the asm `*.bss.s.o` path to the C object) need changing.
 
 ## Near misses
 
