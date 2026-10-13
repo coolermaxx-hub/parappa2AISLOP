@@ -7429,11 +7429,6 @@ static int TsUserList_TagChangeAble(USERLIST_MENU *pfw, int *pno) {
     return flg;
 }
 
-#ifndef NON_MATCHING
-INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
-#else /* The original takes the address of CurFileInfo.logDate/repDate before
-        the 8-byte copy (probably a copy through a pointer cast); a plain
-        struct assignment folds the address into the loads */
 /* static */ int TsUserList_SetCurTag(USERLIST_MENU *pfw, int no) {
     USERLIST_TYPE *ptbl;
     int            fileNo;
@@ -7452,14 +7447,21 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
     pfw->nTag = no;
 
     if (pfw->dataMode == 1) {
-        pfw->curFileDate = CurFileInfo.logDate;
+        /* Copied through a pointer, as the original does */
+        {
+            P3MC_DATE *pd = &CurFileInfo.logDate;
+            pfw->curFileDate = *pd;
+        }
         if (!pfw->isSave) {
             fileNo = CurFileInfo.logFileNo;
         } else {
             fileNo = CurFileInfo.logFileNo;
         }
     } else {
-        pfw->curFileDate = CurFileInfo.repDate;
+        {
+            P3MC_DATE *pd = &CurFileInfo.repDate;
+            pfw->curFileDate = *pd;
+        }
         if (!pfw->isSave) {
             fileNo = CurFileInfo.repFileNo;
         }
@@ -7468,7 +7470,6 @@ INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_SetCurTag);
     pfw->curFileNo = fileNo;
     return 0;
 }
-#endif
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/menu/menusub", TsUserList_Flow);
