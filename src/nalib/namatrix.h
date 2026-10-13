@@ -348,28 +348,25 @@ NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const float& a
     float c = cosf(angle);
     float s = sinf(angle);
 
-    if (0) {
-        ((NaMATRIX<float, 4, 4>*)0)->Set(c, s, c, s, c, s, c, s, c);
-    }
-
-    if (axis == 0) {
+    switch (axis) {
+    case 0:
         return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
                                      0.0f, c,    s,    0.0f,
                                      0.0f, -s,   c,    0.0f,
                                      0.0f, 0.0f, 0.0f, 1.0f);
-    }
-
-    if (axis == 1) {
-        return NaMATRIX<float, 4, 4>(c,    0.0f, -s,   0.0f,
+    default:
+        if (axis == 1) {
+            return NaMATRIX<float, 4, 4>(c,    0.0f, -s,   0.0f,
                                      0.0f, 1.0f, 0.0f, 0.0f,
                                      s,    0.0f, c,    0.0f,
                                      0.0f, 0.0f, 0.0f, 1.0f);
+        }
+        return NaMATRIX<float, 4, 4>(c,    s,    0.0f, 0.0f,
+                                     -s,   c,    0.0f, 0.0f,
+                                     0.0f, 0.0f, 1.0f, 0.0f,
+                                     0.0f, 0.0f, 0.0f, 1.0f);
     }
-
-    return NaMATRIX<float, 4, 4>(c,    s,    0.0f, 0.0f,
-                                 0.0f - s, c,  0.0f, 0.0f,
-                                 0.0f, 0.0f, 1.0f, 0.0f,
-                                 0.0f, 0.0f, 0.0f, 1.0f);
+    return NaMATRIX<float, 4, 4>(c, s, 0.0f, -s, c, 0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 #endif /* NALIB_NAMATRIX_H */

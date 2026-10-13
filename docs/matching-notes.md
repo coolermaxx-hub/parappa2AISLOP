@@ -56,7 +56,15 @@ the original order, and both `Set` bodies then match exactly. The
 original reloads `s` from its stack slot (`bnel ... lwc1 $f0, 104($sp)`),
 where gcc here shares one `neg.s` between the second and third cases.
 Writing the third case's `-s` as `0.0f - s` separates them (38 off) but
-does not bring back the reload.
+does not bring back the reload. Wrapping the first two cases in
+`do { ... } while (0)` stops cse following the branch into the third case,
+which brings the reload back (8 off); what remains is the delay slot of the
+`axis != 1` branch, which reorg now fills from the fall-through because the
+branch leaves a loop, where the original filled it from the target
+(`bnel` + the reload). A `switch` with `case 2: default:` also gets the
+reload (14 off) but dispatches through a comparison tree. The unreachable
+tail `return NaMATRIX<float, 4, 4>(c, s, 0.0f, -s, c, 0.0f, 0.0f, 0.0f, 1.0f);`
+is a less artificial way to reference the 9-argument `Set` than `if (0)`.
 
 ## Near misses
 
