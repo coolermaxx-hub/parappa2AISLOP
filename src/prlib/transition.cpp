@@ -21,7 +21,7 @@ void PrModelObject::ResetPosture() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/transition", BlendTransitionMatrix__7SpmNodeP13PrModelObjectRt8NaMATRIX3Zfi4i4);
-#else
+#else /* 18 off: in the second product the loop counter and the row temporary take a0/a1 the other way round */
 void SpmNode::BlendTransitionMatrix(PrModelObject *model, NaMATRIX<float, 4, 4>& mtx) {
     float ratio = prSpramData->m_model_transaction_blend_ratio;
 

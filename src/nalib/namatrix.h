@@ -164,8 +164,9 @@ public:
 
     NaMATRIX<float, 4, 4> operator*(const float& s) const {
         NaMATRIX<float, 4, 4> ret;
+        NaMATRIX<float, 4, 4> *pret = &ret;
         for (int i = 0; i < 4; i++) {
-            ret.m[i] = m[i] * s;
+            pret->m[i] = m[i] * s;
         }
         return ret;
     }
