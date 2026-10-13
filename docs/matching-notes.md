@@ -101,6 +101,25 @@ An empty `do { } while (0);` inserted after each statement of `Render`,
 `DrawObjStrDisp`, `RenderClusterNode` and `ApplyDepthOfField` never lowers
 their counts, so the `RotateMatrix(int)` fix does not carry over to them.
 
+## render.cpp: end-of-unit functions
+
+The original ends with the `NaVECTOR` 4-argument constructor, then
+`ComposeGlobalMatrix`, the weak `PrRenderStuff::AppendDmaTag` (the
+`j Append` stub) and `ComposeGlobalMatrixWithoutVisibility`, so
+`ComposeGlobalMatrix` was inline too, and was not inlined into its callers
+or able to inline `ComposeGlobalMatrixWithoutVisibility` (gcc 2.95 decides
+inlining when it parses a function). With every block in C, defining
+`AppendDmaTag` inline and then `ComposeGlobalMatrix` inline after
+`CalculateCurrentMatrix` and before `ComposeGlobalMatrixWithoutVisibility`
+gives that order, and the constructor, `ComposeGlobalMatrix` and
+`AppendDmaTag` match exactly. `ComposeGlobalMatrixWithoutVisibility` is then
+32 off (the inlined `operator*` copies the `prSpramData` pointer into its own
+register). Its asm cannot stay alone, because top-level asm is emitted
+before the deferred functions.
+
+scene.cpp's draft builds `dir` with the 4-argument constructor; with
+`Set` the unit does not emit the constructor copy the original has.
+
 ## Near misses
 
 | Function | Off by | Notes |

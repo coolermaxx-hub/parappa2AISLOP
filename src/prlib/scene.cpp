@@ -106,8 +106,7 @@ void PrSceneObject::SetAppropriateDefaultCamera() {
     }
 
     NaVECTOR<float, 4> center = (min + max) / 2.0f;
-    NaVECTOR<float, 4> dir;
-    dir.Set(0.0f, 0.0f, -1.0f, 1.0f);
+    NaVECTOR<float, 4> dir(0.0f, 0.0f, -1.0f, 1.0f);
 
     float r = (size[2] <= size[1]) ? size[1] : size[2];
     NaVECTOR<float, 4> eye = center - dir * (size[2] + r * 1.7320508f * 1.3f);
