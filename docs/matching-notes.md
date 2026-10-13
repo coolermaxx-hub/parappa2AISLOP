@@ -12,6 +12,7 @@ targets and relocations, with every `NON_MATCHING` block of the unit in C.
 | `PrUpdateMendererSpeed` (menderer.cpp) | Both clamps `goto` their store |
 | `SpmComplexNode::SaveContour` (contour.cpp) | Source vectors addressed as `(m_src << 4) + (u_int)src` |
 | `TsOption_Flow` (menusub.c) | Arrow timer indexed as `(pfw->btnlr + osel)->tim[...]` |
+| menderer.cpp `TranslateMatrix(x, y, z)`, `RotateMatrix(int)` | The namatrix.h changes above; `ScaleMatrix(x, y, z)` stays asm, placed after `_GLOBAL_$I` |
 | billboard.cpp (all 5) | `RotateMatrix(int)` below: an `if (0)` 9-argument `Set` reference and an empty loop after the second case's `return` |
 
 ## spadata.cpp: emission order
@@ -83,6 +84,22 @@ instances, in reverse order of first use (menderer: `ScaleMatrix(x, y, z)`,
 `TranslateMatrix(x, y, z)`, `RotateMatrix(int)`). They are inline in
 namatrix.h now. Units that do not carry their own copy of the 16-argument
 `Set` (menderer) need `extern template` for it once their asm is replaced.
+
+## ScaleMatrix(x, y, z)
+
+menderer's and spram's original copies are identical to each other, and to
+the plain 16-argument constructor call apart from scheduling: the original
+sets the vector-init loop counter (`li v1, 3`) before the temporaries for
+the `0.0f`/`1.0f` arguments, where the constructor call sets it after them
+(50 off). Literal types, reference locals, a local plus `Set` and the g++
+named return value (`return ret { ret.Set(...); }`) don't reproduce it; the
+named return value moves the counter first but also moves the temporaries
+after the loop.
+
+An empty `do { } while (0);` inserted after each statement of `Render`,
+`SetNextTarget`, `GetAwfulRotation`, `PrUpdateAwfulMenderer`,
+`DrawObjStrDisp`, `RenderClusterNode` and `ApplyDepthOfField` never lowers
+their counts, so the `RotateMatrix(int)` fix does not carry over to them.
 
 ## Near misses
 
