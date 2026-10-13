@@ -348,6 +348,11 @@ inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const f
     float c = cosf(angle);
     float s = sinf(angle);
 
+    /* Never taken; the original references the 9-argument Set here */
+    if (0) {
+        ((NaMATRIX<float, 4, 4>*)0)->Set(c, s, c, s, c, s, c, s, c);
+    }
+
     if (axis == 0) {
         return NaMATRIX<float, 4, 4>(1.0f, 0.0f, 0.0f, 0.0f,
                                      0.0f, c,    s,    0.0f,
@@ -360,6 +365,8 @@ inline NaMATRIX<float, 4, 4> NaMATRIX<T, t0, t1>::RotateMatrix(int axis, const f
                                      0.0f, 1.0f, 0.0f, 0.0f,
                                      s,    0.0f, c,    0.0f,
                                      0.0f, 0.0f, 0.0f, 1.0f);
+        /* An empty loop here keeps cse from carrying -s into the next case */
+        do { } while (0);
     }
 
     return NaMATRIX<float, 4, 4>(c,    s,    0.0f, 0.0f,

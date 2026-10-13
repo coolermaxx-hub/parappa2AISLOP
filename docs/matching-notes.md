@@ -11,6 +11,8 @@ targets and relocations, with every `NON_MATCHING` block of the unit in C.
 | `TsUserList_SetCurTag` (menusub.c) | The date copies go through a pointer to the source field |
 | `PrUpdateMendererSpeed` (menderer.cpp) | Both clamps `goto` their store |
 | `SpmComplexNode::SaveContour` (contour.cpp) | Source vectors addressed as `(m_src << 4) + (u_int)src` |
+| `TsOption_Flow` (menusub.c) | Arrow timer indexed as `(pfw->btnlr + osel)->tim[...]` |
+| billboard.cpp (all 5) | `RotateMatrix(int)` below: an `if (0)` 9-argument `Set` reference and an empty loop after the second case's `return` |
 
 ## spadata.cpp: emission order
 
@@ -43,28 +45,35 @@ off), the `NaMATRIX` spline/linear instances (186/58), `GetLinearValue<VEC>`
 (28), `TranslateMatrix(vec)` (20), `RotateMatrix(int)` (44). The `float`
 instances and `ScaleMatrix(vec)` are within 2 instructions.
 
-## billboard.cpp and RotateMatrix(int)
+## billboard.cpp and RotateMatrix(int) (matched)
 
 billboard's three weak copies are the 9-argument `Set`, the 16-argument `Set`
 and `RotateMatrix(int)`, in that order; spadata has the same `Set` pair.
 `RotateMatrix(int)` only calls the 16-argument `Set`, so the original must
-reference the 9-argument one in code the compiler removed: adding
+reference the 9-argument one in code the compiler removed: an
 `if (0) { ((NaMATRIX<float, 4, 4>*)0)->Set(c, s, c, s, c, s, c, s, c); }`
-to `RotateMatrix(int)` makes billboard emit Set9, Set16 and RotateMatrix in
-the original order, and both `Set` bodies then match exactly. The
-`RotateMatrix(int)` body is still 44 instructions off: in the third case the
-original reloads `s` from its stack slot (`bnel ... lwc1 $f0, 104($sp)`),
-where gcc here shares one `neg.s` between the second and third cases.
-Writing the third case's `-s` as `0.0f - s` separates them (38 off) but
-does not bring back the reload. Wrapping the first two cases in
-`do { ... } while (0)` stops cse following the branch into the third case,
-which brings the reload back (8 off); what remains is the delay slot of the
-`axis != 1` branch, which reorg now fills from the fall-through because the
-branch leaves a loop, where the original filled it from the target
-(`bnel` + the reload). A `switch` with `case 2: default:` also gets the
-reload (14 off) but dispatches through a comparison tree. The unreachable
-tail `return NaMATRIX<float, 4, 4>(c, s, 0.0f, -s, c, 0.0f, 0.0f, 0.0f, 1.0f);`
-is a less artificial way to reference the 9-argument `Set` than `if (0)`.
+at the top of `RotateMatrix(int)` gives the original order (a dead reference
+after the last `return` puts the 16-argument `Set` first instead).
+
+In the third case the original reloads `s` from its stack slot, in the delay
+slot of a branch-likely (`bnel ... lwc1 $f0, 104($sp)`). Two gcc 2.95 rules
+decide this:
+
+- cse follows a conditional jump into its target (and so reuses the `-s`
+  of the second case) only when the target label is preceded by a barrier
+  with nothing but notes in between, and a `NOTE_INSN_LOOP_END` stops it
+  (`cse_end_of_basic_block`).
+- reorg predicts a jump out of a loop not taken (`LABEL_OUTSIDE_LOOP_P`,
+  set by loop.c for any jump whose target is not in the jump's own loop or
+  a loop nested in it); otherwise an `NE` test is predicted taken, which is
+  what gives the `bnel`.
+
+So the loop has to end between the second case and the third without the
+`axis != 1` jump being inside it: an empty `do { } while (0);` after the
+second case's `return` does it, and the whole unit then matches. Wrapping
+the second case itself in a loop gives the reload but either predicts the
+jump not taken (when the test is inside the loop) or raises the loop weight
+of the case's registers (when only the body is).
 
 ## Template emission (general)
 
@@ -74,9 +83,6 @@ instances, in reverse order of first use (menderer: `ScaleMatrix(x, y, z)`,
 `TranslateMatrix(x, y, z)`, `RotateMatrix(int)`). They are inline in
 namatrix.h now. Units that do not carry their own copy of the 16-argument
 `Set` (menderer) need `extern template` for it once their asm is replaced.
-An empty `asm volatile("" ::: "memory")` before the third case of
-`RotateMatrix(int)` also brings back the reload, but blocks reorg the same
-way the loop does.
 
 ## Near misses
 
