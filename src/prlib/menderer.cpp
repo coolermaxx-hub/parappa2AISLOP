@@ -302,12 +302,17 @@ void DrawNoodleStripChunk(const NaMATRIX<float, 4, 4>& matrix) {
 }
 #endif
 
-#ifndef NON_MATCHING
-/* This file's weak copies of these are still asm at the end of the file */
-extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::RotateMatrix(int axis, const float& angle);
-extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::TranslateMatrix(const float& x, const float& y, const float& z);
+/* This file's copies of the two Set overloads and of ScaleMatrix(x, y, z) are asm */
 extern template NaMATRIX<float, 4, 4> NaMATRIX<float, 4, 4>::ScaleMatrix(const float& x, const float& y, const float& z);
-#endif
+extern template NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Set(
+    const float& m00, const float& m01, const float& m02,
+    const float& m10, const float& m11, const float& m12,
+    const float& m20, const float& m21, const float& m22);
+extern template NaMATRIX<float, 4, 4>& NaMATRIX<float, 4, 4>::Set(
+    const float& m00, const float& m01, const float& m02, const float& m03,
+    const float& m10, const float& m11, const float& m12, const float& m13,
+    const float& m20, const float& m21, const float& m22, const float& m23,
+    const float& m30, const float& m31, const float& m32, const float& m33);
 
 void SetNoodleRotationMatrix(NaMATRIX<float, 4, 4>& matrix, float rot) {
     rot = (rot - floorf(rot)) * 2.0f * 3.1415927f;
@@ -662,14 +667,9 @@ PR_EXTERN
 void _GLOBAL_$I$prMendererRatio(void) {
 }
 
-/* nalib/namatrix.h: weak copies of ScaleMatrix(x, y, z), TranslateMatrix(x, y, z) and RotateMatrix(int) */
-#ifndef NON_MATCHING
+/* nalib/namatrix.h: weak copy of ScaleMatrix(x, y, z), before the C copies
+   of TranslateMatrix(x, y, z) and RotateMatrix(int) that gcc emits here */
 INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F4C8);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F5D0);
-
-INCLUDE_ASM("asm/nonmatchings/prlib/menderer", func_0014F6D8);
-#endif
 
 /* prlib/menderer.cpp */
 INCLUDE_RODATA("asm/nonmatchings/prlib/menderer", D_003967E0);
