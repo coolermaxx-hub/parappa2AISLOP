@@ -43,7 +43,7 @@ void SetNextSwitchRotationTimer() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", GetAwfulRotation__Fv);
-#else /* Codegen differs (73 vs 72 instructions) */
+#else /* Control flow matches; the clamped status 2 is held in a1 instead of v0, and the status 3 clamp and the epilogue schedule differently */
 float GetAwfulRotation() {
     if (awfulStatus == 0 || awfulStatus == 2) {
         u_int timer = awfulChangeTimer - 1;
@@ -56,21 +56,27 @@ float GetAwfulRotation() {
         }
     }
 
+    float rot;
     if (awfulStatus == 1) {
-        awfulRotation -= 8.888889e-05f;
-        if (awfulRotation < -0.016f) {
-            awfulRotation = -0.016f;
+        rot = awfulRotation - 8.888889e-05f;
+        if (rot < -0.016f) {
+            rot = -0.016f;
             awfulStatus = 2;
         }
-    } else if (awfulStatus == 3) {
-        awfulRotation += 8.888889e-05f;
-        if (awfulRotation > 0.016f) {
-            awfulRotation = 0.016f;
+    } else {
+        rot = awfulRotation;
+        if (awfulStatus != 3) {
+            return rot;
+        }
+        rot += 8.888889e-05f;
+        if (rot > 0.016f) {
+            rot = 0.016f;
             awfulStatus = 0;
         }
     }
+    awfulRotation = rot;
+    return rot;
 
-    return awfulRotation;
 }
 #endif
 
@@ -176,15 +182,20 @@ void PrDrawAwfulBackground(sceGsFrame frame) {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/mendererawful", PrUpdateAwfulMenderer__Fv);
-#else /* Codegen differs (32 vs 35 instructions) */
+#else /* 8 off: the original compares the copy of the angle in the first wrap, ours the angle itself */
+/* Each wrap is a separate inlined step, which keeps a second copy of the angle */
+static inline float WrapAngleHigh(float x) {
+    return (x >= 6.2831855f) ? x - 6.2831855f : x;
+}
+
+static inline float WrapAngleLow(float x) {
+    return (x < 0.0f) ? x + 6.2831855f : x;
+}
+
 void PrUpdateAwfulMenderer() {
     float angle = awfulAngle + prMendererSpeed * GetAwfulRotation();
-    if (angle >= 6.2831855f) {
-        angle -= 6.2831855f;
-    }
-    if (angle < 0.0f) {
-        angle += 6.2831855f;
-    }
+    angle = WrapAngleHigh(angle);
+    angle = WrapAngleLow(angle);
     awfulAngle = angle;
 
     WaveCtrlUpdate(&awfulWave, prMendererSpeed);
