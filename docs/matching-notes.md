@@ -43,6 +43,21 @@ off), the `NaMATRIX` spline/linear instances (186/58), `GetLinearValue<VEC>`
 (28), `TranslateMatrix(vec)` (20), `RotateMatrix(int)` (44). The `float`
 instances and `ScaleMatrix(vec)` are within 2 instructions.
 
+## billboard.cpp and RotateMatrix(int)
+
+billboard's three weak copies are the 9-argument `Set`, the 16-argument `Set`
+and `RotateMatrix(int)`, in that order; spadata has the same `Set` pair.
+`RotateMatrix(int)` only calls the 16-argument `Set`, so the original must
+reference the 9-argument one in code the compiler removed: adding
+`if (0) { ((NaMATRIX<float, 4, 4>*)0)->Set(c, s, c, s, c, s, c, s, c); }`
+to `RotateMatrix(int)` makes billboard emit Set9, Set16 and RotateMatrix in
+the original order, and both `Set` bodies then match exactly. The
+`RotateMatrix(int)` body is still 44 instructions off: in the third case the
+original reloads `s` from its stack slot (`bnel ... lwc1 $f0, 104($sp)`),
+where gcc here shares one `neg.s` between the second and third cases.
+Writing the third case's `-s` as `0.0f - s` separates them (38 off) but
+does not bring back the reload.
+
 ## Near misses
 
 | Function | Off by | Notes |
