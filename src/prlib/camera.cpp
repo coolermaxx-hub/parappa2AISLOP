@@ -6,7 +6,7 @@ void SpcFileHeader::Initialize() {
 
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/camera", GetCamera__C13SpcFileHeaderf);
-#else
+#else /* 16 off: the original sets w in the cross product temporary and copies it to side afterwards, and copies the normalised up vector through another temporary */
 /*
  * Register allocation and stack slots differ. The original also writes
  * side.w = 1 into the cross product's temporary before copying it, which
@@ -47,7 +47,8 @@ PrPERSPECTIVE_CAMERA* SpcFileHeader::GetCamera(float time) const {
 
     /* Up is the world Y axis made perpendicular to the view direction, then rolled around it */
     NaVECTOR<float, 4> dir = cam->interest - cam->position;
-    NaVECTOR<float, 4> side = dir.Cross(NaMATRIX<float, 4, 4>::IDENT[1]);
+    NaVECTOR<float, 4> side;
+    side = dir.Cross(NaMATRIX<float, 4, 4>::IDENT[1]);
     side[3] = 1.0f;
     cam->up = side.Cross(dir).Normalize();
 
