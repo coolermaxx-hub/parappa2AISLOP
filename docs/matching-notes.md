@@ -120,6 +120,22 @@ before the deferred functions.
 scene.cpp's draft builds `dir` with the 4-argument constructor; with
 `Set` the unit does not emit the constructor copy the original has.
 
+## Notes from the survey
+
+- With every block in C, many functions differ only in `gp`-relative or
+  `%lo` offsets (drawctrl's `DrawCtrlInit`, menusub's `TsMenu_Init`,
+  `TsSetScene_Map`, `MpCityHall_Flow`, p3mc's `P3MC_LoadUser`, ...). Those
+  come from the data the other drafts own, not from their own code.
+- `TsPopMenCus_Draw`: the original computes `&PopMenuSel_Pat[i]` with
+  `mtlo` + `madd`. This gcc only keeps its multiply-accumulate pattern when
+  no scratch register is free (otherwise it splits it into `mult` + `addu`,
+  even for a plain `a * b + c`), so the difference is register pressure at
+  that call, not the expression.
+- `ApplyDepthOfField`: with `zbuf` loaded before `width` (24 off), the
+  original's only remaining difference is that the packet address is a
+  fresh `addiu` for `Init` and a saved register only afterwards; empty loops
+  around `Init` make it worse.
+
 ## Near misses
 
 | Function | Off by | Notes |
