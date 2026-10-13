@@ -71,7 +71,7 @@ void PrModelObject::ResetContour() {
 #ifndef NON_MATCHING
 INCLUDE_ASM("asm/nonmatchings/prlib/contour", RenderContour__14SpmComplexNodeP13PrModelObject);
 #else
-/* Register allocation: the product/copy temporaries land in t3/t4 instead of t8/t9 */
+/* Register allocation: the matrix product temporary and its copy (sp+96, sp+32) take t8/t9 the other way round */
 void SpmComplexNode::RenderContour(PrModelObject *model) {
     NaVECTOR<float, 4> result;
     NaVECTOR<float, 4> tmp;
@@ -93,12 +93,12 @@ void SpmComplexNode::RenderContour(PrModelObject *model) {
     u_int num = m_contour_index_num;
     if (ident) {
         for (u_int i = 0; i < num; i++) {
-            NaVECTOR<float, 4> *s = &src[m_contour_index[i].m_src];
+            NaVECTOR<float, 4> *s = (NaVECTOR<float, 4>*)((m_contour_index[i].m_src << 4) + (u_int)src);
             dst[m_contour_index[i].m_dst] = *s;
         }
     } else {
         for (u_int i = 0; i < num; i++) {
-            NaVECTOR<float, 4> *v = &src[m_contour_index[i].m_src];
+            NaVECTOR<float, 4> *v = (NaVECTOR<float, 4>*)((m_contour_index[i].m_src << 4) + (u_int)src);
             u_int d = m_contour_index[i].m_dst;
 
             asm volatile(
